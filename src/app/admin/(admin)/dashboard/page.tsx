@@ -1,0 +1,535 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  Area,
+  AreaChart
+} from 'recharts'
+import { 
+  DollarSign, 
+  AlertTriangle, 
+  TrendingUp, 
+  Users,
+  Clock,
+  Phone,
+  MessageSquare,
+  FileText,
+  ArrowUpRight,
+  ArrowDownRight,
+  Loader2
+} from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/Card'
+import { StatsCardSkeleton, ChartPlaceholder, QuickActionSkeleton } from '@/components/ui/LoadingSpinner'
+import { adminApi } from '@/lib/adminApi'
+import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import toast from 'react-hot-toast'
+
+// Mock data - replace with actual API calls
+const mockDashboardData = {
+  cartera: {
+    valorTotalCartera: 15800000000,
+    totalRecaudado: 9480000000,
+    totalPendiente: 6320000000,
+    porcentajeRecaudo: 60
+  },
+  mora: {
+    totalContratosActivos: 1247,
+    contratosAlDia: 820,
+    contratosMora1a15: 185,
+    contratosMora16a30: 142,
+    contratosMora31a60: 67,
+    contratosMora60plus: 33,
+    porcentajeMora: 34.2,
+    dineroEnMora: 2100000000
+  },
+  recaudoMensual: {
+    mesActual: 890000000,
+    mesAnterior: 756000000,
+    variacion: 17.7
+  },
+  operacion: {
+    comprobantesPendientes: 47,
+    clientesEscalados: 12,
+    whatsappEnviadosMes: 1580,
+    llamadasAIMes: 340
+  }
+}
+
+
+export default function AdminDashboard() {
+  const { isAuthenticated } = useAdminAuthStore()
+  const [data, setData] = useState(mockDashboardData)
+  const [loading, setLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [chartsLoading, setChartsLoading] = useState(true)
+  const [actionsLoading, setActionsLoading] = useState(true)
+  const [clientStats, setClientStats] = useState({
+    total: 0,
+    dispuestos: 0,
+    indecisos: 0,
+    evasivos: 0
+  })
+  const [recaudoMensualData, setRecaudoMensualData] = useState([])
+  const [moraData, setMoraData] = useState([])
+
+  // Load real dashboard data
+  const loadDashboardData = async () => {
+    if (!isAuthenticated) return
+    
+    try {
+      setLoading(true)
+      setStatsLoading(true)
+      setChartsLoading(true)
+      setActionsLoading(true)
+      
+      // Load dashboard summary, clients data, and recaudo mensual
+      const [dashboardResponse, clientsResponse, recaudoResponse] = await Promise.all([
+        adminApi.getDashboardSummary(),
+        adminApi.getClients(1, 1000), // Get more clients for stats
+        adminApi.getRecaudoMensual()
+      ])
+      
+      if (dashboardResponse.data.success) {
+        const dashboardData = dashboardResponse.data.data
+        // Replace mock data with real data
+        setData({
+          cartera: dashboardData.cartera,
+          mora: dashboardData.mora,
+          recaudoMensual: dashboardData.recaudoMensual,
+          operacion: dashboardData.operacion
+        })
+        
+        // Create mora chart data from real data
+        setMoraData([
+          { name: 'Al día', value: dashboardData.mora.contratosAlDia, color: '#10b981' },
+          { name: '1-15 días', value: dashboardData.mora.contratosMora1a15, color: '#f59e0b' },
+          { name: '16-30 días', value: dashboardData.mora.contratosMora16a30, color: '#f97316' },
+          { name: '31-60 días', value: dashboardData.mora.contratosMora31a60, color: '#ef4444' },
+          { name: '+60 días', value: dashboardData.mora.contratosMora60plus, color: '#991b1b' }
+        ])
+      }
+
+      if (recaudoResponse.data.success) {
+        const recaudoData = recaudoResponse.data.data
+        // Convert to chart format (only showing last 6 months)
+        const chartData = recaudoData.data.slice(-6).map(item => ({
+          mes: item.mes.substring(0, 3), // Abreviar mes
+          recaudado: item.recaudado,
+          meta: item.meta
+        }))
+        setRecaudoMensualData(chartData)
+      }
+
+      if (clientsResponse.data.success) {
+        const clients = clientsResponse.data.data.clients
+        setClientStats({
+          total: clientsResponse.data.data.pagination.total,
+          dispuestos: clients.filter(c => c.behaviorTag === 'DISPUESTO').length,
+          indecisos: clients.filter(c => c.behaviorTag === 'INDECISO').length,
+          evasivos: clients.filter(c => c.behaviorTag === 'EVASIVO').length
+        })
+      }
+
+      // Simulate staggered loading for better UX
+      setTimeout(() => setStatsLoading(false), 300)
+      setTimeout(() => setChartsLoading(false), 600) 
+      setTimeout(() => setActionsLoading(false), 900)
+      
+      toast.success('Dashboard cargado con datos reales')
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+      toast.error('Error cargando datos del dashboard')
+    } finally {
+      setTimeout(() => {
+        setLoading(false)
+        setStatsLoading(false)
+        setChartsLoading(false)
+        setActionsLoading(false)
+      }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [isAuthenticated])
+
+  // Calculate real behavior data
+  const realComportamientoData = [
+    { 
+      name: 'Dispuestos', 
+      value: clientStats.total > 0 ? Math.round((clientStats.dispuestos / clientStats.total) * 100) : 0, 
+      count: clientStats.dispuestos,
+      color: '#10b981' 
+    },
+    { 
+      name: 'Indecisos', 
+      value: clientStats.total > 0 ? Math.round((clientStats.indecisos / clientStats.total) * 100) : 0, 
+      count: clientStats.indecisos,
+      color: '#f59e0b' 
+    },
+    { 
+      name: 'Evasivos', 
+      value: clientStats.total > 0 ? Math.round((clientStats.evasivos / clientStats.total) * 100) : 0, 
+      count: clientStats.evasivos,
+      color: '#ef4444' 
+    }
+  ]
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value)
+  }
+
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat('es-CO').format(value)
+  }
+
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`
+  }
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="glass-card p-3 shadow-glass-hover">
+          <p className="font-medium text-text-primary">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }} className="text-sm">
+              {entry.name}: {entry.name.includes('meta') || entry.name.includes('recaudado') 
+                ? formatCurrency(entry.value) 
+                : formatNumber(entry.value)
+              }
+            </p>
+          ))}
+        </div>
+      )
+    }
+    return null
+  }
+
+
+  return (
+    <div className="space-y-6 md:space-y-8 p-4 md:p-6">
+      <div className="animate-fade-in-up">
+        <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
+          <span className="gradient-text">Dashboard Administrativo</span>
+        </h1>
+        <p className="text-text-secondary text-responsive-base">
+          Resumen general del sistema de cobranza inmobiliaria ({clientStats.total} clientes registrados)
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up-delay">
+        {statsLoading ? (
+          <>
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+          </>
+        ) : (
+          <>
+            <Card variant="interactive">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-text-secondary font-medium mb-1">Valor Total Cartera</p>
+                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                      {formatCurrency(data.cartera.valorTotalCartera)}
+                    </p>
+                  </div>
+                  <div className="glass-card p-3 border-accent-blue/20">
+                    <DollarSign className="w-6 h-6 text-accent-blue" />
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <TrendingUp className="w-4 h-4 text-accent-green mr-1" />
+                  <span className="text-sm text-accent-green font-medium">
+                    {formatPercentage(data.cartera.porcentajeRecaudo)} recaudado
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="interactive">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-text-secondary font-medium mb-1">Recaudo Mensual</p>
+                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                      {formatCurrency(data.recaudoMensual.mesActual)}
+                    </p>
+                  </div>
+                  <div className="glass-card p-3 border-accent-green/20">
+                    <ArrowUpRight className="w-6 h-6 text-accent-green" />
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <ArrowUpRight className="w-4 h-4 text-accent-green mr-1" />
+                  <span className="text-sm text-accent-green font-medium">
+                    +{formatPercentage(data.recaudoMensual.variacion)} vs mes anterior
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="interactive">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-text-secondary font-medium mb-1">Dinero en Mora</p>
+                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                      {formatCurrency(data.mora.dineroEnMora)}
+                    </p>
+                  </div>
+                  <div className="glass-card p-3 border-accent-red/20">
+                    <AlertTriangle className="w-6 h-6 text-accent-red" />
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm text-accent-red font-medium">
+                    {formatPercentage(data.mora.porcentajeMora)} de contratos en mora
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="interactive">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-text-secondary font-medium mb-1">Clientes Activos</p>
+                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                      {formatNumber(clientStats.total)}
+                    </p>
+                  </div>
+                  <div className="glass-card p-3 border-accent-purple/20">
+                    <Users className="w-6 h-6 text-accent-purple" />
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm text-accent-green font-medium">
+                    {formatNumber(clientStats.dispuestos)} dispuestos
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-fade-in-up-delay-2">
+        {chartsLoading ? (
+          <>
+            <ChartPlaceholder title="Recaudo Mensual vs Meta" />
+            <ChartPlaceholder title="Estado de Contratos" />
+          </>
+        ) : (
+          <>
+            <Card variant="elevated">
+              <CardContent className="p-4 md:p-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4">Recaudo Mensual vs Meta</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={recaudoMensualData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <XAxis dataKey="mes" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis tickFormatter={(value) => `$${(value / 1000000).toFixed(0)}M`} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="recaudado" fill="#60a5fa" name="Recaudado" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="meta" fill="rgba(255,255,255,0.1)" name="Meta" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="elevated">
+              <CardContent className="p-4 md:p-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4">Estado de Contratos</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={moraData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {moraData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-in-up-delay-3">
+        <Card variant="elevated">
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Comportamiento Clientes</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={realComportamientoData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="count"
+                    label={({ name, value, count }) => `${name} ${count} (${value}%)`}
+                  >
+                    {realComportamientoData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [`${value} clientes`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="elevated">
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Operaciones del Mes</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 glass-button rounded-xl">
+                <div className="flex items-center">
+                  <FileText className="w-5 h-5 text-accent-blue mr-3" />
+                  <span className="text-sm text-text-primary">Comprobantes Pendientes</span>
+                </div>
+                <span className="text-base font-semibold text-text-primary">
+                  {data.operacion.comprobantesPendientes}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 glass-button rounded-xl">
+                <div className="flex items-center">
+                  <AlertTriangle className="w-5 h-5 text-accent-red mr-3" />
+                  <span className="text-sm text-text-primary">Clientes Escalados</span>
+                </div>
+                <span className="text-base font-semibold text-text-primary">
+                  {data.operacion.clientesEscalados}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 glass-button rounded-xl">
+                <div className="flex items-center">
+                  <MessageSquare className="w-5 h-5 text-accent-green mr-3" />
+                  <span className="text-sm text-text-primary">WhatsApp Enviados</span>
+                </div>
+                <span className="text-base font-semibold text-text-primary">
+                  {formatNumber(data.operacion.whatsappEnviadosMes)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 glass-button rounded-xl">
+                <div className="flex items-center">
+                  <Phone className="w-5 h-5 text-accent-purple mr-3" />
+                  <span className="text-sm text-text-primary">Llamadas AI</span>
+                </div>
+                <span className="text-base font-semibold text-text-primary">
+                  {formatNumber(data.operacion.llamadasAIMes)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {actionsLoading ? (
+          <Card variant="elevated">
+            <CardContent className="p-4 md:p-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-4">Acciones Rápidas</h3>
+              <QuickActionSkeleton count={4} />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card variant="elevated">
+            <CardContent className="p-4 md:p-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-4">Acciones Rápidas</h3>
+              <div className="space-y-3">
+                <Link
+                  href="/admin/payments"
+                  className="flex items-center p-3 text-left w-full glass-button rounded-xl hover:shadow-glow transition-all duration-300 group"
+                >
+                  <div className="p-2 bg-accent-blue/20 rounded-lg mr-3 group-hover:bg-accent-blue/30 transition-colors">
+                    <FileText className="w-5 h-5 text-accent-blue" />
+                  </div>
+                  <div className="min-h-[44px] flex flex-col justify-center">
+                    <p className="font-medium text-text-primary">Revisar Pagos</p>
+                    <p className="text-sm text-text-secondary">{data.operacion.comprobantesPendientes} pendientes</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/admin/clients"
+                  className="flex items-center p-3 text-left w-full glass-button rounded-xl hover:shadow-glow transition-all duration-300 group"
+                >
+                  <div className="p-2 bg-accent-yellow/20 rounded-lg mr-3 group-hover:bg-accent-yellow/30 transition-colors">
+                    <Users className="w-5 h-5 text-accent-yellow" />
+                  </div>
+                  <div className="min-h-[44px] flex flex-col justify-center">
+                    <p className="font-medium text-text-primary">Clientes Escalados</p>
+                    <p className="text-sm text-text-secondary">{data.operacion.clientesEscalados} requieren atención</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/admin/collections"
+                  className="flex items-center p-3 text-left w-full glass-button rounded-xl hover:shadow-glow transition-all duration-300 group"
+                >
+                  <div className="p-2 bg-accent-green/20 rounded-lg mr-3 group-hover:bg-accent-green/30 transition-colors">
+                    <MessageSquare className="w-5 h-5 text-accent-green" />
+                  </div>
+                  <div className="min-h-[44px] flex flex-col justify-center">
+                    <p className="font-medium text-text-primary">Nueva Cobranza</p>
+                    <p className="text-sm text-text-secondary">Enviar mensajes masivos</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/admin/import"
+                  className="flex items-center p-3 text-left w-full glass-button rounded-xl hover:shadow-glow transition-all duration-300 group"
+                >
+                  <div className="p-2 bg-accent-purple/20 rounded-lg mr-3 group-hover:bg-accent-purple/30 transition-colors">
+                    <FileText className="w-5 h-5 text-accent-purple" />
+                  </div>
+                  <div className="min-h-[44px] flex flex-col justify-center">
+                    <p className="font-medium text-text-primary">Importar Datos</p>
+                    <p className="text-sm text-text-secondary">Cargar archivo Excel</p>
+                  </div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  )
+}
