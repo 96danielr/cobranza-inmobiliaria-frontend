@@ -27,20 +27,23 @@ import { Modal } from '@/components/ui/Modal'
 import { StatsCardSkeleton, TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import { ClientCard, ClientCardSkeleton } from '@/components/ui/ClientCard'
 import { PaginationControls } from '@/components/ui/Pagination'
+import { Combobox } from '@/components/ui/Combobox'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 
 interface Client {
-  id: string
-  fullName: string
-  cedula: string
+  _id: string
+  name: string
+  idNumber: string
   phone: string
   email?: string
   address?: string
-  behaviorTag: 'DISPUESTO' | 'INDECISO' | 'EVASIVO'
+  behavior: string
+  excelRowId?: number
   createdAt: string
   _count?: {
     contracts: number
@@ -61,40 +64,37 @@ interface ApiResponse {
 }
 
 export default function ClientsPage() {
+  const { clients: storeClients, setClients } = useClientStore()
   const { isAuthenticated } = useAdminAuthStore()
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [behaviorFilter, setBehaviorFilter] = useState<'ALL' | 'DISPUESTO' | 'INDECISO' | 'EVASIVO'>('ALL')
-  const [statsLoading, setStatsLoading] = useState(true)
-  const [dashboardData, setDashboardData] = useState<any>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
 
   // Fetch clients with pagination and filtering
   const fetchClients = async (page: number, limit: number, search?: string) => {
     try {
-      // Load dashboard data for stats on first page
-      if (page === 1) {
-        setStatsLoading(true)
-        const dashboardResponse = await adminApi.getDashboardSummary()
-        if (dashboardResponse.data.success) {
-          setDashboardData(dashboardResponse.data.data)
-        }
-        setStatsLoading(false)
-      }
-
       const response = await adminApi.getClients(page, limit, search)
       if (!response.data.success) {
         throw new Error('Error loading clients')
       }
 
-      let clients = response.data.data.clients || []
+      const freshClients = response.data.data.clients || []
+      
+      // Update global store if we're on the first page without search
+      if (page === 1 && !search) {
+        setClients(freshClients, response.data.data.pagination.total)
+      }
+
+      let filteredClients = freshClients
       
       // Apply behavior filter
       if (behaviorFilter !== 'ALL') {
-        clients = clients.filter((client: Client) => client.behaviorTag === behaviorFilter)
+        filteredClients = filteredClients.filter((client: Client) => client.behavior === behaviorFilter)
       }
 
       return {
-        data: clients,
+        data: filteredClients,
         total: response.data.data.pagination.total,
         page: response.data.data.pagination.page,
         limit: response.data.data.pagination.limit,
@@ -122,6 +122,9 @@ export default function ClientsPage() {
         return 'text-accent-yellow bg-accent-yellow/20 border-accent-yellow/30'
       case 'EVASIVO':
         return 'text-accent-red bg-accent-red/20 border-accent-red/30'
+      case 'N/A':
+      case '':
+        return 'text-text-muted bg-glass-primary/10 border-glass-border/40'
       default:
         return 'text-text-muted bg-glass-primary/20 border-glass-border'
     }
@@ -135,9 +138,11 @@ export default function ClientsPage() {
 
   // Calculate stats from real data
   const totalClients = pagination.total || 0
-  const clientsDispuestos = Math.floor(totalClients * 0.4) // 40% dispuestos
-  const clientsEvasivos = Math.floor(totalClients * 0.2) // 20% evasivos  
-  const clientsIndecisos = totalClients - clientsDispuestos - clientsEvasivos // resto indecisos
+  
+  // Real stats based on the data we have
+  const clientsDispuestos = pagination.data.filter(c => c.behavior === 'DISPUESTO').length
+  const clientsEvasivos = pagination.data.filter(c => c.behavior === 'EVASIVO').length
+  const clientsIndecisos = pagination.data.filter(c => c.behavior === 'INDECISO').length
 
   return (
     <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
@@ -241,29 +246,31 @@ export default function ClientsPage() {
       </div>
 
       {/* Filters */}
-      <Card variant="interactive" className="animate-fade-in-up animate-fade-in-up-delay">
+      <Card variant="interactive" className="animate-fade-in-up animate-fade-in-up-delay relative z-40">
         <CardContent className="p-4 md:p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
-              <Input
-                placeholder="Buscar por nombre, cédula, teléfono..."
-                value={pagination.search}
-                onChange={(e) => pagination.handleSearch(e.target.value)}
-                icon={Search}
-                className="glass-input"
-              />
+                <Input
+                  placeholder="Buscar por nombre, cédula, teléfono..."
+                  value={pagination.search}
+                  onChange={(e) => pagination.handleSearch(e.target.value)}
+                  className="glass-input"
+                />
             </div>
-            <div className="lg:w-48">
-              <select
+            <div className="lg:w-72">
+              <Combobox
                 value={behaviorFilter}
-                onChange={(e) => setBehaviorFilter(e.target.value as any)}
-                className="glass-input w-full min-h-[44px] px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-              >
-                <option value="ALL">Todos los comportamientos</option>
-                <option value="DISPUESTO">Dispuestos</option>
-                <option value="INDECISO">Indecisos</option>
-                <option value="EVASIVO">Evasivos</option>
-              </select>
+                onChange={(val) => setBehaviorFilter(val as any)}
+                options={[
+                  { value: 'ALL', label: 'Todos los comportamientos' },
+                  { value: 'DISPUESTO', label: 'Dispuestos' },
+                  { value: 'INDECISO', label: 'Indecisos' },
+                  { value: 'EVASIVO', label: 'Evasivos' },
+                  { value: 'N/A', label: 'No definido' },
+                ]}
+                placeholder="Filtrar por comportamiento"
+                searchPlaceholder="Buscar estado..."
+              />
             </div>
           </div>
         </CardContent>
@@ -271,36 +278,21 @@ export default function ClientsPage() {
 
       {/* Clients List - Hybrid View with Independent Scroll */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
-        {/* Fixed Header */}
-        <div className="flex-shrink-0 border-b border-glass-border">
-          <div className="hidden lg:block">
-            {/* Desktop Table Header */}
-            <div className="bg-glass-primary/30 backdrop-blur-glass">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Cliente</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Contacto</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Contratos</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Comportamiento</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Fecha Registro</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Acciones</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
-          <div className="lg:hidden p-4">
-            <h3 className="font-medium text-text-primary">Lista de Clientes</h3>
-            <p className="text-sm text-text-secondary">{pagination.total} clientes encontrados</p>
-          </div>
-        </div>
-
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px]">
-          {/* Desktop Table Body */}
+        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px] relative">
+          {/* Desktop Table */}
           <div className="hidden lg:block">
-            <table className="w-full">
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 z-10 bg-glass-primary backdrop-blur-glass shadow-sm">
+                <tr className="border-b border-glass-border">
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-x border-glass-border w-16">No.</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border">Cliente</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border w-40">Cédula</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border">Contacto</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border w-48">Comportamiento</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border w-56">Acciones</th>
+                </tr>
+              </thead>
               <tbody>
                 {pagination.loading ? (
                   Array.from({ length: 8 }).map((_, index) => (
@@ -318,40 +310,33 @@ export default function ClientsPage() {
                   </tr>
                 ) : (
                   pagination.data.map((client) => (
-                  <tr key={client.id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
-                    <td className="py-4 px-4 md:px-6">
-                      <div>
-                        <p className="font-medium text-text-primary">{client.fullName}</p>
-                        <p className="text-sm text-text-muted">{client.cedula}</p>
-                      </div>
+                  <tr key={client._id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
+                    <td className="py-2 px-4 md:px-6 border-x border-glass-border text-text-secondary text-sm w-16">
+                      {client.excelRowId || '-'}
                     </td>
-                    <td className="py-4 px-4 md:px-6">
+                    <td className="py-2 px-4 md:px-6 border-r border-glass-border">
+                      <p className="font-medium text-text-primary whitespace-nowrap">{client.name}</p>
+                    </td>
+                    <td className="py-2 px-4 md:px-6 border-r border-glass-border font-mono text-xs text-text-muted w-40">
+                      {client.idNumber || 'Sin Cédula'}
+                    </td>
+                    <td className="py-2 px-4 md:px-6 border-r border-glass-border">
                       <div>
                         <p className="text-sm text-text-primary">{client.phone}</p>
                         {client.email && (
-                          <p className="text-sm text-text-muted">{client.email}</p>
+                          <p className="text-xs text-text-muted">{client.email}</p>
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-4 md:px-6">
-                      <span className="font-medium text-text-primary">
-                        {client._count?.contracts || 0}
+                    <td className="py-2 px-4 md:px-6 border-r border-glass-border w-48">
+                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(client.behavior)}`}>
+                        {client.behavior && client.behavior !== 'N/A' ? client.behavior : 'No definido'}
                       </span>
                     </td>
-                    <td className="py-4 px-4 md:px-6">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(client.behaviorTag)}`}>
-                        {client.behaviorTag}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 md:px-6">
-                      <p className="text-sm text-text-primary">
-                        {dayjs(client.createdAt).format('DD/MM/YYYY')}
-                      </p>
-                    </td>
-                    <td className="py-4 px-4 md:px-6">
+                    <td className="py-2 px-4 md:px-6 border-r border-glass-border w-56">
                       <div className="flex items-center space-x-2">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleViewClient(client)}
                           className="glass-button min-h-[44px] min-w-[44px]"
@@ -359,21 +344,21 @@ export default function ClientsPage() {
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
                         >
                           <MessageSquare className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
                         >
@@ -403,7 +388,7 @@ export default function ClientsPage() {
                   <p className="text-sm text-text-muted">Agrega un nuevo cliente para comenzar</p>
                   {(pagination.search || behaviorFilter !== 'ALL') && (
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       onClick={() => { 
                         pagination.handleSearch('')
                         setBehaviorFilter('ALL')
@@ -418,7 +403,7 @@ export default function ClientsPage() {
             ) : (
               pagination.data.map((client) => (
                 <ClientCard
-                  key={client.id}
+                  key={client._id}
                   client={client}
                   onView={handleViewClient}
                 />
@@ -440,8 +425,8 @@ export default function ClientsPage() {
                 endIndex={pagination.endIndex}
                 hasNextPage={pagination.hasNextPage}
                 hasPreviousPage={pagination.hasPreviousPage}
-                onPageChange={pagination.setPage}
-                onLimitChange={pagination.setLimit}
+                onPageChange={pagination.goToPage}
+                onLimitChange={pagination.changeLimit}
               />
             </div>
           </div>
@@ -466,11 +451,11 @@ export default function ClientsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-text-secondary">Nombre Completo</p>
-                  <p className="font-medium text-text-primary">{selectedClient.fullName}</p>
+                  <p className="font-medium text-text-primary">{selectedClient.name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">Cédula</p>
-                  <p className="font-medium text-text-primary">{selectedClient.cedula}</p>
+                  <p className="font-medium text-text-primary">{selectedClient.idNumber}</p>
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">Teléfono</p>
@@ -488,8 +473,8 @@ export default function ClientsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">Comportamiento</p>
-                  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(selectedClient.behaviorTag)}`}>
-                    {selectedClient.behaviorTag}
+                  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(selectedClient.behavior)}`}>
+                    {selectedClient.behavior}
                   </span>
                 </div>
                 <div>

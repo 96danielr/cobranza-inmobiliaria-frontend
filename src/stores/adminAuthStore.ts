@@ -40,7 +40,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           })
 
           if (response.data.success) {
-            const { token, user: admin } = response.data
+            const { accessToken: token, user: admin } = response.data.data
             
             set({
               token,

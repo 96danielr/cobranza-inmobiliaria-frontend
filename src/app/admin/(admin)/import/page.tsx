@@ -240,6 +240,30 @@ export default function ImportPage() {
     }, 1000)
   }
 
+  const handleExportData = async () => {
+    try {
+      toast.loading('Generando archivo de exportación...', { id: 'export-toast' })
+      const response = await adminApi.exportExcel()
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `export-cobranza-${new Date().toISOString().split('T')[0]}.xlsx`)
+      document.body.appendChild(link)
+      link.click()
+      
+      // Cleanup
+      link.parentNode?.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Datos exportados correctamente', { id: 'export-toast' })
+    } catch (error) {
+      console.error('Error al exportar:', error)
+      toast.error('Error al exportar los datos', { id: 'export-toast' })
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -251,9 +275,17 @@ export default function ImportPage() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline" onClick={downloadTemplate}>
+          <Button variant="outline" onClick={downloadTemplate} className="glass-button">
             <Download className="w-4 h-4 mr-2" />
             Descargar Plantilla
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleExportData}
+            className="bg-accent-purple/20 text-accent-purple border-accent-purple/30 hover:bg-accent-purple/30"
+          >
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Exportar Datos (DB)
           </Button>
         </div>
       </div>
@@ -353,7 +385,7 @@ export default function ImportPage() {
                   </div>
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="glass"
                   size="sm"
                   onClick={resetImport}
                   disabled={importProgress.isImporting}
@@ -482,7 +514,7 @@ export default function ImportPage() {
                         </span>
                       </div>
                       <Button
-                        variant="ghost"
+                        variant="glass"
                         size="sm"
                         onClick={() => setShowErrorsModal(true)}
                         className="glass-button text-accent-red hover:text-accent-red/80 min-h-[44px]"
@@ -507,7 +539,7 @@ export default function ImportPage() {
                         </span>
                       </div>
                       <Button
-                        variant="ghost"
+                        variant="glass"
                         size="sm"
                         onClick={() => setShowErrorsModal(true)}
                         className="glass-button text-accent-yellow hover:text-accent-yellow/80 min-h-[44px]"

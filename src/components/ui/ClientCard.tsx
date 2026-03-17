@@ -21,14 +21,14 @@ import dayjs from 'dayjs'
 
 interface ClientCardProps {
   client: {
-    id: string
-    fullName: string
-    cedula: string
+    _id: string
+    name: string
+    idNumber: string
     phone: string
     email?: string
     address?: string
     birthDate?: string
-    behaviorTag: 'DISPUESTO' | 'INDECISO' | 'EVASIVO'
+    behavior: string
     createdAt: string
     _count?: {
       contracts?: number
@@ -65,7 +65,7 @@ export function ClientCard({ client, onView }: ClientCardProps) {
     }
   }
 
-  const behaviorConfig = getBehaviorConfig(client.behaviorTag)
+  const behaviorConfig = getBehaviorConfig(client.behavior)
   const contractCount = client._count?.contracts || 0
   const age = client.birthDate ? dayjs().diff(dayjs(client.birthDate), 'years') : null
 
@@ -85,18 +85,18 @@ export function ClientCard({ client, onView }: ClientCardProps) {
             <div className="flex items-center mb-1">
               <User className="w-4 h-4 text-text-secondary mr-2 flex-shrink-0" />
               <h3 className="font-semibold text-text-primary truncate">
-                {client.fullName}
+                {client.name}
               </h3>
             </div>
             <p className="text-sm text-text-muted">
-              C.C. {client.cedula}
+              C.C. {client.idNumber}
             </p>
           </div>
           <span className={cn(
             'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border backdrop-blur-sm flex-shrink-0',
             behaviorConfig.color
           )}>
-            {client.behaviorTag}
+            {client.behavior}
           </span>
         </div>
 
@@ -188,7 +188,7 @@ export function ClientCard({ client, onView }: ClientCardProps) {
                 <p><span className="font-medium">Fecha de nacimiento:</span> {dayjs(client.birthDate).format('DD/MM/YYYY')}</p>
               )}
               
-              <p><span className="font-medium">ID Cliente:</span> {client.id}</p>
+              <p><span className="font-medium">ID Cliente:</span> {client._id}</p>
               
               <div className="pt-2">
                 <p className="font-medium mb-1">Actividad Reciente:</p>
@@ -207,7 +207,7 @@ export function ClientCard({ client, onView }: ClientCardProps) {
         <div className="flex items-center justify-between pt-3 border-t border-glass-border">
           {/* Toggle Details */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
             className="glass-button text-text-muted hover:text-text-primary min-h-[44px] px-3"
@@ -224,7 +224,7 @@ export function ClientCard({ client, onView }: ClientCardProps) {
           {/* Main Actions */}
           <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
               title="Enviar mensaje"
@@ -233,7 +233,7 @@ export function ClientCard({ client, onView }: ClientCardProps) {
             </Button>
             
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => onView(client)}
               className="glass-button min-h-[44px] px-4 hover:shadow-glow"

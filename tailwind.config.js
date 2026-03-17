@@ -55,9 +55,9 @@ module.exports = {
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.6s ease-out',
-        'fade-in-up-delay': 'fadeInUp 0.6s ease-out 0.2s both',
-        'fade-in-up-delay-2': 'fadeInUp 0.6s ease-out 0.4s both',
-        'fade-in-up-delay-3': 'fadeInUp 0.6s ease-out 0.6s both',
+        'fade-in-up-delay': 'fadeInUp 0.5s ease-out 0.1s both',
+        'fade-in-up-delay-2': 'fadeInUp 0.5s ease-out 0.2s both',
+        'fade-in-up-delay-3': 'fadeInUp 0.5s ease-out 0.3s both',
         'slide-in': 'slideIn 0.3s ease-out',
         'glass-glow': 'glassGlow 2s ease-in-out infinite alternate',
         'twinkle': 'twinkle 3s ease-in-out infinite'

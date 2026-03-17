@@ -66,11 +66,36 @@ export const adminApi = {
     return apiAdmin.get(`/contracts?${params.toString()}`)
   },
 
+  // Lots
+  getLots: (page: number = 1, limit: number = 10, search?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search })
+    })
+    return apiAdmin.get(`/lots?${params.toString()}`)
+  },
+
+  createLot: (data: any) =>
+    apiAdmin.post('/lots', data),
+
+  updateLot: (id: string, data: any) =>
+    apiAdmin.put(`/lots/${id}`, data),
+
+  deleteLot: (id: string) =>
+    apiAdmin.delete(`/lots/${id}`),
+
   // Excel Import
   uploadExcel: (formData: FormData) =>
     apiAdmin.post('/import/excel', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       }
-    })
+    }),
+
+  // Excel Export
+  exportExcel: () =>
+    apiAdmin.get('/import/export', {
+      responseType: 'blob',
+    }),
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { 
   BarChart, 
@@ -35,6 +35,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { StatsCardSkeleton, ChartPlaceholder, QuickActionSkeleton } from '@/components/ui/LoadingSpinner'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 
 // Mock data - replace with actual API calls
@@ -80,66 +81,80 @@ export default function AdminDashboard() {
     total: 0,
     dispuestos: 0,
     indecisos: 0,
-    evasivos: 0
+    evasivos: 0,
+    noDefinido: 0
   })
   const [recaudoMensualData, setRecaudoMensualData] = useState([])
   const [moraData, setMoraData] = useState([])
+  const isInitialMount = useRef(true)
+  const isFetching = useRef(false)
+
+  const { clients, fetchClientsIfNeeded, totalClients: storeTotal } = useClientStore()
 
   // Load real dashboard data
   const loadDashboardData = async () => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || isFetching.current) return
     
+    isFetching.current = true
     try {
       setLoading(true)
       setStatsLoading(true)
       setChartsLoading(true)
       setActionsLoading(true)
       
-      // Load dashboard summary, clients data, and recaudo mensual
-      const [dashboardResponse, clientsResponse, recaudoResponse] = await Promise.all([
+      // Load dashboard summary, ensuring client store is hydrated
+      const [dashboardResponse, recaudoResponse] = await Promise.all([
         adminApi.getDashboardSummary(),
-        adminApi.getClients(1, 1000), // Get more clients for stats
-        adminApi.getRecaudoMensual()
+        adminApi.getRecaudoMensual(),
+        fetchClientsIfNeeded() // Use store to fetch/cache clients
       ])
       
       if (dashboardResponse.data.success) {
         const dashboardData = dashboardResponse.data.data
-        // Replace mock data with real data
         setData({
           cartera: dashboardData.cartera,
           mora: dashboardData.mora,
           recaudoMensual: dashboardData.recaudoMensual,
           operacion: dashboardData.operacion
         })
+
+        // Optimized: get total count directly from summary
+        setClientStats(prev => ({
+          ...prev,
+          total: dashboardData.totalClients || storeTotal
+        }))
         
         // Create mora chart data from real data
         setMoraData([
-          { name: 'Al día', value: dashboardData.mora.contratosAlDia, color: '#10b981' },
-          { name: '1-15 días', value: dashboardData.mora.contratosMora1a15, color: '#f59e0b' },
-          { name: '16-30 días', value: dashboardData.mora.contratosMora16a30, color: '#f97316' },
-          { name: '31-60 días', value: dashboardData.mora.contratosMora31a60, color: '#ef4444' },
-          { name: '+60 días', value: dashboardData.mora.contratosMora60plus, color: '#991b1b' }
-        ])
+          { name: 'Al día', value: Number(dashboardData.mora.contratosAlDia) || 0, color: '#10b981' },
+          { name: '1-15 días', value: Number(dashboardData.mora.contratosMora1a15) || 0, color: '#f59e0b' },
+          { name: '16-30 días', value: Number(dashboardData.mora.contratosMora16a30) || 0, color: '#f97316' },
+          { name: '31-60 días', value: Number(dashboardData.mora.contratosMora31a60) || 0, color: '#ef4444' },
+          { name: '+60 días', value: Number(dashboardData.mora.contratosMora60plus) || 0, color: '#991b1b' }
+        ] as any)
       }
 
       if (recaudoResponse.data.success) {
         const recaudoData = recaudoResponse.data.data
-        // Convert to chart format (only showing last 6 months)
-        const chartData = recaudoData.data.slice(-6).map(item => ({
-          mes: item.mes.substring(0, 3), // Abreviar mes
+        const chartData = recaudoData.data.slice(-6).map((item: any) => ({
+          mes: item.mes.substring(0, 3),
           recaudado: item.recaudado,
           meta: item.meta
         }))
         setRecaudoMensualData(chartData)
       }
 
-      if (clientsResponse.data.success) {
-        const clients = clientsResponse.data.data.clients
+      // Show success toast with unique ID to prevent duplicates
+      toast.success('Dashboard cargado con datos reales', { id: 'dashboard-load-success' })
+
+      // Update behavior stats using cached store data
+      if (clients.length > 0) {
         setClientStats({
-          total: clientsResponse.data.data.pagination.total,
-          dispuestos: clients.filter(c => c.behaviorTag === 'DISPUESTO').length,
-          indecisos: clients.filter(c => c.behaviorTag === 'INDECISO').length,
-          evasivos: clients.filter(c => c.behaviorTag === 'EVASIVO').length
+          total: storeTotal,
+          dispuestos: clients.filter(c => c.behavior === 'DISPUESTO').length,
+          indecisos: clients.filter(c => c.behavior === 'INDECISO').length,
+          evasivos: clients.filter(c => c.behavior === 'EVASIVO').length,
+          noDefinido: clients.filter(c => !c.behavior || c.behavior === 'N/A').length
         })
       }
 
@@ -148,11 +163,11 @@ export default function AdminDashboard() {
       setTimeout(() => setChartsLoading(false), 600) 
       setTimeout(() => setActionsLoading(false), 900)
       
-      toast.success('Dashboard cargado con datos reales')
     } catch (error) {
       console.error('Error loading dashboard data:', error)
       toast.error('Error cargando datos del dashboard')
     } finally {
+      isFetching.current = false
       setTimeout(() => {
         setLoading(false)
         setStatsLoading(false)
@@ -163,7 +178,9 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    loadDashboardData()
+    if (isAuthenticated && !isFetching.current) {
+      loadDashboardData()
+    }
   }, [isAuthenticated])
 
   // Calculate real behavior data
@@ -185,6 +202,12 @@ export default function AdminDashboard() {
       value: clientStats.total > 0 ? Math.round((clientStats.evasivos / clientStats.total) * 100) : 0, 
       count: clientStats.evasivos,
       color: '#ef4444' 
+    },
+    { 
+      name: 'No definido', 
+      value: clientStats.total > 0 ? Math.round((clientStats.noDefinido / clientStats.total) * 100) : 0, 
+      count: clientStats.noDefinido,
+      color: '#94a3b8' 
     }
   ]
 
@@ -373,9 +396,9 @@ export default function AdminDashboard() {
                         cy="50%"
                         outerRadius={100}
                         dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
-                        {moraData.map((entry, index) => (
+                        {moraData.map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -402,7 +425,7 @@ export default function AdminDashboard() {
                     cy="50%"
                     outerRadius={80}
                     dataKey="count"
-                    label={({ name, value, count }) => `${name} ${count} (${value}%)`}
+                    label={({ name, value, count }: any) => `${name} ${count} (${value}%)`}
                   >
                     {realComportamientoData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />

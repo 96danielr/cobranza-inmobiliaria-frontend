@@ -14,7 +14,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     const variantClasses = {
       default: 'glass-card',
       elevated: 'glass-card shadow-glass-hover transform hover:scale-[1.02]',
-      interactive: 'glass-card cursor-pointer hover:shadow-glow transition-all duration-300'
+      interactive: 'glass-card cursor-pointer hover:shadow-glow transition-all duration-200'
     }
 
     const animationClasses = animate ? 'animate-fade-in-up' : ''

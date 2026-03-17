@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
   { icon: CreditCard, label: 'Pagos', href: '/admin/payments' },
   { icon: Users, label: 'Cartera', href: '/admin/portfolio' },
   { icon: Users, label: 'Clientes', href: '/admin/clients' },
+  { icon: Building2, label: 'Lotes', href: '/admin/lots' },
   { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections' },
   { icon: Upload, label: 'Importar', href: '/admin/import' },
   { icon: Settings, label: 'Configuración', href: '/admin/settings' },
