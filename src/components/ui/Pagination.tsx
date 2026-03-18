@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from './Button'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
@@ -35,10 +36,18 @@ export function PaginationControls({
   showLimitSelector = true,
   limitOptions = [10, 20, 50, 100]
 }: PaginationControlsProps) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   
   // Generate page numbers to show
   const getVisiblePages = () => {
-    const delta = 2
+    const delta = isMobile ? 1 : 2
     const range = []
     const rangeWithDots = []
 
@@ -74,7 +83,7 @@ export function PaginationControls({
   const visiblePages = getVisiblePages()
 
   return (
-    <div className={cn('flex flex-col sm:flex-row items-center justify-between gap-4 p-4', className)}>
+    <div className={cn('flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-0 sm:px-4', className)}>
       {/* Results info */}
       <div className="text-sm text-text-secondary">
         Mostrando <span className="font-medium text-text-primary">{startIndex}</span> a{' '}
@@ -85,7 +94,7 @@ export function PaginationControls({
       <div className="flex items-center gap-2">
         {/* Limit selector */}
         {showLimitSelector && onLimitChange && (
-          <div className="flex items-center gap-2 mr-4">
+          <div className="hidden lg:flex items-center gap-2 mr-4">
             <span className="text-sm text-text-secondary">Mostrar:</span>
             <select
               value={limit}
@@ -103,7 +112,7 @@ export function PaginationControls({
 
         {/* First page */}
         <Button
-          variant="ghost"
+          variant="glass"
           size="sm"
           onClick={() => onPageChange(1)}
           disabled={page === 1}
@@ -114,7 +123,7 @@ export function PaginationControls({
 
         {/* Previous page */}
         <Button
-          variant="ghost"
+          variant="glass"
           size="sm"
           onClick={() => onPageChange(page - 1)}
           disabled={!hasPreviousPage}
@@ -125,18 +134,18 @@ export function PaginationControls({
         </Button>
 
         {/* Page numbers */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
           {visiblePages.map((pageNum, index) => (
             <div key={index}>
               {pageNum === '...' ? (
-                <span className="px-2 py-1 text-text-muted">...</span>
+                <span className="px-1 sm:px-2 py-1 text-text-muted text-xs sm:text-sm">...</span>
               ) : (
                 <Button
-                  variant={pageNum === page ? "default" : "ghost"}
+                  variant={pageNum === page ? "primary" : "glass"}
                   size="sm"
                   onClick={() => onPageChange(pageNum as number)}
                   className={cn(
-                    "min-w-[32px] h-8",
+                    "min-w-[28px] sm:min-w-[32px] h-8 px-1 sm:px-3",
                     pageNum === page 
                       ? "glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30" 
                       : "glass-button"
@@ -151,7 +160,7 @@ export function PaginationControls({
 
         {/* Next page */}
         <Button
-          variant="ghost"
+          variant="glass"
           size="sm"
           onClick={() => onPageChange(page + 1)}
           disabled={!hasNextPage}
@@ -163,7 +172,7 @@ export function PaginationControls({
 
         {/* Last page */}
         <Button
-          variant="ghost"
+          variant="glass"
           size="sm"
           onClick={() => onPageChange(pages)}
           disabled={page === pages}
@@ -199,7 +208,7 @@ export function SimplePagination({
   return (
     <div className={cn('flex items-center justify-between p-4', className)}>
       <Button
-        variant="ghost"
+        variant="glass"
         size="sm"
         onClick={() => onPageChange(page - 1)}
         disabled={!hasPreviousPage}
@@ -214,7 +223,7 @@ export function SimplePagination({
       </span>
 
       <Button
-        variant="ghost"
+        variant="glass"
         size="sm"
         onClick={() => onPageChange(page + 1)}
         disabled={!hasNextPage}

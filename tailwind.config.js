@@ -18,8 +18,8 @@ module.exports = {
           accent: '#16213e'
         },
         glass: {
-          primary: 'rgba(255, 255, 255, 0.08)',
-          secondary: 'rgba(255, 255, 255, 0.12)',
+          primary: 'rgba(15, 23, 42, 0.6)',
+          secondary: 'rgba(15, 23, 42, 0.8)',
           border: 'rgba(255, 255, 255, 0.15)',
           'border-hover': 'rgba(255, 255, 255, 0.25)'
         },
@@ -39,7 +39,7 @@ module.exports = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-dark': 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
-        'gradient-glass': 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+        'gradient-glass': 'linear-gradient(135deg, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.4) 100%)',
         'gradient-primary': 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
       },
       backdropBlur: {

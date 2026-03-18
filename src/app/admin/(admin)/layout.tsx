@@ -11,32 +11,41 @@ import {
   PhoneCall, 
   Upload, 
   Settings,
-  Menu,
   X,
   LogOut,
   Building2,
   ChevronRight
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
+
+type Role = 'tenant_admin' | 'company_admin' | 'agent'
 
 interface NavItem {
   icon: React.ElementType
   label: string
   href: string
+  roles: Role[]
 }
 
 const navItems: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' },
-  { icon: CreditCard, label: 'Pagos', href: '/admin/payments' },
-  { icon: Users, label: 'Cartera', href: '/admin/portfolio' },
-  { icon: Users, label: 'Clientes', href: '/admin/clients' },
-  { icon: Building2, label: 'Lotes', href: '/admin/lots' },
-  { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections' },
-  { icon: Upload, label: 'Importar', href: '/admin/import' },
-  { icon: Settings, label: 'Configuración', href: '/admin/settings' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', roles: ['tenant_admin', 'company_admin', 'agent'] },
+  { icon: CreditCard, label: 'Pagos', href: '/admin/payments', roles: ['tenant_admin', 'company_admin', 'agent'] },
+  { icon: Users, label: 'Cartera', href: '/admin/portfolio', roles: ['tenant_admin', 'company_admin', 'agent'] },
+  { icon: Users, label: 'Clientes', href: '/admin/clients', roles: ['tenant_admin', 'company_admin', 'agent'] },
+  { icon: Building2, label: 'Lotes', href: '/admin/lots', roles: ['tenant_admin', 'company_admin'] },
+  { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', roles: ['tenant_admin', 'company_admin'] },
+  { icon: Upload, label: 'Importar', href: '/admin/import', roles: ['tenant_admin', 'company_admin'] },
+  { icon: Building2, label: 'Empresas', href: '/admin/select-company', roles: ['tenant_admin'] },
+  { icon: Users, label: 'Usuarios', href: '/admin/users', roles: ['tenant_admin'] },
+  { icon: Settings, label: 'Configuración', href: '/admin/settings', roles: ['tenant_admin'] },
 ]
+
+const roleLabels: Record<Role, string> = {
+  tenant_admin: 'Admin Tenant',
+  company_admin: 'Admin Empresa',
+  agent: 'Agente',
+}
 
 export default function AdminLayout({
   children,
@@ -44,7 +53,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { isAuthenticated, admin, logout } = useAdminAuthStore()
+  const { isAuthenticated, admin, logout, selectedCompanyId } = useAdminAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -62,8 +71,7 @@ export default function AdminLayout({
     
     if (path.length > 1) {
       const currentPage = path[path.length - 1]
-      const navItem = navItems.find(item => item.href.includes(currentPage))
-      // Only add current page if it's different from dashboard
+      const navItem = navItems.find((item) => item.href.includes(currentPage))
       if (navItem && pathname !== '/admin/dashboard') {
         breadcrumbs.push({ label: navItem.label, href: pathname })
       }
@@ -74,14 +82,14 @@ export default function AdminLayout({
 
   const getCurrentPageInfo = () => {
     const currentPath = pathname
-    const navItem = navItems.find(item => 
+    const navItem = navItems.find((item) => 
       item.href === currentPath || 
       (item.href !== '/admin/dashboard' && currentPath.startsWith(item.href))
     )
     
     return {
       title: navItem?.label || 'Dashboard',
-      subtitle: admin?.fullName || 'Admin User'
+      subtitle: admin?.fullName || 'Admin User',
     }
   }
 
@@ -95,6 +103,7 @@ export default function AdminLayout({
   }
 
   const currentPageInfo = getCurrentPageInfo()
+  const userRole = (admin?.role || 'agent') as Role
 
   return (
     <div className="min-h-screen bg-dark-primary">
@@ -124,8 +133,12 @@ export default function AdminLayout({
                   <Building2 className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-3">
-                  <h2 className="text-lg font-semibold text-text-primary">Admin Panel</h2>
-                  <p className="text-sm text-text-secondary">Alicante Cobranza</p>
+                  <h2 className="text-lg font-semibold text-text-primary">
+                    {admin?.tenantName || 'Admin Panel'}
+                  </h2>
+                  <p className="text-sm text-text-secondary">
+                    {roleLabels[userRole]}
+                  </p>
                 </div>
               </div>
               
@@ -141,7 +154,9 @@ export default function AdminLayout({
             {/* Navigation with enhanced styling */}
             <nav className="flex-1 px-4 py-6">
               <div className="space-y-2">
-                {navItems.map((item) => {
+                {navItems
+                  .filter((item) => item.roles.includes(userRole))
+                  .map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href || 
                     (item.href !== '/admin/dashboard' && pathname.startsWith(item.href))
@@ -194,7 +209,7 @@ export default function AdminLayout({
                       {admin?.fullName || 'Admin User'}
                     </p>
                     <p className="text-xs text-text-secondary truncate">
-                      {admin?.role || 'ADMIN'}
+                      {roleLabels[userRole]}
                     </p>
                   </div>
                 </div>

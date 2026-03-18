@@ -20,7 +20,6 @@ import { TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingS
 import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
-import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
 
 interface Lot {
@@ -33,7 +32,6 @@ interface Lot {
 }
 
 export default function LotsPage() {
-  const { isAuthenticated } = useAdminAuthStore()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -44,19 +42,23 @@ export default function LotsPage() {
   })
 
   const fetchLots = async (page: number, limit: number, search?: string) => {
+    // Debug: trazar cada carga de datos para identificar patrones de llamadas
+    console.time(`fetchLots page=${page} limit=${limit} search=${search || ''}`)
     try {
       const response = await adminApi.getLots(page, limit, search)
       if (!response.data.success) {
         throw new Error('Error loading lots')
       }
 
-      return {
+      const result = {
         data: response.data.data.lots || [],
         total: response.data.data.pagination.total,
         page: response.data.data.pagination.page,
         limit: response.data.data.pagination.limit,
         pages: response.data.data.pagination.pages
       }
+      console.timeEnd(`fetchLots page=${page} limit=${limit} search=${search || ''}`)
+      return result
     } catch (error) {
       console.error('Error fetching lots:', error)
       throw error

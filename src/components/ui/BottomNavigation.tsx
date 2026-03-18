@@ -13,11 +13,14 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+import { useAdminAuthStore } from '@/stores/adminAuthStore'
+
 interface NavItem {
   icon: React.ElementType
   label: string
   href: string
-  shortLabel: string // Para espacios reducidos
+  shortLabel: string
+  roles: ('tenant_admin' | 'company_admin' | 'agent')[]
 }
 
 const bottomNavItems: NavItem[] = [
@@ -25,36 +28,42 @@ const bottomNavItems: NavItem[] = [
     icon: LayoutDashboard, 
     label: 'Dashboard', 
     href: '/admin/dashboard',
-    shortLabel: 'Inicio'
+    shortLabel: 'Inicio',
+    roles: ['tenant_admin', 'company_admin', 'agent']
   },
   { 
     icon: CreditCard, 
     label: 'Pagos', 
     href: '/admin/payments',
-    shortLabel: 'Pagos'
+    shortLabel: 'Pagos',
+    roles: ['tenant_admin', 'company_admin', 'agent']
   },
   { 
     icon: Building2, 
     label: 'Cartera', 
     href: '/admin/portfolio',
-    shortLabel: 'Cartera'
+    shortLabel: 'Cartera',
+    roles: ['tenant_admin', 'company_admin', 'agent']
   },
   { 
     icon: Users, 
     label: 'Clientes', 
     href: '/admin/clients',
-    shortLabel: 'Clientes'
+    shortLabel: 'Clientes',
+    roles: ['tenant_admin', 'company_admin', 'agent']
   },
   { 
     icon: PhoneCall, 
     label: 'Cobranzas', 
     href: '/admin/collections',
-    shortLabel: 'Cobranzas'
+    shortLabel: 'Cobranzas',
+    roles: ['tenant_admin', 'company_admin']
   }
 ]
 
 export function BottomNavigation() {
   const pathname = usePathname()
+  const { admin } = useAdminAuthStore()
 
   const isActive = (href: string) => {
     if (href === '/admin/dashboard') {
@@ -70,7 +79,9 @@ export function BottomNavigation() {
       
       {/* Navigation items */}
       <div className="relative flex items-center justify-around py-2">
-        {bottomNavItems.map((item) => {
+        {bottomNavItems
+          .filter(item => item.roles.includes(admin?.role as any))
+          .map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
           

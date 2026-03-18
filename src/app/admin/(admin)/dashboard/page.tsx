@@ -70,8 +70,10 @@ const mockDashboardData = {
 }
 
 
+import { Button } from '@/components/ui/Button'
+
 export default function AdminDashboard() {
-  const { isAuthenticated } = useAdminAuthStore()
+  const { admin, isAuthenticated } = useAdminAuthStore()
   const [data, setData] = useState(mockDashboardData)
   const [loading, setLoading] = useState(true)
   const [statsLoading, setStatsLoading] = useState(true)
@@ -86,7 +88,7 @@ export default function AdminDashboard() {
   })
   const [recaudoMensualData, setRecaudoMensualData] = useState([])
   const [moraData, setMoraData] = useState([])
-  const isInitialMount = useRef(true)
+  const [adminUsersCount, setAdminUsersCount] = useState(0)
   const isFetching = useRef(false)
 
   const { clients, fetchClientsIfNeeded, totalClients: storeTotal } = useClientStore()
@@ -165,7 +167,10 @@ export default function AdminDashboard() {
       
     } catch (error) {
       console.error('Error loading dashboard data:', error)
-      toast.error('Error cargando datos del dashboard')
+      // Only show error for standard admins since superadmins don't use this data
+      if (admin?.role !== 'superadmin') {
+        toast.error('Error cargando datos del dashboard')
+      }
     } finally {
       isFetching.current = false
       setTimeout(() => {
@@ -178,10 +183,16 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (isAuthenticated && !isFetching.current) {
-      loadDashboardData()
+    if (isAuthenticated) {
+      if (admin?.role === 'superadmin') {
+        adminApi.getAdminUsers().then(res => {
+          if (res.data.success) setAdminUsersCount(res.data.data.admins.length)
+        })
+      } else if (!isFetching.current) {
+        loadDashboardData()
+      }
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, admin])
 
   // Calculate real behavior data
   const realComportamientoData = [
@@ -247,6 +258,58 @@ export default function AdminDashboard() {
     return null
   }
 
+  if (admin?.role === 'superadmin') {
+    return (
+      <div className="space-y-6 md:space-y-8 p-4 md:p-6">
+        <div className="animate-fade-in-up">
+          <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
+            Bienvenido, <span className="gradient-text">{admin.fullName}</span>
+          </h1>
+          <p className="text-text-secondary text-responsive-base">
+            Panel de control para S. Administrador
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up-delay">
+          <Card variant="interactive">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm text-text-secondary font-medium mb-1">Administradores</p>
+                  <p className="text-3xl font-bold text-text-primary">{adminUsersCount}</p>
+                </div>
+                <div className="glass-card p-3 border-accent-purple/20">
+                  <Users className="w-6 h-6 text-accent-purple" />
+                </div>
+              </div>
+              <Link href="/admin/users">
+                <Button variant="glass" size="sm" className="w-full">
+                  Gestionar Usuarios
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card variant="interactive">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm text-text-secondary font-medium mb-1">Estado del Sistema</p>
+                  <p className="text-3xl font-bold text-accent-green">Activo</p>
+                </div>
+                <div className="glass-card p-3 border-accent-green/20">
+                  <Clock className="w-6 h-6 text-accent-green" />
+                </div>
+              </div>
+              <p className="text-xs text-text-secondary">
+                Todos los servicios operando normalmente
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 md:space-y-8 p-4 md:p-6">

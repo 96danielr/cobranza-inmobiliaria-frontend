@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   Search,
   Filter,
@@ -72,7 +72,7 @@ export default function ClientsPage() {
   const [statsLoading, setStatsLoading] = useState(false)
 
   // Fetch clients with pagination and filtering
-  const fetchClients = async (page: number, limit: number, search?: string) => {
+  const fetchClients = useCallback(async (page: number, limit: number, search?: string) => {
     try {
       const response = await adminApi.getClients(page, limit, search)
       if (!response.data.success) {
@@ -104,11 +104,10 @@ export default function ClientsPage() {
       console.error('Error fetching clients:', error)
       throw error
     }
-  }
+  }, [behaviorFilter])
 
   const pagination = useServerPagination({
     fetchData: fetchClients,
-    dependencies: [behaviorFilter],
     initialLimit: 20
   })
 

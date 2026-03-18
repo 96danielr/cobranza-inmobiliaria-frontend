@@ -36,11 +36,14 @@ import toast from 'react-hot-toast'
 
 interface AdminUser {
   id: string
+  accountId: string
   email: string
   fullName: string
-  role: 'ADMIN' | 'COBROS'
+  role: string
   createdAt: string
-  isActive: boolean
+  status: 'active' | 'inactive'
+  accountStatus: string
+  lastLogin?: string
 }
 
 interface TenantConfig {
@@ -64,24 +67,7 @@ interface TenantConfig {
 }
 
 // Mock data
-const mockAdminUsers: AdminUser[] = [
-  {
-    id: '1',
-    email: 'admin@inmobiliaria.com',
-    fullName: 'Administrador Principal',
-    role: 'ADMIN',
-    createdAt: '2023-01-01',
-    isActive: true
-  },
-  {
-    id: '2',
-    email: 'cobros@inmobiliaria.com',
-    fullName: 'Juan Pérez',
-    role: 'COBROS',
-    createdAt: '2023-06-15',
-    isActive: true
-  }
-]
+const mockAdminUsers: AdminUser[] = []
 
 const mockTenantConfig: TenantConfig = {
   id: '1',
@@ -118,7 +104,7 @@ export default function SettingsPage() {
   const [userForm, setUserForm] = useState({
     email: '',
     fullName: '',
-    role: 'COBROS' as 'ADMIN' | 'COBROS',
+    role: 'agent' as string,
     password: '',
     confirmPassword: ''
   })
@@ -126,40 +112,19 @@ export default function SettingsPage() {
   // Fetch admin users with pagination
   const fetchAdminUsers = async (page: number, limit: number, search?: string) => {
     try {
-      // For now, simulate admin users using client data
-      const response = await adminApi.getClients(page, limit)
+      const response = await adminApi.getAdminUsers(page, limit, search)
       if (!response.data.success) {
         throw new Error('Error loading admin users')
       }
 
-      let clients = response.data.data.clients || []
+      const { users, pagination } = response.data.data
       
-      // Transform clients to admin users format
-      const adminUsers = clients.slice(0, 5).map((client: any, index: number) => ({
-        id: `admin-${client.id || index}`,
-        email: `${client.fullName?.toLowerCase().replace(/\s+/g, '.')}@alicante.com`,
-        fullName: client.fullName || 'Usuario Admin',
-        role: index === 0 ? 'ADMIN' : 'COBROS',
-        createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-        isActive: Math.random() > 0.2
-      }))
-
-      // Apply search filter
-      let filteredUsers = adminUsers
-      if (search && search.trim()) {
-        const searchLower = search.toLowerCase()
-        filteredUsers = adminUsers.filter(user =>
-          user.fullName.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower)
-        )
-      }
-
       return {
-        data: filteredUsers,
-        total: Math.max(filteredUsers.length, 8), // Simulate having more users
-        page: page,
-        limit: limit,
-        pages: Math.ceil(Math.max(filteredUsers.length, 8) / limit)
+        data: users,
+        total: pagination.total,
+        page: pagination.page,
+        limit: pagination.limit,
+        pages: pagination.pages
       }
     } catch (error) {
       console.error('Error fetching admin users:', error)
@@ -235,29 +200,49 @@ export default function SettingsPage() {
     }
 
     try {
-      // Simulate API call for user creation/update
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      setIsSaving(true)
       if (selectedUser) {
+        // Update user
+        await adminApi.updateAdminUser(selectedUser.id, {
+          fullName: userForm.fullName,
+          role: userForm.role
+        })
+
+        // Update password if provided
+        if (userForm.password) {
+          await adminApi.changeAdminPassword(selectedUser.id, userForm.password)
+        }
+
         toast.success('Usuario actualizado exitosamente')
       } else {
+        // Create user
+        if (!userForm.password) {
+          toast.error('La contraseña es requerida para nuevos usuarios')
+          return
+        }
+        await adminApi.createAdminUser({
+          fullName: userForm.fullName,
+          email: userForm.email,
+          password: userForm.password,
+          role: userForm.role
+        })
         toast.success('Usuario creado exitosamente')
       }
       
       setIsUserModalOpen(false)
-      // Refresh users list
       usersPagination.refresh()
-    } catch (error) {
-      toast.error('Error al guardar el usuario')
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al guardar el usuario')
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+  const handleToggleUserStatus = async (userId: string, currentStatus: 'active' | 'inactive') => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      toast.success(`Usuario ${currentStatus ? 'desactivado' : 'activado'} exitosamente`)
-      // Refresh users list  
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+      await adminApi.updateAdminUser(userId, { status: newStatus })
+      toast.success(`Usuario ${newStatus === 'inactive' ? 'desactivado' : 'activado'} exitosamente`)
       usersPagination.refresh()
     } catch (error) {
       toast.error('Error al cambiar el estado del usuario')
@@ -511,17 +496,17 @@ export default function SettingsPage() {
                         </td>
                         <td className="py-4 px-4 md:px-6">
                           <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${
-                            user.isActive 
+                            user.status === 'active' 
                               ? 'text-accent-green bg-accent-green/20 border-accent-green/30' 
                               : 'text-accent-red bg-accent-red/20 border-accent-red/30'
                           }`}>
-                            {user.isActive ? 'Activo' : 'Inactivo'}
+                            {user.status === 'active' ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
                         <td className="py-4 px-4 md:px-6">
                           <div className="flex items-center space-x-2">
                             <Button
-                              variant="ghost"
+                              variant="glass"
                               size="sm"
                               onClick={() => handleEditUser(user)}
                               className="glass-button min-h-[44px] min-w-[44px]"
@@ -529,16 +514,16 @@ export default function SettingsPage() {
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
-                              variant="ghost"
+                              variant="glass"
                               size="sm"
-                              onClick={() => handleToggleUserStatus(user.id, user.isActive)}
+                              onClick={() => handleToggleUserStatus(user.id, user.status)}
                               className={`glass-button min-h-[44px] min-w-[44px] ${
-                                user.isActive 
+                                user.status === 'active' 
                                   ? 'text-accent-red hover:text-accent-red hover:bg-accent-red/20'
                                   : 'text-accent-green hover:text-accent-green hover:bg-accent-green/20'
                               }`}
                             >
-                              {user.isActive ? <X className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                              {user.status === 'active' ? <X className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                             </Button>
                           </div>
                         </td>
@@ -559,8 +544,8 @@ export default function SettingsPage() {
                 endIndex={usersPagination.endIndex}
                 hasNextPage={usersPagination.hasNextPage}
                 hasPreviousPage={usersPagination.hasPreviousPage}
-                onPageChange={usersPagination.setPage}
-                onLimitChange={usersPagination.setLimit}
+                onPageChange={usersPagination.goToPage}
+                onLimitChange={usersPagination.changeLimit}
               />
             </CardFooter>
           </Card>
@@ -769,19 +754,19 @@ export default function SettingsPage() {
             placeholder="email@empresa.com"
           />
 
-          <div>
             <label className="block text-sm font-medium text-text-primary mb-2">
               Rol
             </label>
             <select
               value={userForm.role}
-              onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value as 'ADMIN' | 'COBROS' }))}
+              onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value }))}
               className="glass-input w-full min-h-[44px] px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
             >
-              <option value="COBROS">Cobros</option>
-              <option value="ADMIN">Administrador</option>
+              <option value="agent">Agente (Cobros)</option>
+              <option value="company_admin">Admin de Empresa</option>
+              <option value="tenant_admin">Dueño de Empresa (Tenant Admin)</option>
+              <option value="superadmin">Superadmin (Plataforma)</option>
             </select>
-          </div>
 
           <Input
             label={selectedUser ? 'Nueva Contraseña (opcional)' : 'Contraseña'}

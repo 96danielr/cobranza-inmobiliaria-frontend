@@ -5,13 +5,14 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: dark;
   /* Glassmorphism Color Palette */
   --color-dark-primary: #0f0f1a;
   --color-dark-secondary: #1a1a2e;
   --color-dark-accent: #16213e;
   
-  --color-glass-primary: rgba(255, 255, 255, 0.08);
-  --color-glass-secondary: rgba(255, 255, 255, 0.12);
+  --color-glass-primary: rgba(15, 23, 42, 0.6);
+  --color-glass-secondary: rgba(15, 23, 42, 0.8);
   --color-glass-border: rgba(255, 255, 255, 0.15);
   --color-glass-border-hover: rgba(255, 255, 255, 0.25);
   
@@ -152,16 +153,18 @@
 @layer components {
   /* Glass Card Base */
   .glass-card {
-    @apply backdrop-blur-glass border border-glass-border rounded-2xl shadow-glass;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    @apply backdrop-blur-glass border border-glass-border rounded-2xl;
+    background-color: rgba(15, 15, 26, 0.7) !important;
+    box-shadow: var(--shadow-glass);
     transition: all 0.2s cubic-bezier(0, 0, 0.2, 1);
     position: relative;
     z-index: 20;
   }
 
   .glass-card:hover {
-    @apply border-glass-border-hover shadow-glass-hover;
-    background-color: rgba(255, 255, 255, 0.12) !important;
+    @apply border-glass-border-hover;
+    background-color: rgba(15, 15, 26, 0.8) !important;
+    box-shadow: var(--shadow-glass-hover);
     transform: translateY(-2px);
   }
 
@@ -169,11 +172,11 @@
   .glass-button {
     @apply backdrop-blur-glass border border-glass-border rounded-xl px-4 py-2 text-text-primary;
     @apply transition-all duration-200 hover:border-glass-border-hover;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
   }
   
   .glass-button:hover {
-    background-color: rgba(255, 255, 255, 0.12) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
 
   /* Glass Input */
@@ -182,20 +185,22 @@
     @apply text-text-primary placeholder-text-muted;
     @apply focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20;
     @apply transition-all duration-200;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: rgba(0, 0, 0, 0.2) !important;
   }
   
   .glass-input:focus {
-    background-color: rgba(255, 255, 255, 0.12) !important;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-color: var(--color-accent-blue) !important;
   }
 
   /* Override any white/light backgrounds */
-  input, select, textarea {
-    @apply text-text-primary;
+  input, select, textarea, option {
+    background-color: var(--color-dark-secondary);
+    color: var(--color-text-primary);
   }
   
   input::placeholder, select::placeholder, textarea::placeholder {
-    @apply text-text-muted;
+    color: var(--color-text-muted);
   }
 
   /* Gradient Text */

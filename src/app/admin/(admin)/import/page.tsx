@@ -231,13 +231,26 @@ export default function ImportPage() {
     }
   }
 
-  const downloadTemplate = () => {
-    // In a real app, this would download an actual Excel template
-    toast.success('Descargando plantilla Excel...')
-    // Simulate download delay
-    setTimeout(() => {
-      toast.success('Plantilla descargada correctamente')
-    }, 1000)
+  const downloadTemplate = async () => {
+    try {
+      toast.loading('Generando plantilla...', { id: 'download-template-toast' })
+      const response = await adminApi.downloadTemplate()
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'plantilla-importacion-cobranza.xlsx')
+      document.body.appendChild(link)
+      link.click()
+      
+      link.parentNode?.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Plantilla descargada correctamente', { id: 'download-template-toast' })
+    } catch (error) {
+      console.error('Error al descargar plantilla:', error)
+      toast.error('Error al descargar la plantilla', { id: 'download-template-toast' })
+    }
   }
 
   const handleExportData = async () => {
@@ -267,14 +280,14 @@ export default function ImportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Importar Datos</h1>
           <p className="text-text-secondary mt-2">
             Importa clientes, lotes, contratos y pagos desde archivos Excel o CSV
           </p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 md:mt-0 mt-4">
           <Button variant="outline" onClick={downloadTemplate} className="glass-button">
             <Download className="w-4 h-4 mr-2" />
             Descargar Plantilla

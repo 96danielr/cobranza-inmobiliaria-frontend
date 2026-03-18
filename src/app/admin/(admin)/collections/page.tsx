@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   MessageSquare,
   Phone,
@@ -137,7 +137,7 @@ export default function CollectionsPage() {
   })
 
   // Fetch activities with pagination
-  const fetchCollectionActivities = async (page: number, limit: number, search?: string) => {
+  const fetchCollectionActivities = useCallback(async (page: number, limit: number, search?: string) => {
     try {
       // First load dashboard data for stats
       if (page === 1) {
@@ -187,7 +187,7 @@ export default function CollectionsPage() {
       let filteredActivities = activities
       if (search && search.trim()) {
         const searchLower = search.toLowerCase()
-        filteredActivities = activities.filter(activity =>
+        filteredActivities = activities.filter((activity: any) =>
           activity.clientName.toLowerCase().includes(searchLower) ||
           activity.cedula.includes(search) ||
           activity.phone.includes(search)
@@ -205,11 +205,10 @@ export default function CollectionsPage() {
       console.error('Error fetching collection activities:', error)
       throw error
     }
-  }
+  }, [typeFilter, statusFilter])
 
   const pagination = useServerPagination({
     fetchData: fetchCollectionActivities,
-    dependencies: [typeFilter, statusFilter],
     initialLimit: 15
   })
 
@@ -538,7 +537,7 @@ export default function CollectionsPage() {
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
                           <Button
-                            variant="ghost"
+                            variant="glass"
                             size="sm"
                             onClick={() => handleViewActivity(activity)}
                             className="glass-button min-h-[44px] min-w-[44px]"
@@ -547,7 +546,7 @@ export default function CollectionsPage() {
                           </Button>
                           {activity.type === 'AI_CALL' && activity.status === 'FALLIDO' && (
                             <Button
-                              variant="ghost"
+                              variant="glass"
                               size="sm"
                               className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
                             >
@@ -578,11 +577,11 @@ export default function CollectionsPage() {
                   <p className="text-sm text-text-muted">Crea una nueva campaña para comenzar</p>
                   {(pagination.search || typeFilter !== 'ALL' || statusFilter !== 'ALL') && (
                     <Button 
-                      variant="ghost" 
+                      variant="glass" 
                       onClick={() => { 
                         pagination.handleSearch('')
-                        setTypeFilter('ALL')
                         setStatusFilter('ALL')
+                        setTypeFilter('ALL')
                       }}
                       className="glass-button"
                     >
@@ -616,8 +615,8 @@ export default function CollectionsPage() {
                 endIndex={pagination.endIndex}
                 hasNextPage={pagination.hasNextPage}
                 hasPreviousPage={pagination.hasPreviousPage}
-                onPageChange={pagination.setPage}
-                onLimitChange={pagination.setLimit}
+                onPageChange={pagination.goToPage}
+                onLimitChange={pagination.changeLimit}
               />
             </div>
           </div>

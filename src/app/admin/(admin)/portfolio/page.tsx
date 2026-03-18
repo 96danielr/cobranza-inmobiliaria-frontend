@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { 
+import { useState, useEffect, useCallback } from 'react'
+import {
   Search,
   Filter,
   Download,
@@ -147,22 +147,22 @@ export default function PortfolioPage() {
   const [modalLoading, setModalLoading] = useState(false)
 
   // Server-side pagination for portfolio
-  const fetchPortfolio = async (page: number, limit: number, search?: string) => {
+  const fetchPortfolio = useCallback(async (page: number, limit: number, search?: string) => {
     // Load dashboard data for stats
     const dashboardResponse = await adminApi.getDashboardSummary()
     if (dashboardResponse.data.success) {
       setDashboardData(dashboardResponse.data.data)
     }
-    
+
     // Load clients data and convert to portfolio format
     const clientsResponse = await adminApi.getClients(page, limit)
-    
+
     if (!clientsResponse.data.success) {
       throw new Error('Error loading portfolio data')
     }
 
     let clients = clientsResponse.data.data.clients
-    
+
     // Apply behavior filter
     if (behaviorFilter !== 'ALL') {
       clients = clients.filter(client => client.behaviorTag === behaviorFilter)
@@ -202,12 +202,11 @@ export default function PortfolioPage() {
       limit: clientsResponse.data.data.pagination.limit,
       pages: clientsResponse.data.data.pagination.pages
     }
-  }
+  }, [behaviorFilter])
 
   const pagination = useServerPagination({
     initialLimit: 15,
     fetchData: fetchPortfolio,
-    dependencies: [isAuthenticated, behaviorFilter, moraFilter]
   })
 
 
@@ -266,7 +265,7 @@ export default function PortfolioPage() {
         <div>
           <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de Cartera</h1>
           <p className="text-text-secondary mt-2">
-            {dashboardData ? 
+            {dashboardData ?
               `${dashboardData.mora.totalContratosActivos} contratos activos - $${(dashboardData.cartera.valorTotalCartera / 1000000000).toFixed(1)}B en cartera total` :
               'Administra y supervisa toda la cartera de clientes y contratos'
             }
@@ -282,30 +281,21 @@ export default function PortfolioPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
-        {pagination.loading ? (
-          <>
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-            <StatsCardSkeleton />
-          </>
-        ) : (
-          <>
-            <Card variant="elevated">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
-                    <DollarSign className="w-6 h-6 text-accent-blue" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-text-secondary font-medium">Valor Total Cartera</p>
-                    <p className="text-responsive-lg font-bold text-text-primary">
-                      {formatCurrency(totalValuePortfolio)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <Card variant="elevated">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
+                <DollarSign className="w-6 h-6 text-accent-blue" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-text-secondary font-medium">Valor Total Cartera</p>
+                <p className="text-responsive-lg font-bold text-text-primary">
+                  {formatCurrency(totalValuePortfolio)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card variant="elevated">
           <CardContent className="p-4 md:p-6">
@@ -333,7 +323,7 @@ export default function PortfolioPage() {
                 <p className="text-sm text-text-secondary font-medium">Clientes al Día</p>
                 <p className="text-responsive-xl font-bold text-text-primary">{clientsAlDia}</p>
                 <p className="text-xs text-accent-green">
-                  {((clientsAlDia / totalClients) * 100).toFixed(1)}%
+                  {totalClients > 0 ? ((clientsAlDia / totalClients) * 100).toFixed(1) : 0}%
                 </p>
               </div>
             </div>
@@ -350,14 +340,12 @@ export default function PortfolioPage() {
                 <p className="text-sm text-text-secondary font-medium">Clientes en Mora</p>
                 <p className="text-responsive-xl font-bold text-text-primary">{clientsEnMora}</p>
                 <p className="text-xs text-accent-red">
-                  {((clientsEnMora / totalClients) * 100).toFixed(1)}%
+                  {totalClients > 0 ? ((clientsEnMora / totalClients) * 100).toFixed(1) : 0}%
                 </p>
               </div>
             </div>
           </CardContent>
-            </Card>
-          </>
-        )}
+        </Card>
       </div>
 
       {/* Filters */}
@@ -404,7 +392,7 @@ export default function PortfolioPage() {
       </Card>
 
       {/* Portfolio List - Hybrid View (Table for Desktop, Cards for Mobile) */}
-      
+
       {/* Portfolio List - Hybrid View with Independent Scroll */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Fixed Header */}
@@ -441,22 +429,18 @@ export default function PortfolioPage() {
           <div className="hidden lg:block">
             <table className="w-full">
               <tbody>
-                {pagination.loading ? (
-                  Array.from({ length: 8 }).map((_, index) => (
-                    <TableRowSkeleton key={index} columns={9} />
-                  ))
-                  ) : pagination.total === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="py-12 text-center text-text-muted">
-                        <div className="flex flex-col items-center space-y-3">
-                          <Users className="w-12 h-12 text-text-disabled" />
-                          <p className="text-lg font-medium">No hay clientes en el portafolio</p>
-                          <p className="text-sm">Agrega clientes para comenzar a gestionar tu portafolio</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    pagination.data.map((client) => (
+                {pagination.total === 0 && !pagination.loading ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-text-muted">
+                      <div className="flex flex-col items-center space-y-3">
+                        <Users className="w-12 h-12 text-text-disabled" />
+                        <p className="text-lg font-medium">No hay clientes en el portafolio</p>
+                        <p className="text-sm">Agrega clientes para comenzar a gestionar tu portafolio</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  pagination.data.map((client) => (
                     <tr key={client.clientId} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
                       <td className="py-4 px-4 md:px-6">
                         <div>
@@ -511,7 +495,7 @@ export default function PortfolioPage() {
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
                           <Button
-                            variant="ghost"
+                            variant="glass"
                             size="sm"
                             onClick={() => handleViewClient(client)}
                             className="glass-button min-h-[44px] min-w-[44px]"
@@ -519,14 +503,14 @@ export default function PortfolioPage() {
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="glass"
                             size="sm"
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
                           >
                             <MessageSquare className="w-4 h-4" />
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="glass"
                             size="sm"
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
                           >
@@ -535,29 +519,24 @@ export default function PortfolioPage() {
                         </div>
                       </td>
                     </tr>
-                    ))
-                  )}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Mobile Cards View */}
           <div className="lg:hidden p-4 space-y-4">
-            {pagination.loading ? (
-              // Loading skeletons for cards
-              Array.from({ length: 6 }).map((_, index) => (
-                <PortfolioCardSkeleton key={`card-skeleton-${index}`} />
-              ))
-            ) : pagination.total === 0 ? (
+            {pagination.total === 0 && !pagination.loading ? (
               <div className="py-8 text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <Users className="w-12 h-12 text-text-disabled" />
                   <p className="text-lg font-medium text-text-secondary">No hay clientes en el portafolio</p>
                   <p className="text-sm text-text-muted">Agrega clientes para comenzar a gestionar tu portafolio</p>
                   {(pagination.search || behaviorFilter !== 'ALL') && (
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => { 
+                    <Button
+                      variant="glass"
+                      onClick={() => {
                         pagination.handleSearch('')
                         setBehaviorFilter('ALL')
                       }}
@@ -683,7 +662,7 @@ export default function PortfolioPage() {
                         {getMoraText(contract.diasMora)}
                       </span>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
                       <div>
                         <p className="text-xs text-text-secondary">Valor Total</p>
@@ -706,8 +685,8 @@ export default function PortfolioPage() {
                       <div>
                         <p className="text-xs text-text-secondary">Próximo Vencimiento</p>
                         <p className="font-medium text-text-primary">
-                          {contract.proximoVencimiento ? 
-                            dayjs(contract.proximoVencimiento).format('DD/MM/YYYY') : 
+                          {contract.proximoVencimiento ?
+                            dayjs(contract.proximoVencimiento).format('DD/MM/YYYY') :
                             'N/A'
                           }
                         </p>

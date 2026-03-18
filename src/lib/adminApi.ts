@@ -1,13 +1,20 @@
 import { apiAdmin } from './api'
+import { useAdminAuthStore } from '@/stores/adminAuthStore'
+
+// Helper to get the selected companyId from the store
+const getCompanyId = (): string => {
+  return useAdminAuthStore.getState().selectedCompanyId || ''
+}
 
 // Admin API methods
 export const adminApi = {
-  // Clients
+  // Clients (company-scoped)
   getClients: (page: number = 1, limit: number = 10, search?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...(search && { search })
+      companyId: getCompanyId(),
+      ...(search && { search }),
     })
     return apiAdmin.get(`/clients?${params.toString()}`)
   },
@@ -15,9 +22,9 @@ export const adminApi = {
   getClient: (id: string) =>
     apiAdmin.get(`/clients/${id}`),
 
-  // Dashboard
+  // Dashboard (company-scoped)
   getDashboardSummary: () =>
-    apiAdmin.get('/dashboard/summary'),
+    apiAdmin.get(`/dashboard/summary?companyId=${getCompanyId()}`),
 
   getRankingMorosos: () =>
     apiAdmin.get('/dashboard/ranking-morosos'),
@@ -30,14 +37,15 @@ export const adminApi = {
 
   // Portfolio (use dashboard summary for now)
   getPortfolio: () =>
-    apiAdmin.get('/dashboard/summary'),
+    apiAdmin.get(`/dashboard/summary?companyId=${getCompanyId()}`),
 
-  // Payments
+  // Payments (company-scoped)
   getPayments: (page: number = 1, limit: number = 10, search?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...(search && { search })
+      companyId: getCompanyId(),
+      ...(search && { search }),
     })
     return apiAdmin.get(`/payments/all?${params.toString()}`)
   },
@@ -45,7 +53,8 @@ export const adminApi = {
   getPendingPayments: (page: number = 1, limit: number = 10) => {
     const params = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
+      companyId: getCompanyId(),
     })
     return apiAdmin.get(`/payments/pending?${params.toString()}`)
   },
@@ -56,28 +65,30 @@ export const adminApi = {
   rejectPayment: (id: string, observacion: string) =>
     apiAdmin.put(`/payments/${id}/reject`, { observacion }),
 
-  // Contracts
+  // Contracts (company-scoped)
   getContracts: (page: number = 1, limit: number = 10, search?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...(search && { search })
+      companyId: getCompanyId(),
+      ...(search && { search }),
     })
     return apiAdmin.get(`/contracts?${params.toString()}`)
   },
 
-  // Lots
+  // Lots (company-scoped)
   getLots: (page: number = 1, limit: number = 10, search?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...(search && { search })
+      companyId: getCompanyId(),
+      ...(search && { search }),
     })
     return apiAdmin.get(`/lots?${params.toString()}`)
   },
 
   createLot: (data: any) =>
-    apiAdmin.post('/lots', data),
+    apiAdmin.post('/lots', { ...data, companyId: getCompanyId() }),
 
   updateLot: (id: string, data: any) =>
     apiAdmin.put(`/lots/${id}`, data),
@@ -85,17 +96,66 @@ export const adminApi = {
   deleteLot: (id: string) =>
     apiAdmin.delete(`/lots/${id}`),
 
-  // Excel Import
-  uploadExcel: (formData: FormData) =>
-    apiAdmin.post('/import/excel', formData, {
+  // Excel Import (company-scoped)
+  uploadExcel: (formData: FormData) => {
+    const companyId = getCompanyId()
+    formData.append('companyId', companyId)
+    return apiAdmin.post(`/import/excel?companyId=${companyId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-      }
-    }),
+      },
+    })
+  },
 
-  // Excel Export
+  // Excel Export (company-scoped)
   exportExcel: () =>
-    apiAdmin.get('/import/export', {
+    apiAdmin.get(`/import/export?companyId=${getCompanyId()}`, {
       responseType: 'blob',
     }),
+    
+  // Excel Template
+  downloadTemplate: () =>
+    apiAdmin.get('/import/template', {
+      responseType: 'blob',
+    }),
+
+  // User Management (tenant_admin only)
+  getAdminUsers: (page: number = 1, limit: number = 10, search?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      companyId: getCompanyId(),
+      ...(search && { search }),
+    })
+    return apiAdmin.get(`/admin-users/all?${params.toString()}`)
+  },
+
+  createAdminUser: (data: any) =>
+    apiAdmin.post('/admin-users/create', { ...data, companyId: getCompanyId() }),
+
+  updateAdminUser: (id: string, data: any) =>
+    apiAdmin.put(`/admin-users/update/${id}`, { ...data, companyId: getCompanyId() }),
+
+  changeAdminPassword: (id: string, password: string) =>
+    apiAdmin.put(`/admin-users/change-password/${id}`, { password, companyId: getCompanyId() }),
+
+  deleteAdminUser: (id: string) =>
+    apiAdmin.delete(`/admin-users/delete/${id}?companyId=${getCompanyId()}`),
+
+  // Companies (tenant-scoped)
+  getCompanies: () =>
+    apiAdmin.get('/companies'),
+
+  createCompany: (data: any) =>
+    apiAdmin.post('/companies', data),
+
+  updateCompany: (id: string, data: any) =>
+    apiAdmin.put(`/companies/${id}`, data),
+
+  deleteCompany: (id: string) =>
+    apiAdmin.delete(`/companies/${id}`),
+
+  // Tenants (superadmin only)
+  createTenantWithAdmin: (data: any) =>
+    apiAdmin.post('/tenants/create-with-admin', data),
 }

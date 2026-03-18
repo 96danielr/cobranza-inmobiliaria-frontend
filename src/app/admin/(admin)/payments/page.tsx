@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   Check, 
   X, 
@@ -67,7 +67,7 @@ export default function PaymentsPage() {
   const [modalLoading, setModalLoading] = useState(false)
 
   // Server-side pagination for payments
-  const fetchPayments = async (page: number, limit: number, search?: string) => {
+  const fetchPayments = useCallback(async (page: number, limit: number, search?: string) => {
     const response = await adminApi.getPayments(page, limit)
     
     if (!response.data.success) {
@@ -98,12 +98,11 @@ export default function PaymentsPage() {
       limit: response.data.data.pagination.limit,
       pages: response.data.data.pagination.pages
     }
-  }
+  }, [statusFilter])
 
   const pagination = useServerPagination({
     initialLimit: 20,
     fetchData: fetchPayments,
-    dependencies: [isAuthenticated, statusFilter]
   })
 
 
@@ -374,7 +373,7 @@ export default function PaymentsPage() {
                           </p>
                           {(pagination.search || statusFilter !== 'ALL') && (
                             <Button 
-                              variant="ghost" 
+                              variant="glass" 
                               onClick={() => { 
                                 pagination.handleSearch('')
                                 setStatusFilter('ALL')
@@ -431,7 +430,7 @@ export default function PaymentsPage() {
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
                           <Button
-                            variant="ghost"
+                            variant="glass"
                             size="sm"
                             onClick={() => handleViewPayment(payment)}
                             className="glass-button min-h-[44px] min-w-[44px]"
@@ -441,7 +440,7 @@ export default function PaymentsPage() {
                           {payment.status === 'PENDIENTE' && (
                             <>
                               <Button
-                                variant="ghost"
+                                variant="glass"
                                 size="sm"
                                 className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
                                 onClick={() => handleViewPayment(payment)}
@@ -449,7 +448,7 @@ export default function PaymentsPage() {
                                 <Check className="w-4 h-4" />
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="glass"
                                 size="sm"
                                 className="glass-button min-h-[44px] min-w-[44px] text-accent-red hover:text-accent-red hover:bg-accent-red/20"
                                 onClick={() => handleViewPayment(payment)}
@@ -486,7 +485,7 @@ export default function PaymentsPage() {
                   </p>
                   {(pagination.search || statusFilter !== 'ALL') && (
                     <Button 
-                      variant="ghost" 
+                      variant="glass" 
                       onClick={() => { 
                         pagination.handleSearch('')
                         setStatusFilter('ALL')
@@ -610,7 +609,7 @@ export default function PaymentsPage() {
                     <FileText className="w-6 h-6 text-text-muted mr-2" />
                     <span className="text-text-secondary">Comprobante de pago</span>
                   </div>
-                  <Button variant="ghost" size="sm" className="glass-button">
+                  <Button variant="glass" size="sm" className="glass-button">
                     <Download className="w-4 h-4 mr-2" />
                     Descargar
                   </Button>

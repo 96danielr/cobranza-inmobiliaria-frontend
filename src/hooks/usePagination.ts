@@ -41,7 +41,10 @@ export function useServerPagination({
       setData(result.data)
       setTotal(result.total)
       setPages(result.pages)
-      setPage(result.page)
+      // Solo actualizamos la página si realmente cambia, para evitar renders innecesarios
+      if (result.page !== page) {
+        setPage(result.page)
+      }
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading data')

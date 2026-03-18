@@ -6,9 +6,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, Building2, Shield } from 'lucide-react'
+import { Eye, EyeOff, Building2, Shield, ChevronRight } from 'lucide-react'
 
-import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useAdminAuthStore, TenantMembership } from '@/stores/adminAuthStore'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -19,7 +19,7 @@ const adminLoginSchema = z.object({
     .min(1, 'Email requerido'),
   password: z.string()
     .min(6, 'La contraseña debe tener mínimo 6 caracteres')
-    .min(1, 'Contraseña requerida')
+    .min(1, 'Contraseña requerida'),
 })
 
 type AdminLoginFormData = z.infer<typeof adminLoginSchema>
@@ -27,15 +27,23 @@ type AdminLoginFormData = z.infer<typeof adminLoginSchema>
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
-  const { login, isAuthenticated, isLoading } = useAdminAuthStore()
+  const { 
+    login, 
+    selectTenant,
+    isAuthenticated, 
+    isLoading,
+    requiresTenantSelection,
+    pendingAccountId,
+    pendingMemberships,
+  } = useAdminAuthStore()
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch
+    watch,
   } = useForm<AdminLoginFormData>({
-    resolver: zodResolver(adminLoginSchema)
+    resolver: zodResolver(adminLoginSchema),
   })
 
   const emailValue = watch('email', '')
@@ -43,23 +51,93 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/admin/dashboard')
+      router.push('/admin/select-company')
     }
   }, [isAuthenticated, router])
 
   const onSubmit = async (data: AdminLoginFormData) => {
     const result = await login(data.email, data.password)
     
-    if (result.success) {
-      toast.success('¡Bienvenido al panel administrativo!')
-      router.push('/admin/dashboard')
+    if (result.success && !result.requiresTenantSelection) {
+      toast.success('¡Bienvenido al panel!')
+      router.push('/admin/select-company')
+    } else if (result.success && result.requiresTenantSelection) {
+      toast('Selecciona tu equipo de trabajo', { icon: '🏢' })
     } else {
       toast.error(result.message || 'Error de autenticación')
     }
   }
 
+  const handleSelectTenant = async (membership: TenantMembership) => {
+    if (!pendingAccountId) return
+
+    const result = await selectTenant(pendingAccountId, membership.tenantId)
+
+    if (result.success) {
+      toast.success(`¡Bienvenido a ${membership.tenantName}!`)
+      router.push('/admin/select-company')
+    } else {
+      toast.error(result.message || 'Error al seleccionar equipo')
+    }
+  }
+
   if (isAuthenticated) {
-    return null // Will redirect
+    return null
+  }
+
+  // Tenant selection view
+  if (requiresTenantSelection && pendingMemberships.length > 0) {
+    return (
+      <div className="min-h-screen bg-dark-primary flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent-purple/15 via-transparent to-accent-blue/15" />
+        
+        <div className="relative w-full max-w-md animate-fade-in-up">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-24 h-24 glass-card mb-6 shadow-glow border-accent-blue/30">
+              <Building2 className="w-12 h-12 text-accent-blue" />
+            </div>
+            <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
+              <span className="gradient-text">Seleccionar Equipo</span>
+            </h1>
+            <p className="text-text-secondary text-responsive-base">
+              Tienes acceso a múltiples equipos. Selecciona uno para continuar.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {pendingMemberships.map((membership) => (
+              <Card
+                key={membership.tenantId}
+                variant="default"
+                className="cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+                onClick={() => handleSelectTenant(membership)}
+              >
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Building2 className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary">
+                        {membership.tenantName}
+                      </h3>
+                      <p className="text-sm text-text-muted capitalize">
+                        {membership.role.replace('_', ' ')} · {membership.plan}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-text-muted" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center text-sm text-text-muted">
+            © 2024 Sistema de Cobranza Inmobiliaria
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -90,18 +168,16 @@ export default function AdminLoginPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Email Input */}
               <div>
                 <Input
                   label="Correo Electrónico"
                   type="email"
-                  placeholder="admin@inmobiliaria.com"
+                  placeholder="admin@empresa.com"
                   {...register('email')}
                   error={errors.email?.message}
                 />
               </div>
 
-              {/* Password Input */}
               <div>
                 <div className="relative">
                   <Input
@@ -115,14 +191,13 @@ export default function AdminLoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-glass-secondary transition-all duration-300 flex items-center justify-center"
-                    style={{marginTop: '12px'}}
+                    style={{ marginTop: '12px' }}
                   >
                     {showPassword ? <EyeOff size={16} className="text-text-secondary" /> : <Eye size={16} className="text-text-secondary" />}
                   </button>
                 </div>
               </div>
 
-              {/* Submit Button */}
               <Button
                 type="submit"
                 variant="primary"
@@ -136,7 +211,6 @@ export default function AdminLoginPage() {
               </Button>
             </form>
 
-            {/* Help Text */}
             <div className="mt-8 text-center">
               <p className="text-sm text-text-muted">
                 Solo personal autorizado puede acceder al panel administrativo
@@ -145,7 +219,6 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
         <div className="mt-8 text-center text-sm text-text-muted">
           © 2024 Sistema de Cobranza Inmobiliaria - Panel Administrativo
         </div>

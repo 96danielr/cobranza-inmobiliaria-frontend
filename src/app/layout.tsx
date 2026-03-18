@@ -8,7 +8,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Portal Cliente - Cobranza Inmobiliaria',
   description: 'Portal del cliente para gestión de pagos y contratos inmobiliarios',
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({

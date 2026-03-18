@@ -84,7 +84,7 @@ export function ClientCard({ client, onView }: ClientCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center mb-1">
               <User className="w-4 h-4 text-text-secondary mr-2 flex-shrink-0" />
-              <h3 className="font-semibold text-text-primary truncate">
+              <h3 className="font-semibold text-text-primary">
                 {client.name}
               </h3>
             </div>
