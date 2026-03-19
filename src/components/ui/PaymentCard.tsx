@@ -29,7 +29,7 @@ interface PaymentCardProps {
     fechaPago: string
     comprobante?: string | null
     createdAt: string
-    status: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO'
+    status: 'PENDIENTE' | 'PAGADO' | 'MORA'
     observacion?: string
     contract: {
       client: {
@@ -78,13 +78,13 @@ export function PaymentCard({
           icon: <Clock className="w-3 h-3" />,
           bgColor: 'bg-accent-yellow/5'
         }
-      case 'APROBADO':
+      case 'PAGADO':
         return {
           color: 'text-accent-green bg-accent-green/20 border-accent-green/30',
           icon: <CheckCircle className="w-3 h-3" />,
           bgColor: 'bg-accent-green/5'
         }
-      case 'RECHAZADO':
+      case 'MORA':
         return {
           color: 'text-accent-red bg-accent-red/20 border-accent-red/30',
           icon: <AlertCircle className="w-3 h-3" />,
@@ -111,64 +111,34 @@ export function PaymentCard({
       )}
     >
       <CardContent className="p-4">
-        {/* Header - Client and Status */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center mb-1">
-              <User className="w-4 h-4 text-text-secondary mr-2 flex-shrink-0" />
-              <h3 className="font-semibold text-text-primary truncate">
-                {payment.contract.client.fullName}
-              </h3>
+        {/* Ultra-Compact Layout */}
+        <div className="flex justify-between items-start gap-4">
+          <div className="min-w-0 flex-1">
+            {/* Line 1: Name (up to 2 lines if needed) */}
+            <h3 className="font-bold text-text-primary text-sm line-clamp-2 leading-tight mb-1">
+              {payment.contract.client.fullName}
+            </h3>
+            
+            {/* Line 2: Critical Info consolidated */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-text-muted">
+              <span className="font-bold text-accent-blue">#{payment.cuotaNumber}</span>
+              <span className="w-1 h-1 rounded-full bg-glass-border/40" />
+              <span className="truncate">{payment.contract.lot.project.name}</span>
+              <span className="w-1 h-1 rounded-full bg-glass-border/40" />
+              <span>{dayjs(payment.fechaPago).format('D MMM')}</span>
             </div>
-            <p className="text-sm text-text-muted">
-              C.C. {payment.contract.client.cedula}
-            </p>
           </div>
-          <div className="flex flex-col items-end gap-2">
+
+          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+            <p className="text-sm font-bold text-text-primary whitespace-nowrap">
+              {formatCurrency(payment.amount)}
+            </p>
             <span className={cn(
-              'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border backdrop-blur-sm',
+              'px-1.5 py-0.5 rounded text-[9px] font-bold border whitespace-nowrap tracking-wider uppercase',
               statusConfig.color
             )}>
-              {statusConfig.icon}
-              <span className="ml-1">{payment.status}</span>
+              {payment.status}
             </span>
-          </div>
-        </div>
-
-        {/* Amount and Project - Prominent Display */}
-        <div className="bg-glass-primary/20 rounded-lg p-3 mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center">
-              <CreditCard className="w-4 h-4 text-accent-blue mr-2" />
-              <span className="text-sm text-text-secondary">Cuota #{payment.cuotaNumber}</span>
-            </div>
-            <div className="text-right">
-              <p className="text-lg font-bold text-text-primary">
-                {formatCurrency(payment.amount)}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center">
-            <Building2 className="w-4 h-4 text-text-muted mr-2" />
-            <span className="text-sm text-text-secondary">
-              {payment.contract.lot.project.name}
-            </span>
-          </div>
-          <p className="text-xs text-text-muted mt-1">
-            Mz {payment.contract.lot.manzana} - #{payment.contract.lot.nomenclatura}
-          </p>
-        </div>
-
-        {/* Quick Info Row */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div className="flex items-center">
-            <Calendar className="w-3 h-3 text-text-muted mr-2" />
-            <span className="text-sm text-text-secondary">
-              {dayjs(payment.fechaPago).format('DD/MM/YYYY')}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="text-sm text-text-secondary">{payment.banco}</span>
           </div>
         </div>
 
@@ -191,7 +161,7 @@ export function PaymentCard({
         <div className="flex items-center justify-between pt-3 border-t border-glass-border">
           {/* Toggle Details */}
           <Button
-            variant="ghost"
+            variant="glass"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
             className="glass-button text-text-muted hover:text-text-primary min-h-[44px] px-3"
@@ -208,7 +178,7 @@ export function PaymentCard({
           {/* Main Actions */}
           <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="glass"
               size="sm"
               onClick={() => onView(payment)}
               className="glass-button min-h-[44px] min-w-[44px] hover:shadow-glow"
@@ -220,7 +190,7 @@ export function PaymentCard({
             {payment.status === 'PENDIENTE' && (
               <>
                 <Button
-                  variant="ghost"
+                  variant="glass"
                   size="sm"
                   onClick={() => onReject?.(payment.id)}
                   disabled={isProcessing}
@@ -230,7 +200,7 @@ export function PaymentCard({
                   <X className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="glass"
                   size="sm"
                   onClick={() => onApprove?.(payment.id)}
                   disabled={isProcessing}

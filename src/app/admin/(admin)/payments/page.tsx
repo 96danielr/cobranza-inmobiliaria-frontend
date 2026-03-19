@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { 
   Check, 
   X, 
@@ -38,7 +38,7 @@ interface PendingPayment {
   fechaPago: string
   comprobante?: string | null
   createdAt: string
-  status: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO'
+  status: 'PENDIENTE' | 'PAGADO' | 'MORA'
   observacion?: string
   contract: {
     client: {
@@ -61,49 +61,38 @@ export default function PaymentsPage() {
   const { isAuthenticated } = useAdminAuthStore()
   const [selectedPayment, setSelectedPayment] = useState<PendingPayment | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDIENTE' | 'APROBADO' | 'RECHAZADO'>('ALL')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDIENTE' | 'PAGADO' | 'MORA'>('ALL')
   const [isProcessing, setIsProcessing] = useState(false)
   const [observacion, setObservacion] = useState('')
   const [modalLoading, setModalLoading] = useState(false)
 
-  // Server-side pagination for payments
+  // Fetch payments with server-side pagination — same pattern as Clients page
   const fetchPayments = useCallback(async (page: number, limit: number, search?: string) => {
-    const response = await adminApi.getPayments(page, limit)
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Error loading payments')
-    }
+    try {
+      const response = await adminApi.getPayments(page, limit, search, statusFilter)
+      if (!response.data.success) {
+        throw new Error('Error loading payments')
+      }
 
-    let payments = response.data.data.payments || []
-    
-    // Apply status filter
-    if (statusFilter !== 'ALL') {
-      payments = payments.filter(payment => payment.status === statusFilter)
-    }
-
-    // Apply search filter
-    if (search && search.trim()) {
-      const searchLower = search.toLowerCase()
-      payments = payments.filter(payment =>
-        payment.contract.client.fullName.toLowerCase().includes(searchLower) ||
-        payment.contract.client.cedula.includes(search) ||
-        payment.contract.lot.project.name.toLowerCase().includes(searchLower)
-      )
-    }
-
-    return {
-      data: payments,
-      total: response.data.data.pagination.total,
-      page: response.data.data.pagination.page,
-      limit: response.data.data.pagination.limit,
-      pages: response.data.data.pagination.pages
+      return {
+        data: response.data.data.payments || [],
+        total: response.data.data.pagination.total,
+        page: response.data.data.pagination.page,
+        limit: response.data.data.pagination.limit,
+        pages: response.data.data.pagination.pages
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error)
+      throw error
     }
   }, [statusFilter])
 
   const pagination = useServerPagination({
-    initialLimit: 20,
     fetchData: fetchPayments,
+    initialLimit: 20
   })
+
+  const refresh = () => pagination.refresh()
 
 
   const formatCurrency = (value: string | number) => {
@@ -127,9 +116,9 @@ export default function PaymentsPage() {
       await adminApi.approvePayment(paymentId)
       
       // Refresh the current page
-      pagination.refresh()
+      refresh()
       
-      toast.success('Pago aprobado exitosamente')
+      toast.success('Cuota marcada como pagada')
       setIsModalOpen(false)
       setSelectedPayment(null)
       setObservacion('')
@@ -152,9 +141,9 @@ export default function PaymentsPage() {
       await adminApi.rejectPayment(paymentId, observacion)
       
       // Refresh the current page
-      pagination.refresh()
+      refresh()
       
-      toast.success('Pago rechazado')
+      toast.success('Cuota revertida a pendiente')
       setIsModalOpen(false)
       setSelectedPayment(null)
       setObservacion('')
@@ -170,9 +159,9 @@ export default function PaymentsPage() {
     switch (status) {
       case 'PENDIENTE':
         return 'text-accent-yellow bg-accent-yellow/20 border-accent-yellow/30'
-      case 'APROBADO':
+      case 'PAGADO':
         return 'text-accent-green bg-accent-green/20 border-accent-green/30'
-      case 'RECHAZADO':
+      case 'MORA':
         return 'text-accent-red bg-accent-red/20 border-accent-red/30'
       default:
         return 'text-text-muted bg-glass-primary/20 border-glass-border'
@@ -183,19 +172,22 @@ export default function PaymentsPage() {
     switch (status) {
       case 'PENDIENTE':
         return <Clock className="w-4 h-4" />
-      case 'APROBADO':
+      case 'PAGADO':
         return <CheckCircle className="w-4 h-4" />
-      case 'RECHAZADO':
+      case 'MORA':
         return <AlertCircle className="w-4 h-4" />
       default:
         return <Clock className="w-4 h-4" />
     }
   }
 
-  // Calculate stats from current page data
-  const pendingCount = pagination.data.filter(p => p.status === 'PENDIENTE').length
-  const approvedCount = pagination.data.filter(p => p.status === 'APROBADO').length 
-  const rejectedCount = pagination.data.filter(p => p.status === 'RECHAZADO').length
+  const { pendingCount, paidCount, overdueCount } = useMemo(() => {
+    return {
+      pendingCount: pagination.data.filter((p: PendingPayment) => p.status === 'PENDIENTE').length,
+      paidCount: pagination.data.filter((p: PendingPayment) => p.status === 'PAGADO').length,
+      overdueCount: pagination.data.filter((p: PendingPayment) => p.status === 'MORA').length
+    }
+  }, [pagination.data])
 
 
   return (
@@ -206,12 +198,12 @@ export default function PaymentsPage() {
           <h1 className="text-responsive-2xl font-bold text-text-primary">Aprobación de Pagos</h1>
           <p className="text-text-secondary mt-2">
             Revisa y aprueba los comprobantes de pago reportados por los clientes 
-            {!pagination.loading && `(${pagination.total.toLocaleString('es-CO')} pagos total)`}
+            {!pagination.loading && `(${pagination.total.toLocaleString('es-CO')} cuotas total)`}
           </p>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - RE-ENABLED */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
         {pagination.loading ? (
           <>
@@ -242,8 +234,8 @@ export default function PaymentsPage() {
                     <CheckCircle className="w-6 h-6 text-accent-green" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-text-secondary font-medium">Aprobados</p>
-                    <p className="text-responsive-xl font-bold text-text-primary">{approvedCount}</p>
+                    <p className="text-sm text-text-secondary font-medium">Pagados</p>
+                    <p className="text-responsive-xl font-bold text-text-primary">{paidCount}</p>
                   </div>
                 </div>
               </CardContent>
@@ -256,8 +248,8 @@ export default function PaymentsPage() {
                     <AlertCircle className="w-6 h-6 text-accent-red" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-text-secondary font-medium">Rechazados</p>
-                    <p className="text-responsive-xl font-bold text-text-primary">{rejectedCount}</p>
+                    <p className="text-sm text-text-secondary font-medium">En Mora</p>
+                    <p className="text-responsive-xl font-bold text-text-primary">{overdueCount}</p>
                   </div>
                 </div>
               </CardContent>
@@ -287,232 +279,118 @@ export default function PaymentsPage() {
               >
                 <option value="ALL">Todos los estados</option>
                 <option value="PENDIENTE">Pendientes</option>
-                <option value="APROBADO">Aprobados</option>
-                <option value="RECHAZADO">Rechazados</option>
+                <option value="PAGADO">Pagados</option>
+                <option value="MORA">En Mora</option>
               </select>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Payments List - Hybrid View with Independent Scroll */}
+      {/* Payments List - Partial recovery for testing */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Fixed Header */}
         <div className="flex-shrink-0 border-b border-glass-border">
-          <div className="hidden lg:block">
-            {/* Desktop Table Header */}
-            <div className="bg-glass-primary/30 backdrop-blur-glass">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Cliente</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Lote</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Cuota</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Monto</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Banco</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Fecha</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Estado</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Acciones</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
-          <div className="lg:hidden p-4">
-            <h3 className="font-medium text-text-primary">Lista de Pagos</h3>
-            <p className="text-sm text-text-secondary">{pagination.total} pagos encontrados</p>
-          </div>
-        </div>
-
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px]">
-          {/* Desktop Table Body */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:block bg-glass-primary/30 backdrop-blur-glass">
             <table className="w-full">
-              <tbody>
-                  {pagination.loading ? (
-                    // Loading skeletons for table
-                    Array.from({ length: 8 }).map((_, index) => (
-                      <tr key={`skeleton-${index}`} className="border-b border-glass-border">
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <TableRowSkeleton />
-                        </td>
-                      </tr>
-                    ))
-                  ) : pagination.data.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="py-8 px-4 md:px-6 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-3">
-                          <FileText className="w-12 h-12 text-text-muted opacity-50" />
-                          <p className="text-text-secondary">
-                            {pagination.total === 0 
-                              ? 'No hay pagos registrados en el sistema' 
-                              : 'No se encontraron pagos con los filtros aplicados'
-                            }
-                          </p>
-                          {(pagination.search || statusFilter !== 'ALL') && (
-                            <Button 
-                              variant="glass" 
-                              onClick={() => { 
-                                pagination.handleSearch('')
-                                setStatusFilter('ALL')
-                              }}
-                              className="glass-button"
-                            >
-                              Limpiar filtros
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    pagination.data.map((payment) => (
-                    <tr key={payment.id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
-                      <td className="py-4 px-4 md:px-6">
-                        <div>
-                          <p className="font-medium text-text-primary">{payment.contract.client.fullName}</p>
-                          <p className="text-sm text-text-muted">{payment.contract.client.cedula}</p>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 md:px-6">
-                        <div>
-                          <p className="font-medium text-text-primary">
-                            {payment.contract.lot.project.name}
-                          </p>
-                          <p className="text-sm text-text-muted">
-                            Mz {payment.contract.lot.manzana} - #{payment.contract.lot.nomenclatura}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 md:px-6">
-                        <span className="text-text-primary font-medium">#{payment.cuotaNumber}</span>
-                      </td>
-                      <td className="py-4 px-4 md:px-6">
-                        <span className="text-text-primary font-medium">
-                          {formatCurrency(payment.amount)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 md:px-6">
-                        <span className="text-text-secondary">{payment.banco}</span>
-                      </td>
-                      <td className="py-4 px-4 md:px-6">
-                        <span className="text-text-secondary">
-                          {dayjs(payment.fechaPago).format('DD/MM/YYYY')}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 md:px-6">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getStatusColor(payment.status)}`}>
-                          {getStatusIcon(payment.status)}
-                          <span className="ml-1">{payment.status}</span>
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 md:px-6">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            onClick={() => handleViewPayment(payment)}
-                            className="glass-button min-h-[44px] min-w-[44px]"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          {payment.status === 'PENDIENTE' && (
-                            <>
-                              <Button
-                                variant="glass"
-                                size="sm"
-                                className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
-                                onClick={() => handleViewPayment(payment)}
-                              >
-                                <Check className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="glass"
-                                size="sm"
-                                className="glass-button min-h-[44px] min-w-[44px] text-accent-red hover:text-accent-red hover:bg-accent-red/20"
-                                onClick={() => handleViewPayment(payment)}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                    ))
-                  )}
-              </tbody>
+              <thead>
+                <tr>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Cliente</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Proyecto/Lote</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary"># Cuota</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Monto</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Banco</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Fecha</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Estado</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Acciones</th>
+                </tr>
+              </thead>
             </table>
           </div>
+        </div>
 
-          {/* Mobile Cards View */}
-          <div className="lg:hidden p-4 space-y-4">
-            {pagination.loading ? (
-              // Loading skeletons for cards
-              Array.from({ length: 6 }).map((_, index) => (
-                <PaymentCardSkeleton key={`card-skeleton-${index}`} />
-              ))
-            ) : pagination.data.length === 0 ? (
-              <div className="py-8 text-center">
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <FileText className="w-12 h-12 text-text-muted opacity-50" />
-                  <p className="text-text-secondary">
-                    {pagination.total === 0 
-                      ? 'No hay pagos registrados en el sistema' 
-                      : 'No se encontraron pagos con los filtros aplicados'
-                    }
-                  </p>
-                  {(pagination.search || statusFilter !== 'ALL') && (
-                    <Button 
-                      variant="glass" 
-                      onClick={() => { 
-                        pagination.handleSearch('')
-                        setStatusFilter('ALL')
-                      }}
-                      className="glass-button"
-                    >
-                      Limpiar filtros
-                    </Button>
-                  )}
-                </div>
-              </div>
-        ) : (
-          pagination.data.map((payment) => (
-            <PaymentCard
-              key={payment.id}
-              payment={payment}
-              onView={handleViewPayment}
-              onApprove={handleApprovePayment}
-              onReject={() => handleViewPayment(payment)} // Opens modal for reject with observation
-              isProcessing={isProcessing}
-            />
-          ))
+        <div className="flex-1 overflow-y-auto min-h-[400px]">
+          <table className="hidden lg:table w-full">
+            <tbody>
+              {pagination.loading ? (
+                <tr><td colSpan={8} className="text-center py-4 text-text-muted">Cargando cuotas...</td></tr>
+              ) : pagination.data.map((payment: PendingPayment) => (
+                <tr key={payment.id} className="border-b border-glass-border hover:bg-glass-primary/10 transition-colors">
+                  <td className="py-4 px-6">
+                    <p className="text-text-primary font-medium">{payment.contract?.client?.fullName || 'N/A'}</p>
+                    <p className="text-xs text-text-muted">{payment.contract?.client?.cedula}</p>
+                  </td>
+                  <td className="py-4 px-6 text-sm">
+                    <p className="text-text-primary font-medium">{payment.contract?.lot?.project?.name || '---'}</p>
+                    <p className="text-xs text-text-muted">Mz {payment.contract?.lot?.manzana || '-'} Lote {payment.contract?.lot?.nomenclatura || '-'}</p>
+                  </td>
+                  <td className="py-4 px-6 text-text-primary font-medium">#{payment.cuotaNumber}</td>
+                  <td className="py-4 px-6 text-text-primary font-medium">{formatCurrency(payment.amount)}</td>
+                  <td className="py-4 px-6 text-text-secondary text-sm">{payment.banco}</td>
+                  <td className="py-4 px-6 text-text-secondary text-sm">{dayjs(payment.fechaPago).format('DD/MM/YYYY')}</td>
+                  <td className="py-4 px-6">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border backdrop-blur-sm ${getStatusColor(payment.status)}`}>
+                      {payment.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center space-x-2">
+                      <Button variant="glass" size="sm" onClick={() => handleViewPayment(payment)} className="glass-button">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      {payment.status === 'PENDIENTE' && (
+                        <>
+                          <Button 
+                            variant="glass" 
+                            size="sm" 
+                            className="glass-button text-accent-green hover:bg-accent-green/20"
+                            onClick={() => handleApprovePayment(payment.id)}
+                            disabled={isProcessing}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="glass" 
+                            size="sm" 
+                            className="glass-button text-accent-red hover:bg-accent-red/20"
+                            onClick={() => handleViewPayment(payment)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!pagination.loading && pagination.data.length === 0 && (
+            <p className="text-center py-10 text-text-muted">No se encontraron resultados</p>
           )}
+
+          <div className="lg:hidden p-4 space-y-4">
+            <p className="text-sm text-text-secondary mb-2">{pagination.total} cuotas encontradas</p>
+            {pagination.loading ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <PaymentCardSkeleton key={`skeleton-${index}`} />
+              ))
+            ) : (
+              pagination.data.map((payment: PendingPayment) => (
+                <PaymentCard
+                  key={payment.id}
+                  payment={payment}
+                  onView={handleViewPayment}
+                  onApprove={handleApprovePayment}
+                  onReject={() => handleViewPayment(payment)}
+                  isProcessing={isProcessing}
+                />
+              ))
+            )}
           </div>
         </div>
 
-        {/* Fixed Footer with Pagination */}
+        {/* Pagination Controls */}
         {!pagination.loading && pagination.pages > 1 && (
           <div className="flex-shrink-0 border-t border-glass-border">
             <div className="px-4 py-3">

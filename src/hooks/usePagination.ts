@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 
 // Server-side pagination hook
 export interface UseServerPaginationProps {
@@ -31,34 +31,41 @@ export function useServerPagination({
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
-  const loadData = async (pageToLoad = page, searchTerm = search) => {
+  // Stable reference to fetchData to avoid re-renders if it's not memoized
+  const fetchRef = useRef(fetchData)
+  useEffect(() => {
+    fetchRef.current = fetchData
+  }, [fetchData])
+
+  const loadData = useCallback(async (pageToLoad = page, searchTerm = search) => {
     try {
       setLoading(true)
       setError(null)
-      
-      const result = await fetchData(pageToLoad, limit, searchTerm)
+      const result = await fetchRef.current(pageToLoad, limit, searchTerm)
       
       setData(result.data)
       setTotal(result.total)
       setPages(result.pages)
-      // Solo actualizamos la página si realmente cambia, para evitar renders innecesarios
-      if (result.page !== page) {
+      
+      // Sync local page if server returned a different one
+      if (result.page !== pageToLoad) {
         setPage(result.page)
       }
-      
     } catch (err) {
+      console.error('Pagination Error:', err)
       setError(err instanceof Error ? err.message : 'Error loading data')
       setData([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [limit, page, search])
 
-  // Load data when dependencies change
+  // Load data when core state or external dependencies change
   useEffect(() => {
     loadData()
   }, [page, limit, search, ...dependencies])
 
+  // Actions
   const goToPage = (newPage: number) => {
     if (newPage >= 1 && newPage <= pages) {
       setPage(newPage)
@@ -66,56 +73,43 @@ export function useServerPagination({
   }
 
   const goToNextPage = () => {
-    if (page < pages) {
-      setPage(page + 1)
-    }
+    if (page < pages) setPage(page + 1)
   }
 
   const goToPreviousPage = () => {
-    if (page > 1) {
-      setPage(page - 1)
-    }
+    if (page > 1) setPage(page - 1)
   }
 
   const changeLimit = (newLimit: number) => {
     setLimit(newLimit)
-    setPage(1) // Reset to first page when changing limit
+    setPage(1)
   }
 
   const handleSearch = (searchTerm: string) => {
     setSearch(searchTerm)
-    setPage(1) // Reset to first page when searching
+    setPage(1)
   }
 
-  const refresh = () => {
-    loadData()
-  }
+  const refresh = () => loadData()
 
   return {
-    // Data
     data,
     loading,
     error,
-    
-    // Pagination state
     page,
     limit,
     total,
     pages,
     search,
-    
-    // Actions
     goToPage,
     goToNextPage,
     goToPreviousPage,
     changeLimit,
     handleSearch,
     refresh,
-    
-    // Computed values
     hasNextPage: page < pages,
     hasPreviousPage: page > 1,
-    startIndex: (page - 1) * limit + 1,
+    startIndex: total === 0 ? 0 : (page - 1) * limit + 1,
     endIndex: Math.min(page * limit, total),
   }
 }
@@ -141,6 +135,7 @@ export function useClientPagination<T>({
     
     return data.filter(item => {
       const searchStr = search.toLowerCase()
+      // Deep search in object
       return JSON.stringify(item).toLowerCase().includes(searchStr)
     })
   }, [data, search])
@@ -155,21 +150,7 @@ export function useClientPagination<T>({
   const pages = Math.ceil(total / limit)
 
   const goToPage = (newPage: number) => {
-    if (newPage >= 1 && newPage <= pages) {
-      setPage(newPage)
-    }
-  }
-
-  const goToNextPage = () => {
-    if (page < pages) {
-      setPage(page + 1)
-    }
-  }
-
-  const goToPreviousPage = () => {
-    if (page > 1) {
-      setPage(page - 1)
-    }
+    if (newPage >= 1 && newPage <= pages) setPage(newPage)
   }
 
   const changeLimit = (newLimit: number) => {
@@ -182,7 +163,7 @@ export function useClientPagination<T>({
     setPage(1)
   }
 
-  // Reset page when data changes
+  // Reset page if it exceeds bounds after data change
   useEffect(() => {
     if (page > pages && pages > 0) {
       setPage(1)
@@ -190,28 +171,19 @@ export function useClientPagination<T>({
   }, [data, page, pages])
 
   return {
-    // Data
     data: paginatedData,
     allData: filteredData,
-    
-    // Pagination state
     page,
     limit,
     total,
     pages,
     search,
-    
-    // Actions
     goToPage,
-    goToNextPage,
-    goToPreviousPage,
     changeLimit,
     handleSearch,
-    
-    // Computed values
     hasNextPage: page < pages,
     hasPreviousPage: page > 1,
-    startIndex: (page - 1) * limit + 1,
+    startIndex: total === 0 ? 0 : (page - 1) * limit + 1,
     endIndex: Math.min(page * limit, total),
   }
-}
+}

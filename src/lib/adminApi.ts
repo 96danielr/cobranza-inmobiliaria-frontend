@@ -40,12 +40,13 @@ export const adminApi = {
     apiAdmin.get(`/dashboard/summary?companyId=${getCompanyId()}`),
 
   // Payments (company-scoped)
-  getPayments: (page: number = 1, limit: number = 10, search?: string) => {
+  getPayments: (page: number = 1, limit: number = 10, search?: string, status?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       companyId: getCompanyId(),
       ...(search && { search }),
+      ...(status && status !== 'ALL' && { status }),
     })
     return apiAdmin.get(`/payments/all?${params.toString()}`)
   },
@@ -60,10 +61,10 @@ export const adminApi = {
   },
 
   approvePayment: (id: string) =>
-    apiAdmin.put(`/payments/${id}/approve`),
+    apiAdmin.put(`/payments/${id}/approve?companyId=${getCompanyId()}`),
 
   rejectPayment: (id: string, observacion: string) =>
-    apiAdmin.put(`/payments/${id}/reject`, { observacion }),
+    apiAdmin.put(`/payments/${id}/reject?companyId=${getCompanyId()}`, { observacion }),
 
   // Contracts (company-scoped)
   getContracts: (page: number = 1, limit: number = 10, search?: string) => {
