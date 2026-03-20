@@ -21,6 +21,7 @@ interface NavItem {
   href: string
   shortLabel: string
   roles: ('tenant_admin' | 'company_admin' | 'agent')[]
+  module?: string
 }
 
 const bottomNavItems: NavItem[] = [
@@ -57,7 +58,8 @@ const bottomNavItems: NavItem[] = [
     label: 'Cobranzas', 
     href: '/admin/collections',
     shortLabel: 'Cobranzas',
-    roles: ['tenant_admin', 'company_admin']
+    roles: ['tenant_admin', 'company_admin'],
+    module: 'cobranzas'
   }
 ]
 
@@ -80,7 +82,12 @@ export function BottomNavigation() {
       {/* Navigation items */}
       <div className="relative flex items-center justify-around py-2">
         {bottomNavItems
-          .filter(item => item.roles.includes(admin?.role as any))
+          .filter(item => {
+            const hasRole = item.roles.includes(admin?.role as any)
+            if (!hasRole) return false
+            if (item.module && !admin?.activeModules?.includes(item.module)) return false
+            return true
+          })
           .map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)

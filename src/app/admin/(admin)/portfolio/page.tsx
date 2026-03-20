@@ -165,34 +165,34 @@ export default function PortfolioPage() {
 
     // Apply behavior filter
     if (behaviorFilter !== 'ALL') {
-      clients = clients.filter(client => client.behaviorTag === behaviorFilter)
+      clients = clients.filter((client: any) => (client.behavior || client.behaviorTag) === behaviorFilter)
     }
 
     // Apply search filter
     if (search && search.trim()) {
       const searchLower = search.toLowerCase()
-      clients = clients.filter(client =>
-        client.fullName.toLowerCase().includes(searchLower) ||
-        client.cedula.includes(search) ||
-        client.email?.toLowerCase().includes(searchLower)
+      clients = clients.filter((client: any) =>
+        (client.name || client.fullName || '').toLowerCase().includes(searchLower) ||
+        (client.idNumber || client.cedula || '').includes(search) ||
+        (client.email || '').toLowerCase().includes(searchLower)
       )
     }
 
     // Convert to portfolio format
-    const portfolioData = clients.map(client => ({
-      clientId: client.id,
-      clientName: client.fullName,
-      cedula: client.cedula,
+    const portfolioData = clients.map((client: any) => ({
+      clientId: client._id || client.id,
+      clientName: client.name || client.fullName,
+      cedula: client.idNumber || client.cedula,
       phone: client.phone,
       totalContracts: client._count?.contracts || 0,
-      totalValue: client._count?.contracts ? client._count.contracts * 45000000 : 0, // Estimated based on contracts
-      totalPaid: client._count?.contracts ? client._count.contracts * 22500000 : 0, // 50% paid estimate
+      totalValue: client._count?.contracts ? client._count.contracts * 45000000 : 0, 
+      totalPaid: client._count?.contracts ? client._count.contracts * 22500000 : 0, 
       totalPending: client._count?.contracts ? client._count.contracts * 22500000 : 0,
-      averageRecaudo: client.behaviorTag === 'DISPUESTO' ? 85 : client.behaviorTag === 'INDECISO' ? 50 : 25,
-      behaviorTag: client.behaviorTag || 'INDECISO',
-      daysInArrears: client.behaviorTag === 'EVASIVO' ? Math.floor(Math.random() * 60) + 30 : Math.floor(Math.random() * 15),
+      averageRecaudo: client.behavior === 'DISPUESTO' ? 85 : client.behavior === 'INDECISO' ? 50 : 25,
+      behaviorTag: client.behavior || 'INDECISO',
+      daysInArrears: client.behavior === 'EVASIVO' ? Math.floor(Math.random() * 60) + 30 : Math.floor(Math.random() * 15),
       lastContact: dayjs().subtract(Math.floor(Math.random() * 30), 'days').format('YYYY-MM-DD'),
-      contracts: [] // Would need separate API call for detailed contracts
+      contracts: [] 
     }))
 
     return {
@@ -429,7 +429,11 @@ export default function PortfolioPage() {
           <div className="hidden lg:block">
             <table className="w-full">
               <tbody>
-                {pagination.total === 0 && !pagination.loading ? (
+                {pagination.loading ? (
+                  Array.from({ length: 8 }).map((_, index) => (
+                    <TableRowSkeleton key={`portfolio-skeleton-${index}`} columns={9} />
+                  ))
+                ) : pagination.total === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-12 text-center text-text-muted">
                       <div className="flex flex-col items-center space-y-3">
@@ -572,8 +576,8 @@ export default function PortfolioPage() {
                 endIndex={pagination.endIndex}
                 hasNextPage={pagination.hasNextPage}
                 hasPreviousPage={pagination.hasPreviousPage}
-                onPageChange={pagination.setPage}
-                onLimitChange={pagination.setLimit}
+                onPageChange={pagination.goToPage}
+                onLimitChange={pagination.changeLimit}
               />
             </div>
           </div>

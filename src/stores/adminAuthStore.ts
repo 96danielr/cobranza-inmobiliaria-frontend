@@ -21,6 +21,10 @@ export interface AdminUser {
   role: 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent'
   tenantId: string
   tenantName: string
+  plan: 'basic' | 'premium' | 'enterprise'
+  activeModules: string[]
+  subscriptionStart?: string
+  subscriptionEnd?: string
 }
 
 interface AdminAuthState {
@@ -34,11 +38,12 @@ interface AdminAuthState {
   requiresTenantSelection: boolean
   // Selected company
   selectedCompanyId: string | null
+  selectedCompanyName: string | null
   companies: CompanyAccess[]
   // Actions
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string; requiresTenantSelection?: boolean }>
   selectTenant: (accountId: string, tenantId: string) => Promise<{ success: boolean; message?: string }>
-  setSelectedCompany: (companyId: string) => void
+  setSelectedCompany: (companyId: string, companyName: string) => void
   logout: () => void
   setLoading: (loading: boolean) => void
 }
@@ -54,6 +59,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       pendingMemberships: [],
       requiresTenantSelection: false,
       selectedCompanyId: null,
+      selectedCompanyName: null,
       companies: [],
 
       login: async (email: string, password: string) => {
@@ -152,8 +158,8 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         }
       },
 
-      setSelectedCompany: (companyId: string) => {
-        set({ selectedCompanyId: companyId })
+      setSelectedCompany: (companyId: string, companyName: string) => {
+        set({ selectedCompanyId: companyId, selectedCompanyName: companyName })
       },
 
       logout: () => {
@@ -166,6 +172,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           pendingMemberships: [],
           requiresTenantSelection: false,
           selectedCompanyId: null,
+          selectedCompanyName: null,
           companies: [],
         })
         
@@ -185,6 +192,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         admin: state.admin,
         isAuthenticated: state.isAuthenticated,
         selectedCompanyId: state.selectedCompanyId,
+        selectedCompanyName: state.selectedCompanyName,
         companies: state.companies,
       }),
     }

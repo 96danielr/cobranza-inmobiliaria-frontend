@@ -14,7 +14,8 @@ import {
   X,
   LogOut,
   Building2,
-  ChevronRight
+  ChevronRight,
+  Shield,
 } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
@@ -26,18 +27,19 @@ interface NavItem {
   label: string
   href: string
   roles: Role[]
+  module?: string
 }
 
 const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', roles: ['tenant_admin', 'company_admin', 'agent'] },
+  { icon: Building2, label: 'Empresas', href: '/admin/select-company', roles: ['tenant_admin'] },
   { icon: CreditCard, label: 'Pagos', href: '/admin/payments', roles: ['tenant_admin', 'company_admin', 'agent'] },
   { icon: Users, label: 'Cartera', href: '/admin/portfolio', roles: ['tenant_admin', 'company_admin', 'agent'] },
   { icon: Users, label: 'Clientes', href: '/admin/clients', roles: ['tenant_admin', 'company_admin', 'agent'] },
   { icon: Building2, label: 'Lotes', href: '/admin/lots', roles: ['tenant_admin', 'company_admin'] },
-  { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', roles: ['tenant_admin', 'company_admin'] },
+  { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', roles: ['tenant_admin', 'company_admin'], module: 'cobranzas' },
   { icon: Upload, label: 'Importar', href: '/admin/import', roles: ['tenant_admin', 'company_admin'] },
-  { icon: Building2, label: 'Empresas', href: '/admin/select-company', roles: ['tenant_admin'] },
-  { icon: Users, label: 'Usuarios', href: '/admin/users', roles: ['tenant_admin'] },
+  { icon: Shield, label: 'Equipo', href: '/admin/users', roles: ['tenant_admin'] },
   { icon: Settings, label: 'Configuración', href: '/admin/settings', roles: ['tenant_admin'] },
 ]
 
@@ -53,7 +55,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { isAuthenticated, admin, logout, selectedCompanyId } = useAdminAuthStore()
+  const { isAuthenticated, admin, logout, selectedCompanyId, selectedCompanyName } = useAdminAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -110,7 +112,7 @@ export default function AdminLayout({
       {/* Enhanced Mobile Header */}
       <MobileHeader 
         title={currentPageInfo.title}
-        subtitle={currentPageInfo.subtitle}
+        subtitle={selectedCompanyName || currentPageInfo.subtitle}
         onMenuToggle={() => setIsSidebarOpen(true)}
         isMenuOpen={isSidebarOpen}
       />
@@ -134,10 +136,10 @@ export default function AdminLayout({
                 </div>
                 <div className="ml-3">
                   <h2 className="text-lg font-semibold text-text-primary">
-                    {admin?.tenantName || 'Admin Panel'}
+                    {selectedCompanyName || admin?.tenantName || 'Admin Panel'}
                   </h2>
                   <p className="text-sm text-text-secondary">
-                    {roleLabels[userRole]}
+                    {admin?.tenantName && selectedCompanyName ? admin.tenantName : roleLabels[userRole]}
                   </p>
                 </div>
               </div>
@@ -155,7 +157,12 @@ export default function AdminLayout({
             <nav className="flex-1 px-4 py-6">
               <div className="space-y-2">
                 {navItems
-                  .filter((item) => item.roles.includes(userRole))
+                  .filter((item) => {
+                    const hasRole = item.roles.includes(userRole)
+                    if (!hasRole) return false
+                    if (item.module && !admin?.activeModules?.includes(item.module)) return false
+                    return true
+                  })
                   .map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href || 
@@ -235,10 +242,10 @@ export default function AdminLayout({
 
         {/* Main Content Area */}
         <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-          {/* Desktop Header */}
-          <header className="admin-header flex-shrink-0 hidden lg:block">
-            <div className="flex items-center justify-between px-4 py-4">
-              <nav className="overflow-hidden">
+          <header className="admin-header flex-shrink-0 hidden lg:block relative">
+            <div className="flex items-center justify-between px-6 py-4">
+              {/* Left Side: Breadcrumbs */}
+              <nav className="overflow-hidden min-w-0">
                 <div className="flex items-center space-x-1 sm:space-x-2 text-sm">
                   {getBreadcrumbs().map((crumb, index) => (
                     <div key={crumb.href} className="flex items-center flex-shrink-0">
@@ -258,17 +265,28 @@ export default function AdminLayout({
                 </div>
               </nav>
 
-              <div className="flex items-center space-x-3">
+              {/* Center: Company Name (Absolutely Centered) */}
+              {selectedCompanyName && (
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center bg-accent-blue/10 px-6 py-2.5 rounded-2xl border border-accent-blue/20 shadow-lg shadow-accent-blue/5">
+                  <Building2 className="w-5 h-5 text-accent-blue mr-3" />
+                  <span className="text-sm font-black text-accent-blue tracking-wide uppercase">
+                    {selectedCompanyName}
+                  </span>
+                </div>
+              )}
+                
+              {/* Right Side: User Profile */}
+              <div className="flex items-center space-x-3 border-l border-glass-border pl-6 ml-4 flex-shrink-0">
                 <div className="text-right min-w-0">
-                  <p className="text-sm font-medium text-text-primary truncate">
+                  <p className="text-sm font-semibold text-text-primary truncate">
                     {admin?.fullName || 'Admin User'}
                   </p>
                   <p className="text-xs text-text-secondary truncate">
                     {admin?.email}
                   </p>
                 </div>
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-glow flex-shrink-0">
-                  <span className="text-xs sm:text-sm font-medium text-white">
+                <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-glow flex-shrink-0">
+                  <span className="text-sm font-bold text-white">
                     {admin?.fullName?.charAt(0)?.toUpperCase() || 'A'}
                   </span>
                 </div>

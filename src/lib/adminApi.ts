@@ -97,6 +97,20 @@ export const adminApi = {
   deleteLot: (id: string) =>
     apiAdmin.delete(`/lots/${id}`),
 
+  uploadLotImages: (id: string, formData: FormData) =>
+    apiAdmin.post(`/lots/${id}/images`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  getLotsPublic: (companyId: string, search?: string) => {
+    const params = new URLSearchParams({
+      ...(search && { search }),
+    })
+    return apiAdmin.get(`/lots/catalog/${companyId}?${params.toString()}`)
+  },
+
   // Excel Import (company-scoped)
   uploadExcel: (formData: FormData) => {
     const companyId = getCompanyId()
@@ -156,7 +170,16 @@ export const adminApi = {
   deleteCompany: (id: string) =>
     apiAdmin.delete(`/companies/${id}`),
 
+  getCompanyPublic: (id: string) =>
+    apiAdmin.get(`/companies/public/${id}`),
+
   // Tenants (superadmin only)
+  getAllTenants: () =>
+    apiAdmin.get('/tenants/all'),
+
   createTenantWithAdmin: (data: any) =>
     apiAdmin.post('/tenants/create-with-admin', data),
+
+  updateTenant: (id: string, data: any) =>
+    apiAdmin.put(`/tenants/${id}`, data),
 }
