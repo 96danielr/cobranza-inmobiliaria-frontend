@@ -46,6 +46,7 @@ interface CollectionActivity {
   createdAt: string
   montoAdeudado: number
   diasMora: number
+  behaviorTag?: 'DISPUESTO' | 'INDECISO' | 'EVASIVO'
 }
 
 interface CollectionTemplate {
@@ -159,10 +160,10 @@ export default function CollectionsPage() {
       
       // Apply filters (we'll simulate based on index for consistency)
       if (typeFilter !== 'ALL') {
-        payments = payments.filter((_, index) => index % 3 === 0) // Every 3rd item
+        payments = payments.filter((_: any, index: number) => index % 3 === 0) // Every 3rd item
       }
       if (statusFilter !== 'ALL') {
-        payments = payments.filter((_, index) => index % 2 === 0) // Every 2nd item
+        payments = payments.filter((_: any, index: number) => index % 2 === 0) // Every 2nd item
       }
 
       // Transform payments to collection activities
@@ -180,6 +181,7 @@ export default function CollectionsPage() {
         createdAt: dayjs().subtract((index % 35), 'days').toISOString(),
         montoAdeudado: payment.amount || ((index % 10) + 1) * 500000,
         diasMora: (index % 90),
+        behaviorTag: ['DISPUESTO', 'INDECISO', 'EVASIVO'][index % 3] as any,
         notes: index % 2 === 0 ? 'Gestión de cobranza realizada' : undefined
       }))
 

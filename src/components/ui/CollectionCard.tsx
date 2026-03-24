@@ -33,6 +33,7 @@ interface CollectionCardProps {
     createdAt: string
     montoAdeudado: number
     diasMora: number
+    behaviorTag?: 'DISPUESTO' | 'INDECISO' | 'EVASIVO'
     notes?: string
   }
   onView: (activity: any) => void
@@ -136,7 +137,7 @@ export function CollectionCard({ activity, onView }: CollectionCardProps) {
 
   const typeConfig = getTypeConfig(activity.type)
   const statusConfig = getStatusConfig(activity.status)
-  const behaviorConfig = getBehaviorConfig(activity.behaviorTag)
+  const behaviorConfig = getBehaviorConfig(activity.behaviorTag || '')
 
   return (
     <Card 
@@ -266,7 +267,7 @@ export function CollectionCard({ activity, onView }: CollectionCardProps) {
         <div className="flex items-center justify-between pt-3 border-t border-glass-border">
           {/* Toggle Details */}
           <Button
-            variant="ghost"
+            variant="glass"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
             className="glass-button text-text-muted hover:text-text-primary min-h-[44px] px-3"
@@ -283,7 +284,7 @@ export function CollectionCard({ activity, onView }: CollectionCardProps) {
           {/* Main Actions */}
           <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="glass"
               size="sm"
               onClick={() => onView(activity)}
               className="glass-button min-h-[44px] px-4 hover:shadow-glow"

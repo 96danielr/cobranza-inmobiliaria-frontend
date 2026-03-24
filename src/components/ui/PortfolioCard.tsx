@@ -218,7 +218,7 @@ export function PortfolioCard({ client, onView }: PortfolioCardProps) {
         <div className="flex items-center justify-between pt-3 border-t border-glass-border">
           {/* Toggle Details */}
           <Button
-            variant="ghost"
+            variant="glass"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
             className="glass-button text-text-muted hover:text-text-primary min-h-[44px] px-3"
@@ -235,7 +235,7 @@ export function PortfolioCard({ client, onView }: PortfolioCardProps) {
           {/* Main Actions */}
           <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="glass"
               size="sm"
               onClick={() => onView(client)}
               className="glass-button min-h-[44px] px-4 hover:shadow-glow"
