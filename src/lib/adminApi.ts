@@ -9,12 +9,14 @@ const getCompanyId = (): string => {
 // Admin API methods
 export const adminApi = {
   // Clients (company-scoped)
-  getClients: (page: number = 1, limit: number = 10, search?: string) => {
+  getClients: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       companyId: getCompanyId(),
       ...(search && { search }),
+      ...(sortBy && { sortBy }),
+      ...(order && { order }),
     })
     return apiAdmin.get(`/clients?${params.toString()}`)
   },
@@ -40,13 +42,15 @@ export const adminApi = {
     apiAdmin.get(`/dashboard/summary?companyId=${getCompanyId()}`),
 
   // Payments (company-scoped)
-  getPayments: (page: number = 1, limit: number = 10, search?: string, status?: string) => {
+  getPayments: (page: number = 1, limit: number = 10, search?: string, status?: string, sortBy?: string, order?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       companyId: getCompanyId(),
       ...(search && { search }),
       ...(status && status !== 'ALL' && { status }),
+      ...(sortBy && { sortBy }),
+      ...(order && { order }),
     })
     return apiAdmin.get(`/payments/all?${params.toString()}`)
   },
@@ -67,23 +71,27 @@ export const adminApi = {
     apiAdmin.put(`/payments/${id}/reject?companyId=${getCompanyId()}`, { observacion }),
 
   // Contracts (company-scoped)
-  getContracts: (page: number = 1, limit: number = 10, search?: string) => {
+  getContracts: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       companyId: getCompanyId(),
       ...(search && { search }),
+      ...(sortBy && { sortBy }),
+      ...(order && { order }),
     })
     return apiAdmin.get(`/contracts?${params.toString()}`)
   },
 
   // Lots (company-scoped)
-  getLots: (page: number = 1, limit: number = 10, search?: string) => {
+  getLots: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       companyId: getCompanyId(),
       ...(search && { search }),
+      ...(sortBy && { sortBy }),
+      ...(order && { order }),
     })
     return apiAdmin.get(`/lots?${params.toString()}`)
   },
@@ -135,12 +143,14 @@ export const adminApi = {
     }),
 
   // User Management (tenant_admin only)
-  getAdminUsers: (page: number = 1, limit: number = 10, search?: string) => {
+  getAdminUsers: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       companyId: getCompanyId(),
       ...(search && { search }),
+      ...(sortBy && { sortBy }),
+      ...(order && { order }),
     })
     return apiAdmin.get(`/admin-users/all?${params.toString()}`)
   },

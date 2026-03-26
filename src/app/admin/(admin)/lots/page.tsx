@@ -23,6 +23,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { SortHeader } from '@/components/ui/SortHeader'
 import { TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
@@ -58,9 +59,9 @@ export default function LotsPage() {
   })
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
-  const fetchLots = async (page: number, limit: number, search?: string) => {
+  const fetchLots = async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     try {
-      const response = await adminApi.getLots(page, limit, search)
+      const response = await adminApi.getLots(page, limit, search, sortBy, sortOrder)
       if (!response.data.success) {
         throw new Error('Error loading lots')
       }
@@ -270,14 +271,35 @@ export default function LotsPage() {
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px] relative">
           <div className="hidden lg:block">
-            <table className="w-full border-collapse">
-              <thead className="sticky top-0 z-10 bg-glass-primary backdrop-blur-glass shadow-sm">
-                <tr className="border-b border-glass-border">
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Lote</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Área</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Precio</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Imágenes</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary w-40">Acciones</th>
+            <table className="w-full border-separate border-spacing-0">
+              <thead>
+                <tr className="sticky top-0 z-20">
+                  <SortHeader 
+                    label="Lote" 
+                    field="lotNumber" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Área" 
+                    field="area" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Precio" 
+                    field="price" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Imágenes</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary w-40 bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Acciones</th>
                 </tr>
               </thead>
               <tbody>

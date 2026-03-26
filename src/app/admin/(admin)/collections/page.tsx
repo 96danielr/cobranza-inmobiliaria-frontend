@@ -21,6 +21,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { SortHeader } from '@/components/ui/SortHeader'
 import { StatsCardSkeleton, TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import { CollectionCard, CollectionCardSkeleton } from '@/components/ui/CollectionCard'
 import { PaginationControls } from '@/components/ui/Pagination'
@@ -138,7 +139,7 @@ export default function CollectionsPage() {
   })
 
   // Fetch activities with pagination
-  const fetchCollectionActivities = useCallback(async (page: number, limit: number, search?: string) => {
+  const fetchCollectionActivities = useCallback(async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     try {
       // First load dashboard data for stats
       if (page === 1) {
@@ -151,7 +152,7 @@ export default function CollectionsPage() {
       }
 
       // For now, we'll simulate collection activities using payment data
-      const response = await adminApi.getPayments(page, limit)
+      const response = await adminApi.getPayments(page, limit, search, 'ALL', sortBy, sortOrder)
       if (!response.data.success) {
         throw new Error('Error loading collection activities')
       }
@@ -439,25 +440,6 @@ export default function CollectionsPage() {
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Fixed Header */}
         <div className="flex-shrink-0 border-b border-glass-border">
-          <div className="hidden lg:block">
-            {/* Desktop Table Header */}
-            <div className="bg-glass-primary/30 backdrop-blur-glass">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Cliente</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Lote</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Tipo</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Estado</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Monto Adeudado</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Días Mora</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Fecha</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Acciones</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
           <div className="lg:hidden p-4">
             <h3 className="font-medium text-text-primary">Actividades de Cobranza</h3>
             <p className="text-sm text-text-secondary">{pagination.total} actividades encontradas</p>
@@ -468,7 +450,61 @@ export default function CollectionsPage() {
         <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px]">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
-            <table className="w-full">
+            <table className="w-full border-separate border-spacing-0">
+              <thead>
+                <tr className="sticky top-0 z-20">
+                  <SortHeader 
+                    label="Cliente" 
+                    field="client.name" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Lote" 
+                    field="lot.nomenclatura" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Tipo</th>
+                  <SortHeader 
+                    label="Estado" 
+                    field="status" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Monto Adeudado" 
+                    field="valorMora" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Días Mora" 
+                    field="diasMora" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Fecha" 
+                    field="createdAt" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Acciones</th>
+                </tr>
+              </thead>
               <tbody>
                 {pagination.loading ? (
                   Array.from({ length: 8 }).map((_, index) => (

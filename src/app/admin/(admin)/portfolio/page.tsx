@@ -21,6 +21,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { SortHeader } from '@/components/ui/SortHeader'
 import { StatsCardSkeleton, TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import { PortfolioCard, PortfolioCardSkeleton } from '@/components/ui/PortfolioCard'
 import { PaginationControls } from '@/components/ui/Pagination'
@@ -147,7 +148,7 @@ export default function PortfolioPage() {
   const [modalLoading, setModalLoading] = useState(false)
 
   // Server-side pagination for portfolio
-  const fetchPortfolio = useCallback(async (page: number, limit: number, search?: string) => {
+  const fetchPortfolio = useCallback(async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     // Load dashboard data for stats
     const dashboardResponse = await adminApi.getDashboardSummary()
     if (dashboardResponse.data.success) {
@@ -155,13 +156,14 @@ export default function PortfolioPage() {
     }
 
     // Load clients data and convert to portfolio format
-    const clientsResponse = await adminApi.getClients(page, limit)
+    const clientsResponse = await adminApi.getClients(page, limit, search, sortBy, sortOrder)
 
     if (!clientsResponse.data.success) {
       throw new Error('Error loading portfolio data')
     }
 
     let clients = clientsResponse.data.data.clients
+    const totalClients = clientsResponse.data.data.pagination.total
 
     // Apply behavior filter
     if (behaviorFilter !== 'ALL') {
@@ -202,11 +204,12 @@ export default function PortfolioPage() {
       limit: clientsResponse.data.data.pagination.limit,
       pages: clientsResponse.data.data.pagination.pages
     }
-  }, [behaviorFilter])
+  }, [behaviorFilter, moraFilter])
 
   const pagination = useServerPagination({
     initialLimit: 15,
     fetchData: fetchPortfolio,
+    dependencies: [behaviorFilter, moraFilter]
   })
 
 
@@ -241,7 +244,7 @@ export default function PortfolioPage() {
 
   const getMoraText = (days: number) => {
     if (days === 0) return 'Al día'
-    return `${days} días mora`
+    return `${days} días`
   }
 
   const handleViewClient = (client: ClientPortfolio) => {
@@ -397,26 +400,6 @@ export default function PortfolioPage() {
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Fixed Header */}
         <div className="flex-shrink-0 border-b border-glass-border">
-          <div className="hidden lg:block">
-            {/* Desktop Table Header */}
-            <div className="bg-glass-primary/30 backdrop-blur-glass">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Cliente</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Contratos</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Valor Total</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Pendiente</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">% Recaudo</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Estado Mora</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Comportamiento</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Último Contacto</th>
-                    <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Acciones</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
           <div className="lg:hidden p-4">
             <h3 className="font-medium text-text-primary">Portafolio de Clientes</h3>
             <p className="text-sm text-text-secondary">{pagination.total} clientes encontrados</p>
@@ -427,15 +410,51 @@ export default function PortfolioPage() {
         <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px]">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
-            <table className="w-full">
+            <table className="w-full border-separate border-spacing-0">
+              <thead>
+                <tr className="sticky top-0 z-20">
+                  <SortHeader 
+                    label="Cliente" 
+                    field="name" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Cédula" 
+                    field="idNumber" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Contacto</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Contratos</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Valor Total Lote</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Pendiente</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">% Recaudo</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Estado Mora</th>
+                  <SortHeader 
+                    label="Comportamiento" 
+                    field="behavior" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Último Contacto</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Acciones</th>
+                </tr>
+              </thead>
               <tbody>
                 {pagination.loading ? (
                   Array.from({ length: 8 }).map((_, index) => (
-                    <TableRowSkeleton key={`portfolio-skeleton-${index}`} columns={9} />
+                    <TableRowSkeleton key={`portfolio-skeleton-${index}`} columns={11} />
                   ))
                 ) : pagination.total === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-text-muted">
+                    <td colSpan={11} className="py-12 text-center text-text-muted">
                       <div className="flex flex-col items-center space-y-3">
                         <Users className="w-12 h-12 text-text-disabled" />
                         <p className="text-lg font-medium">No hay clientes en el portafolio</p>
@@ -447,11 +466,13 @@ export default function PortfolioPage() {
                   pagination.data.map((client) => (
                     <tr key={client.clientId} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
                       <td className="py-4 px-4 md:px-6">
-                        <div>
-                          <p className="font-medium text-text-primary">{client.clientName}</p>
-                          <p className="text-sm text-text-muted">{client.cedula}</p>
-                          <p className="text-sm text-text-muted">{client.phone}</p>
-                        </div>
+                        <p className="font-medium text-text-primary">{client.clientName}</p>
+                      </td>
+                      <td className="py-4 px-4 md:px-6">
+                        <p className="text-sm text-text-primary">{client.cedula}</p>
+                      </td>
+                      <td className="py-4 px-4 md:px-6">
+                        <p className="text-sm text-text-primary">{client.phone}</p>
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <span className="font-medium text-text-primary">
@@ -470,12 +491,6 @@ export default function PortfolioPage() {
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center">
-                          <div className="flex-1 bg-glass-primary/30 rounded-full h-2 mr-2">
-                            <div
-                              className="bg-accent-blue h-2 rounded-full"
-                              style={{ width: `${client.averageRecaudo}%` }}
-                            />
-                          </div>
                           <span className="text-sm font-medium text-text-primary">
                             {client.averageRecaudo}%
                           </span>

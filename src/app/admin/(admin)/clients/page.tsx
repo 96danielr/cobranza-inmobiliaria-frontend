@@ -24,6 +24,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { SortHeader } from '@/components/ui/SortHeader'
 import { StatsCardSkeleton, TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import { ClientCard, ClientCardSkeleton } from '@/components/ui/ClientCard'
 import { PaginationControls } from '@/components/ui/Pagination'
@@ -72,9 +73,9 @@ export default function ClientsPage() {
   const [statsLoading, setStatsLoading] = useState(false)
 
   // Fetch clients with pagination and filtering
-  const fetchClients = useCallback(async (page: number, limit: number, search?: string) => {
+  const fetchClients = useCallback(async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     try {
-      const response = await adminApi.getClients(page, limit, search)
+      const response = await adminApi.getClients(page, limit, search, sortBy, sortOrder)
       if (!response.data.success) {
         throw new Error('Error loading clients')
       }
@@ -279,17 +280,45 @@ export default function ClientsPage() {
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px] relative">
-          {/* Desktop Table */}
+          {/* Desktop Table Body */}
           <div className="hidden lg:block">
-            <table className="w-full border-collapse">
-              <thead className="sticky top-0 z-10 bg-glass-primary backdrop-blur-glass shadow-sm">
-                <tr className="border-b border-glass-border">
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-x border-glass-border w-16">No.</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border">Cliente</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border w-40">Cédula</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border">Contacto</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border w-48">Comportamiento</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary border-r border-glass-border w-56">Acciones</th>
+            <table className="w-full border-separate border-spacing-0">
+              <thead>
+                <tr className="sticky top-0 z-20">
+                  <SortHeader 
+                    label="No." 
+                    field="excelRowId" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border w-16"
+                  />
+                  <SortHeader 
+                    label="Cliente" 
+                    field="name" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <SortHeader 
+                    label="Cédula" 
+                    field="idNumber" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border w-40"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Contacto</th>
+                  <SortHeader 
+                    label="Comportamiento" 
+                    field="behavior" 
+                    currentSortBy={pagination.sortBy} 
+                    currentSortOrder={pagination.sortOrder} 
+                    onSort={pagination.handleSort}
+                    className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border w-48"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border w-56">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -310,16 +339,16 @@ export default function ClientsPage() {
                 ) : (
                   pagination.data.map((client) => (
                   <tr key={client._id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
-                    <td className="py-2 px-4 md:px-6 border-x border-glass-border text-text-secondary text-sm w-16">
+                    <td className="py-2 px-4 md:px-6 text-text-secondary text-sm w-16">
                       {client.excelRowId || '-'}
                     </td>
-                    <td className="py-2 px-4 md:px-6 border-r border-glass-border">
+                    <td className="py-2 px-4 md:px-6">
                       <p className="font-medium text-text-primary whitespace-nowrap">{client.name}</p>
                     </td>
-                    <td className="py-2 px-4 md:px-6 border-r border-glass-border font-mono text-xs text-text-muted w-40">
+                    <td className="py-2 px-4 md:px-6 font-mono text-xs text-text-muted w-40">
                       {client.idNumber || 'Sin Cédula'}
                     </td>
-                    <td className="py-2 px-4 md:px-6 border-r border-glass-border">
+                    <td className="py-2 px-4 md:px-6">
                       <div>
                         <p className="text-sm text-text-primary">{client.phone}</p>
                         {client.email && (
@@ -327,12 +356,12 @@ export default function ClientsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="py-2 px-4 md:px-6 border-r border-glass-border w-48">
+                    <td className="py-2 px-4 md:px-6 w-48">
                       <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(client.behavior)}`}>
                         {client.behavior && client.behavior !== 'N/A' ? client.behavior : 'No definido'}
                       </span>
                     </td>
-                    <td className="py-2 px-4 md:px-6 border-r border-glass-border w-56">
+                    <td className="py-2 px-4 md:px-6 w-56">
                       <div className="flex items-center space-x-2">
                         <Button
                           variant="outline"

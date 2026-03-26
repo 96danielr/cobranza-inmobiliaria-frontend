@@ -20,6 +20,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { SortHeader } from '@/components/ui/SortHeader'
 import { StatsCardSkeleton, TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import { PaymentCard, PaymentCardSkeleton } from '@/components/ui/PaymentCard'
 import { PaginationControls } from '@/components/ui/Pagination'
@@ -67,9 +68,9 @@ export default function PaymentsPage() {
   const [modalLoading, setModalLoading] = useState(false)
 
   // Fetch payments with server-side pagination — same pattern as Clients page
-  const fetchPayments = useCallback(async (page: number, limit: number, search?: string) => {
+  const fetchPayments = useCallback(async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     try {
-      const response = await adminApi.getPayments(page, limit, search, statusFilter)
+      const response = await adminApi.getPayments(page, limit, search, statusFilter, sortBy, sortOrder)
       if (!response.data.success) {
         throw new Error('Error loading payments')
       }
@@ -289,28 +290,77 @@ export default function PaymentsPage() {
 
       {/* Payments List - Partial recovery for testing */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
-        {/* Fixed Header */}
-        <div className="flex-shrink-0 border-b border-glass-border">
-          <div className="hidden lg:block bg-glass-primary/30 backdrop-blur-glass">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Cliente</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Proyecto/Lote</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary"># Cuota</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Monto</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Banco</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Fecha</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Estado</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary">Acciones</th>
-                </tr>
-              </thead>
-            </table>
+        {/* Fixed Header (Mobile only) */}
+        <div className="flex-shrink-0 border-b border-glass-border lg:hidden">
+          <div className="p-4">
+            <h3 className="font-medium text-text-primary">Aprobación de Pagos</h3>
+            <p className="text-sm text-text-secondary">{pagination.total} cuotas encontradas</p>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-[400px]">
-          <table className="hidden lg:table w-full">
+        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px] relative">
+          <table className="hidden lg:table w-full border-separate border-spacing-0">
+            <thead>
+              <tr className="sticky top-0 z-20">
+                <SortHeader 
+                  label="Cliente" 
+                  field="contract.client.fullName" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
+                />
+                <SortHeader 
+                  label="Proyecto/Lote" 
+                  field="contract.lot.nomenclatura" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
+                />
+                <SortHeader 
+                  label="# Cuota" 
+                  field="cuotaNumber" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
+                />
+                <SortHeader 
+                  label="Monto" 
+                  field="amount" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
+                />
+                <SortHeader 
+                  label="Banco" 
+                  field="banco" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
+                />
+                <SortHeader 
+                  label="Fecha" 
+                  field="fechaPago" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
+                />
+                <SortHeader 
+                  label="Estado" 
+                  field="status" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
+                />
+                <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20">Acciones</th>
+              </tr>
+            </thead>
             <tbody>
               {pagination.loading ? (
                 <tr><td colSpan={8} className="text-center py-4 text-text-muted">Cargando cuotas...</td></tr>

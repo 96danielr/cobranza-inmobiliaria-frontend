@@ -198,7 +198,7 @@ export function CollectionCard({ activity, onView }: CollectionCardProps) {
             <div className="flex items-center gap-2">
               {activity.diasMora > 0 && (
                 <span className="text-xs text-accent-red font-medium">
-                  {activity.diasMora} días mora
+                  {activity.diasMora} días
                 </span>
               )}
             </div>

@@ -6,7 +6,9 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 export interface UseServerPaginationProps {
   initialPage?: number
   initialLimit?: number
-  fetchData: (page: number, limit: number, search?: string) => Promise<{
+  initialSortBy?: string
+  initialSortOrder?: 'asc' | 'desc'
+  fetchData: (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => Promise<{
     data: any[]
     total: number
     page: number
@@ -30,6 +32,8 @@ export function useServerPagination({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   // Stable reference to fetchData to avoid re-renders if it's not memoized
   const fetchRef = useRef(fetchData)
@@ -37,11 +41,11 @@ export function useServerPagination({
     fetchRef.current = fetchData
   }, [fetchData])
 
-  const loadData = useCallback(async (pageToLoad = page, searchTerm = search) => {
+  const loadData = useCallback(async (pageToLoad = page, searchTerm = search, currentSortBy = sortBy, currentSortOrder = sortOrder) => {
     try {
       setLoading(true)
       setError(null)
-      const result = await fetchRef.current(pageToLoad, limit, searchTerm)
+      const result = await fetchRef.current(pageToLoad, limit, searchTerm, currentSortBy, currentSortOrder)
       
       setData(result.data)
       setTotal(result.total)
@@ -58,12 +62,12 @@ export function useServerPagination({
     } finally {
       setLoading(false)
     }
-  }, [limit, page, search])
+  }, [limit, page, search, sortBy, sortOrder])
 
   // Load data when core state or external dependencies change
   useEffect(() => {
     loadData()
-  }, [page, limit, search, ...dependencies])
+  }, [page, limit, search, sortBy, sortOrder, ...dependencies])
 
   // Actions
   const goToPage = (newPage: number) => {
@@ -90,6 +94,16 @@ export function useServerPagination({
     setPage(1)
   }
 
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(field)
+      setSortOrder('desc')
+    }
+    setPage(1)
+  }
+
   const refresh = () => loadData()
 
   return {
@@ -101,11 +115,14 @@ export function useServerPagination({
     total,
     pages,
     search,
+    sortBy,
+    sortOrder,
     goToPage,
     goToNextPage,
     goToPreviousPage,
     changeLimit,
     handleSearch,
+    handleSort,
     refresh,
     hasNextPage: page < pages,
     hasPreviousPage: page > 1,
