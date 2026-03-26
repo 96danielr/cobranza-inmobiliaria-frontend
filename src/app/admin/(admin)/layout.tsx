@@ -41,6 +41,7 @@ const navItems: NavItem[] = [
   { icon: Upload, label: 'Importar', href: '/admin/import', roles: ['tenant_admin', 'company_admin'] },
   { icon: Shield, label: 'Equipo', href: '/admin/users', roles: ['tenant_admin'] },
   { icon: Settings, label: 'Configuración', href: '/admin/settings', roles: ['tenant_admin'] },
+  { icon: LogOut, label: 'Cerrar Sesión', href: 'logout', roles: ['tenant_admin', 'company_admin', 'agent'] },
 ]
 
 const roleLabels: Record<Role, string> = {
@@ -114,6 +115,7 @@ export default function AdminLayout({
         title={currentPageInfo.title}
         subtitle={selectedCompanyName || currentPageInfo.subtitle}
         onMenuToggle={() => setIsSidebarOpen(true)}
+        onLogout={handleLogout}
         isMenuOpen={isSidebarOpen}
       />
       
@@ -171,14 +173,21 @@ export default function AdminLayout({
                   return (
                     <Link
                       key={item.href}
-                      href={item.href}
-                      onClick={() => setIsSidebarOpen(false)}
+                      href={item.href === 'logout' ? '#' : item.href}
+                      onClick={(e) => {
+                        if (item.href === 'logout') {
+                          e.preventDefault()
+                          handleLogout()
+                        }
+                        setIsSidebarOpen(false)
+                      }}
                       className={cn(
                         'flex items-center px-3 sm:px-4 py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 min-h-[48px] relative',
                         'hover:scale-[1.02] active:scale-[0.98]',
                         isActive 
                           ? 'bg-gradient-primary text-white shadow-glow' 
-                          : 'glass-button hover:shadow-glow hover:text-accent-blue hover:bg-accent-blue/10'
+                          : 'glass-button hover:shadow-glow hover:text-accent-blue hover:bg-accent-blue/10',
+                        item.href === 'logout' && 'hover:text-accent-red hover:bg-accent-red/10'
                       )}
                     >
                       {/* Active indicator */}
@@ -188,7 +197,8 @@ export default function AdminLayout({
                       
                       <Icon className={cn(
                         'w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 transition-colors flex-shrink-0',
-                        isActive ? 'text-white' : 'text-text-secondary'
+                        isActive ? 'text-white' : 'text-text-secondary',
+                        item.href === 'logout' && 'group-hover:text-accent-red'
                       )} />
                       <span className={cn(
                         'truncate',
@@ -252,14 +262,17 @@ export default function AdminLayout({
                       {index > 0 && (
                         <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-text-muted mx-1 sm:mx-2 flex-shrink-0" />
                       )}
-                      <span className={cn(
-                        'truncate text-xs sm:text-sm',
-                        index === getBreadcrumbs().length - 1 
-                          ? 'text-text-primary font-medium' 
-                          : 'text-text-secondary hover:text-accent-blue'
-                      )}>
+                      <Link 
+                        href={crumb.href}
+                        className={cn(
+                          'truncate text-xs sm:text-sm transition-colors',
+                          index === getBreadcrumbs().length - 1 
+                            ? 'text-text-primary font-medium cursor-default pointer-events-none' 
+                            : 'text-text-secondary hover:text-accent-blue'
+                        )}
+                      >
                         {crumb.label}
-                      </span>
+                      </Link>
                     </div>
                   ))}
                 </div>

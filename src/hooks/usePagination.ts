@@ -203,4 +203,4 @@ export function useClientPagination<T>({
     startIndex: total === 0 ? 0 : (page - 1) * limit + 1,
     endIndex: Math.min(page * limit, total),
   }
-}
+}

@@ -63,10 +63,10 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
               variant="glass"
               size="sm"
               onClick={handleLogout}
-              className="hidden md:flex hover:text-accent-red hover:border-accent-red/30 transition-colors"
+              className="flex hover:text-accent-red hover:border-accent-red/30 transition-colors px-2 xs:px-3 sm:px-4"
             >
-              <LogOut size={16} className="mr-2" />
-              Salir
+              <LogOut size={16} className="sm:mr-2" />
+              <span className="hidden sm:inline">Salir</span>
             </Button>
           </div>
         </div>

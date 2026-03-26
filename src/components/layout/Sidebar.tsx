@@ -42,6 +42,12 @@ const navigation = [
     href: '/profile',
     icon: User,
     description: 'Configuración de cuenta'
+  },
+  {
+    name: 'Cerrar Sesión',
+    href: 'logout',
+    icon: LogOut,
+    description: 'Salir de la cuenta'
   }
 ]
 
@@ -121,18 +127,26 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                 return (
                   <button
                     key={item.name}
-                    onClick={() => handleNavigation(item.href)}
+                    onClick={() => {
+                      if (item.href === 'logout') {
+                        handleLogout()
+                      } else {
+                        handleNavigation(item.href)
+                      }
+                    }}
                     className={cn(
                       'w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group min-h-[56px]',
                       isActive
                         ? 'bg-gradient-primary text-white shadow-glow'
-                        : 'glass-button hover:shadow-glow'
+                        : 'glass-button hover:shadow-glow',
+                      item.href === 'logout' && 'hover:text-accent-red hover:bg-accent-red/10'
                     )}
                   >
                     <Icon 
                       className={cn(
                         'w-5 h-5 mr-3 transition-colors',
-                        isActive ? 'text-white' : 'text-text-secondary group-hover:text-accent-blue'
+                        isActive ? 'text-white' : 'text-text-secondary group-hover:text-accent-blue',
+                        item.href === 'logout' && 'group-hover:text-accent-red'
                       )} 
                     />
                     <div>

@@ -9,7 +9,8 @@ import {
   PhoneCall, 
   Upload,
   Settings,
-  Building2
+  Building2,
+  LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -220,14 +221,17 @@ export function MobileBreadcrumbs({ breadcrumbs }: { breadcrumbs: Array<{ label:
             {index > 0 && (
               <div className="w-2 h-2 bg-text-muted rounded-full mx-2 opacity-50" />
             )}
-            <span className={cn(
-              'text-sm px-3 py-1.5 rounded-full whitespace-nowrap min-h-[36px] flex items-center',
-              index === breadcrumbs.length - 1
-                ? 'text-accent-blue bg-accent-blue/20 font-medium'
-                : 'text-text-secondary bg-glass-primary/30'
-            )}>
+            <Link 
+              href={crumb.href}
+              className={cn(
+                'text-sm px-3 py-1.5 rounded-full whitespace-nowrap min-h-[36px] flex items-center transition-all duration-300',
+                index === breadcrumbs.length - 1
+                  ? 'text-accent-blue bg-accent-blue/20 font-medium cursor-default pointer-events-none'
+                  : 'text-text-secondary bg-glass-primary/30 hover:bg-glass-secondary'
+              )}
+            >
               {crumb.label}
-            </span>
+            </Link>
           </div>
         ))}
       </div>
@@ -240,11 +244,13 @@ export function MobileHeader({
   title, 
   subtitle,
   onMenuToggle,
+  onLogout,
   isMenuOpen 
 }: { 
   title: string
   subtitle?: string
   onMenuToggle: () => void
+  onLogout?: () => void
   isMenuOpen: boolean
 }) {
   return (
@@ -290,8 +296,18 @@ export function MobileHeader({
           )}
         </div>
         
-        {/* Right side placeholder for balance */}
-        <div className="w-[44px]" />
+        {/* Right side logout button */}
+        <button
+          onClick={onLogout}
+          className={cn(
+            'p-3 rounded-xl transition-all duration-300 min-h-[44px] min-w-[44px]',
+            'flex items-center justify-center',
+            'glass-button hover:shadow-glow hover:text-accent-red hover:bg-accent-red/20'
+          )}
+          aria-label="Cerrar sesión"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
       </div>
     </div>
   )

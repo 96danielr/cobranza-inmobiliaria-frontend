@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu } from 'lucide-react'
+import { Menu, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { Navbar } from '@/components/layout/Navbar'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -40,6 +40,12 @@ export default function PortalLayout({
     setIsMobileMenuOpen(false)
   }
 
+  const handleLogout = () => {
+    const { logout } = useAuthStore.getState()
+    logout()
+    router.push('/login')
+  }
+
   if (isLoading) {
     return <FullPageLoading message="Verificando autenticación..." />
   }
@@ -73,10 +79,17 @@ export default function PortalLayout({
                 {client?.fullName?.charAt(0)?.toUpperCase() || 'C'}
               </span>
             </div>
-            <div className="text-right">
+            <div className="text-right mr-3 hidden xs:block">
               <p className="text-sm font-medium text-text-primary">{client?.fullName}</p>
               <p className="text-xs text-text-secondary">C.C. {client?.cedula}</p>
             </div>
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-xl glass-button hover:text-accent-red hover:bg-accent-red/20 transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              title="Cerrar Sesión"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
