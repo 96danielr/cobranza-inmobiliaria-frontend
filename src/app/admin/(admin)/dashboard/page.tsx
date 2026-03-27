@@ -312,7 +312,7 @@ export default function AdminDashboard() {
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">Valor Total del Proyecto</p>
+                    <p className="text-sm text-text-secondary font-medium mb-1">Ventas Totales</p>
                     <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
                       {formatCurrency(data.cartera.valorTotalCartera)}
                     </p>

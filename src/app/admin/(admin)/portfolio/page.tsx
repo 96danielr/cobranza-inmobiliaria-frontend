@@ -15,7 +15,8 @@ import {
   Phone,
   MessageSquare,
   Users,
-  Loader2
+  Loader2,
+  CheckCircle
 } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -236,8 +237,10 @@ export default function PortfolioPage() {
   const totalClients = pagination.total
   const clientsAlDia = pagination.data.filter(c => c.daysInArrears === 0).length
   const clientsEnMora = pagination.data.filter(c => c.daysInArrears > 0).length
-  const totalValuePortfolio = pagination.data.reduce((sum, c) => sum + c.totalValue, 0)
-  const totalPendingPortfolio = pagination.data.reduce((sum, c) => sum + c.totalPending, 0)
+  // Calculate stats from dashboard summary if available, otherwise from current page data (fallback)
+  const totalRecaudado = dashboardData?.cartera?.totalRecaudado ?? pagination.data.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
+  const ventasTotales = dashboardData?.cartera?.valorTotalCartera ?? pagination.data.reduce((sum, c) => sum + (c.totalValue || 0), 0)
+  const valorCartera = Math.max(0, ventasTotales - totalRecaudado)
 
 
   return (
@@ -266,13 +269,13 @@ export default function PortfolioPage() {
         <Card variant="elevated">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
-                <DollarSign className="w-6 h-6 text-accent-blue" />
+              <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
+                <CheckCircle className="w-6 h-6 text-accent-green" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-text-secondary font-medium">Ventas Totales</p>
+                <p className="text-sm text-text-secondary font-medium">Total Recaudado</p>
                 <p className="text-responsive-lg font-bold text-text-primary">
-                  {formatCurrency(totalValuePortfolio)}
+                  {formatCurrency(totalRecaudado)}
                 </p>
               </div>
             </div>
@@ -282,13 +285,13 @@ export default function PortfolioPage() {
         <Card variant="elevated">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-accent-red/20 backdrop-blur-sm rounded-full border border-glass-border">
-                <AlertTriangle className="w-6 h-6 text-accent-red" />
+              <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
+                <DollarSign className="w-6 h-6 text-accent-blue" />
               </div>
               <div className="ml-4">
                 <p className="text-sm text-text-secondary font-medium">Valor Total de la Cartera</p>
                 <p className="text-responsive-lg font-bold text-text-primary">
-                  {formatCurrency(totalPendingPortfolio)}
+                  {formatCurrency(valorCartera)}
                 </p>
               </div>
             </div>
