@@ -22,7 +22,7 @@ export const adminApi = {
   },
 
   getClient: (id: string) =>
-    apiAdmin.get(`/clients/${id}`),
+    apiAdmin.get(`/clients/${id}?companyId=${getCompanyId()}`),
 
   // Dashboard (company-scoped)
   getDashboardSummary: () =>
@@ -111,6 +111,9 @@ export const adminApi = {
         'Content-Type': 'multipart/form-data',
       },
     }),
+  
+  sellLot: (id: string, data: any) =>
+    apiAdmin.post(`/lots/${id}/sell?companyId=${getCompanyId()}`, data),
 
   getLotsPublic: (companyId: string, search?: string) => {
     const params = new URLSearchParams({
@@ -127,6 +130,7 @@ export const adminApi = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 240000, // 2 minutes for heavy imports
     })
   },
 

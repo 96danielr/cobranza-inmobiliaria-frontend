@@ -38,43 +38,19 @@ import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 
-// Mock data - replace with actual API calls
-const mockDashboardData = {
-  cartera: {
-    valorTotalCartera: 15800000000,
-    totalRecaudado: 9480000000,
-    totalPendiente: 6320000000,
-    porcentajeRecaudo: 60
-  },
-  mora: {
-    totalContratosActivos: 1247,
-    contratosAlDia: 820,
-    contratosMora1a15: 185,
-    contratosMora16a30: 142,
-    contratosMora31a60: 67,
-    contratosMora60plus: 33,
-    porcentajeMora: 34.2,
-    dineroEnMora: 2100000000
-  },
-  recaudoMensual: {
-    mesActual: 890000000,
-    mesAnterior: 756000000,
-    variacion: 17.7
-  },
-  operacion: {
-    comprobantesPendientes: 47,
-    clientesEscalados: 12,
-    whatsappEnviadosMes: 1580,
-    llamadasAIMes: 340
-  }
-}
+
 
 
 import { Button } from '@/components/ui/Button'
 
 export default function AdminDashboard() {
   const { admin, isAuthenticated } = useAdminAuthStore()
-  const [data, setData] = useState(mockDashboardData)
+  const [data, setData] = useState({
+    cartera: { valorTotalCartera: 0, totalRecaudado: 0, totalPendiente: 0, porcentajeRecaudo: 0 },
+    mora: { totalContratosActivos: 0, contratosAlDia: 0, contratosMora1a15: 0, contratosMora16a30: 0, contratosMora31a60: 0, contratosMora60plus: 0, porcentajeMora: 0, dineroEnMora: 0 },
+    recaudoMensual: { mesActual: 0, mesAnterior: 0, variacion: 0 },
+    operacion: { comprobantesPendientes: 0, clientesEscalados: 0, whatsappEnviadosMes: 0, llamadasAIMes: 0 }
+  })
   const [loading, setLoading] = useState(true)
   const [statsLoading, setStatsLoading] = useState(true)
   const [chartsLoading, setChartsLoading] = useState(true)
@@ -336,7 +312,7 @@ export default function AdminDashboard() {
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">Valor Total Cartera</p>
+                    <p className="text-sm text-text-secondary font-medium mb-1">Valor Total del Proyecto</p>
                     <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
                       {formatCurrency(data.cartera.valorTotalCartera)}
                     </p>

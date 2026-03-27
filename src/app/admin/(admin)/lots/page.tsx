@@ -16,8 +16,11 @@ import {
   Link,
   Copy,
   ExternalLink,
-  X,
-  ImageIcon
+  ImageIcon,
+  ShoppingCart,
+  Calendar as CalendarIcon,
+  UserPlus,
+  Users
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -29,7 +32,9 @@ import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
+import dayjs from 'dayjs'
 
 interface Lot {
   _id: string
@@ -47,8 +52,13 @@ export default function LotsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null)
+  const [isSellModalOpen, setIsSellModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isCreatingNewClient, setIsCreatingNewClient] = useState(false)
+  
+  const { clients, fetchClientsIfNeeded, loading: clientsLoading } = useClientStore()
+
   const [formData, setFormData] = useState({
     _id: '',
     stage: '',
@@ -57,6 +67,21 @@ export default function LotsPage() {
     area: '',
     price: ''
   })
+  
+  const [sellFormData, setSellFormData] = useState({
+    clientId: '',
+    totalValue: '',
+    installmentsCount: '24',
+    initialQuotaPercentage: '30',
+    initialQuotasCount: '1',
+    contractDate: dayjs().format('YYYY-MM-DD'),
+    negotiation: 'Venta Directa',
+    // New client fields if creating new
+    clientName: '',
+    clientIdNumber: '',
+    clientPhone: ''
+  })
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   const fetchLots = async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
@@ -164,6 +189,67 @@ export default function LotsPage() {
     if (e.target.files) {
       setSelectedFiles(Array.from(e.target.files))
     }
+  }
+
+  const handleSellClick = (lot: Lot) => {
+    setSelectedLot(lot)
+    setSellFormData({
+      ...sellFormData,
+      totalValue: lot.price?.toString() || '',
+      contractDate: dayjs().format('YYYY-MM-DD')
+    })
+    setIsSellModalOpen(true)
+    fetchClientsIfNeeded()
+  }
+
+  const handleSellLot = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedLot) return
+    
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        totalValue: parseFloat(sellFormData.totalValue),
+        installmentsCount: parseInt(sellFormData.installmentsCount),
+        initialQuotaPercentage: parseFloat(sellFormData.initialQuotaPercentage),
+        initialQuotasCount: parseInt(sellFormData.initialQuotasCount),
+        contractDate: sellFormData.contractDate,
+        negotiation: sellFormData.negotiation
+      }
+
+      if (isCreatingNewClient) {
+        payload.clientData = {
+          name: sellFormData.clientName,
+          idNumber: sellFormData.clientIdNumber,
+          phone: sellFormData.clientPhone
+        }
+      } else {
+        payload.clientId = sellFormData.clientId
+        if (!payload.clientId) {
+          toast.error('Debe seleccionar un cliente')
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      const response = await adminApi.sellLot(selectedLot._id, payload)
+      if (response.data.success) {
+        toast.success('Venta registrada correctamente')
+        setIsSellModalOpen(false)
+        pagination.refresh()
+      } else {
+        toast.error(response.data.message || 'Error al registrar venta')
+      }
+    } catch (error) {
+      toast.error('Error al conectar con el servidor')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSellInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setSellFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleUploadImages = async () => {
@@ -364,6 +450,15 @@ export default function LotsPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleSellClick(lot)}
+                            className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
+                            title="Vender Lote"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleEdit(lot)}
                             className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
                           >
@@ -397,6 +492,9 @@ export default function LotsPage() {
                       <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
                     </div>
                     <div className="flex space-x-2">
+                       <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
+                        <ShoppingCart className="w-4 h-4" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button">
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -594,6 +692,219 @@ export default function LotsPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Sell Modal */}
+      <Modal
+        isOpen={isSellModalOpen}
+        onClose={() => setIsSellModalOpen(false)}
+        title={`Vender Lote: ${selectedLot?.stage} - ${selectedLot?.lotNumber}`}
+        size="lg"
+      >
+        <form onSubmit={handleSellLot} className="space-y-6 pt-2">
+          {/* Client Selection */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-text-primary flex items-center">
+                <Users className="w-4 h-4 mr-2 text-accent-blue" />
+                Información del Cliente
+              </label>
+              <Button
+                type="button"
+                variant="glass"
+                size="sm"
+                onClick={() => setIsCreatingNewClient(!isCreatingNewClient)}
+                className="text-xs h-8"
+              >
+                {isCreatingNewClient ? 'Seleccionar existente' : 'Nuevo cliente'}
+                {isCreatingNewClient ? <Users className="w-3 h-3 ml-2" /> : <UserPlus className="w-3 h-3 ml-2" />}
+              </Button>
+            </div>
+
+            {isCreatingNewClient ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border animate-fade-in">
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Nombre Completo</label>
+                  <Input
+                    name="clientName"
+                    value={sellFormData.clientName}
+                    onChange={handleSellInputChange}
+                    placeholder="Nombre del cliente"
+                    required
+                    className="glass-input h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Cédula</label>
+                  <Input
+                    name="clientIdNumber"
+                    value={sellFormData.clientIdNumber}
+                    onChange={handleSellInputChange}
+                    placeholder="Documento"
+                    required
+                    className="glass-input h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Teléfono</label>
+                  <Input
+                    name="clientPhone"
+                    value={sellFormData.clientPhone}
+                    onChange={handleSellInputChange}
+                    placeholder="Contacto"
+                    required
+                    className="glass-input h-9"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <select
+                  name="clientId"
+                  value={sellFormData.clientId}
+                  onChange={handleSellInputChange}
+                  required={!isCreatingNewClient}
+                  className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
+                >
+                  <option value="">Seleccione un cliente...</option>
+                  {clients.map(c => (
+                    <option key={c._id} value={c._id}>
+                      {c.name} - {c.idNumber}
+                    </option>
+                  ))}
+                </select>
+                {clientsLoading && <p className="text-xs text-text-muted animate-pulse">Cargando clientes...</p>}
+              </div>
+            )}
+          </div>
+
+          <div className="h-px bg-glass-border w-full" />
+
+          {/* Sale Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <label className="text-sm font-semibold text-text-primary flex items-center">
+                <DollarSign className="w-4 h-4 mr-2 text-accent-green" />
+                Valores del Contrato
+              </label>
+              
+              <div className="space-y-2">
+                <label className="text-xs text-text-secondary">Valor Total de Venta</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" />
+                  <Input
+                    name="totalValue"
+                    type="number"
+                    value={sellFormData.totalValue}
+                    onChange={handleSellInputChange}
+                    className="glass-input pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-text-secondary">% Cuota Inicial</label>
+                  <Input
+                    name="initialQuotaPercentage"
+                    type="number"
+                    value={sellFormData.initialQuotaPercentage}
+                    onChange={handleSellInputChange}
+                    className="glass-input"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-text-secondary"># Cuotas Iniciales</label>
+                  <Input
+                    name="initialQuotasCount"
+                    type="number"
+                    value={sellFormData.initialQuotasCount}
+                    onChange={handleSellInputChange}
+                    className="glass-input"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-sm font-semibold text-text-primary flex items-center">
+                <CalendarIcon className="w-4 h-4 mr-2 text-accent-purple" />
+                Plazos y Programación
+              </label>
+
+              <div className="space-y-2">
+                <label className="text-xs text-text-secondary">Fecha del Contrato</label>
+                <Input
+                  name="contractDate"
+                  type="date"
+                  value={sellFormData.contractDate}
+                  onChange={handleSellInputChange}
+                  className="glass-input"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-text-secondary"># Cuotas Ordinarias</label>
+                <Input
+                  name="installmentsCount"
+                  type="number"
+                  value={sellFormData.installmentsCount}
+                  onChange={handleSellInputChange}
+                  className="glass-input"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Preview */}
+          <div className="p-4 rounded-xl bg-accent-blue/5 border border-accent-blue/20">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-text-secondary">Por cobrar en cuotas:</span>
+              <span className="font-bold text-accent-blue">
+                {formatCurrency(parseFloat(sellFormData.totalValue || '0') * (1 - parseFloat(sellFormData.initialQuotaPercentage || '0') / 100))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs mt-1 text-text-muted italic">
+              <span>Valor cuota mensual estim.:</span>
+              <span>
+                {formatCurrency((parseFloat(sellFormData.totalValue || '0') * (1 - parseFloat(sellFormData.initialQuotaPercentage || '0') / 100)) / (parseInt(sellFormData.installmentsCount) || 1))}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsSellModalOpen(false)}
+              className="glass-button"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="glass-button bg-accent-green text-white hover:bg-accent-green/80 flex-1 sm:flex-none"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Registrando...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Completar Venta
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   )

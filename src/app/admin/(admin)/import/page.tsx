@@ -32,6 +32,9 @@ interface ImportResult {
     clientsUpdated: number
     lotsCreated: number
     contractsCreated: number
+    initialQuotasCreated: number
+    normalQuotasCreated: number
+    quotasMarkedPaid: number
     paymentsRegistered: number
     rowsSkipped: number
     rowsProcessed: number
@@ -141,8 +144,23 @@ export default function ImportPage() {
         currentStep: 'Subiendo archivo al servidor...'
       }))
 
+      // Fake progress interval while waiting for server
+      const progressInterval = setInterval(() => {
+        setImportProgress(prev => {
+          if (prev.progress < 90) {
+            return {
+              ...prev,
+              progress: prev.progress + (90 - prev.progress) * 0.1,
+              currentStep: 'Procesando datos en el servidor...'
+            }
+          }
+          return prev
+        })
+      }, 2000)
+
       // Call the real API
       const response = await adminApi.uploadExcel(formData)
+      clearInterval(progressInterval)
       const result: ImportResult = response.data
 
       // Update progress
@@ -189,6 +207,9 @@ export default function ImportPage() {
           clientsUpdated: 0,
           lotsCreated: 0,
           contractsCreated: 0,
+          initialQuotasCreated: 0,
+          normalQuotasCreated: 0,
+          quotasMarkedPaid: 0,
           paymentsRegistered: 0,
           rowsSkipped: 0,
           rowsProcessed: 0
@@ -508,9 +529,21 @@ export default function ImportPage() {
               <div className="glass-card hover:shadow-glow rounded-lg p-4 text-center">
                 <DollarSign className="w-8 h-8 text-accent-yellow mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
-                  {importProgress.result.summary.paymentsRegistered}
+                  {importProgress.result.summary.quotasMarkedPaid}
                 </p>
-                <p className="text-sm text-text-secondary">Pagos</p>
+                <p className="text-sm text-text-secondary">Cuotas Pagadas</p>
+              </div>
+            </div>
+
+            {/* Quota Breakdown */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-glass-primary/20 rounded-lg p-3 flex justify-between items-center text-sm">
+                <span className="text-text-secondary">Cuotas Iniciales creadas:</span>
+                <span className="font-bold text-text-primary">{importProgress.result.summary.initialQuotasCreated}</span>
+              </div>
+              <div className="bg-glass-primary/20 rounded-lg p-3 flex justify-between items-center text-sm">
+                <span className="text-text-secondary">Cuotas Normales creadas:</span>
+                <span className="font-bold text-text-primary">{importProgress.result.summary.normalQuotasCreated}</span>
               </div>
             </div>
 

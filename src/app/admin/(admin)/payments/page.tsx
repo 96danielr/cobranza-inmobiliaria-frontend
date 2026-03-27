@@ -588,7 +588,7 @@ export default function PaymentsPage() {
                   <div className="flex items-center">
                     {getStatusIcon(selectedPayment.status)}
                     <span className="ml-2 font-medium">
-                      Pago {selectedPayment.status}
+                      Estado: {selectedPayment.status}
                     </span>
                   </div>
                   {selectedPayment.observacion && (

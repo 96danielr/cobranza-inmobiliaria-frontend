@@ -58,69 +58,11 @@ interface CollectionTemplate {
   isActive: boolean
 }
 
-// Mock data
-const mockActivities: CollectionActivity[] = [
-  {
-    id: '1',
-    clientId: '1',
-    clientName: 'María García Pérez',
-    cedula: '12345678',
-    phone: '+57 300 123 4567',
-    lote: 'Villa Campestre - Mz A #15',
-    type: 'WHATSAPP',
-    status: 'RESPONDIDO',
-    scheduledDate: '2024-01-15T10:00:00',
-    sentAt: '2024-01-15T10:00:00',
-    createdAt: '2024-01-15T09:30:00',
-    montoAdeudado: 2500000,
-    diasMora: 5,
-    notes: 'Cliente confirmó pago para esta semana'
-  },
-  {
-    id: '2',
-    clientId: '2',
-    clientName: 'Juan Carlos Rodríguez',
-    cedula: '87654321',
-    phone: '+57 310 987 6543',
-    lote: 'Reserva Natural - Mz B #22',
-    type: 'AI_CALL',
-    status: 'FALLIDO',
-    scheduledDate: '2024-01-14T14:00:00',
-    sentAt: '2024-01-14T14:00:00',
-    createdAt: '2024-01-14T13:45:00',
-    montoAdeudado: 7500000,
-    diasMora: 45,
-    notes: 'No contestó la llamada. Número ocupado'
-  }
-]
 
-const mockTemplates: CollectionTemplate[] = [
-  {
-    id: '1',
-    name: 'Recordatorio Amigable',
-    type: 'WHATSAPP',
-    content: 'Hola {nombre}, te recordamos que tienes una cuota pendiente por ${monto} con vencimiento el {fecha}. ¡Gracias por tu pronto pago!',
-    isActive: true
-  },
-  {
-    id: '2',
-    name: 'Mora Inicial',
-    type: 'WHATSAPP',
-    content: 'Estimado {nombre}, tu cuota de ${monto} tiene {dias} días de mora. Te pedimos ponerte al día lo antes posible.',
-    isActive: true
-  },
-  {
-    id: '3',
-    name: 'Llamada Automática Mora',
-    type: 'AI_CALL',
-    content: 'Script para llamada automática con IA para clientes en mora mayor a 30 días',
-    isActive: true
-  }
-]
 
 export default function CollectionsPage() {
   const { isAuthenticated } = useAdminAuthStore()
-  const [templates, setTemplates] = useState<CollectionTemplate[]>(mockTemplates)
+  const [templates, setTemplates] = useState<CollectionTemplate[]>([])
   const [selectedActivity, setSelectedActivity] = useState<CollectionActivity | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isNewCampaignModalOpen, setIsNewCampaignModalOpen] = useState(false)
@@ -167,23 +109,23 @@ export default function CollectionsPage() {
         payments = payments.filter((_: any, index: number) => index % 2 === 0) // Every 2nd item
       }
 
-      // Transform payments to collection activities
+      // Transform payments to collection activities (placeholder until collection API is ready)
       const activities = payments.map((payment: any, index: number) => ({
-        id: `${payment.id}-${index}`,
-        clientId: payment.contract?.client?.id || 'unknown',
+        id: `${payment._id || payment.id}-${index}`,
+        clientId: payment.contract?.client?._id || payment.contract?.client?.id || 'unknown',
         clientName: payment.contract?.client?.fullName || 'Cliente Desconocido',
         cedula: payment.contract?.client?.cedula || 'Sin cédula',
         phone: payment.contract?.client?.phone || 'Sin teléfono',
         lote: `${payment.contract?.lot?.project?.name || 'Proyecto'} - Lote ${payment.contract?.lot?.number || 'N/A'}`,
-        type: index % 2 === 0 ? 'WHATSAPP' : 'AI_CALL',
-        status: ['PROGRAMADO', 'ENVIADO', 'ENTREGADO', 'LEIDO', 'RESPONDIDO', 'FALLIDO'][index % 6],
-        scheduledDate: dayjs().subtract((index % 30), 'days').toISOString(),
-        sentAt: index % 3 !== 0 ? dayjs().subtract((index % 25), 'days').toISOString() : undefined,
-        createdAt: dayjs().subtract((index % 35), 'days').toISOString(),
-        montoAdeudado: payment.amount || ((index % 10) + 1) * 500000,
-        diasMora: (index % 90),
-        behaviorTag: ['DISPUESTO', 'INDECISO', 'EVASIVO'][index % 3] as any,
-        notes: index % 2 === 0 ? 'Gestión de cobranza realizada' : undefined
+        type: 'MANUAL',
+        status: payment.status || 'PROGRAMADO',
+        scheduledDate: payment.fechaPago || payment.createdAt,
+        sentAt: undefined,
+        createdAt: payment.createdAt,
+        montoAdeudado: payment.amount || 0,
+        diasMora: payment.diasMora || 0,
+        behaviorTag: payment.contract?.client?.behavior || 'INDECISO',
+        notes: payment.observacion
       }))
 
       // Apply search filter

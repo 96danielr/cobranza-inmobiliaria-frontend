@@ -62,81 +62,7 @@ interface ContractSummary {
   proximoVencimiento?: string
 }
 
-// Mock data
-const mockPortfolio: ClientPortfolio[] = [
-  {
-    clientId: '1',
-    clientName: 'María García Pérez',
-    cedula: '12345678',
-    phone: '+57 300 123 4567',
-    totalContracts: 1,
-    totalValue: 120000000,
-    totalPaid: 60000000,
-    totalPending: 60000000,
-    averageRecaudo: 85,
-    behaviorTag: 'DISPUESTO',
-    daysInArrears: 5,
-    lastContact: '2024-01-10',
-    contracts: [{
-      id: 'C001',
-      project: 'Villa Campestre',
-      manzana: 'A',
-      nomenclatura: '15',
-      valorTotal: 120000000,
-      totalPagado: 60000000,
-      cuotasPagadas: 24,
-      totalCuotas: 48,
-      valorCuota: 2500000,
-      diasMora: 5,
-      status: 'ACTIVO',
-      proximoVencimiento: '2024-02-15'
-    }]
-  },
-  {
-    clientId: '2',
-    clientName: 'Juan Carlos Rodríguez',
-    cedula: '87654321',
-    phone: '+57 310 987 6543',
-    totalContracts: 2,
-    totalValue: 280000000,
-    totalPaid: 98000000,
-    totalPending: 182000000,
-    averageRecaudo: 35,
-    behaviorTag: 'EVASIVO',
-    daysInArrears: 45,
-    lastContact: '2023-12-20',
-    contracts: [
-      {
-        id: 'C002',
-        project: 'Reserva Natural',
-        manzana: 'B',
-        nomenclatura: '22',
-        valorTotal: 150000000,
-        totalPagado: 52500000,
-        cuotasPagadas: 15,
-        totalCuotas: 60,
-        valorCuota: 2500000,
-        diasMora: 45,
-        status: 'MORA',
-        proximoVencimiento: '2024-01-20'
-      },
-      {
-        id: 'C003',
-        project: 'Los Pinos',
-        manzana: 'C',
-        nomenclatura: '08',
-        valorTotal: 130000000,
-        totalPagado: 45500000,
-        cuotasPagadas: 13,
-        totalCuotas: 52,
-        valorCuota: 2500000,
-        diasMora: 30,
-        status: 'MORA',
-        proximoVencimiento: '2024-02-05'
-      }
-    ]
-  }
-]
+
 
 export default function PortfolioPage() {
   const { isAuthenticated } = useAdminAuthStore()
@@ -186,14 +112,14 @@ export default function PortfolioPage() {
       clientName: client.name || client.fullName,
       cedula: client.idNumber || client.cedula,
       phone: client.phone,
-      totalContracts: client._count?.contracts || 0,
-      totalValue: client._count?.contracts ? client._count.contracts * 45000000 : 0, 
-      totalPaid: client._count?.contracts ? client._count.contracts * 22500000 : 0, 
-      totalPending: client._count?.contracts ? client._count.contracts * 22500000 : 0,
-      averageRecaudo: client.behavior === 'DISPUESTO' ? 85 : client.behavior === 'INDECISO' ? 50 : 25,
+      totalContracts: client.totalContracts || 0,
+      totalValue: client.totalValue || 0,
+      totalPaid: client.totalPaid || 0,
+      totalPending: client.totalPending || 0,
+      averageRecaudo: Math.round(client.porcentajeRecaudo || 0),
       behaviorTag: client.behavior || 'INDECISO',
-      daysInArrears: client.behavior === 'EVASIVO' ? Math.floor(Math.random() * 60) + 30 : Math.floor(Math.random() * 15),
-      lastContact: dayjs().subtract(Math.floor(Math.random() * 30), 'days').format('YYYY-MM-DD'),
+      daysInArrears: client.diasMora || 0,
+      lastContact: client.lastContact || undefined,
       contracts: [] 
     }))
 
@@ -223,16 +149,17 @@ export default function PortfolioPage() {
   }
 
   const getBehaviorColor = (behavior: string) => {
-    switch (behavior) {
-      case 'DISPUESTO':
-        return 'text-accent-green bg-accent-green/20 border-accent-green/30'
-      case 'INDECISO':
-        return 'text-accent-yellow bg-accent-yellow/20 border-accent-yellow/30'
-      case 'EVASIVO':
-        return 'text-accent-red bg-accent-red/20 border-accent-red/30'
-      default:
-        return 'text-text-muted bg-glass-primary/20 border-glass-border'
+    const b = (behavior || '').toUpperCase().trim();
+    if (b.includes('DISPUESTO')) {
+      return 'text-accent-green bg-accent-green/20 border-accent-green/30'
     }
+    if (b.includes('INDECISO')) {
+      return 'text-accent-yellow bg-accent-yellow/20 border-accent-yellow/30'
+    }
+    if (b.includes('EVASIVO')) {
+      return 'text-accent-red bg-accent-red/20 border-accent-red/30'
+    }
+    return 'text-text-muted bg-glass-primary/20 border-glass-border'
   }
 
   const getMoraColor = (days: number) => {
@@ -247,9 +174,61 @@ export default function PortfolioPage() {
     return `${days} días`
   }
 
-  const handleViewClient = (client: ClientPortfolio) => {
+  const handleViewClient = async (client: ClientPortfolio) => {
     setSelectedClient(client)
     setIsModalOpen(true)
+    setModalLoading(true)
+    
+    try {
+      const response = await adminApi.getClient(client.clientId)
+      if (response.data.success) {
+        const fullClient = response.data.data
+        setSelectedClient({
+          clientId: fullClient._id,
+          clientName: fullClient.name,
+          cedula: fullClient.idNumber,
+          phone: fullClient.phone,
+          totalContracts: fullClient.contracts?.length || 0,
+          totalValue: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalValue || 0), 0) || 0,
+          totalPaid: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalPagado || 0), 0) || 0,
+          totalPending: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalValue - c.totalPagado || 0), 0) || 0,
+          averageRecaudo: fullClient.contracts?.length ? 
+            Math.round((fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalPagado || 0), 0) / 
+            fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalValue || 1), 0)) * 100) : 0,
+          behaviorTag: fullClient.behavior || 'INDECISO',
+          daysInArrears: client.daysInArrears,
+          contracts: fullClient.contracts.map((c: any) => ({
+            id: c._id,
+            project: c.negotiation || 'Proyecto sin nombre',
+            manzana: 'N/A', 
+            nomenclatura: 'N/A',
+            valorTotal: c.totalValue,
+            totalPagado: c.totalPagado,
+            // Value breakdown
+            valorTotalInicial: c.valorTotalInicial,
+            valorPagadoInicial: c.valorPagadoInicial,
+            valorTotalCuotas: c.valorTotalCuotas,
+            valorPagadoCuotas: c.valorPagadoCuotas,
+            // New detailed fields
+            cuotasInicialesPagadas: c.cuotasInicialesPagadas,
+            totalCuotasIniciales: c.totalCuotasIniciales,
+            cuotasNormalesPagadas: c.cuotasNormalesPagadas,
+            totalCuotasNormales: c.totalCuotasNormales,
+            // Fallback
+            cuotasPagadas: c.cuotasPagadas,
+            totalCuotas: c.totalCuotas,
+            valorCuota: c.valorCuota,
+            diasMora: c.diasMora,
+            status: c.status,
+            proximoVencimiento: c.startDate 
+          }))
+        })
+      }
+    } catch (error) {
+      toast.error('Error al cargar detalles del cliente')
+    } finally {
+      setModalLoading(false)
+    }
   }
 
   // Calculate stats
@@ -609,7 +588,7 @@ export default function PortfolioPage() {
         title="Detalle del Cliente"
         size="xl"
       >
-        {selectedClient ? (
+        {selectedClient && !modalLoading ? (
           <div className="space-y-6">
             {/* Client Info */}
             <div className="bg-glass-primary/30 backdrop-blur-glass border border-glass-border rounded-lg p-4">
@@ -712,16 +691,72 @@ export default function PortfolioPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center">
-                      <div className="flex-1 bg-glass-primary/30 rounded-full h-2 mr-2">
-                        <div
-                          className="bg-accent-blue h-2 rounded-full"
-                          style={{ width: `${(contract.cuotasPagadas / contract.totalCuotas) * 100}%` }}
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4 pt-4 border-t border-glass-border">
+                      {/* Initial Quotas */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-text-secondary font-semibold uppercase tracking-wider">Cuotas Iniciales</span>
+                          <span className="text-text-primary px-2 py-0.5 bg-glass-primary rounded">
+                            {(contract as any).cuotasInicialesPagadas}/{(contract as any).totalCuotasIniciales}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-text-muted">
+                            Recaudado: <span className="text-accent-green font-medium">{formatCurrency((contract as any).valorPagadoInicial)}</span>
+                          </p>
+                          <p className="text-[10px] text-text-muted">
+                            Total: <span className="text-text-primary">{formatCurrency((contract as any).valorTotalInicial)}</span>
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="flex-1 bg-glass-primary/30 rounded-full h-2 mr-2">
+                            <div
+                              className="bg-accent-purple h-2 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                              style={{ 
+                                width: `${(contract as any).totalCuotasIniciales > 0 ? 
+                                  ((contract as any).cuotasInicialesPagadas / (contract as any).totalCuotasIniciales) * 100 : 0}%` 
+                                }}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-accent-purple">
+                            {(contract as any).totalCuotasIniciales > 0 ? 
+                              (((contract as any).cuotasInicialesPagadas / (contract as any).totalCuotasIniciales) * 100).toFixed(0) : 0}%
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-sm font-medium text-text-primary">
-                        {((contract.cuotasPagadas / contract.totalCuotas) * 100).toFixed(1)}%
-                      </span>
+
+                      {/* Normal Quotas */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-text-secondary font-semibold uppercase tracking-wider">Cuotas Ordinarias</span>
+                          <span className="text-text-primary px-2 py-0.5 bg-glass-primary rounded">
+                            {(contract as any).cuotasNormalesPagadas}/{(contract as any).totalCuotasNormales}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-text-muted">
+                            Recaudado: <span className="text-accent-green font-medium">{formatCurrency((contract as any).valorPagadoCuotas)}</span>
+                          </p>
+                          <p className="text-[10px] text-text-muted">
+                            Total: <span className="text-text-primary">{formatCurrency((contract as any).valorTotalCuotas)}</span>
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="flex-1 bg-glass-primary/30 rounded-full h-2 mr-2">
+                            <div
+                              className="bg-accent-blue h-2 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                              style={{ 
+                                width: `${(contract as any).totalCuotasNormales > 0 ? 
+                                  ((contract as any).cuotasNormalesPagadas / (contract as any).totalCuotasNormales) * 100 : 0}%` 
+                                }}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-accent-blue">
+                            {(contract as any).totalCuotasNormales > 0 ? 
+                                (((contract as any).cuotasNormalesPagadas / (contract as any).totalCuotasNormales) * 100).toFixed(0) : 0}%
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
