@@ -270,7 +270,7 @@ export default function PortfolioPage() {
                 <DollarSign className="w-6 h-6 text-accent-blue" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-text-secondary font-medium">Valor Total Cartera</p>
+                <p className="text-sm text-text-secondary font-medium">Ventas Totales</p>
                 <p className="text-responsive-lg font-bold text-text-primary">
                   {formatCurrency(totalValuePortfolio)}
                 </p>
@@ -286,7 +286,7 @@ export default function PortfolioPage() {
                 <AlertTriangle className="w-6 h-6 text-accent-red" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-text-secondary font-medium">Total Pendiente</p>
+                <p className="text-sm text-text-secondary font-medium">Valor Total de la Cartera</p>
                 <p className="text-responsive-lg font-bold text-text-primary">
                   {formatCurrency(totalPendingPortfolio)}
                 </p>
