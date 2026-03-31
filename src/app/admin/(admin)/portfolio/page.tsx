@@ -70,7 +70,7 @@ export default function PortfolioPage() {
   const [selectedClient, setSelectedClient] = useState<ClientPortfolio | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [behaviorFilter, setBehaviorFilter] = useState<'ALL' | 'DISPUESTO' | 'INDECISO' | 'EVASIVO'>('ALL')
-  const [moraFilter, setMoraFilter] = useState<'ALL' | 'AL_DIA' | 'MORA_1_15' | 'MORA_16_30' | 'MORA_31_60' | 'MORA_60_PLUS'>('ALL')
+  const [moraFilter, setMoraFilter] = useState<'ALL' | 'AL_DIA' | 'IN_MORA' | 'MORA_1_15' | 'MORA_16_30' | 'MORA_31_60' | 'MORA_60_PLUS'>('ALL')
   const [dashboardData, setDashboardData] = useState<any>(null)
   const [modalLoading, setModalLoading] = useState(false)
 
@@ -83,19 +83,17 @@ export default function PortfolioPage() {
     }
 
     // Load clients data and convert to portfolio format
-    const clientsResponse = await adminApi.getClients(page, limit, search, sortBy, sortOrder)
+    // Map moraFilter to boolean for server
+    const moraOnly = moraFilter !== 'ALL' && moraFilter !== 'AL_DIA'
+    const alDiaOnly = moraFilter === 'AL_DIA'
+
+    const clientsResponse = await adminApi.getClients(page, limit, search, sortBy, sortOrder, behaviorFilter, moraOnly, alDiaOnly)
 
     if (!clientsResponse.data.success) {
       throw new Error('Error loading portfolio data')
     }
 
     let clients = clientsResponse.data.data.clients
-    const totalClients = clientsResponse.data.data.pagination.total
-
-    // Apply behavior filter
-    if (behaviorFilter !== 'ALL') {
-      clients = clients.filter((client: any) => (client.behavior || client.behaviorTag) === behaviorFilter)
-    }
 
     // Apply search filter
     if (search && search.trim()) {

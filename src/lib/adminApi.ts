@@ -9,7 +9,7 @@ const getCompanyId = (): string => {
 // Admin API methods
 export const adminApi = {
   // Clients (company-scoped)
-  getClients: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {
+  getClients: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string, behavior?: string, moraOnly?: boolean, alDiaOnly?: boolean) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -17,6 +17,9 @@ export const adminApi = {
       ...(search && { search }),
       ...(sortBy && { sortBy }),
       ...(order && { order }),
+      ...(behavior && behavior !== 'ALL' && { behavior }),
+      ...(moraOnly && { moraOnly: 'true' }),
+      ...(alDiaOnly && { alDiaOnly: 'true' }),
     })
     return apiAdmin.get(`/clients?${params.toString()}`)
   },
