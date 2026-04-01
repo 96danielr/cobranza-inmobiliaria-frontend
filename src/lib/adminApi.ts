@@ -27,6 +27,12 @@ export const adminApi = {
   getClient: (id: string) =>
     apiAdmin.get(`/clients/${id}?companyId=${getCompanyId()}`),
 
+  createClient: (data: any) =>
+    apiAdmin.post(`/clients?companyId=${getCompanyId()}`, data),
+
+  deleteClient: (id: string) =>
+    apiAdmin.delete(`/clients/${id}?companyId=${getCompanyId()}`),
+
   // Dashboard (company-scoped)
   getDashboardSummary: () =>
     apiAdmin.get(`/dashboard/summary?companyId=${getCompanyId()}`),
@@ -72,6 +78,13 @@ export const adminApi = {
 
   rejectPayment: (id: string, observacion: string) =>
     apiAdmin.put(`/payments/${id}/reject?companyId=${getCompanyId()}`, { observacion }),
+
+  registerManualPayment: (formData: FormData) =>
+    apiAdmin.post(`/payments/manual?companyId=${getCompanyId()}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 
   // Contracts (company-scoped)
   getContracts: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {
@@ -189,6 +202,9 @@ export const adminApi = {
 
   getCompanyPublic: (id: string) =>
     apiAdmin.get(`/companies/public/${id}`),
+
+  getCompany: (id: string) =>
+    apiAdmin.get(`/companies/${id}?companyId=${id}`), // Scoped anyway by tenant
 
   // Tenants (superadmin only)
   getAllTenants: () =>

@@ -44,6 +44,7 @@ interface Lot {
   area: number
   price?: number
   images?: string[]
+  status: 'disponible' | 'vendido'
   createdAt: string
 }
 
@@ -384,6 +385,7 @@ export default function LotsPage() {
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Estado</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Imágenes</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary w-40 bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Acciones</th>
                 </tr>
@@ -391,11 +393,11 @@ export default function LotsPage() {
               <tbody>
                 {pagination.loading ? (
                   Array.from({ length: 8 }).map((_, index) => (
-                    <TableRowSkeleton key={index} columns={5} />
+                    <TableRowSkeleton key={index} columns={6} />
                   ))
                 ) : pagination.total === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-text-muted">
+                    <td colSpan={6} className="py-12 text-center text-text-muted">
                       <div className="flex flex-col items-center space-y-3">
                         <Building2 className="w-12 h-12 text-text-disabled" />
                         <p className="text-lg font-medium">No hay lotes registrados</p>
@@ -416,6 +418,15 @@ export default function LotsPage() {
                       </td>
                       <td className="py-4 px-4 md:px-6 text-text-primary font-medium">
                         {lot.price ? formatCurrency(lot.price) : '-'}
+                      </td>
+                      <td className="py-4 px-4 md:px-6">
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          lot.status === 'vendido' 
+                            ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' 
+                            : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                        }`}>
+                          {lot.status === 'vendido' ? 'Vendido' : 'Disponible'}
+                        </span>
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
@@ -447,15 +458,17 @@ export default function LotsPage() {
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSellClick(lot)}
-                            className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
-                            title="Vender Lote"
-                          >
-                            <ShoppingCart className="w-4 h-4" />
-                          </Button>
+                          {lot.status !== 'vendido' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSellClick(lot)}
+                              className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
+                              title="Vender Lote"
+                            >
+                              <ShoppingCart className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -490,11 +503,20 @@ export default function LotsPage() {
                     <div>
                       <h3 className="font-bold text-text-primary">{lot.stage} - {lot.lotNumber}</h3>
                       <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        lot.status === 'vendido' 
+                          ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' 
+                          : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                      }`}>
+                        {lot.status === 'vendido' ? 'Vendido' : 'Disponible'}
+                      </span>
                     </div>
                     <div className="flex space-x-2">
-                       <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
-                        <ShoppingCart className="w-4 h-4" />
-                      </Button>
+                       {lot.status !== 'vendido' && (
+                         <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
+                          <ShoppingCart className="w-4 h-4" />
+                        </Button>
+                       )}
                       <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button">
                         <Edit className="w-4 h-4" />
                       </Button>

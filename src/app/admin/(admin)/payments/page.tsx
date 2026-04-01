@@ -14,12 +14,18 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Loader2
+  Loader2,
+  Plus,
+  User,
+  CreditCard,
+  Upload,
+  Link as LinkIcon
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { Combobox } from '@/components/ui/Combobox'
 import { SortHeader } from '@/components/ui/SortHeader'
 import { StatsCardSkeleton, TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import { PaymentCard, PaymentCardSkeleton } from '@/components/ui/PaymentCard'
@@ -27,6 +33,7 @@ import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 
@@ -66,6 +73,71 @@ export default function PaymentsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [observacion, setObservacion] = useState('')
   const [modalLoading, setModalLoading] = useState(false)
+  
+  // Manual Payment State
+  const { clients, fetchClientsIfNeeded } = useClientStore()
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false)
+  const [selectedClientId, setSelectedClientId] = useState('')
+  const [clientDetails, setClientDetails] = useState<any>(null)
+  const [selectedContractId, setSelectedContractId] = useState('')
+  const [isRegistering, setIsRegistering] = useState(false)
+  
+  // Manual Payment Form State
+  const [manualAmount, setManualAmount] = useState('')
+  const [manualBank, setManualBank] = useState('')
+  const [manualObservations, setManualObservations] = useState('')
+  const [manualCapture, setManualCapture] = useState<File | null>(null)
+  const [companySlug, setCompanySlug] = useState('')
+
+  const { selectedCompanyId } = useAdminAuthStore()
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+      if (selectedCompanyId) {
+        try {
+          const res = await adminApi.getCompany(selectedCompanyId)
+          if (res.data.success) {
+            setCompanySlug(res.data.data.company.slug)
+          }
+        } catch (err) {
+          console.error('Error fetching company slug', err)
+        }
+      }
+    }
+    fetchCompany()
+  }, [selectedCompanyId])
+
+  useEffect(() => {
+    if (isManualModalOpen) {
+      fetchClientsIfNeeded()
+    }
+  }, [isManualModalOpen, fetchClientsIfNeeded])
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      if (!selectedClientId) {
+        setClientDetails(null)
+        setSelectedContractId('')
+        return
+      }
+      setModalLoading(true)
+      try {
+        const response = await adminApi.getClient(selectedClientId)
+        if (response.data.success) {
+          setClientDetails(response.data.data)
+          // Default to first contract if available
+          if (response.data.data.contracts?.length > 0) {
+            setSelectedContractId(response.data.data.contracts[0]._id)
+          }
+        }
+      } catch (error) {
+        toast.error('Error al cargar detalles del cliente')
+      } finally {
+        setModalLoading(false)
+      }
+    }
+    fetchDetails()
+  }, [selectedClientId])
 
   // Fetch payments with server-side pagination — same pattern as Clients page
   const fetchPayments = useCallback(async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
@@ -121,11 +193,84 @@ export default function PaymentsPage() {
       
       toast.success('Cuota marcada como pagada')
       setIsModalOpen(false)
+      setIsManualModalOpen(false)
       setSelectedPayment(null)
+      setSelectedClientId('')
       setObservacion('')
     } catch (error) {
       console.error('Error approving payment:', error)
       toast.error('Error al aprobar el pago')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const copyPaymentLink = async () => {
+    let currentSlug = companySlug
+    
+    // Attempt re-fetch if state is empty
+    if (!currentSlug && selectedCompanyId) {
+      try {
+        setModalLoading(true)
+        const res = await adminApi.getCompany(selectedCompanyId)
+        if (res.data.success) {
+          currentSlug = res.data.data.company.slug
+          setCompanySlug(currentSlug)
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setModalLoading(false)
+      }
+    }
+
+    if (!currentSlug) {
+      toast.error('No se pudo generar el link. Verifique el nombre de la inmobiliaria.')
+      return
+    }
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const link = `${origin}/p/${currentSlug}/payments`
+    
+    try {
+      await navigator.clipboard.writeText(link)
+      toast.success('Link público copiado: ' + link, { duration: 4000 })
+    } catch (err) {
+      // Fallback for non-secure contexts if needed
+      console.error('Clipboard error', err)
+      toast.error('Haga clic derecho y copie: ' + link)
+    }
+  }
+
+  const handleRegisterManualPayment = async (quotaId: string, quotaValue: number) => {
+    setIsProcessing(true)
+    try {
+      const formData = new FormData()
+      formData.append('quotaId', quotaId)
+      formData.append('amount', manualAmount || quotaValue.toString())
+      formData.append('bank', manualBank)
+      formData.append('observations', manualObservations)
+      if (manualCapture) {
+        formData.append('capture', manualCapture)
+      }
+      formData.append('paymentDate', new Date().toISOString())
+
+      await adminApi.registerManualPayment(formData)
+      
+      toast.success('Pago registrado y aprobado exitosamente')
+      setIsManualModalOpen(false)
+      // Reset form
+      setManualAmount('')
+      setManualBank('')
+      setManualObservations('')
+      setManualCapture(null)
+      setSelectedClientId('')
+      setClientDetails(null)
+      
+      refresh()
+    } catch (error) {
+      console.error('Error registering manual payment:', error)
+      toast.error('Error al registrar el pago')
     } finally {
       setIsProcessing(false)
     }
@@ -201,6 +346,23 @@ export default function PaymentsPage() {
             Revisa y aprueba los comprobantes de pago reportados por los clientes 
             {!pagination.loading && `(${pagination.total.toLocaleString('es-CO')} cuotas total)`}
           </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            variant="outline"
+            className="glass-button border-glass-border text-text-secondary min-h-[44px]"
+            onClick={copyPaymentLink}
+          >
+            <LinkIcon className="w-4 h-4 mr-2" />
+            Copiar Link Público
+          </Button>
+          <Button 
+            className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+            onClick={() => setIsManualModalOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Registrar Pago
+          </Button>
         </div>
       </div>
 
@@ -529,21 +691,44 @@ export default function PaymentsPage() {
             </div>
 
             {/* Comprobante */}
-            <div>
-              <h3 className="font-medium text-text-primary mb-3">Comprobante de Pago</h3>
-              <div className="border border-glass-border rounded-lg p-4 bg-glass-primary/20 backdrop-blur-glass">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <FileText className="w-6 h-6 text-text-muted mr-2" />
-                    <span className="text-text-secondary">Comprobante de pago</span>
+            {selectedPayment.comprobante && (
+              <div>
+                <h3 className="font-medium text-text-primary mb-3">Comprobante de Pago</h3>
+                <div className="border border-glass-border rounded-lg p-4 bg-glass-primary/20 backdrop-blur-glass overflow-hidden">
+                  {selectedPayment.comprobante.match(/\.(jpeg|jpg|gif|png|webp)/i) ? (
+                    <div className="relative group">
+                      <img 
+                        src={selectedPayment.comprobante} 
+                        alt="Comprobante" 
+                        className="w-full h-auto rounded-lg shadow-lg cursor-zoom-in group-hover:scale-[1.02] transition-transform duration-300"
+                        onClick={() => window.open(selectedPayment.comprobante || '', '_blank')}
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <FileText className="w-6 h-6 text-text-muted mr-2" />
+                        <span className="text-text-secondary truncate max-w-[200px]">
+                          Comprobante ({selectedPayment.comprobante.split('/').pop()})
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 flex justify-end">
+                    <Button 
+                      variant="glass" 
+                      size="sm" 
+                      className="glass-button"
+                      onClick={() => window.open(selectedPayment.comprobante || '', '_blank')}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Descargar / Ver Full
+                    </Button>
                   </div>
-                  <Button variant="glass" size="sm" className="glass-button">
-                    <Download className="w-4 h-4 mr-2" />
-                    Descargar
-                  </Button>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Observaciones */}
             <div>
@@ -599,6 +784,184 @@ export default function PaymentsPage() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Manual Payment Registration Modal */}
+      <Modal
+        isOpen={isManualModalOpen}
+        onClose={() => {
+          setIsManualModalOpen(false)
+          setSelectedClientId('')
+          setClientDetails(null)
+          setSelectedContractId('')
+          setManualAmount('')
+          setManualBank('')
+          setManualObservations('')
+          setManualCapture(null)
+        }}
+        title="Registrar Pago Manual"
+        size="lg"
+      >
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-2 mb-4 p-3 bg-accent-blue/10 rounded-lg border border-accent-blue/20">
+              <User className="w-5 h-5 text-accent-blue" />
+              <p className="text-sm font-medium text-accent-blue">Paso 1: Seleccione el cliente</p>
+            </div>
+            <label className="block text-sm font-medium text-text-primary mb-2">Cliente</label>
+            <Combobox
+              options={clients.map(c => ({ value: c._id, label: `${c.name} - ${c.idNumber}` }))}
+              value={selectedClientId}
+              onChange={setSelectedClientId}
+              placeholder="Buscar cliente por nombre o cédula..."
+              searchPlaceholder="Escribir nombre..."
+            />
+          </div>
+
+          {modalLoading && <ModalContentSkeleton sections={2} />}
+
+          {!modalLoading && clientDetails && (
+            <div className="space-y-6 animate-fade-in-up">
+              <div className="flex items-center gap-2 mb-2 p-3 bg-accent-purple/10 rounded-lg border border-accent-purple/20">
+                <FileText className="w-5 h-5 text-accent-purple" />
+                <p className="text-sm font-medium text-accent-purple">Paso 2: Complete los detalles del pago</p>
+              </div>
+
+              {clientDetails.contracts?.length > 1 && (
+                <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                  <label className="block text-sm font-medium text-text-primary mb-3">CONTRATO / LOTE</label>
+                  <select
+                    value={selectedContractId}
+                    onChange={(e) => setSelectedContractId(e.target.value)}
+                    className="glass-input w-full px-4 py-3 text-lg"
+                  >
+                    {clientDetails.contracts.map((c: any) => (
+                      <option key={c._id} value={c._id}>
+                        {c.negotiation || 'Contrato'} - Mz {c.lotId?.manzana || '-'} Lote {c.lotId?.nomenclatura || '-'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" /> Banco
+                  </label>
+                  <Input 
+                    placeholder="Ej. Bancolombia" 
+                    value={manualBank} 
+                    onChange={(e) => setManualBank(e.target.value)} 
+                    className="glass-input h-12" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" /> Monto Pagado (Opcional)
+                  </label>
+                  <Input 
+                    type="number" 
+                    placeholder="Valor total por defecto" 
+                    value={manualAmount} 
+                    onChange={(e) => setManualAmount(e.target.value)} 
+                    className="glass-input h-12" 
+                  />
+                </div>
+              </div>
+
+              <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                  <Upload className="w-4 h-4" /> Comprobante / Captura
+                </label>
+                <div className="relative group">
+                  <Input 
+                    type="file" 
+                    onChange={(e) => setManualCapture(e.target.files?.[0] || null)} 
+                    className="glass-input h-14 pt-3 flex-1 file:hidden cursor-pointer" 
+                    accept="image/*,.pdf"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-text-muted italic">
+                    {manualCapture ? manualCapture.name : 'Subir archivo (opcional)'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                <label className="block text-sm font-medium text-text-primary mb-2">OBSERVACIONES</label>
+                <textarea 
+                  value={manualObservations} 
+                  onChange={(e) => setManualObservations(e.target.value)} 
+                  className="glass-input w-full px-4 py-3" 
+                  rows={2} 
+                  placeholder="Detalles sobre transferencia, número de operación, etc."
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 p-3 bg-accent-green/10 rounded-lg border border-accent-green/20">
+                  <CheckCircle className="w-5 h-5 text-accent-green" />
+                  <p className="text-sm font-medium text-accent-green">Paso 3: Seleccione la cuota que está pagando</p>
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                  {clientDetails.contracts
+                    .find((c: any) => c._id === selectedContractId)
+                    ?.quotas?.filter((q: any) => q.status !== 'pagado')
+                    .sort((a: any, b: any) => {
+                      if (a.type === 'inicial' && b.type !== 'inicial') return -1;
+                      if (a.type !== 'inicial' && b.type === 'inicial') return 1;
+                      return a.number - b.number;
+                    })
+                    .map((quota: any) => (
+                      <div 
+                        key={quota._id}
+                        className="flex items-center justify-between p-4 rounded-2xl border border-glass-border bg-glass-primary/10 hover:bg-glass-primary/20 transition-all hover:scale-[1.01]"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${quota.type === 'inicial' ? 'bg-accent-purple/20 text-accent-purple' : 'bg-accent-blue/20 text-accent-blue'}`}>
+                            <span className="font-bold">#{quota.number}</span>
+                          </div>
+                          <div>
+                            <p className={`font-bold ${quota.type === 'inicial' ? 'text-accent-purple' : 'text-text-primary'}`}>
+                              {quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'}
+                            </p>
+                            <p className="text-sm text-text-muted">Vence: {dayjs(quota.dueDate).format('DD/MM/YYYY')}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-6">
+                          <span className="text-xl font-bold text-text-primary">{formatCurrency(quota.value)}</span>
+                          <Button
+                            size="lg"
+                            className="bg-accent-green/20 text-accent-green border border-accent-green/30 hover:bg-accent-green/40 px-6 h-12 shadow-md shadow-accent-green/10"
+                            onClick={() => handleRegisterManualPayment(quota._id, quota.value)}
+                            disabled={isProcessing}
+                          >
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Pagar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  {clientDetails.contracts
+                    .find((c: any) => c._id === selectedContractId)
+                    ?.quotas?.filter((q: any) => q.status !== 'pagado').length === 0 && (
+                      <p className="text-center py-4 text-text-muted">No hay cuotas pendientes para este contrato.</p>
+                    )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4 border-t border-glass-border">
+            <Button
+              variant="outline"
+              onClick={() => setIsManualModalOpen(false)}
+              className="glass-button"
+            >
+              Cerrar
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

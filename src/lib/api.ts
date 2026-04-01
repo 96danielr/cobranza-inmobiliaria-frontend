@@ -121,3 +121,16 @@ export const apiClient = {
       responseType: 'blob'
     }),
 }
+
+// Public API (No auth required)
+export const apiPublic = {
+  getClientInfo: (companySlug: string, idNumber: string) => 
+    api.get(`/public/${companySlug}/client/${idNumber}`),
+    
+  reportPayment: (formData: FormData) => 
+    api.post('/public/report-payment', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    }),
+}

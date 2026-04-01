@@ -69,8 +69,19 @@ export default function ClientsPage() {
   const { isAuthenticated } = useAdminAuthStore()
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [behaviorFilter, setBehaviorFilter] = useState<'ALL' | 'DISPUESTO' | 'INDECISO' | 'EVASIVO'>('ALL')
   const [statsLoading, setStatsLoading] = useState(false)
+  
+  const [newClient, setNewClient] = useState({
+    name: '',
+    idNumber: '',
+    phone: '',
+    email: '',
+    address: '',
+    behavior: 'INDECISO'
+  })
 
   // Fetch clients with pagination and filtering
   const fetchClients = useCallback(async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
@@ -136,6 +147,35 @@ export default function ClientsPage() {
     setIsModalOpen(true)
   }
 
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newClient.name || !newClient.idNumber) {
+      toast.error('Nombre y Cédula son obligatorios')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await adminApi.createClient(newClient)
+      toast.success('Cliente creado exitosamente')
+      setIsCreateModalOpen(false)
+      setNewClient({
+        name: '',
+        idNumber: '',
+        phone: '',
+        email: '',
+        address: '',
+        behavior: 'INDECISO'
+      })
+      pagination.refresh()
+    } catch (error: any) {
+      console.error('Error creating client:', error)
+      toast.error(error.response?.data?.message || 'Error al crear cliente')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // Calculate stats from real data
   const totalClients = pagination.total || 0
   
@@ -159,7 +199,10 @@ export default function ClientsPage() {
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </Button>
-          <Button className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]">
+          <Button 
+            className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Cliente
           </Button>
@@ -285,14 +328,7 @@ export default function ClientsPage() {
             <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="sticky top-0 z-20">
-                  <SortHeader 
-                    label="No." 
-                    field="excelRowId" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
-                    onSort={pagination.handleSort}
-                    className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border w-16"
-                  />
+
                   <SortHeader 
                     label="Cliente" 
                     field="name" 
@@ -324,11 +360,11 @@ export default function ClientsPage() {
               <tbody>
                 {pagination.loading ? (
                   Array.from({ length: 8 }).map((_, index) => (
-                    <TableRowSkeleton key={index} columns={6} />
+                    <TableRowSkeleton key={index} columns={5} />
                   ))
                 ) : pagination.total === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-text-muted">
+                    <td colSpan={5} className="py-12 text-center text-text-muted">
                       <div className="flex flex-col items-center space-y-3">
                         <User className="w-12 h-12 text-text-disabled" />
                         <p className="text-lg font-medium">No hay clientes registrados</p>
@@ -339,9 +375,7 @@ export default function ClientsPage() {
                 ) : (
                   pagination.data.map((client) => (
                   <tr key={client._id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
-                    <td className="py-2 px-4 md:px-6 text-text-secondary text-sm w-16">
-                      {client.excelRowId || '-'}
-                    </td>
+
                     <td className="py-2 px-4 md:px-6">
                       <p className="font-medium text-text-primary whitespace-nowrap">{client.name}</p>
                     </td>
@@ -531,6 +565,99 @@ export default function ClientsPage() {
         ) : (
           <ModalContentSkeleton />
         )}
+      </Modal>
+
+      {/* New Client Modal */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Agregar Nuevo Cliente"
+        size="lg"
+      >
+        <form onSubmit={handleCreateClient} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Nombre Completo *</label>
+              <Input
+                placeholder="Ej. Juan Pérez"
+                value={newClient.name}
+                onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
+                className="glass-input"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Cédula / ID *</label>
+              <Input
+                placeholder="Sin puntos ni comas"
+                value={newClient.idNumber}
+                onChange={(e) => setNewClient({ ...newClient, idNumber: e.target.value })}
+                className="glass-input"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Teléfono</label>
+              <Input
+                placeholder="Ej. 3101234567"
+                value={newClient.phone}
+                onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Email</label>
+              <Input
+                type="email"
+                placeholder="correo@ejemplo.com"
+                value={newClient.email}
+                onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium text-text-secondary">Dirección</label>
+              <Input
+                placeholder="Dirección de residencia"
+                value={newClient.address}
+                onChange={(e) => setNewClient({ ...newClient, address: e.target.value })}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium text-text-secondary">Estado / Comportamiento inicial</label>
+              <Combobox
+                value={newClient.behavior}
+                onChange={(val) => setNewClient({ ...newClient, behavior: val as string })}
+                options={[
+                  { value: 'ALL', label: 'No definido' },
+                  { value: 'DISPUESTO', label: 'Dispuesto' },
+                  { value: 'INDECISO', label: 'Indeciso' },
+                  { value: 'EVASIVO', label: 'Evasivo' },
+                ]}
+                placeholder="Seleccione estado"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-glass-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(false)}
+              className="glass-button"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              loading={isSubmitting}
+              className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-w-[120px]"
+            >
+              Crear Cliente
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   )
