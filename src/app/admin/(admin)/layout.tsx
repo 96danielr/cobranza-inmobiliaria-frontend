@@ -20,7 +20,7 @@ import {
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 
-type Role = 'tenant_admin' | 'company_admin' | 'agent'
+type Role = 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent'
 
 interface NavItem {
   icon: React.ElementType
@@ -40,11 +40,13 @@ const navItems: NavItem[] = [
   { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', roles: ['tenant_admin', 'company_admin'], module: 'cobranzas' },
   { icon: Upload, label: 'Importar', href: '/admin/import', roles: ['tenant_admin', 'company_admin'] },
   { icon: Shield, label: 'Equipo', href: '/admin/users', roles: ['tenant_admin'] },
+  { icon: Building2, label: 'Bancos', href: '/admin/banks', roles: ['superadmin'] },
   { icon: Settings, label: 'Configuración', href: '/admin/settings', roles: ['tenant_admin'] },
-  { icon: LogOut, label: 'Cerrar Sesión', href: 'logout', roles: ['tenant_admin', 'company_admin', 'agent'] },
+  { icon: LogOut, label: 'Cerrar Sesión', href: 'logout', roles: ['superadmin', 'tenant_admin', 'company_admin', 'agent'] },
 ]
 
 const roleLabels: Record<Role, string> = {
+  superadmin: 'Super Admin',
   tenant_admin: 'Admin Tenant',
   company_admin: 'Admin Empresa',
   agent: 'Agente',

@@ -26,18 +26,20 @@ import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
 import { StatsCardSkeleton } from '@/components/ui/LoadingSpinner'
 
-type Role = 'tenant_admin' | 'company_admin' | 'agent'
+type Role = 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor'
 
 const roleLabels: Record<Role, string> = {
   tenant_admin: 'Admin Tenant',
   company_admin: 'Admin Empresa',
   agent: 'Agente',
+  vendedor: 'Vendedor',
 }
 
 const roleBadgeVariant: Record<Role, 'purple' | 'info' | 'default'> = {
   tenant_admin: 'purple',
   company_admin: 'info',
   agent: 'default',
+  vendedor: 'default',
 }
 
 interface AdminUser {
@@ -365,6 +367,7 @@ export default function UsersPage() {
               onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
             >
               <option value="agent">Agente</option>
+              <option value="vendedor">Vendedor</option>
               <option value="company_admin">Admin Empresa</option>
               <option value="tenant_admin">Admin Tenant</option>
             </select>
@@ -412,6 +415,7 @@ export default function UsersPage() {
               onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
             >
               <option value="agent">Agente</option>
+              <option value="vendedor">Vendedor</option>
               <option value="company_admin">Admin Empresa</option>
               <option value="tenant_admin">Admin Tenant</option>
             </select>

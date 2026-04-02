@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Combobox } from '@/components/ui/Combobox'
 import { apiPublic } from '@/lib/api'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
@@ -40,6 +41,26 @@ export default function PublicPaymentPage() {
   const [observations, setObservations] = useState('')
   const [capture, setCapture] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [banks, setBanks] = useState<any[]>([])
+  const [loadingBanks, setLoadingBanks] = useState(false)
+
+  useEffect(() => {
+    fetchBanks()
+  }, [])
+
+  const fetchBanks = async () => {
+    try {
+      setLoadingBanks(true)
+      const response = await apiPublic.getBanks()
+      if (response.data.success) {
+        setBanks(response.data.data.banks)
+      }
+    } catch (error) {
+      console.error('Error fetching banks:', error)
+    } finally {
+      setLoadingBanks(false)
+    }
+  }
 
   const handleSearchClient = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -268,13 +289,15 @@ export default function PublicPaymentPage() {
                         <CreditCard className="w-4 h-4 text-accent-purple" />
                         ¿Desde qué banco?
                       </label>
-                      <Input
-                        placeholder="Eje. Bancolombia, Nequi"
+                      <Combobox
+                        options={banks.map((b: any) => ({ value: b.acronym, label: b.acronym }))}
                         value={bank}
-                        onChange={(e) => setBank(e.target.value)}
-                        className="glass-input h-12"
-                        required
+                        onChange={setBank}
+                        placeholder="Selecciona tu banco..."
+                        searchPlaceholder="Escribir nombre del banco..."
+                        className="h-12"
                       />
+                      {loadingBanks && <p className="text-[10px] text-text-muted mt-1 animate-pulse">Cargando bancos...</p>}
                     </div>
                   </div>
 

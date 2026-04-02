@@ -133,4 +133,7 @@ export const apiPublic = {
         'Content-Type': 'multipart/form-data',
       }
     }),
+
+  getBanks: () => 
+    api.get('/banks'),
 }

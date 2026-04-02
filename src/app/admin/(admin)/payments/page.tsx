@@ -88,6 +88,8 @@ export default function PaymentsPage() {
   const [manualObservations, setManualObservations] = useState('')
   const [manualCapture, setManualCapture] = useState<File | null>(null)
   const [companySlug, setCompanySlug] = useState('')
+  const [banks, setBanks] = useState<any[]>([])
+  const [loadingBanks, setLoadingBanks] = useState(false)
 
   const { selectedCompanyId } = useAdminAuthStore()
 
@@ -110,8 +112,23 @@ export default function PaymentsPage() {
   useEffect(() => {
     if (isManualModalOpen) {
       fetchClientsIfNeeded()
+      fetchBanks()
     }
   }, [isManualModalOpen, fetchClientsIfNeeded])
+
+  const fetchBanks = async () => {
+    try {
+      setLoadingBanks(true)
+      const response = await adminApi.getBanks(1, 1000) // Get all banks
+      if (response.data.success) {
+        setBanks(response.data.data.banks)
+      }
+    } catch (error) {
+      console.error('Error fetching banks:', error)
+    } finally {
+      setLoadingBanks(false)
+    }
+  }
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -849,12 +866,15 @@ export default function PaymentsPage() {
                   <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
                     <CreditCard className="w-4 h-4" /> Banco
                   </label>
-                  <Input 
-                    placeholder="Ej. Bancolombia" 
-                    value={manualBank} 
-                    onChange={(e) => setManualBank(e.target.value)} 
-                    className="glass-input h-12" 
+                  <Combobox
+                    options={banks.map(b => ({ value: b.acronym, label: b.acronym }))}
+                    value={manualBank}
+                    onChange={setManualBank}
+                    placeholder="Seleccione un banco..."
+                    searchPlaceholder="Buscar banco..."
+                    className="h-12"
                   />
+                  {loadingBanks && <p className="text-[10px] text-text-muted mt-1 animate-pulse">Cargando bancos...</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">

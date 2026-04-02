@@ -20,7 +20,9 @@ import {
   ShoppingCart,
   Calendar as CalendarIcon,
   UserPlus,
-  Users
+  Users,
+  Eye,
+  Info
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -46,6 +48,11 @@ interface Lot {
   images?: string[]
   status: 'disponible' | 'vendido'
   createdAt: string
+  sellerId?: {
+    accountId: {
+      fullName: string
+    }
+  }
 }
 
 export default function LotsPage() {
@@ -57,6 +64,12 @@ export default function LotsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isCreatingNewClient, setIsCreatingNewClient] = useState(false)
+  const [sellers, setSellers] = useState<any[]>([])
+  const [loadingSellers, setLoadingSellers] = useState(false)
+  
+  const [isSaleDetailModalOpen, setIsSaleDetailModalOpen] = useState(false)
+  const [saleDetail, setSaleDetail] = useState<any>(null)
+  const [loadingSaleDetail, setLoadingSaleDetail] = useState(false)
   
   const { clients, fetchClientsIfNeeded, loading: clientsLoading } = useClientStore()
 
@@ -80,7 +93,8 @@ export default function LotsPage() {
     // New client fields if creating new
     clientName: '',
     clientIdNumber: '',
-    clientPhone: ''
+    clientPhone: '',
+    sellerId: ''
   })
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -192,15 +206,49 @@ export default function LotsPage() {
     }
   }
 
+  const handleViewSaleDetail = async (lot: Lot) => {
+    setSelectedLot(lot)
+    setIsSaleDetailModalOpen(true)
+    setLoadingSaleDetail(true)
+    setSaleDetail(null)
+    try {
+      const response = await adminApi.getLotSaleDetail(lot._id)
+      if (response.data.success) {
+        setSaleDetail(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching sale detail:', error)
+      toast.error('Error al cargar detalles de la venta')
+    } finally {
+      setLoadingSaleDetail(false)
+    }
+  }
+
   const handleSellClick = (lot: Lot) => {
     setSelectedLot(lot)
     setSellFormData({
       ...sellFormData,
       totalValue: lot.price?.toString() || '',
-      contractDate: dayjs().format('YYYY-MM-DD')
+      contractDate: dayjs().format('YYYY-MM-DD'),
+      sellerId: ''
     })
     setIsSellModalOpen(true)
     fetchClientsIfNeeded()
+    fetchSellers()
+  }
+
+  const fetchSellers = async () => {
+    try {
+      setLoadingSellers(true)
+      const response = await adminApi.getSellers()
+      if (response.data.success) {
+        setSellers(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching sellers:', error)
+    } finally {
+      setLoadingSellers(false)
+    }
   }
 
   const handleSellLot = async (e: React.FormEvent) => {
@@ -215,7 +263,8 @@ export default function LotsPage() {
         initialQuotaPercentage: parseFloat(sellFormData.initialQuotaPercentage),
         initialQuotasCount: parseInt(sellFormData.initialQuotasCount),
         contractDate: sellFormData.contractDate,
-        negotiation: sellFormData.negotiation
+        negotiation: sellFormData.negotiation,
+        sellerId: sellFormData.sellerId || undefined
       }
 
       if (isCreatingNewClient) {
@@ -386,6 +435,7 @@ export default function LotsPage() {
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Estado</th>
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Vendedor</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Imágenes</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary w-40 bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Acciones</th>
                 </tr>
@@ -428,6 +478,9 @@ export default function LotsPage() {
                           {lot.status === 'vendido' ? 'Vendido' : 'Disponible'}
                         </span>
                       </td>
+                      <td className="py-4 px-4 md:px-6 text-sm text-text-secondary whitespace-nowrap">
+                        {lot.sellerId?.accountId?.fullName || '-'}
+                      </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
                           {lot.images && lot.images.length > 0 ? (
@@ -458,7 +511,17 @@ export default function LotsPage() {
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
-                          {lot.status !== 'vendido' && (
+                          {lot.status === 'vendido' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewSaleDetail(lot)}
+                              className="glass-button min-h-[40px] min-w-[40px] text-accent-purple hover:bg-accent-purple/10"
+                              title="Ver Detalles de Venta"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          ) : (
                             <Button
                               variant="outline"
                               size="sm"
@@ -503,6 +566,7 @@ export default function LotsPage() {
                     <div>
                       <h3 className="font-bold text-text-primary">{lot.stage} - {lot.lotNumber}</h3>
                       <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
+                      <p className="text-xs text-text-muted mt-1">Vendedor: {lot.sellerId?.accountId?.fullName || 'N/A'}</p>
                       <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                         lot.status === 'vendido' 
                           ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' 
@@ -512,7 +576,11 @@ export default function LotsPage() {
                       </span>
                     </div>
                     <div className="flex space-x-2">
-                       {lot.status !== 'vendido' && (
+                       {lot.status === 'vendido' ? (
+                         <Button size="sm" variant="outline" onClick={() => handleViewSaleDetail(lot)} className="glass-button text-accent-purple">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                       ) : (
                          <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
                           <ShoppingCart className="w-4 h-4" />
                         </Button>
@@ -800,6 +868,27 @@ export default function LotsPage() {
             )}
           </div>
 
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-text-primary flex items-center">
+              <Users className="w-4 h-4 mr-2 text-accent-purple" />
+              Asignar Vendedor (Opcional)
+            </label>
+            <select
+              name="sellerId"
+              value={sellFormData.sellerId}
+              onChange={handleSellInputChange}
+              className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
+            >
+              <option value="">Sin vendedor asignado</option>
+              {sellers.map((s: any) => (
+                <option key={s.id} value={s.id}>
+                  {s.fullName}
+                </option>
+              ))}
+            </select>
+            {loadingSellers && <p className="text-xs text-text-muted animate-pulse">Cargando vendedores...</p>}
+          </div>
+
           <div className="h-px bg-glass-border w-full" />
 
           {/* Sale Details */}
@@ -927,6 +1016,169 @@ export default function LotsPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+      {/* Sale Detail Modal */}
+      <Modal
+        isOpen={isSaleDetailModalOpen}
+        onClose={() => setIsSaleDetailModalOpen(false)}
+        title="Detalles de Contrato Pro"
+        size="xl"
+      >
+        {loadingSaleDetail ? (
+          <ModalContentSkeleton />
+        ) : saleDetail ? (
+          <div className="space-y-6 pt-2 animate-fade-in">
+            {/* Lot & Contract Header */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
+                <p className="text-xs text-text-muted uppercase font-bold mb-1">Información del Lote</p>
+                <h4 className="text-xl font-bold text-text-primary">{selectedLot?.stage} - {selectedLot?.lotNumber}</h4>
+                <div className="mt-2 space-y-1">
+                  <p className="text-sm text-text-secondary flex justify-between">
+                    <span>Nomenclatura:</span> <span className="text-text-primary font-medium">{selectedLot?.nomenclature}</span>
+                  </p>
+                  <p className="text-sm text-text-secondary flex justify-between">
+                    <span>Área:</span> <span className="text-text-primary font-medium">{selectedLot?.area} m²</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-accent-blue/5 border border-accent-blue/20">
+                <p className="text-xs text-accent-blue uppercase font-bold mb-1">Resumen Financiero</p>
+                <h4 className="text-xl font-bold text-accent-blue">{formatCurrency(saleDetail.contract.totalValue)}</h4>
+                <div className="mt-2 space-y-1">
+                  <p className="text-sm text-text-secondary flex justify-between">
+                    <span>Cuotas:</span> <span className="text-text-primary font-medium">{saleDetail.contract.installmentsCount} cuotas</span>
+                  </p>
+                  <p className="text-sm text-text-secondary flex justify-between">
+                    <span>Valor Cuota:</span> <span className="text-text-primary font-medium">{formatCurrency(saleDetail.contract.installmentValue)}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Client & Seller */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div className="flex items-center text-text-primary font-semibold border-b border-glass-border pb-2">
+                  <Users className="w-4 h-4 mr-2 text-accent-blue" />
+                  Cliente
+                </div>
+                <div className="space-y-1">
+                  <p className="text-lg font-bold text-text-primary">{saleDetail.contract.client?.name}</p>
+                  <p className="text-sm text-text-secondary">CC: {saleDetail.contract.client?.idNumber}</p>
+                  <p className="text-sm text-text-secondary">Tel: {saleDetail.contract.client?.phone}</p>
+                  {saleDetail.contract.client?.email && (
+                    <p className="text-sm text-text-secondary">Email: {saleDetail.contract.client.email}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center text-text-primary font-semibold border-b border-glass-border pb-2">
+                  <UserPlus className="w-4 h-4 mr-2 text-accent-green" />
+                  Vendedor
+                </div>
+                {saleDetail.contract.sellerId ? (
+                  <div className="space-y-1">
+                    <p className="text-lg font-bold text-text-primary">
+                      {saleDetail.contract.sellerId.accountId?.fullName || 'N/A'}
+                    </p>
+                    <p className="text-sm text-text-secondary">
+                      {saleDetail.contract.sellerId.accountId?.email || 'N/A'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center text-text-disabled italic text-sm py-4">
+                    Sin vendedor asignado
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Negotiation Details */}
+            <Card variant="elevated" className="p-4 bg-glass-secondary/50">
+              <div className="flex items-center mb-3">
+                <Info className="w-4 h-4 mr-2 text-accent-blue" />
+                <span className="font-bold text-text-primary">Detalles de la Negociación</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-text-muted">Tipo</p>
+                  <p className="text-sm font-medium text-text-primary">{saleDetail.contract.negotiation}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-muted">Fecha Contrato</p>
+                  <p className="text-sm font-medium text-text-primary">
+                    {dayjs(saleDetail.contract.contractDate).format('DD [de] MMMM, YYYY')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-muted">Inicio Pagos</p>
+                  <p className="text-sm font-medium text-text-primary">
+                    {dayjs(saleDetail.contract.startDate).format('DD/MM/YYYY')}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Quotas Summary */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-glass-border pb-2">
+                <div className="flex items-center text-text-primary font-semibold">
+                  <CalendarIcon className="w-4 h-4 mr-2 text-accent-purple" />
+                  Plan de Pagos ({saleDetail.quotas.length} cuotas)
+                </div>
+              </div>
+              <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-xs text-text-muted border-b border-glass-border uppercase">
+                      <th className="py-2">#</th>
+                      <th className="py-2">Tipo</th>
+                      <th className="py-2">Vencimiento</th>
+                      <th className="py-2 text-right">Valor</th>
+                      <th className="py-2 text-center">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {saleDetail.quotas.map((quota: any) => (
+                      <tr key={quota._id} className="border-b border-glass-border hover:bg-glass-primary/10">
+                        <td className="py-3 font-medium text-text-secondary">{quota.number}</td>
+                        <td className="py-3 capitalize text-text-muted">{quota.type}</td>
+                        <td className="py-3 text-text-primary">
+                          {dayjs(quota.dueDate).format('DD/MM/YYYY')}
+                        </td>
+                        <td className="py-3 text-right font-bold text-text-primary">
+                          {formatCurrency(quota.value)}
+                        </td>
+                        <td className="py-3 text-center">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            quota.status === 'pagada' 
+                              ? 'bg-accent-green/10 text-accent-green' 
+                              : 'bg-accent-red/10 text-accent-red'
+                          }`}>
+                            {quota.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="pt-4 flex justify-end">
+              <Button onClick={() => setIsSaleDetailModalOpen(false)} className="glass-button bg-accent-blue text-white">
+                Cerrar Detalles
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="py-12 text-center text-text-muted">
+            No se pudieron cargar los detalles de la venta
+          </div>
+        )}
       </Modal>
     </div>
   )

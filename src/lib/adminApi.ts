@@ -131,6 +131,9 @@ export const adminApi = {
   sellLot: (id: string, data: any) =>
     apiAdmin.post(`/lots/${id}/sell?companyId=${getCompanyId()}`, data),
 
+  getLotSaleDetail: (id: string) =>
+    apiAdmin.get(`/lots/${id}/sale-detail?companyId=${getCompanyId()}`),
+
   getLotsPublic: (companyId: string, search?: string) => {
     const params = new URLSearchParams({
       ...(search && { search }),
@@ -187,6 +190,9 @@ export const adminApi = {
   deleteAdminUser: (id: string) =>
     apiAdmin.delete(`/admin-users/delete/${id}?companyId=${getCompanyId()}`),
 
+  getSellers: () =>
+    apiAdmin.get(`/admin-users/sellers?companyId=${getCompanyId()}`),
+
   // Companies (tenant-scoped)
   getCompanies: () =>
     apiAdmin.get('/companies'),
@@ -215,4 +221,33 @@ export const adminApi = {
 
   updateTenant: (id: string, data: any) =>
     apiAdmin.put(`/tenants/${id}`, data),
+
+  // Banks (global list, superadmin only for writes)
+  getBanks: (page: number = 1, limit: number = 100, search?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+    })
+    return apiAdmin.get(`/banks?${params.toString()}`)
+  },
+
+  createBank: (data: any) =>
+    apiAdmin.post('/banks', data),
+
+  updateBank: (id: string, data: any) =>
+    apiAdmin.put(`/banks/${id}`, data),
+
+  deleteBank: (id: string) =>
+    apiAdmin.delete(`/banks/${id}`),
+
+  bulkCreateBanks: (banks: any[]) =>
+    apiAdmin.post('/banks/bulk', { banks }),
+
+  uploadBanksExcel: (formData: FormData) =>
+    apiAdmin.post('/banks/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 }
