@@ -19,7 +19,9 @@ import {
   User,
   CreditCard,
   Upload,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Copy,
+  ExternalLink
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -62,6 +64,7 @@ interface PendingPayment {
       }
     }
   }
+  receiptUrl?: string
 }
 
 
@@ -257,6 +260,11 @@ export default function PaymentsPage() {
       console.error('Clipboard error', err)
       toast.error('Haga clic derecho y copie: ' + link)
     }
+  }
+
+  const handleCopyReceiptLink = (url: string) => {
+    navigator.clipboard.writeText(url)
+    toast.success('Enlace del recibo copiado')
   }
 
   const handleRegisterManualPayment = async (quotaId: string, quotaValue: number) => {
@@ -567,6 +575,28 @@ export default function PaymentsPage() {
                       <Button variant="glass" size="sm" onClick={() => handleViewPayment(payment)} className="glass-button">
                         <Eye className="w-4 h-4" />
                       </Button>
+                      {payment.receiptUrl && (
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="glass" 
+                            size="sm" 
+                            className="glass-button text-accent-green hover:bg-accent-green/20"
+                            onClick={() => window.open(payment.receiptUrl, '_blank')}
+                            title="Ver Recibo"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="glass" 
+                            size="sm" 
+                            className="glass-button text-accent-blue hover:bg-accent-blue/20"
+                            onClick={() => payment.receiptUrl && handleCopyReceiptLink(payment.receiptUrl)}
+                            title="Copiar Link de Recibo"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                       {payment.status === 'PENDIENTE' && (
                         <>
                           <Button 
@@ -795,6 +825,28 @@ export default function PaymentsPage() {
                   </div>
                   {selectedPayment.observacion && (
                     <p className="mt-2 text-sm">{selectedPayment.observacion}</p>
+                  )}
+                  {selectedPayment.receiptUrl && (
+                    <div className="mt-4 flex gap-2">
+                      <Button 
+                        variant="glass" 
+                        size="sm" 
+                        className="glass-button flex-1 bg-white/10"
+                        onClick={() => window.open(selectedPayment?.receiptUrl, '_blank')}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Ver Recibo (PDF)
+                      </Button>
+                      <Button 
+                        variant="glass" 
+                        size="sm" 
+                        className="glass-button bg-white/10 px-3"
+                        onClick={() => selectedPayment.receiptUrl && handleCopyReceiptLink(selectedPayment.receiptUrl)}
+                        title="Copiar Link"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>

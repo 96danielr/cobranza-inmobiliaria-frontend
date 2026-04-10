@@ -24,9 +24,11 @@ import { TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingS
 import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
+import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
 
 export default function BanksPage() {
+  const { admin } = useAdminAuthStore()
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
@@ -37,7 +39,7 @@ export default function BanksPage() {
 
   // Server-side pagination
   const fetchBanks = useCallback(async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
-    const response = await adminApi.getBanks(page, limit, search)
+    const response = await adminApi.getBanks(page, limit, search, sortBy, sortOrder)
     if (response.data.success) {
       return {
         data: response.data.data.banks,
@@ -95,9 +97,9 @@ export default function BanksPage() {
     <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de Bancos Globales</h1>
+          <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de Bancos</h1>
           <p className="text-text-secondary mt-2">
-            Administra el listado oficial de entidades financieras accesible por todas las empresas.
+            Administra los bancos de tu empresa y consulta el listado oficial.
           </p>
         </div>
         <div className="flex space-x-2">
@@ -143,12 +145,40 @@ export default function BanksPage() {
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="sticky top-0 z-20">
-                <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">TIPO</th>
-                <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">CÓDIGO</th>
-                <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">SIGLA</th>
-                <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">DENOMINACIÓN SOCIAL</th>
+                <SortHeader 
+                  label="TIPO" 
+                  field="type" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                />
+                <SortHeader 
+                  label="CÓDIGO" 
+                  field="code" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                />
+                <SortHeader 
+                  label="SIGLA" 
+                  field="acronym" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                />
+                <SortHeader 
+                  label="DENOMINACIÓN SOCIAL" 
+                  field="socialDenomination" 
+                  currentSortBy={pagination.sortBy} 
+                  currentSortOrder={pagination.sortOrder} 
+                  onSort={pagination.handleSort}
+                  className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                />
                 <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">DELEGATURA</th>
-                <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">ACCIONES</th>
+                <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border text-center">ACCIONES</th>
               </tr>
             </thead>
             <tbody>
@@ -174,11 +204,21 @@ export default function BanksPage() {
                     <td className="py-4 px-6 text-sm text-accent-blue font-medium">{bank.acronym || '---'}</td>
                     <td className="py-4 px-6 font-medium text-text-primary">{bank.socialDenomination}</td>
                     <td className="py-4 px-6 text-xs text-text-muted">{bank.competentDelegation}</td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2">
-                        <Button variant="glass" size="sm" onClick={() => handleDeleteBank(bank._id)} className="text-accent-red hover:bg-accent-red/20">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                    <td className="py-4 px-6 text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        {(!bank.tenantId && admin?.role === 'superadmin') || bank.tenantId ? (
+                          <Button 
+                            variant="glass" 
+                            size="sm" 
+                            onClick={() => handleDeleteBank(bank._id)} 
+                            className="text-accent-red hover:bg-accent-red/20"
+                            title={!bank.tenantId ? 'Desactivar Banco Global' : 'Eliminar Banco'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-text-muted italic">Global</span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -284,6 +324,62 @@ export default function BanksPage() {
             </div>
           )}
         </div>
+      </Modal>
+
+      {/* Add/Edit Modal */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title={editingBank ? 'Editar Banco' : 'Nuevo Banco'}
+        size="md"
+      >
+        <form onSubmit={async (e) => {
+          e.preventDefault()
+          const formData = new FormData(e.currentTarget)
+          const data = Object.fromEntries(formData.entries())
+          try {
+            if (editingBank) {
+              await adminApi.updateBank(editingBank._id, data)
+              toast.success('Banco actualizado')
+            } else {
+              await adminApi.createBank(data)
+              toast.success('Banco creado')
+            }
+            setIsAddModalOpen(false)
+            pagination.refresh()
+          } catch (error) {
+            toast.error('Error al guardar banco')
+          }
+        }} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sigla (ID Único)</label>
+              <Input name="acronym" defaultValue={editingBank?.acronym} placeholder="BCOL" required className="glass-input" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Código</label>
+              <Input name="code" defaultValue={editingBank?.code} placeholder="007" required className="glass-input" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Denominación Social</label>
+            <Input name="socialDenomination" defaultValue={editingBank?.socialDenomination} placeholder="BANCO COLCUOTAS" required className="glass-input" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Tipo</label>
+            <Input name="type" defaultValue={editingBank?.type || 'ESTABLECIMIENTO BANCARIO'} className="glass-input" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Delegatura</label>
+            <Input name="competentDelegation" defaultValue={editingBank?.competentDelegation} className="glass-input" />
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="glass" type="button" onClick={() => setIsAddModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" className="bg-accent-blue text-white shadow-glow">
+              {editingBank ? 'Actualizar' : 'Crear'} Banco
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   )

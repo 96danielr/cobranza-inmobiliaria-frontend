@@ -51,7 +51,7 @@ export default function PublicPaymentPage() {
   const fetchBanks = async () => {
     try {
       setLoadingBanks(true)
-      const response = await apiPublic.getBanks()
+      const response = await apiPublic.getBanks(slug as string)
       if (response.data.success) {
         setBanks(response.data.data.banks)
       }

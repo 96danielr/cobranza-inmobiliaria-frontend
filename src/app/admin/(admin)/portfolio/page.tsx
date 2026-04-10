@@ -213,6 +213,7 @@ export default function PortfolioPage() {
             totalCuotasIniciales: c.totalCuotasIniciales,
             cuotasNormalesPagadas: c.cuotasNormalesPagadas,
             totalCuotasNormales: c.totalCuotasNormales,
+            initialQuotaPercentage: c.initialQuotaPercentage,
             // Fallback
             cuotasPagadas: c.cuotasPagadas,
             totalCuotas: c.totalCuotas,
@@ -696,7 +697,12 @@ export default function PortfolioPage() {
                       {/* Initial Quotas */}
                       <div className="space-y-3">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-text-secondary font-semibold uppercase tracking-wider">Cuotas Iniciales</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-text-secondary font-semibold uppercase tracking-wider">Cuotas Iniciales</span>
+                            <span className="text-[10px] font-bold text-accent-green bg-accent-green/10 px-2 py-0.5 rounded-full">
+                              {(contract as any).initialQuotaPercentage ? `${Number((contract as any).initialQuotaPercentage).toFixed(2)}%` : '0%'}
+                            </span>
+                          </div>
                           <span className="text-text-primary px-2 py-0.5 bg-glass-primary rounded">
                             {(contract as any).cuotasInicialesPagadas}/{(contract as any).totalCuotasIniciales}
                           </span>

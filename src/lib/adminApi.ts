@@ -223,31 +223,35 @@ export const adminApi = {
     apiAdmin.put(`/tenants/${id}`, data),
 
   // Banks (global list, superadmin only for writes)
-  getBanks: (page: number = 1, limit: number = 100, search?: string) => {
+  getBanks: (page: number = 1, limit: number = 100, search?: string, sortBy?: string, sortOrder?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
+      companyId: getCompanyId(),
       ...(search && { search }),
+      ...(sortBy && { sortBy }),
+      ...(sortOrder && { sortOrder }),
     })
     return apiAdmin.get(`/banks?${params.toString()}`)
   },
 
   createBank: (data: any) =>
-    apiAdmin.post('/banks', data),
+    apiAdmin.post(`/banks?companyId=${getCompanyId()}`, data),
 
   updateBank: (id: string, data: any) =>
-    apiAdmin.put(`/banks/${id}`, data),
+    apiAdmin.put(`/banks/${id}?companyId=${getCompanyId()}`, data),
 
   deleteBank: (id: string) =>
-    apiAdmin.delete(`/banks/${id}`),
+    apiAdmin.delete(`/banks/${id}?companyId=${getCompanyId()}`),
 
   bulkCreateBanks: (banks: any[]) =>
-    apiAdmin.post('/banks/bulk', { banks }),
+    apiAdmin.post(`/banks/bulk?companyId=${getCompanyId()}`, { banks }),
 
   uploadBanksExcel: (formData: FormData) =>
-    apiAdmin.post('/banks/import', formData, {
+    apiAdmin.post(`/banks/import?companyId=${getCompanyId()}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     }),
+
 }

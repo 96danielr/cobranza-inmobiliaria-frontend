@@ -20,7 +20,7 @@ import {
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 
-type Role = 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent'
+type Role = 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor'
 
 interface NavItem {
   icon: React.ElementType
@@ -31,18 +31,18 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', roles: ['tenant_admin', 'company_admin', 'agent'] },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
   { icon: Building2, label: 'Empresas', href: '/admin/select-company', roles: ['tenant_admin'] },
-  { icon: CreditCard, label: 'Pagos', href: '/admin/payments', roles: ['tenant_admin', 'company_admin', 'agent'] },
-  { icon: Users, label: 'Cartera', href: '/admin/portfolio', roles: ['tenant_admin', 'company_admin', 'agent'] },
-  { icon: Users, label: 'Clientes', href: '/admin/clients', roles: ['tenant_admin', 'company_admin', 'agent'] },
-  { icon: Building2, label: 'Lotes', href: '/admin/lots', roles: ['tenant_admin', 'company_admin'] },
-  { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', roles: ['tenant_admin', 'company_admin'], module: 'cobranzas' },
+  { icon: CreditCard, label: 'Pagos', href: '/admin/payments', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
+  { icon: Users, label: 'Cartera', href: '/admin/portfolio', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
+  { icon: Users, label: 'Clientes', href: '/admin/clients', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
+  { icon: Building2, label: 'Lotes', href: '/admin/lots', roles: ['tenant_admin', 'company_admin', 'vendedor'] },
+  { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'], module: 'cobranzas' },
   { icon: Upload, label: 'Importar', href: '/admin/import', roles: ['tenant_admin', 'company_admin'] },
   { icon: Shield, label: 'Equipo', href: '/admin/users', roles: ['tenant_admin'] },
-  { icon: Building2, label: 'Bancos', href: '/admin/banks', roles: ['superadmin'] },
+  { icon: Building2, label: 'Bancos', href: '/admin/banks', roles: ['superadmin', 'tenant_admin', 'company_admin'] },
   { icon: Settings, label: 'Configuración', href: '/admin/settings', roles: ['tenant_admin'] },
-  { icon: LogOut, label: 'Cerrar Sesión', href: 'logout', roles: ['superadmin', 'tenant_admin', 'company_admin', 'agent'] },
+  { icon: LogOut, label: 'Cerrar Sesión', href: 'logout', roles: ['superadmin', 'tenant_admin', 'company_admin', 'agent', 'vendedor'] },
 ]
 
 const roleLabels: Record<Role, string> = {
@@ -50,6 +50,7 @@ const roleLabels: Record<Role, string> = {
   tenant_admin: 'Admin Tenant',
   company_admin: 'Admin Empresa',
   agent: 'Agente',
+  vendedor: 'Vendedor',
 }
 
 export default function AdminLayout({
@@ -58,15 +59,18 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { isAuthenticated, admin, logout, selectedCompanyId, selectedCompanyName } = useAdminAuthStore()
+  const { isAuthenticated, _hasHydrated, admin, logout, selectedCompanyId, selectedCompanyName } = useAdminAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
+    if (!_hasHydrated) return // wait for localStorage hydration
+    console.log('[AdminLayout] isAuthenticated:', isAuthenticated, '| path:', pathname)
     if (!isAuthenticated) {
+      console.log('[AdminLayout] Not authenticated → redirecting to /admin/login')
       router.push('/admin/login')
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, _hasHydrated, router])
 
   const getBreadcrumbs = () => {
     const path = pathname.split('/').filter(Boolean)
@@ -101,6 +105,14 @@ export default function AdminLayout({
   const handleLogout = () => {
     logout()
     router.push('/admin/login')
+  }
+
+  if (!_hasHydrated) {
+    return (
+      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent-blue border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
   if (!isAuthenticated) {

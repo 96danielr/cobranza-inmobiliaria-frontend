@@ -49,6 +49,7 @@ interface Client {
   _count?: {
     contracts: number
   }
+  contracts?: any[]
 }
 
 interface ApiResponse {
@@ -545,6 +546,79 @@ export default function ClientsPage() {
                 </div>
               </div>
             </div>
+            
+            {/* Contracts Info */}
+            {selectedClient.contracts && selectedClient.contracts.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-text-primary flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-accent-blue" />
+                  Contratos ({selectedClient.contracts.length})
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {selectedClient.contracts.map((contract: any, idx: number) => (
+                    <div key={contract._id || idx} className="bg-glass-primary/20 backdrop-blur-sm border border-glass-border rounded-xl p-5 hover:bg-glass-primary/30 transition-all duration-300">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="text-xs font-bold text-accent-blue uppercase tracking-wider mb-1">
+                            {contract.negotiation || 'Contrato de Venta'}
+                          </p>
+                          <h4 className="font-bold text-text-primary text-lg">
+                            {contract.lot?.lotNumber ? `Lote ${contract.lot.lotNumber}` : `Contrato #${idx + 1}`}
+                          </h4>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-text-secondary">Valor Total</p>
+                          <p className="text-lg font-black text-text-primary">
+                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(contract.totalValue || 0)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-t border-b border-glass-border/50">
+                        <div>
+                          <p className="text-xs text-text-secondary uppercase mb-1">Cuota Inicial</p>
+                          <div className="flex flex-col">
+                            <p className="font-bold text-text-primary">
+                              {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(contract.valorTotalInicial || 0)}
+                            </p>
+                            <span className="text-[10px] sm:text-xs font-medium text-accent-green bg-accent-green/10 px-2 py-0.5 rounded-full w-fit mt-1">
+                              {contract.initialQuotaPercentage ? `${Number(contract.initialQuotaPercentage).toFixed(2)}%` : '0%'}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-text-secondary uppercase mb-1">Cuotas Normales</p>
+                          <p className="font-bold text-text-primary">
+                            {contract.totalCuotasNormales || contract.installmentsCount || 0} de {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(contract.installmentValue || 0)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-text-secondary uppercase mb-1">Recaudado</p>
+                          <p className="font-bold text-accent-green">
+                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(contract.totalPagado || 0)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-text-secondary uppercase mb-1">Saldo</p>
+                          <p className="font-bold text-accent-red">
+                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format((contract.totalValue || 0) - (contract.totalPagado || 0))}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex justify-between items-center">
+                        <p className="text-xs text-text-muted">
+                          Fecha: {dayjs(contract.contractDate).format('DD/MM/YYYY')}
+                        </p>
+                        <Link href={`/admin/payments?search=${selectedClient.name}`} className="text-xs font-bold text-accent-blue hover:underline">
+                          Ver Pagos →
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-glass-border">

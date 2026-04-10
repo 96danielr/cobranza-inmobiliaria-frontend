@@ -45,11 +45,13 @@ import { Button } from '@/components/ui/Button'
 
 export default function AdminDashboard() {
   const { admin, isAuthenticated } = useAdminAuthStore()
-  const [data, setData] = useState({
+    const [data, setData] = useState({
     cartera: { valorTotalCartera: 0, totalRecaudado: 0, totalPendiente: 0, porcentajeRecaudo: 0 },
     mora: { totalContratosActivos: 0, contratosAlDia: 0, contratosMora1a15: 0, contratosMora16a30: 0, contratosMora31a60: 0, contratosMora60plus: 0, porcentajeMora: 0, dineroEnMora: 0 },
     recaudoMensual: { mesActual: 0, mesAnterior: 0, variacion: 0 },
-    operacion: { comprobantesPendientes: 0, clientesEscalados: 0, whatsappEnviadosMes: 0, llamadasAIMes: 0 }
+    operacion: { comprobantesPendientes: 0, clientesEscalados: 0, whatsappEnviadosMes: 0, llamadasAIMes: 0 },
+    totalSales: 0,
+    isSeller: false
   })
   const [loading, setLoading] = useState(true)
   const [statsLoading, setStatsLoading] = useState(true)
@@ -93,7 +95,9 @@ export default function AdminDashboard() {
           cartera: dashboardData.cartera,
           mora: dashboardData.mora,
           recaudoMensual: dashboardData.recaudoMensual,
-          operacion: dashboardData.operacion
+          operacion: dashboardData.operacion,
+          totalSales: dashboardData.totalSales || 0,
+          isSeller: dashboardData.isSeller || false
         })
 
         // Optimized: get total count directly from summary
@@ -291,10 +295,15 @@ export default function AdminDashboard() {
     <div className="space-y-6 md:space-y-8 p-4 md:p-6">
       <div className="animate-fade-in-up">
         <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
-          <span className="gradient-text">Dashboard Administrativo</span>
+          <span className="gradient-text">
+            {data.isSeller ? 'Mi Resumen de Ventas' : 'Dashboard Administrativo'}
+          </span>
         </h1>
         <p className="text-text-secondary text-responsive-base">
-          Resumen general del sistema de cobranza inmobiliaria ({clientStats.total} clientes registrados)
+          {data.isSeller 
+            ? `Has realizado ${data.totalSales} ventas y gestionas ${clientStats.total} clientes`
+            : `Resumen general del sistema de cobranza inmobiliaria (${clientStats.total} clientes registrados)`
+          }
         </p>
       </div>
 
@@ -312,7 +321,9 @@ export default function AdminDashboard() {
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">Ventas Totales</p>
+                    <p className="text-sm text-text-secondary font-medium mb-1">
+                      {data.isSeller ? 'Valor de mis Ventas' : 'Ventas Totales'}
+                    </p>
                     <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
                       {formatCurrency(data.cartera.valorTotalCartera)}
                     </p>
@@ -324,7 +335,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center">
                   <TrendingUp className="w-4 h-4 text-accent-green mr-1" />
                   <span className="text-sm text-accent-green font-medium">
-                    {formatPercentage(data.cartera.porcentajeRecaudo)} recaudado
+                    {formatPercentage(data.cartera.porcentajeRecaudo)} de mi cartera recaudada
                   </span>
                 </div>
               </CardContent>
@@ -377,18 +388,20 @@ export default function AdminDashboard() {
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">Clientes Activos</p>
+                    <p className="text-sm text-text-secondary font-medium mb-1">
+                      {data.isSeller ? 'Mis Contratos' : 'Contratos Activos'}
+                    </p>
                     <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
-                      {formatNumber(clientStats.total)}
+                      {formatNumber(data.totalSales)}
                     </p>
                   </div>
                   <div className="glass-card p-3 border-accent-purple/20">
-                    <Users className="w-6 h-6 text-accent-purple" />
+                    <FileText className="w-6 h-6 text-accent-purple" />
                   </div>
                 </div>
                 <div className="flex items-center">
                   <span className="text-sm text-accent-green font-medium">
-                    {formatNumber(clientStats.dispuestos)} dispuestos
+                    {formatNumber(clientStats.total)} clientes individuales
                   </span>
                 </div>
               </CardContent>

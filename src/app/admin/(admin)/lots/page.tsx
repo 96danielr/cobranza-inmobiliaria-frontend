@@ -56,7 +56,7 @@ interface Lot {
 }
 
 export default function LotsPage() {
-  const { selectedCompanyId } = useAdminAuthStore()
+  const { selectedCompanyId, admin } = useAdminAuthStore()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null)
@@ -226,10 +226,18 @@ export default function LotsPage() {
 
   const handleSellClick = (lot: Lot) => {
     setSelectedLot(lot)
+    setIsCreatingNewClient(false)
     setSellFormData({
-      ...sellFormData,
+      clientId: '',
       totalValue: lot.price?.toString() || '',
+      installmentsCount: '24',
+      initialQuotaPercentage: '30',
+      initialQuotasCount: '1',
       contractDate: dayjs().format('YYYY-MM-DD'),
+      negotiation: 'Venta Directa',
+      clientName: '',
+      clientIdNumber: '',
+      clientPhone: '',
       sellerId: ''
     })
     setIsSellModalOpen(true)
@@ -361,13 +369,15 @@ export default function LotsPage() {
             <Link className="w-4 h-4 mr-2 text-accent-green" />
             Link Catálogo
           </Button>
-          <Button 
-            onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
-            className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Lote
-          </Button>
+          {admin?.role !== 'vendedor' && (
+            <Button 
+              onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
+              className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Lote
+            </Button>
+          )}
         </div>
       </div>
 
@@ -499,14 +509,16 @@ export default function LotsPage() {
                           ) : (
                             <span className="text-xs text-text-disabled">Sin imágenes</span>
                           )}
-                          <Button 
-                            variant="glass" 
-                            size="sm" 
-                            onClick={() => openImageModal(lot)}
-                            className="p-1 min-h-[32px] min-w-[32px]"
-                          >
-                            <ImagePlus className="w-4 h-4 text-accent-blue" />
-                          </Button>
+                          {admin?.role !== 'vendedor' && (
+                            <Button 
+                              variant="glass" 
+                              size="sm" 
+                              onClick={() => openImageModal(lot)}
+                              className="p-1 min-h-[32px] min-w-[32px]"
+                            >
+                              <ImagePlus className="w-4 h-4 text-accent-blue" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                       <td className="py-4 px-4 md:px-6">
@@ -532,22 +544,26 @@ export default function LotsPage() {
                               <ShoppingCart className="w-4 h-4" />
                             </Button>
                           )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(lot)}
-                            className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteLot(lot._id)}
-                            className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {admin?.role !== 'vendedor' && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(lot)}
+                                className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteLot(lot._id)}
+                                className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -585,12 +601,16 @@ export default function LotsPage() {
                           <ShoppingCart className="w-4 h-4" />
                         </Button>
                        )}
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => openImageModal(lot)} className="glass-button text-accent-blue">
-                        <ImagePlus className="w-4 h-4" />
-                      </Button>
+                      {admin?.role !== 'vendedor' && (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => openImageModal(lot)} className="glass-button text-accent-blue">
+                            <ImagePlus className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                   {lot.images && lot.images.length > 0 && (
@@ -868,26 +888,28 @@ export default function LotsPage() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-text-primary flex items-center">
-              <Users className="w-4 h-4 mr-2 text-accent-purple" />
-              Asignar Vendedor (Opcional)
-            </label>
-            <select
-              name="sellerId"
-              value={sellFormData.sellerId}
-              onChange={handleSellInputChange}
-              className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
-            >
-              <option value="">Sin vendedor asignado</option>
-              {sellers.map((s: any) => (
-                <option key={s.id} value={s.id}>
-                  {s.fullName}
-                </option>
-              ))}
-            </select>
-            {loadingSellers && <p className="text-xs text-text-muted animate-pulse">Cargando vendedores...</p>}
-          </div>
+          {admin?.role !== 'vendedor' && (
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-text-primary flex items-center">
+                <Users className="w-4 h-4 mr-2 text-accent-purple" />
+                Asignar Vendedor (Opcional)
+              </label>
+              <select
+                name="sellerId"
+                value={sellFormData.sellerId}
+                onChange={handleSellInputChange}
+                className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
+              >
+                <option value="">Sin vendedor asignado</option>
+                {sellers.map((s: any) => (
+                  <option key={s.id} value={s.id}>
+                    {s.fullName}
+                  </option>
+                ))}
+              </select>
+              {loadingSellers && <p className="text-xs text-text-muted animate-pulse">Cargando vendedores...</p>}
+            </div>
+          )}
 
           <div className="h-px bg-glass-border w-full" />
 

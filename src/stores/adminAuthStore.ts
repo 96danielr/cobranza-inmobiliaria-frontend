@@ -18,7 +18,7 @@ export interface AdminUser {
   id: string
   email: string
   fullName: string
-  role: 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent'
+  role: 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor'
   tenantId: string
   tenantName: string
   plan: 'basic' | 'premium' | 'enterprise'
@@ -32,6 +32,7 @@ interface AdminAuthState {
   admin: AdminUser | null
   isAuthenticated: boolean
   isLoading: boolean
+  _hasHydrated: boolean
   // Multi-tenant selection
   pendingAccountId: string | null
   pendingMemberships: TenantMembership[]
@@ -41,6 +42,7 @@ interface AdminAuthState {
   selectedCompanyName: string | null
   companies: CompanyAccess[]
   // Actions
+  setHasHydrated: (state: boolean) => void
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string; requiresTenantSelection?: boolean }>
   selectTenant: (accountId: string, tenantId: string) => Promise<{ success: boolean; message?: string }>
   setSelectedCompany: (companyId: string, companyName: string) => void
@@ -55,12 +57,17 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       admin: null,
       isAuthenticated: false,
       isLoading: false,
+      _hasHydrated: false,
       pendingAccountId: null,
       pendingMemberships: [],
       requiresTenantSelection: false,
       selectedCompanyId: null,
       selectedCompanyName: null,
       companies: [],
+
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state })
+      },
 
       login: async (email: string, password: string) => {
         set({ isLoading: true })
@@ -195,6 +202,10 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         selectedCompanyName: state.selectedCompanyName,
         companies: state.companies,
       }),
+      onRehydrateStorage: () => (state) => {
+        console.log('[AdminAuthStore] Rehydrated from localStorage. isAuthenticated:', state?.isAuthenticated)
+        state?.setHasHydrated(true)
+      },
     }
   )
 )
