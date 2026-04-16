@@ -1,6 +1,6 @@
 import { useEffect, RefObject } from 'react'
 
-export function useClickAway(ref: RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) {
+export function useClickAway(ref: RefObject<any>, handler: (event: MouseEvent | TouchEvent) => void) {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
       if (!ref.current || ref.current.contains(event.target as Node)) {

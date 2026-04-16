@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useClickAway } from '@/hooks/useClickAway'
 import {
   adminNavItems,
   filterAdminNavItems,
@@ -376,16 +377,7 @@ export function MobileHeader({
   const { admin } = useAdminAuthStore()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  useClickAway(dropdownRef, () => setIsOpen(false))
 
   return (
     <div className="lg:hidden bg-dark-primary/80 backdrop-blur-glass border-b border-glass-border sticky top-0 z-40">
