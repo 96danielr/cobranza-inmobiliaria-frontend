@@ -35,7 +35,7 @@ export default function HomePage() {
       }
     } catch (error: any) {
       toast.error('Error de conexión')
-      console.error('Error loading home data:', error)
+
     } finally {
       setIsLoading(false)
     }

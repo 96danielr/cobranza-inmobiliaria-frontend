@@ -23,6 +23,7 @@ export interface AdminUser {
   tenantName: string
   plan: 'basic' | 'premium' | 'enterprise'
   activeModules: string[]
+  profileImage?: string
   subscriptionStart?: string
   subscriptionEnd?: string
 }
@@ -48,6 +49,7 @@ interface AdminAuthState {
   setSelectedCompany: (companyId: string, companyName: string) => void
   logout: () => void
   setLoading: (loading: boolean) => void
+  updateAdmin: (data: Partial<AdminUser>) => void
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(
@@ -191,6 +193,12 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       setLoading: (loading: boolean) => {
         set({ isLoading: loading })
       },
+      updateAdmin: (data: Partial<AdminUser>) => {
+        const currentAdmin = get().admin
+        if (currentAdmin) {
+          set({ admin: { ...currentAdmin, ...data } })
+        }
+      },
     }),
     {
       name: 'admin-auth-storage',
@@ -203,7 +211,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         companies: state.companies,
       }),
       onRehydrateStorage: () => (state) => {
-        console.log('[AdminAuthStore] Rehydrated from localStorage. isAuthenticated:', state?.isAuthenticated)
+
         state?.setHasHydrated(true)
       },
     }

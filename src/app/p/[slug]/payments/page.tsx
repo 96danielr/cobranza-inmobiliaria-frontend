@@ -56,7 +56,7 @@ export default function PublicPaymentPage() {
         setBanks(response.data.data.banks)
       }
     } catch (error) {
-      console.error('Error fetching banks:', error)
+
     } finally {
       setLoadingBanks(false)
     }

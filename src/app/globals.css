@@ -242,10 +242,9 @@
     height: 100vh;
   }
 
-  /* Sidebar Admin */
+  /* Sidebar Admin: solo escritorio; en móvil la navegación va por la barra inferior */
   .sidebar-admin {
-    @apply fixed inset-y-0 left-0 z-50 w-64 backdrop-blur-glass border-r border-glass-border;
-    @apply transform transition-transform duration-300 ease-in-out lg:translate-x-0;
+    @apply hidden lg:flex lg:flex-col fixed inset-y-0 left-0 z-50 w-64 backdrop-blur-glass border-r border-glass-border;
     background-color: rgba(255, 255, 255, 0.08) !important;
     height: 100vh;
     overflow-y: hidden;
@@ -255,7 +254,8 @@
   .admin-header {
     @apply backdrop-blur-glass border-b border-glass-border sticky top-0 z-30;
     @apply shadow-glass lg:rounded-none rounded-t-2xl;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: rgba(15, 15, 26, 0.95) !important;
+    backdrop-filter: blur(12px);
   }
 
   /* Drag and Drop Areas */

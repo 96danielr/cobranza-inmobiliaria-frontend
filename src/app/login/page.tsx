@@ -52,7 +52,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     const result = await login(data.cedula, data.pin)
-    
+
     if (result.success) {
       toast.success('¡Bienvenido!')
       router.push('/home')
@@ -78,7 +78,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-dark-primary flex items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-accent-blue/10 via-transparent to-accent-purple/10" />
-      
+
       <div className="relative w-full max-w-md animate-fade-in-up">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 glass-card mb-6 shadow-glow">
@@ -125,7 +125,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPin(!showPin)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-glass-secondary transition-all duration-300 flex items-center justify-center"
-                    style={{marginTop: '12px'}}
+                    style={{ marginTop: '12px' }}
                   >
                     {showPin ? <EyeOff size={16} className="text-text-secondary" /> : <Eye size={16} className="text-text-secondary" />}
                   </button>
@@ -149,8 +149,8 @@ export default function LoginPage() {
             <div className="mt-8 text-center">
               <p className="text-sm text-text-muted">
                 ¿Problemas para ingresar?{' '}
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-accent-blue hover:text-accent-purple font-medium transition-colors"
                 >
                   Contacta soporte
@@ -162,7 +162,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-text-muted">
-          © 2024 Sistema de Cobranza Inmobiliaria
+          © 2026 Sistema de Cobranza Inmobiliaria
         </div>
       </div>
     </div>

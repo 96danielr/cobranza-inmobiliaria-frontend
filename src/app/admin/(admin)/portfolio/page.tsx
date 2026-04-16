@@ -243,7 +243,7 @@ export default function PortfolioPage() {
 
 
   return (
-    <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -264,7 +264,7 @@ export default function PortfolioPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 2xl:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
         <Card variant="elevated">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
@@ -388,7 +388,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px]">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">
@@ -400,7 +400,7 @@ export default function PortfolioPage() {
                     currentSortBy={pagination.sortBy} 
                     currentSortOrder={pagination.sortOrder} 
                     onSort={pagination.handleSort}
-                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border sticky left-0 z-30"
                   />
                   <SortHeader 
                     label="Cédula" 
@@ -446,8 +446,8 @@ export default function PortfolioPage() {
                 ) : (
                   pagination.data.map((client) => (
                     <tr key={client.clientId} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
-                      <td className="py-4 px-4 md:px-6">
-                        <p className="font-medium text-text-primary">{client.clientName}</p>
+                      <td className="py-4 px-4 md:px-6 sticky left-0 z-10 bg-glass-secondary/95 backdrop-blur-sm border-r border-glass-border/30">
+                        <p className="font-semibold text-text-primary whitespace-nowrap min-w-max">{client.clientName}</p>
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <p className="text-sm text-text-primary">{client.cedula}</p>

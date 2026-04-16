@@ -189,9 +189,33 @@ export const adminApi = {
 
   deleteAdminUser: (id: string) =>
     apiAdmin.delete(`/admin-users/delete/${id}?companyId=${getCompanyId()}`),
+    
+  updateProfile: (data: any) =>
+    apiAdmin.put('/admin-users/profile', data),
+
+  changeMyPassword: (password: string) =>
+    apiAdmin.put('/admin-users/change-my-password', { password }),
+    
+  uploadProfileImage: (formData: FormData) =>
+    apiAdmin.put('/admin-users/upload-photo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 
   getSellers: () =>
     apiAdmin.get(`/admin-users/sellers?companyId=${getCompanyId()}`),
+
+  getSystemLogs: (page: number = 1, limit: number = 50, search?: string, action?: string, module?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+      ...(action && { action }),
+      ...(module && { module }),
+    })
+    return apiAdmin.get(`/admin-users/logs?${params.toString()}`)
+  },
 
   // Companies (tenant-scoped)
   getCompanies: () =>

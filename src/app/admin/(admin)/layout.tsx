@@ -1,51 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
-import { 
-  LayoutDashboard, 
-  CreditCard, 
-  Users, 
-  PhoneCall, 
-  Upload, 
-  Settings,
-  X,
-  LogOut,
-  Building2,
-  ChevronRight,
-  Shield,
-} from 'lucide-react'
+import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
+import { adminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
+import { useState, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useClickAway } from '@/hooks/useClickAway'
 
-type Role = 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor'
-
-interface NavItem {
-  icon: React.ElementType
-  label: string
-  href: string
-  roles: Role[]
-  module?: string
-}
-
-const navItems: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
-  { icon: Building2, label: 'Empresas', href: '/admin/select-company', roles: ['tenant_admin'] },
-  { icon: CreditCard, label: 'Pagos', href: '/admin/payments', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
-  { icon: Users, label: 'Cartera', href: '/admin/portfolio', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
-  { icon: Users, label: 'Clientes', href: '/admin/clients', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'] },
-  { icon: Building2, label: 'Lotes', href: '/admin/lots', roles: ['tenant_admin', 'company_admin', 'vendedor'] },
-  { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', roles: ['tenant_admin', 'company_admin', 'agent', 'vendedor'], module: 'cobranzas' },
-  { icon: Upload, label: 'Importar', href: '/admin/import', roles: ['tenant_admin', 'company_admin'] },
-  { icon: Shield, label: 'Equipo', href: '/admin/users', roles: ['tenant_admin'] },
-  { icon: Building2, label: 'Bancos', href: '/admin/banks', roles: ['superadmin', 'tenant_admin', 'company_admin'] },
-  { icon: Settings, label: 'Configuración', href: '/admin/settings', roles: ['tenant_admin'] },
-  { icon: LogOut, label: 'Cerrar Sesión', href: 'logout', roles: ['superadmin', 'tenant_admin', 'company_admin', 'agent', 'vendedor'] },
-]
-
-const roleLabels: Record<Role, string> = {
+const roleLabels: Record<AdminNavRole, string> = {
   superadmin: 'Super Admin',
   tenant_admin: 'Admin Tenant',
   company_admin: 'Admin Empresa',
@@ -58,16 +25,19 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { isAuthenticated, _hasHydrated, admin, logout, selectedCompanyId, selectedCompanyName } = useAdminAuthStore()
   const router = useRouter()
   const pathname = usePathname()
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+
+  useClickAway(profileRef, () => setIsProfileOpen(false))
 
   useEffect(() => {
     if (!_hasHydrated) return // wait for localStorage hydration
-    console.log('[AdminLayout] isAuthenticated:', isAuthenticated, '| path:', pathname)
+
     if (!isAuthenticated) {
-      console.log('[AdminLayout] Not authenticated → redirecting to /admin/login')
+
       router.push('/admin/login')
     }
   }, [isAuthenticated, _hasHydrated, router])
@@ -80,7 +50,7 @@ export default function AdminLayout({
     
     if (path.length > 1) {
       const currentPage = path[path.length - 1]
-      const navItem = navItems.find((item) => item.href.includes(currentPage))
+      const navItem = adminNavItems.find((item) => item.href.includes(currentPage))
       if (navItem && pathname !== '/admin/dashboard') {
         breadcrumbs.push({ label: navItem.label, href: pathname })
       }
@@ -91,7 +61,7 @@ export default function AdminLayout({
 
   const getCurrentPageInfo = () => {
     const currentPath = pathname
-    const navItem = navItems.find((item) => 
+    const navItem = adminNavItems.find((item) => 
       item.href === currentPath || 
       (item.href !== '/admin/dashboard' && currentPath.startsWith(item.href))
     )
@@ -120,17 +90,15 @@ export default function AdminLayout({
   }
 
   const currentPageInfo = getCurrentPageInfo()
-  const userRole = (admin?.role || 'agent') as Role
+  const userRole = (admin?.role || 'agent') as AdminNavRole
 
   return (
     <div className="min-h-screen bg-dark-primary">
       {/* Enhanced Mobile Header */}
-      <MobileHeader 
+      <MobileHeader
         title={currentPageInfo.title}
         subtitle={selectedCompanyName || currentPageInfo.subtitle}
-        onMenuToggle={() => setIsSidebarOpen(true)}
         onLogout={handleLogout}
-        isMenuOpen={isSidebarOpen}
       />
       
       {/* Mobile Breadcrumbs */}
@@ -138,41 +106,25 @@ export default function AdminLayout({
 
       <div className="flex">
         {/* Enhanced Sidebar */}
-        <div className={cn(
-          'sidebar-admin',
-          'transition-all duration-300 ease-in-out',
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        )}>
+        <div className="sidebar-admin">
           <div className="flex flex-col h-full">
-            {/* Sidebar Header with enhanced branding */}
-            <div className="flex items-center justify-between p-6 border-b border-glass-border">
-              <div className="flex items-center">
-                <div className="p-3 bg-gradient-primary rounded-xl shadow-glow">
-                  <Building2 className="w-6 h-6 text-white" />
+            {/* Sidebar Header - System Name */}
+            <div className="flex items-center px-6 py-4 border-b border-glass-border min-h-[73px]">
+              <div className="flex items-center overflow-hidden">
+                <div className="p-2 bg-gradient-primary rounded-lg shadow-glow flex-shrink-0">
+                  <Building2 className="w-5 h-5 text-white" />
                 </div>
-                <div className="ml-3">
-                  <h2 className="text-lg font-semibold text-text-primary">
-                    {selectedCompanyName || admin?.tenantName || 'Admin Panel'}
+                <div className="ml-3 min-w-0">
+                  <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter">
+                    Sistema Cobranza
                   </h2>
-                  <p className="text-sm text-text-secondary">
-                    {admin?.tenantName && selectedCompanyName ? admin.tenantName : roleLabels[userRole]}
-                  </p>
                 </div>
               </div>
-              
-              {/* Enhanced close button for mobile */}
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="lg:hidden p-3 rounded-xl glass-button hover:text-accent-red hover:bg-accent-red/20 transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              >
-                <X className="w-5 h-5 text-text-secondary" />
-              </button>
             </div>
 
-            {/* Navigation with enhanced styling */}
-            <nav className="flex-1 px-4 py-6">
-              <div className="space-y-2">
-                {navItems
+            <nav className="flex-1 px-4 py-6 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-0 lg:space-y-2">
+                {adminNavItems
                   .filter((item) => {
                     const hasRole = item.roles.includes(userRole)
                     if (!hasRole) return false
@@ -193,7 +145,6 @@ export default function AdminLayout({
                           e.preventDefault()
                           handleLogout()
                         }
-                        setIsSidebarOpen(false)
                       }}
                       className={cn(
                         'flex items-center px-3 sm:px-4 py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 min-h-[48px] relative',
@@ -204,13 +155,13 @@ export default function AdminLayout({
                         item.href === 'logout' && 'hover:text-accent-red hover:bg-accent-red/10'
                       )}
                     >
-                      {/* Active indicator */}
+                      {/* Active indicator (Desktop only) */}
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+                        <div className="hidden lg:block absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
                       )}
                       
                       <Icon className={cn(
-                        'w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 transition-colors flex-shrink-0',
+                        'w-6 h-6 lg:w-5 lg:h-5 mb-2 lg:mb-0 lg:mr-3 transition-colors flex-shrink-0',
                         isActive ? 'text-white' : 'text-text-secondary',
                         item.href === 'logout' && 'group-hover:text-accent-red'
                       )} />
@@ -226,47 +177,30 @@ export default function AdminLayout({
               </div>
             </nav>
 
-            {/* Enhanced User Profile Section */}
-            <div className="p-4 border-t border-glass-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center min-w-0">
-                  <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-glow">
-                    <span className="text-sm font-medium text-white">
-                      {admin?.fullName?.charAt(0)?.toUpperCase() || 'A'}
+            {/* Technical Info (Important for reviews/audits) */}
+            <div className="p-5 border-t border-glass-border">
+              <div className="flex flex-col space-y-2 opacity-80">
+                <div className="flex flex-col">
+                  <div className="flex items-center mt-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent-blue mr-2 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                    <span className="text-xs text-text-primary font-bold uppercase tracking-widest">
+                      {roleLabels[userRole]}
                     </span>
                   </div>
-                  <div className="ml-3 min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">
-                      {admin?.fullName || 'Admin User'}
-                    </p>
-                    <p className="text-xs text-text-secondary truncate">
-                      {roleLabels[userRole]}
-                    </p>
-                  </div>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-3 rounded-xl glass-button hover:text-accent-red hover:bg-accent-red/20 transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                  title="Cerrar Sesión"
-                >
-                  <LogOut className="w-4 h-4 text-text-secondary" />
-                </button>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-text-secondary font-mono truncate bg-dark-primary/30 px-2 py-1.5 rounded border border-glass-border/30">
+                    {admin?.id || 'N/A'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Mobile Overlay */}
-        {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-dark-primary/90 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-
         {/* Main Content Area */}
-        <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-          <header className="admin-header flex-shrink-0 hidden lg:block relative">
+        <div className="flex-1 lg:ml-64 flex flex-col h-screen overflow-hidden">
+          <header className="admin-header flex-shrink-0 hidden lg:block sticky top-0 z-50">
             <div className="flex items-center justify-between px-6 py-4">
               {/* Left Side: Breadcrumbs */}
               <nav className="overflow-hidden min-w-0">
@@ -302,21 +236,75 @@ export default function AdminLayout({
                 </div>
               )}
                 
-              {/* Right Side: User Profile */}
-              <div className="flex items-center space-x-3 border-l border-glass-border pl-6 ml-4 flex-shrink-0">
-                <div className="text-right min-w-0">
-                  <p className="text-sm font-semibold text-text-primary truncate">
-                    {admin?.fullName || 'Admin User'}
-                  </p>
-                  <p className="text-xs text-text-secondary truncate">
-                    {admin?.email}
-                  </p>
-                </div>
-                <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-glow flex-shrink-0">
-                  <span className="text-sm font-bold text-white">
-                    {admin?.fullName?.charAt(0)?.toUpperCase() || 'A'}
-                  </span>
-                </div>
+              {/* Right Side: User Profile Dropdown */}
+              <div ref={profileRef} className="relative flex items-center border-l border-glass-border pl-6 ml-4 flex-shrink-0">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-3 group hover:opacity-80 transition-all duration-200"
+                >
+                  <div className="text-right min-w-0">
+                    <p className="text-sm font-semibold text-text-primary truncate transition-colors group-hover:text-accent-blue">
+                      {admin?.fullName || 'Admin User'}
+                    </p>
+                    <p className="text-xs text-text-secondary truncate">
+                      {admin?.email}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-dark-secondary rounded-full flex items-center justify-center shadow-glow flex-shrink-0 border-2 border-transparent group-hover:border-accent-blue/50 transition-all duration-300 overflow-hidden">
+                    {admin?.profileImage ? (
+                      <img 
+                        src={admin.profileImage} 
+                        alt={admin.fullName} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-accent-blue">
+                        {admin?.fullName?.charAt(0)?.toUpperCase() || 'A'}
+                      </span>
+                    )}
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 top-full mt-2 w-56 glass-card p-2 z-[60] shadow-glow"
+                    >
+                      <div className="px-3 py-2 border-b border-glass-border mb-1">
+                        <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Mi Cuenta</p>
+                      </div>
+                      <Link
+                        href="/admin/profile"
+                        className="flex items-center px-3 py-2.5 rounded-xl text-sm text-text-primary hover:bg-accent-blue/10 hover:text-accent-blue transition-all duration-200"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <User className="w-4 h-4 mr-3" />
+                        Perfil
+                      </Link>
+                      {userRole !== 'superadmin' && (
+                        <Link
+                          href="/admin/settings"
+                          className="flex items-center px-3 py-2.5 rounded-xl text-sm text-text-primary hover:bg-accent-blue/10 hover:text-accent-blue transition-all duration-200"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <SettingsIcon className="w-4 h-4 mr-3" />
+                          Configuración
+                        </Link>
+                      )}
+                      <div className="h-px bg-glass-border my-1" />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center px-3 py-2.5 rounded-xl text-sm text-accent-red hover:bg-accent-red/10 transition-all duration-200"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Cerrar Sesión
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </header>

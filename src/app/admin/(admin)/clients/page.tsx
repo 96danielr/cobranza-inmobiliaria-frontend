@@ -114,7 +114,7 @@ export default function ClientsPage() {
         pages: response.data.data.pagination.pages
       }
     } catch (error) {
-      console.error('Error fetching clients:', error)
+
       throw error
     }
   }, [behaviorFilter])
@@ -170,7 +170,7 @@ export default function ClientsPage() {
       })
       pagination.refresh()
     } catch (error: any) {
-      console.error('Error creating client:', error)
+
       toast.error(error.response?.data?.message || 'Error al crear cliente')
     } finally {
       setIsSubmitting(false)
@@ -186,7 +186,7 @@ export default function ClientsPage() {
   const clientsIndecisos = pagination.data.filter(c => c.behavior === 'INDECISO').length
 
   return (
-    <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -323,7 +323,7 @@ export default function ClientsPage() {
       {/* Clients List - Hybrid View with Independent Scroll */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">

@@ -127,7 +127,7 @@ export default function SettingsPage() {
         pages: pagination.pages
       }
     } catch (error) {
-      console.error('Error fetching admin users:', error)
+
       throw error
     }
   }

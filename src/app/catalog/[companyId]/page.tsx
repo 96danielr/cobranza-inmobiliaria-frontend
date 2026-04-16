@@ -153,7 +153,7 @@ export default function CatalogPage() {
         const res = await adminApi.getLotsPublic(companyId as string, debouncedSearch)
         if (res.data.success) setLots(res.data.data)
       } catch (err) {
-        console.error(err)
+
       } finally {
         setLoading(false)
       }

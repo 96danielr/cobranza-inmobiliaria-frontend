@@ -13,7 +13,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, children, variant = 'default', animate = true, ...props }, ref) => {
     const variantClasses = {
       default: 'glass-card',
-      elevated: 'glass-card shadow-glass-hover transform hover:scale-[1.02]',
+      elevated: 'glass-card shadow-glass-hover',
       interactive: 'glass-card cursor-pointer hover:shadow-glow transition-all duration-200'
     }
 

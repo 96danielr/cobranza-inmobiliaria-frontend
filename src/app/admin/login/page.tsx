@@ -27,10 +27,10 @@ type AdminLoginFormData = z.infer<typeof adminLoginSchema>
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
-  const { 
-    login, 
+  const {
+    login,
     selectTenant,
-    isAuthenticated, 
+    isAuthenticated,
     isLoading,
     requiresTenantSelection,
     pendingAccountId,
@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
 
   const onSubmit = async (data: AdminLoginFormData) => {
     const result = await login(data.email, data.password)
-    
+
     if (result.success && !result.requiresTenantSelection) {
       toast.success('¡Bienvenido al panel!')
       router.push('/admin/select-company')
@@ -90,7 +90,7 @@ export default function AdminLoginPage() {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-accent-purple/15 via-transparent to-accent-blue/15" />
-        
+
         <div className="relative w-full max-w-md animate-fade-in-up">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-24 h-24 glass-card mb-6 shadow-glow border-accent-blue/30">
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="mt-8 text-center text-sm text-text-muted">
-            © 2024 Sistema de Cobranza Inmobiliaria
+            © 2026 Sistema de Cobranza Inmobiliaria
           </div>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-dark-primary flex items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-accent-purple/15 via-transparent to-accent-blue/15" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(96,165,250,0.1)_0%,transparent_50%)] opacity-60" />
-      
+
       <div className="relative w-full max-w-md animate-fade-in-up">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 glass-card mb-6 shadow-glow border-accent-purple/30">
@@ -220,7 +220,7 @@ export default function AdminLoginPage() {
         </Card>
 
         <div className="mt-8 text-center text-sm text-text-muted">
-          © 2024 Sistema de Cobranza Inmobiliaria - Panel Administrativo
+          © 2026 Sistema de Cobranza Inmobiliaria - Panel Administrativo
         </div>
       </div>
     </div>

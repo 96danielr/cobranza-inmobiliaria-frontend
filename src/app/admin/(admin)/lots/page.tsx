@@ -114,7 +114,7 @@ export default function LotsPage() {
         pages: response.data.data.pagination.pages
       }
     } catch (error) {
-      console.error('Error fetching lots:', error)
+
       throw error
     }
   }
@@ -155,7 +155,7 @@ export default function LotsPage() {
         toast.error(response.data.message || 'Error en la operación')
       }
     } catch (error) {
-      console.error('Error saving lot:', error)
+
       toast.error('Error al conectar con el servidor')
     } finally {
       setIsSubmitting(false)
@@ -217,7 +217,7 @@ export default function LotsPage() {
         setSaleDetail(response.data.data)
       }
     } catch (error) {
-      console.error('Error fetching sale detail:', error)
+
       toast.error('Error al cargar detalles de la venta')
     } finally {
       setLoadingSaleDetail(false)
@@ -253,7 +253,7 @@ export default function LotsPage() {
         setSellers(response.data.data)
       }
     } catch (error) {
-      console.error('Error fetching sellers:', error)
+
     } finally {
       setLoadingSellers(false)
     }
@@ -351,7 +351,7 @@ export default function LotsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -415,7 +415,7 @@ export default function LotsPage() {
 
       {/* Lots Table */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
-        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">
               <thead>

@@ -44,7 +44,7 @@ export default function PaymentsPage() {
       }
     } catch (error: any) {
       toast.error('Error de conexión')
-      console.error('Error loading payments:', error)
+
     } finally {
       setIsLoading(false)
     }
@@ -86,7 +86,7 @@ export default function PaymentsPage() {
       toast.success('Recibo descargado exitosamente')
     } catch (error: any) {
       toast.error('Error descargando el recibo')
-      console.error('Error downloading receipt:', error)
+
     } finally {
       setDownloadingReceipt(null)
     }

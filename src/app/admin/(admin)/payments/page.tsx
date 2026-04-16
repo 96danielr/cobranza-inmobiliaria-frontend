@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { 
-  Check, 
-  X, 
-  Eye, 
+import {
+  Check,
+  X,
+  Eye,
   Download,
   Filter,
   Search,
@@ -76,7 +76,7 @@ export default function PaymentsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [observacion, setObservacion] = useState('')
   const [modalLoading, setModalLoading] = useState(false)
-  
+
   // Manual Payment State
   const { clients, fetchClientsIfNeeded } = useClientStore()
   const [isManualModalOpen, setIsManualModalOpen] = useState(false)
@@ -84,7 +84,7 @@ export default function PaymentsPage() {
   const [clientDetails, setClientDetails] = useState<any>(null)
   const [selectedContractId, setSelectedContractId] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
-  
+
   // Manual Payment Form State
   const [manualAmount, setManualAmount] = useState('')
   const [manualBank, setManualBank] = useState('')
@@ -105,7 +105,7 @@ export default function PaymentsPage() {
             setCompanySlug(res.data.data.company.slug)
           }
         } catch (err) {
-          console.error('Error fetching company slug', err)
+
         }
       }
     }
@@ -127,7 +127,7 @@ export default function PaymentsPage() {
         setBanks(response.data.data.banks)
       }
     } catch (error) {
-      console.error('Error fetching banks:', error)
+
     } finally {
       setLoadingBanks(false)
     }
@@ -175,7 +175,7 @@ export default function PaymentsPage() {
         pages: response.data.data.pagination.pages
       }
     } catch (error) {
-      console.error('Error fetching payments:', error)
+
       throw error
     }
   }, [statusFilter])
@@ -207,10 +207,10 @@ export default function PaymentsPage() {
     setIsProcessing(true)
     try {
       await adminApi.approvePayment(paymentId)
-      
+
       // Refresh the current page
       refresh()
-      
+
       toast.success('Cuota marcada como pagada')
       setIsModalOpen(false)
       setIsManualModalOpen(false)
@@ -218,7 +218,7 @@ export default function PaymentsPage() {
       setSelectedClientId('')
       setObservacion('')
     } catch (error) {
-      console.error('Error approving payment:', error)
+
       toast.error('Error al aprobar el pago')
     } finally {
       setIsProcessing(false)
@@ -227,7 +227,7 @@ export default function PaymentsPage() {
 
   const copyPaymentLink = async () => {
     let currentSlug = companySlug
-    
+
     // Attempt re-fetch if state is empty
     if (!currentSlug && selectedCompanyId) {
       try {
@@ -238,7 +238,7 @@ export default function PaymentsPage() {
           setCompanySlug(currentSlug)
         }
       } catch (e) {
-        console.error(e)
+
       } finally {
         setModalLoading(false)
       }
@@ -251,13 +251,13 @@ export default function PaymentsPage() {
 
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
     const link = `${origin}/p/${currentSlug}/payments`
-    
+
     try {
       await navigator.clipboard.writeText(link)
       toast.success('Link público copiado: ' + link, { duration: 4000 })
     } catch (err) {
       // Fallback for non-secure contexts if needed
-      console.error('Clipboard error', err)
+
       toast.error('Haga clic derecho y copie: ' + link)
     }
   }
@@ -281,7 +281,7 @@ export default function PaymentsPage() {
       formData.append('paymentDate', new Date().toISOString())
 
       await adminApi.registerManualPayment(formData)
-      
+
       toast.success('Pago registrado y aprobado exitosamente')
       setIsManualModalOpen(false)
       // Reset form
@@ -291,10 +291,10 @@ export default function PaymentsPage() {
       setManualCapture(null)
       setSelectedClientId('')
       setClientDetails(null)
-      
+
       refresh()
     } catch (error) {
-      console.error('Error registering manual payment:', error)
+
       toast.error('Error al registrar el pago')
     } finally {
       setIsProcessing(false)
@@ -310,16 +310,16 @@ export default function PaymentsPage() {
     setIsProcessing(true)
     try {
       await adminApi.rejectPayment(paymentId, observacion)
-      
+
       // Refresh the current page
       refresh()
-      
+
       toast.success('Cuota revertida a pendiente')
       setIsModalOpen(false)
       setSelectedPayment(null)
       setObservacion('')
     } catch (error) {
-      console.error('Error rejecting payment:', error)
+
       toast.error('Error al rechazar el pago')
     } finally {
       setIsProcessing(false)
@@ -362,18 +362,18 @@ export default function PaymentsPage() {
 
 
   return (
-    <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 animate-fade-in-up">
         <div>
           <h1 className="text-responsive-2xl font-bold text-text-primary">Aprobación de Pagos</h1>
           <p className="text-text-secondary mt-2">
-            Revisa y aprueba los comprobantes de pago reportados por los clientes 
+            Revisa y aprueba los comprobantes de pago reportados por los clientes
             {!pagination.loading && `(${pagination.total.toLocaleString('es-CO')} cuotas total)`}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button 
+          <Button
             variant="outline"
             className="glass-button border-glass-border text-text-secondary min-h-[44px]"
             onClick={copyPaymentLink}
@@ -381,7 +381,7 @@ export default function PaymentsPage() {
             <LinkIcon className="w-4 h-4 mr-2" />
             Copiar Link Público
           </Button>
-          <Button 
+          <Button
             className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
             onClick={() => setIsManualModalOpen(true)}
           >
@@ -485,63 +485,63 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] xl:max-w-[900px] 2xl:max-w-[1560px] relative">
           <table className="hidden lg:table w-full border-separate border-spacing-0">
             <thead>
               <tr className="sticky top-0 z-20">
-                <SortHeader 
-                  label="Cliente" 
-                  field="contract.client.fullName" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="Cliente"
+                  field="contract.client.fullName"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
                 />
-                <SortHeader 
-                  label="Proyecto/Lote" 
-                  field="contract.lot.nomenclatura" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="Proyecto/Lote"
+                  field="contract.lot.nomenclatura"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
                 />
-                <SortHeader 
-                  label="# Cuota" 
-                  field="cuotaNumber" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="# Cuota"
+                  field="cuotaNumber"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
                 />
-                <SortHeader 
-                  label="Monto" 
-                  field="amount" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="Monto"
+                  field="amount"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
                 />
-                <SortHeader 
-                  label="Banco" 
-                  field="banco" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="Banco"
+                  field="banco"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
                 />
-                <SortHeader 
-                  label="Fecha" 
-                  field="fechaPago" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="Fecha"
+                  field="fechaPago"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
                 />
-                <SortHeader 
-                  label="Estado" 
-                  field="status" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="Estado"
+                  field="status"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border z-20"
                 />
@@ -577,18 +577,18 @@ export default function PaymentsPage() {
                       </Button>
                       {payment.receiptUrl && (
                         <div className="flex gap-1">
-                          <Button 
-                            variant="glass" 
-                            size="sm" 
+                          <Button
+                            variant="glass"
+                            size="sm"
                             className="glass-button text-accent-green hover:bg-accent-green/20"
                             onClick={() => window.open(payment.receiptUrl, '_blank')}
                             title="Ver Recibo"
                           >
                             <ExternalLink className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="glass" 
-                            size="sm" 
+                          <Button
+                            variant="glass"
+                            size="sm"
                             className="glass-button text-accent-blue hover:bg-accent-blue/20"
                             onClick={() => payment.receiptUrl && handleCopyReceiptLink(payment.receiptUrl)}
                             title="Copiar Link de Recibo"
@@ -599,18 +599,18 @@ export default function PaymentsPage() {
                       )}
                       {payment.status === 'PENDIENTE' && (
                         <>
-                          <Button 
-                            variant="glass" 
-                            size="sm" 
+                          <Button
+                            variant="glass"
+                            size="sm"
                             className="glass-button text-accent-green hover:bg-accent-green/20"
                             onClick={() => handleApprovePayment(payment.id)}
                             disabled={isProcessing}
                           >
                             <Check className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="glass" 
-                            size="sm" 
+                          <Button
+                            variant="glass"
+                            size="sm"
                             className="glass-button text-accent-red hover:bg-accent-red/20"
                             onClick={() => handleViewPayment(payment)}
                           >
@@ -744,9 +744,9 @@ export default function PaymentsPage() {
                 <div className="border border-glass-border rounded-lg p-4 bg-glass-primary/20 backdrop-blur-glass overflow-hidden">
                   {selectedPayment.comprobante.match(/\.(jpeg|jpg|gif|png|webp)/i) ? (
                     <div className="relative group">
-                      <img 
-                        src={selectedPayment.comprobante} 
-                        alt="Comprobante" 
+                      <img
+                        src={selectedPayment.comprobante}
+                        alt="Comprobante"
                         className="w-full h-auto rounded-lg shadow-lg cursor-zoom-in group-hover:scale-[1.02] transition-transform duration-300"
                         onClick={() => window.open(selectedPayment.comprobante || '', '_blank')}
                       />
@@ -763,9 +763,9 @@ export default function PaymentsPage() {
                     </div>
                   )}
                   <div className="mt-3 flex justify-end">
-                    <Button 
-                      variant="glass" 
-                      size="sm" 
+                    <Button
+                      variant="glass"
+                      size="sm"
                       className="glass-button"
                       onClick={() => window.open(selectedPayment.comprobante || '', '_blank')}
                     >
@@ -828,18 +828,18 @@ export default function PaymentsPage() {
                   )}
                   {selectedPayment.receiptUrl && (
                     <div className="mt-4 flex gap-2">
-                      <Button 
-                        variant="glass" 
-                        size="sm" 
+                      <Button
+                        variant="glass"
+                        size="sm"
                         className="glass-button flex-1 bg-white/10"
                         onClick={() => window.open(selectedPayment?.receiptUrl, '_blank')}
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Ver Recibo (PDF)
                       </Button>
-                      <Button 
-                        variant="glass" 
-                        size="sm" 
+                      <Button
+                        variant="glass"
+                        size="sm"
                         className="glass-button bg-white/10 px-3"
                         onClick={() => selectedPayment.receiptUrl && handleCopyReceiptLink(selectedPayment.receiptUrl)}
                         title="Copiar Link"
@@ -932,12 +932,12 @@ export default function PaymentsPage() {
                   <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
                     <DollarSign className="w-4 h-4" /> Monto Pagado (Opcional)
                   </label>
-                  <Input 
-                    type="number" 
-                    placeholder="Valor total por defecto" 
-                    value={manualAmount} 
-                    onChange={(e) => setManualAmount(e.target.value)} 
-                    className="glass-input h-12" 
+                  <Input
+                    type="number"
+                    placeholder="Valor total por defecto"
+                    value={manualAmount}
+                    onChange={(e) => setManualAmount(e.target.value)}
+                    className="glass-input h-12"
                   />
                 </div>
               </div>
@@ -947,10 +947,10 @@ export default function PaymentsPage() {
                   <Upload className="w-4 h-4" /> Comprobante / Captura
                 </label>
                 <div className="relative group">
-                  <Input 
-                    type="file" 
-                    onChange={(e) => setManualCapture(e.target.files?.[0] || null)} 
-                    className="glass-input h-14 pt-3 flex-1 file:hidden cursor-pointer" 
+                  <Input
+                    type="file"
+                    onChange={(e) => setManualCapture(e.target.files?.[0] || null)}
+                    className="glass-input h-14 pt-3 flex-1 file:hidden cursor-pointer"
                     accept="image/*,.pdf"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-text-muted italic">
@@ -961,11 +961,11 @@ export default function PaymentsPage() {
 
               <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
                 <label className="block text-sm font-medium text-text-primary mb-2">OBSERVACIONES</label>
-                <textarea 
-                  value={manualObservations} 
-                  onChange={(e) => setManualObservations(e.target.value)} 
-                  className="glass-input w-full px-4 py-3" 
-                  rows={2} 
+                <textarea
+                  value={manualObservations}
+                  onChange={(e) => setManualObservations(e.target.value)}
+                  className="glass-input w-full px-4 py-3"
+                  rows={2}
                   placeholder="Detalles sobre transferencia, número de operación, etc."
                 />
               </div>
@@ -985,7 +985,7 @@ export default function PaymentsPage() {
                       return a.number - b.number;
                     })
                     .map((quota: any) => (
-                      <div 
+                      <div
                         key={quota._id}
                         className="flex items-center justify-between p-4 rounded-2xl border border-glass-border bg-glass-primary/10 hover:bg-glass-primary/20 transition-all hover:scale-[1.01]"
                       >

@@ -56,7 +56,7 @@ export function useServerPagination({
         setPage(result.page)
       }
     } catch (err) {
-      console.error('Pagination Error:', err)
+
       setError(err instanceof Error ? err.message : 'Error loading data')
       setData([])
     } finally {

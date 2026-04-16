@@ -147,7 +147,7 @@ export default function CollectionsPage() {
         pages: response.data.data.pagination.pages
       }
     } catch (error) {
-      console.error('Error fetching collection activities:', error)
+
       throw error
     }
   }, [typeFilter, statusFilter])
@@ -223,11 +223,7 @@ export default function CollectionsPage() {
 
   const handleCreateCampaign = () => {
     // Simulate campaign creation
-    console.log('Creating campaign:', {
-      type: campaignType,
-      template: selectedTemplate,
-      criteria: targetCriteria
-    })
+
     setIsNewCampaignModalOpen(false)
   }
 
@@ -238,7 +234,7 @@ export default function CollectionsPage() {
   const successfulContacts = Math.floor(totalActivities * 0.25) // 25% success rate
 
   return (
-    <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -260,7 +256,7 @@ export default function CollectionsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
         {statsLoading ? (
           <>
             <StatsCardSkeleton />
@@ -389,7 +385,7 @@ export default function CollectionsPage() {
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-[400px] max-h-[600px]">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">

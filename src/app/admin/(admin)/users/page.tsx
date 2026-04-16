@@ -86,7 +86,7 @@ export default function UsersPage() {
         setUsers(response.data.data.users)
       }
     } catch (error: any) {
-      console.error('Error fetching users:', error)
+
       toast.error('Error al cargar la lista de administradores')
     } finally {
       setIsLoading(false)
@@ -237,7 +237,7 @@ export default function UsersPage() {
           ))}
         </div>
       ) : filteredUsers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
           {filteredUsers.map((user) => (
             <Card 
               key={user.id} 

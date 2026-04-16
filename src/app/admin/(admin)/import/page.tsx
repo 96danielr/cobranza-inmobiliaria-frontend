@@ -186,7 +186,7 @@ export default function ImportPage() {
       }, 1000)
 
     } catch (error: any) {
-      console.error('Error en importación:', error)
+
       
       // Handle different error cases
       let errorMessage = 'Error desconocido en la importación'
@@ -269,7 +269,7 @@ export default function ImportPage() {
       
       toast.success('Plantilla descargada correctamente', { id: 'download-template-toast' })
     } catch (error) {
-      console.error('Error al descargar plantilla:', error)
+
       toast.error('Error al descargar la plantilla', { id: 'download-template-toast' })
     }
   }
@@ -293,7 +293,7 @@ export default function ImportPage() {
       
       toast.success('Datos exportados correctamente', { id: 'export-toast' })
     } catch (error) {
-      console.error('Error al exportar:', error)
+
       toast.error('Error al exportar los datos', { id: 'export-toast' })
     }
   }

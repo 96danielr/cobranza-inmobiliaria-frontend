@@ -94,7 +94,7 @@ export default function BanksPage() {
   }
 
   return (
-    <div className="flex flex-col h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de Bancos</h1>
@@ -141,7 +141,7 @@ export default function BanksPage() {
       </Card>
 
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="sticky top-0 z-20">

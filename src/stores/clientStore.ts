@@ -62,7 +62,7 @@ export const useClientStore = create<ClientStore>((set, get) => ({
         })
       }
     } catch (error) {
-      console.error('Error fetching clients for store:', error)
+
     } finally {
       set({ loading: false })
     }

@@ -102,99 +102,150 @@ export function PortfolioCard({ client, onView }: PortfolioCardProps) {
       )}
     >
       <CardContent className="p-4">
-        {/* Header - Client and Behavior */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center mb-1">
-              <User className="w-4 h-4 text-text-secondary mr-2 flex-shrink-0" />
-              <h3 className="font-semibold text-text-primary truncate">
-                {client.clientName}
-              </h3>
-            </div>
-            <p className="text-sm text-text-muted">
-              C.C. {client.cedula}
-            </p>
-          </div>
+        {/* Header - Behavior Tag (Top) */}
+        <div className="flex items-center justify-between mb-2">
           <span className={cn(
-            'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border backdrop-blur-sm flex-shrink-0',
+            'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border backdrop-blur-sm flex-shrink-0 uppercase tracking-wider',
             behaviorConfig.color
           )}>
             {client.behaviorTag}
           </span>
+          <div className="flex items-center space-x-2">
+            {/* Optional badge for contracts count if we want to be fancy */}
+            <span className="text-[10px] text-text-muted bg-glass-primary/30 px-2 py-0.5 rounded-full border border-glass-border">
+              ID: {client.cedula}
+            </span>
+          </div>
+        </div>
+
+        {/* Client Identity */}
+        <div className="mb-4">
+          <div className="min-w-0">
+            <h3 className="font-bold text-text-primary text-lg leading-tight">
+              {(() => {
+                const name = client.clientName
+                // Helper to split long strings
+                const getSplitParts = (str: string) => {
+                  // 1. Try splitting by spaces if there are more than 2 words
+                  const words = str.split(' ')
+                  if (words.length > 2) {
+                    return { first: words.slice(0, 2).join(' '), second: words.slice(2).join(' ') }
+                  }
+
+                  // 2. If it's a single long string (> 15 chars), try underscores/hyphens
+                  if (str.length > 15) {
+                    const delimiters = /[_\-]/
+                    if (delimiters.test(str)) {
+                      const parts = str.split(delimiters)
+                      const mid = Math.ceil(parts.length / 2)
+                      // Try to reconstruct with a similar separator or space
+                      return { 
+                        first: parts.slice(0, mid).join('_'), 
+                        second: parts.slice(mid).join('_') 
+                      }
+                    }
+                    // 3. Last resort: split roughly in half
+                    const midPoint = Math.floor(str.length / 2)
+                    return { first: str.substring(0, midPoint), second: str.substring(midPoint) }
+                  }
+
+                  return { first: str, second: '' }
+                }
+
+                const { first, second } = getSplitParts(name)
+                
+                return (
+                  <div className="flex flex-col">
+                    <span className="truncate" title={name}>{first}</span>
+                    {second && (
+                      <span className="text-sm font-semibold text-text-secondary opacity-90 truncate" title={name}>
+                        {second}
+                      </span>
+                    )}
+                  </div>
+                )
+              })()}
+            </h3>
+            <p className="text-[10px] text-text-muted mt-1 truncate uppercase tracking-tighter">
+              Cliente Inmobiliario
+            </p>
+          </div>
         </div>
 
         {/* Saldo and Contracts - Prominent Display */}
-        <div className="bg-glass-primary/20 rounded-lg p-3 mb-3">
-          <div className="flex items-center justify-between mb-2">
+        <div className="bg-glass-primary/20 rounded-lg p-3 mb-3 border border-glass-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <div className="flex items-center">
-              <DollarSign className="w-4 h-4 text-accent-blue mr-2" />
+              <DollarSign className="w-4 h-4 text-accent-blue mr-2 flex-shrink-0" />
               <span className="text-sm text-text-secondary">Saldo Pendiente</span>
             </div>
-            <div className="text-right">
-              <p className="text-lg font-bold text-text-primary">
+            <div className="sm:text-right">
+              <p className="text-lg font-bold text-text-primary leading-none">
                 {formatCurrency(client.totalPending)}
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-glass-border/30">
             <div className="flex items-center">
-              <Building2 className="w-4 h-4 text-text-muted mr-2" />
+              <Building2 className="w-4 h-4 text-text-muted mr-2 flex-shrink-0" />
               <span className="text-sm text-text-secondary">
                 {client.totalContracts} {client.totalContracts === 1 ? 'contrato' : 'contratos'}
               </span>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="text-sm text-text-secondary">
-                Total: {formatCurrency(client.totalValue)}
+                Total: <span className="font-medium text-text-primary">{formatCurrency(client.totalValue)}</span>
               </p>
             </div>
           </div>
         </div>
 
         {/* Payment Progress */}
-        <div className="mb-3">
+        <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center">
+            <div className="flex items-center min-w-0">
               {paymentStatus.icon}
-              <span className={cn("text-sm ml-1", paymentStatus.color)}>
-                Progreso de Pagos
+              <span className={cn("text-xs font-medium ml-1 truncate", paymentStatus.color)}>
+                RECUPERACIÓN
               </span>
             </div>
-            <span className="text-sm font-medium text-text-primary">
+            <span className="text-sm font-bold text-text-primary">
               {client.averageRecaudo}%
             </span>
           </div>
-          <div className="w-full bg-glass-primary/20 rounded-full h-2">
+          <div className="w-full bg-glass-primary/30 rounded-full h-2.5 overflow-hidden">
             <div
               className={cn(
-                "h-2 rounded-full transition-all duration-300",
+                "h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(var(--color-glow),0.3)]",
                 paymentPercentage >= 80 ? "bg-accent-green" :
                 paymentPercentage >= 50 ? "bg-accent-yellow" : "bg-accent-red"
               )}
-              style={{ width: `${Math.min(paymentPercentage, 100)}%` }}
+              style={{ 
+                width: `${Math.min(paymentPercentage, 100)}%`,
+                // Applying a CSS variable for the glow based on color
+                '--color-glow': paymentPercentage >= 80 ? '74, 222, 128' : 
+                               paymentPercentage >= 50 ? '251, 191, 36' : '248, 113, 113'
+              } as any}
             />
-          </div>
-          <div className="flex justify-between text-xs text-text-muted mt-1">
-            <span>0%</span>
-            <span className="font-medium">{paymentPercentage.toFixed(1)}%</span>
-            <span>100%</span>
           </div>
         </div>
 
         {/* Quick Info Row */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div className="flex items-center">
-            <Calendar className="w-3 h-3 text-text-muted mr-2" />
-            <div className="min-w-0">
-              <p className="text-xs text-text-muted">Estado mora</p>
-              <p className={cn("text-sm font-medium truncate", moraStatus.color)}>
-                {moraStatus.text}
-              </p>
+        <div className="grid grid-cols-2 gap-4 mb-3">
+          <div className="space-y-1">
+            <div className="flex items-center text-[10px] uppercase tracking-wider text-text-muted">
+              <Calendar className="w-3 h-3 mr-1" />
+              Estado mora
             </div>
+            <p className={cn("text-xs font-bold px-2 py-0.5 rounded border inline-block", 
+              moraStatus.color.replace('text-', 'bg-').replace('accent-', 'accent-').split(' ')[0] + '/10',
+              moraStatus.color)}>
+              {moraStatus.text}
+            </p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-text-muted">Último contacto</p>
-            <p className="text-sm text-text-secondary">
+          <div className="space-y-1 text-right">
+            <div className="text-[10px] uppercase tracking-wider text-text-muted">Último contacto</div>
+            <p className="text-xs text-text-secondary font-medium">
               {client.lastContact ? dayjs(client.lastContact).format('DD/MM/YYYY') : 'Sin contacto'}
             </p>
           </div>
@@ -202,14 +253,20 @@ export function PortfolioCard({ client, onView }: PortfolioCardProps) {
 
         {/* Expandable Details */}
         {isExpanded && (
-          <div className="border-t border-glass-border pt-3 mt-3 space-y-2 animate-fade-in">
-            <div className="text-xs text-text-muted space-y-1">
-              <p><span className="font-medium">Teléfono:</span> {client.phone}</p>
-              <p><span className="font-medium">Total pagado:</span> {formatCurrency(client.totalPaid)}</p>
-              <p><span className="font-medium">Días en mora:</span> {client.daysInArrears} días</p>
-              {client.contracts && client.contracts.length > 0 && (
-                <p><span className="font-medium">Contratos:</span> {client.contracts.length} activos</p>
-              )}
+          <div className="border-t border-glass-border pt-4 mt-3 space-y-3 animate-fade-in">
+            <div className="grid grid-cols-1 gap-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-text-muted">Teléfono:</span>
+                <span className="text-text-primary font-medium">{client.phone}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-text-muted">Total pagado:</span>
+                <span className="text-accent-green font-medium">{formatCurrency(client.totalPaid)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-text-muted">Días en mora actual:</span>
+                <span className={cn("font-medium", moraStatus.color)}>{client.daysInArrears} días</span>
+              </div>
             </div>
           </div>
         )}

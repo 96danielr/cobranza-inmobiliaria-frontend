@@ -126,9 +126,6 @@ export default function AdminDashboard() {
         setRecaudoMensualData(chartData)
       }
 
-      // Show success toast with unique ID to prevent duplicates
-      toast.success('Dashboard cargado con datos reales', { id: 'dashboard-load-success' })
-
       // Update behavior stats using cached store data
       if (clients.length > 0) {
         setClientStats({
@@ -146,7 +143,7 @@ export default function AdminDashboard() {
       setTimeout(() => setActionsLoading(false), 900)
       
     } catch (error) {
-      console.error('Error loading dashboard data:', error)
+
       // Only show error for standard admins since superadmins don't use this data
       if (admin?.role !== 'superadmin') {
         toast.error('Error cargando datos del dashboard')
@@ -307,7 +304,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up-delay">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up-delay">
         {statsLoading ? (
           <>
             <StatsCardSkeleton />

@@ -50,19 +50,19 @@ apiAdmin.interceptors.request.use(
     // Dynamic import to avoid circular dependency
     if (typeof window !== 'undefined') {
       const adminAuthData = localStorage.getItem('admin-auth-storage')
-      console.log('Admin auth data from localStorage:', adminAuthData)
+
       if (adminAuthData) {
         try {
           const parsed = JSON.parse(adminAuthData)
-          console.log('Parsed admin auth data:', parsed)
+
           // Try different possible structures
           const token = parsed.state?.token || parsed.token
-          console.log('Extracted token:', token ? token.substring(0, 20) + '...' : 'None')
+
           if (token) {
             config.headers.Authorization = `Bearer ${token}`
-            console.log('Authorization header set for URL:', config.url)
+
           } else {
-            console.warn('No token found in admin auth data')
+
           }
         } catch (e) {
           console.error('Error parsing admin auth data:', e)
