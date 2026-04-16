@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Sparkles, 
-  Loader2, 
+import {
+  Send,
+  Bot,
+  User,
+  Sparkles,
+  Loader2,
   MessageSquare,
   BarChart3,
   Lightbulb,
@@ -44,7 +44,7 @@ export default function AIChatPage() {
   const [isThinking, setIsThinking] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
-  
+
   const handleCancel = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
@@ -65,7 +65,7 @@ export default function AIChatPage() {
     const ws = XLSX.utils.json_to_sheet(data, { header: columns })
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Reporte AI")
-    
+
     const date = new Date().toISOString().split('T')[0]
     const finalName = suggestedName ? `${suggestedName}_${date}.xlsx` : `Reporte_IA_${date}.xlsx`
     XLSX.writeFile(wb, finalName)
@@ -105,14 +105,14 @@ export default function AIChatPage() {
       }))
 
       const response = await aiApi.ask(input, history, abortControllerRef.current.signal)
-      
+
       if (!response.ok) throw new Error('Error en la comunicación con la IA')
       if (!response.body) throw new Error('No se recibió cuerpo de respuesta')
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
-      
-      let lineBuffer = '' 
+
+      let lineBuffer = ''
 
       // Crear mensaje vacío para el asistente que se irá llenando
       const assistantMessage: Message = {
@@ -131,16 +131,16 @@ export default function AIChatPage() {
 
         lineBuffer += decoder.decode(value, { stream: true })
         const lines = lineBuffer.split('\n')
-        lineBuffer = lines.pop() || '' 
+        lineBuffer = lines.pop() || ''
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const dataStr = line.slice(6).trim()
             if (dataStr === '[DONE]') continue
-            
+
             try {
               const data = JSON.parse(dataStr)
-              
+
               if (data.metadata) {
                 setMessages(prev => {
                   const newMessages = [...prev]
@@ -156,7 +156,7 @@ export default function AIChatPage() {
               } else if (data.token) {
                 setIsThinking(false)
                 accumulatedContent += data.token
-                
+
                 setMessages(prev => {
                   const newMessages = [...prev]
                   const last = newMessages[newMessages.length - 1]
@@ -208,7 +208,7 @@ export default function AIChatPage() {
   ]
 
   return (
-    <div className="flex flex-col h-[calc(100vh-180px)] max-w-5xl mx-auto space-y-4">
+    <div className="flex flex-col h-[calc(100vh-140px)] lg:h-[calc(100vh-100px)] px-1 py-2 md:p-6 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-2">
         <div>
@@ -218,9 +218,9 @@ export default function AIChatPage() {
           </h1>
           <p className="text-text-secondary">Consulta datos y obtén análisis en tiempo real</p>
         </div>
-        <Button 
-          variant="glass" 
-          size="sm" 
+        <Button
+          variant="glass"
+          size="sm"
           onClick={() => setMessages([messages[0]])}
           className="text-text-secondary hover:text-accent-red"
         >
@@ -260,8 +260,8 @@ export default function AIChatPage() {
                 )}>
                   <div className={cn(
                     "px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-700 relative overflow-hidden",
-                    message.role === 'user' 
-                      ? "bg-gradient-primary text-white rounded-tr-none shadow-lg" 
+                    message.role === 'user'
+                      ? "bg-gradient-primary text-white rounded-tr-none shadow-lg"
                       : "bg-dark-secondary/50 text-text-primary border border-glass-border rounded-tl-none backdrop-blur-sm",
                     (message as any).isFinished && "ring-2 ring-accent-blue/30 shadow-[0_0_20px_rgba(0,149,255,0.2)]",
                     (message as any).isFinished && "animate-rainbow-burst animate-mirror-shine",
@@ -274,20 +274,20 @@ export default function AIChatPage() {
                         <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.2s]"></span>
                       </div>
                     ) : (
-                      <ReactMarkdown 
+                      <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-bold text-accent-blue" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2" {...props} />,
-                          ol: ({node, ...props}) => <ol className="list-decimal ml-4 mb-2" {...props} />,
-                          li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                          p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                          strong: ({ node, ...props }) => <strong className="font-bold text-accent-blue" {...props} />,
+                          ul: ({ node, ...props }) => <ul className="list-disc ml-4 mb-2" {...props} />,
+                          ol: ({ node, ...props }) => <ol className="list-decimal ml-4 mb-2" {...props} />,
+                          li: ({ node, ...props }) => <li className="mb-1" {...props} />,
                         }}
                       >
                         {message.content}
                       </ReactMarkdown>
                     )}
-                    
+
                     {message.type === 'table' && message.tableData && message.tableData.length > 0 && (
                       <div className={cn(
                         "mt-4 overflow-x-auto rounded-xl border border-glass-border/30 bg-black/20 transition-all duration-1000",
@@ -302,7 +302,7 @@ export default function AIChatPage() {
                             onClick={() => handleExportToExcel(message.tableData!, message.columns!, message.suggestedFilename)}
                             className={cn(
                               "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                              message.tableData.length > 5 
+                              message.tableData.length > 5
                                 ? "bg-accent-green/20 text-accent-green border border-accent-green/30 hover:bg-accent-green/30 shadow-[0_0_15px_rgba(16,185,129,0.2)] animate-pulse"
                                 : "bg-white/5 text-text-secondary border border-white/10 hover:bg-white/10"
                             )}
@@ -327,8 +327,8 @@ export default function AIChatPage() {
                               <tr key={i} className="hover:bg-white/5 transition-colors">
                                 {message.columns?.map((col) => (
                                   <td key={col} className="px-4 py-2 text-xs border-b border-glass-border/10">
-                                    {typeof row[col] === 'object' && row[col] !== null 
-                                      ? JSON.stringify(row[col]) 
+                                    {typeof row[col] === 'object' && row[col] !== null
+                                      ? JSON.stringify(row[col])
                                       : String(row[col])}
                                   </td>
                                 ))}
@@ -417,8 +417,8 @@ export default function AIChatPage() {
                 disabled={!input.trim()}
                 className={cn(
                   "absolute right-2 p-2 rounded-lg transition-all",
-                  input.trim() 
-                    ? "bg-accent-blue text-white shadow-glow hover:scale-105" 
+                  input.trim()
+                    ? "bg-accent-blue text-white shadow-glow hover:scale-105"
                     : "bg-glass-border text-text-muted cursor-not-allowed"
                 )}
               >

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { 
+import {
   Building2,
   Users,
   Settings,
@@ -118,7 +118,7 @@ export default function SettingsPage() {
       }
 
       const { users, pagination } = response.data.data
-      
+
       return {
         data: users,
         total: pagination.total,
@@ -228,7 +228,7 @@ export default function SettingsPage() {
         })
         toast.success('Usuario creado exitosamente')
       }
-      
+
       setIsUserModalOpen(false)
       usersPagination.refresh()
     } catch (error: any) {
@@ -263,7 +263,7 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="space-y-4 md:space-y-6 px-1 py-2 md:p-6">
       {/* Header */}
       <div className="animate-fade-in-up">
         <h1 className="text-responsive-2xl font-bold text-text-primary">Configuración</h1>
@@ -308,116 +308,116 @@ export default function SettingsPage() {
           ) : (
             <>
               <Card variant="elevated" className="animate-fade-in-up">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <h3 className="text-lg font-semibold text-text-primary">Información de la Empresa</h3>
-                <Button
-                  onClick={handleSaveCompanyInfo}
-                  loading={isSaving}
-                  className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Guardar Cambios
-                </Button>
-              </div>
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <h3 className="text-lg font-semibold text-text-primary">Información de la Empresa</h3>
+                    <Button
+                      onClick={handleSaveCompanyInfo}
+                      loading={isSaving}
+                      className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Guardar Cambios
+                    </Button>
+                  </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <Input
-                    label="Nombre de la Empresa"
-                    value={tenantConfig.name}
-                    onChange={(e) => setTenantConfig(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Nombre de la empresa"
-                  />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <Input
+                        label="Nombre de la Empresa"
+                        value={tenantConfig.name}
+                        onChange={(e) => setTenantConfig(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Nombre de la empresa"
+                      />
 
-                  <Input
-                    label="NIT"
-                    value={tenantConfig.nit}
-                    onChange={(e) => setTenantConfig(prev => ({ ...prev, nit: e.target.value }))}
-                    placeholder="123456789-0"
-                  />
+                      <Input
+                        label="NIT"
+                        value={tenantConfig.nit}
+                        onChange={(e) => setTenantConfig(prev => ({ ...prev, nit: e.target.value }))}
+                        placeholder="123456789-0"
+                      />
 
-                  <div>
-                    <label className="block text-sm font-medium text-text-primary mb-2">
-                      Dirección
-                    </label>
-                    <textarea
-                      value={tenantConfig.address}
-                      onChange={(e) => setTenantConfig(prev => ({ ...prev, address: e.target.value }))}
-                      rows={3}
-                      className="glass-input w-full px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-                      placeholder="Dirección completa de la empresa"
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          Dirección
+                        </label>
+                        <textarea
+                          value={tenantConfig.address}
+                          onChange={(e) => setTenantConfig(prev => ({ ...prev, address: e.target.value }))}
+                          rows={3}
+                          className="glass-input w-full px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
+                          placeholder="Dirección completa de la empresa"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Input
+                        label="Teléfono"
+                        value={tenantConfig.phone}
+                        onChange={(e) => setTenantConfig(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="+57 1 234 5678"
+                        icon={Phone}
+                      />
+
+                      <Input
+                        label="Email"
+                        type="email"
+                        value={tenantConfig.email}
+                        onChange={(e) => setTenantConfig(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="info@empresa.com"
+                        icon={Mail}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Bank Information */}
+              <Card variant="elevated" className="animate-fade-in-up animate-fade-in-up-delay">
+                <CardContent className="p-4 md:p-6">
+                  <h3 className="text-lg font-semibold text-text-primary mb-6">Información Bancaria</h3>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <Input
+                      label="Banco"
+                      value={tenantConfig.bankInfo.banco}
+                      onChange={(e) => setTenantConfig(prev => ({
+                        ...prev,
+                        bankInfo: { ...prev.bankInfo, banco: e.target.value }
+                      }))}
+                      placeholder="Nombre del banco"
+                    />
+
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Tipo de Cuenta
+                      </label>
+                      <select
+                        value={tenantConfig.bankInfo.tipoCuenta}
+                        onChange={(e) => setTenantConfig(prev => ({
+                          ...prev,
+                          bankInfo: { ...prev.bankInfo, tipoCuenta: e.target.value }
+                        }))}
+                        className="glass-input w-full min-h-[44px] px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
+                      >
+                        <option value="Ahorros">Ahorros</option>
+                        <option value="Corriente">Corriente</option>
+                      </select>
+                    </div>
+
+                    <Input
+                      label="Número de Cuenta"
+                      value={tenantConfig.bankInfo.numeroCuenta}
+                      onChange={(e) => setTenantConfig(prev => ({
+                        ...prev,
+                        bankInfo: { ...prev.bankInfo, numeroCuenta: e.target.value }
+                      }))}
+                      placeholder="1234567890"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Input
-                    label="Teléfono"
-                    value={tenantConfig.phone}
-                    onChange={(e) => setTenantConfig(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="+57 1 234 5678"
-                    icon={Phone}
-                  />
-
-                  <Input
-                    label="Email"
-                    type="email"
-                    value={tenantConfig.email}
-                    onChange={(e) => setTenantConfig(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="info@empresa.com"
-                    icon={Mail}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Bank Information */}
-          <Card variant="elevated" className="animate-fade-in-up animate-fade-in-up-delay">
-            <CardContent className="p-4 md:p-6">
-              <h3 className="text-lg font-semibold text-text-primary mb-6">Información Bancaria</h3>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <Input
-                  label="Banco"
-                  value={tenantConfig.bankInfo.banco}
-                  onChange={(e) => setTenantConfig(prev => ({
-                    ...prev,
-                    bankInfo: { ...prev.bankInfo, banco: e.target.value }
-                  }))}
-                  placeholder="Nombre del banco"
-                />
-
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">
-                    Tipo de Cuenta
-                  </label>
-                  <select
-                    value={tenantConfig.bankInfo.tipoCuenta}
-                    onChange={(e) => setTenantConfig(prev => ({
-                      ...prev,
-                      bankInfo: { ...prev.bankInfo, tipoCuenta: e.target.value }
-                    }))}
-                    className="glass-input w-full min-h-[44px] px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-                  >
-                    <option value="Ahorros">Ahorros</option>
-                    <option value="Corriente">Corriente</option>
-                  </select>
-                </div>
-
-                <Input
-                  label="Número de Cuenta"
-                  value={tenantConfig.bankInfo.numeroCuenta}
-                  onChange={(e) => setTenantConfig(prev => ({
-                    ...prev,
-                    bankInfo: { ...prev.bankInfo, numeroCuenta: e.target.value }
-                  }))}
-                  placeholder="1234567890"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>
@@ -473,61 +473,58 @@ export default function SettingsPage() {
                       </tr>
                     ) : (
                       usersPagination.data.map((user) => (
-                      <tr key={user.id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
-                        <td className="py-4 px-4 md:px-6">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-glass-primary/30 backdrop-blur-sm rounded-full flex items-center justify-center mr-3 border border-glass-border">
-                              <span className="text-sm font-medium text-text-primary">
-                                {user.fullName.charAt(0).toUpperCase()}
-                              </span>
+                        <tr key={user.id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
+                          <td className="py-4 px-4 md:px-6">
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-glass-primary/30 backdrop-blur-sm rounded-full flex items-center justify-center mr-3 border border-glass-border">
+                                <span className="text-sm font-medium text-text-primary">
+                                  {user.fullName.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <span className="font-medium text-text-primary">{user.fullName}</span>
                             </div>
-                            <span className="font-medium text-text-primary">{user.fullName}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 md:px-6 text-text-secondary">{user.email}</td>
-                        <td className="py-4 px-4 md:px-6">
-                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${
-                            user.role === 'ADMIN' 
-                              ? 'text-accent-purple bg-accent-purple/20 border-accent-purple/30' 
+                          </td>
+                          <td className="py-4 px-4 md:px-6 text-text-secondary">{user.email}</td>
+                          <td className="py-4 px-4 md:px-6">
+                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${user.role === 'ADMIN'
+                              ? 'text-accent-purple bg-accent-purple/20 border-accent-purple/30'
                               : 'text-accent-blue bg-accent-blue/20 border-accent-blue/30'
-                          }`}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${
-                            user.status === 'active' 
-                              ? 'text-accent-green bg-accent-green/20 border-accent-green/30' 
+                              }`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 md:px-6">
+                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${user.status === 'active'
+                              ? 'text-accent-green bg-accent-green/20 border-accent-green/30'
                               : 'text-accent-red bg-accent-red/20 border-accent-red/30'
-                          }`}>
-                            {user.status === 'active' ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 md:px-6">
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="glass"
-                              size="sm"
-                              onClick={() => handleEditUser(user)}
-                              className="glass-button min-h-[44px] min-w-[44px]"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="glass"
-                              size="sm"
-                              onClick={() => handleToggleUserStatus(user.id, user.status)}
-                              className={`glass-button min-h-[44px] min-w-[44px] ${
-                                user.status === 'active' 
+                              }`}>
+                              {user.status === 'active' ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 md:px-6">
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="glass"
+                                size="sm"
+                                onClick={() => handleEditUser(user)}
+                                className="glass-button min-h-[44px] min-w-[44px]"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="glass"
+                                size="sm"
+                                onClick={() => handleToggleUserStatus(user.id, user.status)}
+                                className={`glass-button min-h-[44px] min-w-[44px] ${user.status === 'active'
                                   ? 'text-accent-red hover:text-accent-red hover:bg-accent-red/20'
                                   : 'text-accent-green hover:text-accent-green hover:bg-accent-green/20'
-                              }`}
-                            >
-                              {user.status === 'active' ? <X className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
+                                  }`}
+                              >
+                                {user.status === 'active' ? <X className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
                       ))
                     )}
                   </tbody>
@@ -563,168 +560,168 @@ export default function SettingsPage() {
             </>
           ) : (
             <>
-          {/* WhatsApp Integration */}
-          <Card variant="elevated" className="animate-fade-in-up">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-accent-green/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 border border-glass-border">
-                    <MessageSquare className="w-5 h-5 text-accent-green" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-text-primary">WhatsApp Business API</h3>
-                    <p className="text-sm text-text-secondary">Envío automático de mensajes de cobranza</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-sm text-text-secondary mr-3">
-                    {tenantConfig.integrations.whatsappEnabled ? 'Habilitado' : 'Deshabilitado'}
-                  </span>
-                  <button
-                    onClick={() => setTenantConfig(prev => ({
-                      ...prev,
-                      integrations: {
-                        ...prev.integrations,
-                        whatsappEnabled: !prev.integrations.whatsappEnabled
-                      }
-                    }))}
-                    className={`
+              {/* WhatsApp Integration */}
+              <Card variant="elevated" className="animate-fade-in-up">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-accent-green/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 border border-glass-border">
+                        <MessageSquare className="w-5 h-5 text-accent-green" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-text-primary">WhatsApp Business API</h3>
+                        <p className="text-sm text-text-secondary">Envío automático de mensajes de cobranza</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm text-text-secondary mr-3">
+                        {tenantConfig.integrations.whatsappEnabled ? 'Habilitado' : 'Deshabilitado'}
+                      </span>
+                      <button
+                        onClick={() => setTenantConfig(prev => ({
+                          ...prev,
+                          integrations: {
+                            ...prev.integrations,
+                            whatsappEnabled: !prev.integrations.whatsappEnabled
+                          }
+                        }))}
+                        className={`
                       relative inline-flex h-6 w-11 items-center rounded-full transition-colors
                       ${tenantConfig.integrations.whatsappEnabled ? 'bg-accent-green' : 'bg-glass-primary/30'}
                     `}
-                  >
-                    <span className={`
+                      >
+                        <span className={`
                       inline-block h-4 w-4 transform rounded-full bg-white transition-transform
                       ${tenantConfig.integrations.whatsappEnabled ? 'translate-x-6' : 'translate-x-1'}
                     `} />
-                  </button>
-                </div>
-              </div>
-
-              {tenantConfig.integrations.whatsappEnabled && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-text-primary mb-2">
-                      API Key de WhatsApp
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showApiKeys.whatsapp ? 'text' : 'password'}
-                        value={tenantConfig.integrations.whatsappApiKey || ''}
-                        onChange={(e) => setTenantConfig(prev => ({
-                          ...prev,
-                          integrations: {
-                            ...prev.integrations,
-                            whatsappApiKey: e.target.value
-                          }
-                        }))}
-                        className="glass-input w-full pr-10 px-3 py-2 min-h-[44px] focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-                        placeholder="Ingresa tu API Key de WhatsApp"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => toggleApiKeyVisibility('whatsapp')}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-muted hover:text-text-secondary transition-colors"
-                      >
-                        {showApiKeys.whatsapp ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Dapta Integration */}
-          <Card variant="elevated" className="animate-fade-in-up animate-fade-in-up-delay">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-accent-blue/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 border border-glass-border">
-                    <Zap className="w-5 h-5 text-accent-blue" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-text-primary">Dapta AI</h3>
-                    <p className="text-sm text-text-secondary">Llamadas automáticas con inteligencia artificial</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-sm text-text-secondary mr-3">
-                    {tenantConfig.integrations.daptaEnabled ? 'Habilitado' : 'Deshabilitado'}
-                  </span>
-                  <button
-                    onClick={() => setTenantConfig(prev => ({
-                      ...prev,
-                      integrations: {
-                        ...prev.integrations,
-                        daptaEnabled: !prev.integrations.daptaEnabled
-                      }
-                    }))}
-                    className={`
+                  {tenantConfig.integrations.whatsappEnabled && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          API Key de WhatsApp
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showApiKeys.whatsapp ? 'text' : 'password'}
+                            value={tenantConfig.integrations.whatsappApiKey || ''}
+                            onChange={(e) => setTenantConfig(prev => ({
+                              ...prev,
+                              integrations: {
+                                ...prev.integrations,
+                                whatsappApiKey: e.target.value
+                              }
+                            }))}
+                            className="glass-input w-full pr-10 px-3 py-2 min-h-[44px] focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
+                            placeholder="Ingresa tu API Key de WhatsApp"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleApiKeyVisibility('whatsapp')}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-muted hover:text-text-secondary transition-colors"
+                          >
+                            {showApiKeys.whatsapp ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Dapta Integration */}
+              <Card variant="elevated" className="animate-fade-in-up animate-fade-in-up-delay">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-accent-blue/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 border border-glass-border">
+                        <Zap className="w-5 h-5 text-accent-blue" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-text-primary">Dapta AI</h3>
+                        <p className="text-sm text-text-secondary">Llamadas automáticas con inteligencia artificial</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm text-text-secondary mr-3">
+                        {tenantConfig.integrations.daptaEnabled ? 'Habilitado' : 'Deshabilitado'}
+                      </span>
+                      <button
+                        onClick={() => setTenantConfig(prev => ({
+                          ...prev,
+                          integrations: {
+                            ...prev.integrations,
+                            daptaEnabled: !prev.integrations.daptaEnabled
+                          }
+                        }))}
+                        className={`
                       relative inline-flex h-6 w-11 items-center rounded-full transition-colors
                       ${tenantConfig.integrations.daptaEnabled ? 'bg-accent-blue' : 'bg-glass-primary/30'}
                     `}
-                  >
-                    <span className={`
+                      >
+                        <span className={`
                       inline-block h-4 w-4 transform rounded-full bg-white transition-transform
                       ${tenantConfig.integrations.daptaEnabled ? 'translate-x-6' : 'translate-x-1'}
                     `} />
-                  </button>
-                </div>
-              </div>
-
-              {tenantConfig.integrations.daptaEnabled && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-text-primary mb-2">
-                      API Key de Dapta
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showApiKeys.dapta ? 'text' : 'password'}
-                        value={tenantConfig.integrations.daptaApiKey || ''}
-                        onChange={(e) => setTenantConfig(prev => ({
-                          ...prev,
-                          integrations: {
-                            ...prev.integrations,
-                            daptaApiKey: e.target.value
-                          }
-                        }))}
-                        className="glass-input w-full pr-10 px-3 py-2 min-h-[44px] focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-                        placeholder="Ingresa tu API Key de Dapta"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => toggleApiKeyVisibility('dapta')}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-muted hover:text-text-secondary transition-colors"
-                      >
-                        {showApiKeys.dapta ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSaveIntegrations}
-              loading={isSaving}
-              className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Guardar Configuración
-            </Button>
-          </div>
+                  {tenantConfig.integrations.daptaEnabled && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          API Key de Dapta
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showApiKeys.dapta ? 'text' : 'password'}
+                            value={tenantConfig.integrations.daptaApiKey || ''}
+                            onChange={(e) => setTenantConfig(prev => ({
+                              ...prev,
+                              integrations: {
+                                ...prev.integrations,
+                                daptaApiKey: e.target.value
+                              }
+                            }))}
+                            className="glass-input w-full pr-10 px-3 py-2 min-h-[44px] focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
+                            placeholder="Ingresa tu API Key de Dapta"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleApiKeyVisibility('dapta')}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-muted hover:text-text-secondary transition-colors"
+                          >
+                            {showApiKeys.dapta ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSaveIntegrations}
+                  loading={isSaving}
+                  className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Configuración
+                </Button>
+              </div>
             </>
           )}
         </div>
@@ -739,20 +736,20 @@ export default function SettingsPage() {
       >
         {isUserModalOpen ? (
           <div className="space-y-4">
-          <Input
-            label="Nombre Completo"
-            value={userForm.fullName}
-            onChange={(e) => setUserForm(prev => ({ ...prev, fullName: e.target.value }))}
-            placeholder="Nombre completo del usuario"
-          />
+            <Input
+              label="Nombre Completo"
+              value={userForm.fullName}
+              onChange={(e) => setUserForm(prev => ({ ...prev, fullName: e.target.value }))}
+              placeholder="Nombre completo del usuario"
+            />
 
-          <Input
-            label="Email"
-            type="email"
-            value={userForm.email}
-            onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
-            placeholder="email@empresa.com"
-          />
+            <Input
+              label="Email"
+              type="email"
+              value={userForm.email}
+              onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+              placeholder="email@empresa.com"
+            />
 
             <label className="block text-sm font-medium text-text-primary mb-2">
               Rol
@@ -768,39 +765,39 @@ export default function SettingsPage() {
               <option value="superadmin">Superadmin (Plataforma)</option>
             </select>
 
-          <Input
-            label={selectedUser ? 'Nueva Contraseña (opcional)' : 'Contraseña'}
-            type="password"
-            value={userForm.password}
-            onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
-            placeholder="Contraseña"
-          />
+            <Input
+              label={selectedUser ? 'Nueva Contraseña (opcional)' : 'Contraseña'}
+              type="password"
+              value={userForm.password}
+              onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
+              placeholder="Contraseña"
+            />
 
-          <Input
-            label="Confirmar Contraseña"
-            type="password"
-            value={userForm.confirmPassword}
-            onChange={(e) => setUserForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-            placeholder="Confirmar contraseña"
-          />
+            <Input
+              label="Confirmar Contraseña"
+              type="password"
+              value={userForm.confirmPassword}
+              onChange={(e) => setUserForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+              placeholder="Confirmar contraseña"
+            />
 
-          <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-glass-border">
-            <Button
-              variant="outline"
-              onClick={() => setIsUserModalOpen(false)}
-              className="glass-button min-h-[44px]"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSaveUser}
-              disabled={!userForm.fullName || !userForm.email}
-              className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
-            >
-              {selectedUser ? 'Actualizar' : 'Crear'} Usuario
-            </Button>
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-glass-border">
+              <Button
+                variant="outline"
+                onClick={() => setIsUserModalOpen(false)}
+                className="glass-button min-h-[44px]"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSaveUser}
+                disabled={!userForm.fullName || !userForm.email}
+                className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+              >
+                {selectedUser ? 'Actualizar' : 'Crear'} Usuario
+              </Button>
+            </div>
           </div>
-        </div>
         ) : (
           <ModalContentSkeleton />
         )}

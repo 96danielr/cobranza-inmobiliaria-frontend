@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { 
+import {
   Search,
   Filter,
   Download,
@@ -74,7 +74,7 @@ export default function ClientsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [behaviorFilter, setBehaviorFilter] = useState<'ALL' | 'DISPUESTO' | 'INDECISO' | 'EVASIVO'>('ALL')
   const [statsLoading, setStatsLoading] = useState(false)
-  
+
   const [newClient, setNewClient] = useState({
     name: '',
     idNumber: '',
@@ -93,14 +93,14 @@ export default function ClientsPage() {
       }
 
       const freshClients = response.data.data.clients || []
-      
+
       // Update global store if we're on the first page without search
       if (page === 1 && !search) {
         setClients(freshClients, response.data.data.pagination.total)
       }
 
       let filteredClients = freshClients
-      
+
       // Apply behavior filter
       if (behaviorFilter !== 'ALL') {
         filteredClients = filteredClients.filter((client: Client) => client.behavior === behaviorFilter)
@@ -179,14 +179,14 @@ export default function ClientsPage() {
 
   // Calculate stats from real data
   const totalClients = pagination.total || 0
-  
+
   // Real stats based on the data we have
   const clientsDispuestos = pagination.data.filter(c => c.behavior === 'DISPUESTO').length
   const clientsEvasivos = pagination.data.filter(c => c.behavior === 'EVASIVO').length
   const clientsIndecisos = pagination.data.filter(c => c.behavior === 'INDECISO').length
 
   return (
-    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -200,7 +200,7 @@ export default function ClientsPage() {
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </Button>
-          <Button 
+          <Button
             className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
             onClick={() => setIsCreateModalOpen(true)}
           >
@@ -294,12 +294,12 @@ export default function ClientsPage() {
         <CardContent className="p-4 md:p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
-                <Input
-                  placeholder="Buscar por nombre, cédula, teléfono..."
-                  value={pagination.search}
-                  onChange={(e) => pagination.handleSearch(e.target.value)}
-                  className="glass-input"
-                />
+              <Input
+                placeholder="Buscar por nombre, cédula, teléfono..."
+                value={pagination.search}
+                onChange={(e) => pagination.handleSearch(e.target.value)}
+                className="glass-input"
+              />
             </div>
             <div className="lg:w-72">
               <Combobox
@@ -330,28 +330,28 @@ export default function ClientsPage() {
               <thead>
                 <tr className="sticky top-0 z-20">
 
-                  <SortHeader 
-                    label="Cliente" 
-                    field="name" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Cliente"
+                    field="name"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <SortHeader 
-                    label="Cédula" 
-                    field="idNumber" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Cédula"
+                    field="idNumber"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border w-40"
                   />
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Contacto</th>
-                  <SortHeader 
-                    label="Comportamiento" 
-                    field="behavior" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Comportamiento"
+                    field="behavior"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border w-48"
                   />
@@ -375,65 +375,65 @@ export default function ClientsPage() {
                   </tr>
                 ) : (
                   pagination.data.map((client) => (
-                  <tr key={client._id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
+                    <tr key={client._id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
 
-                    <td className="py-2 px-4 md:px-6">
-                      <p className="font-medium text-text-primary whitespace-nowrap">{client.name}</p>
-                    </td>
-                    <td className="py-2 px-4 md:px-6 font-mono text-xs text-text-muted w-40">
-                      {client.idNumber || 'Sin Cédula'}
-                    </td>
-                    <td className="py-2 px-4 md:px-6">
-                      <div>
-                        <p className="text-sm text-text-primary">{client.phone}</p>
-                        {client.email && (
-                          <p className="text-xs text-text-muted">{client.email}</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-2 px-4 md:px-6 w-48">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(client.behavior)}`}>
-                        {client.behavior && client.behavior !== 'N/A' ? client.behavior : 'No definido'}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4 md:px-6 w-56">
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewClient(client)}
-                          className="glass-button min-h-[44px] min-w-[44px]"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
-                        >
-                          <Phone className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                      <td className="py-2 px-4 md:px-6">
+                        <p className="font-medium text-text-primary whitespace-nowrap">{client.name}</p>
+                      </td>
+                      <td className="py-2 px-4 md:px-6 font-mono text-xs text-text-muted w-40">
+                        {client.idNumber || 'Sin Cédula'}
+                      </td>
+                      <td className="py-2 px-4 md:px-6">
+                        <div>
+                          <p className="text-sm text-text-primary">{client.phone}</p>
+                          {client.email && (
+                            <p className="text-xs text-text-muted">{client.email}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 md:px-6 w-48">
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(client.behavior)}`}>
+                          {client.behavior && client.behavior !== 'N/A' ? client.behavior : 'No definido'}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4 md:px-6 w-56">
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewClient(client)}
+                            className="glass-button min-h-[44px] min-w-[44px]"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
+                          >
+                            <Phone className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
                   ))
                 )}
-                </tbody>
-              </table>
+              </tbody>
+            </table>
           </div>
 
           {/* Mobile Cards View */}
@@ -450,9 +450,9 @@ export default function ClientsPage() {
                   <p className="text-lg font-medium text-text-secondary">No hay clientes registrados</p>
                   <p className="text-sm text-text-muted">Agrega un nuevo cliente para comenzar</p>
                   {(pagination.search || behaviorFilter !== 'ALL') && (
-                    <Button 
-                      variant="outline" 
-                      onClick={() => { 
+                    <Button
+                      variant="outline"
+                      onClick={() => {
                         pagination.handleSearch('')
                         setBehaviorFilter('ALL')
                       }}
@@ -546,7 +546,7 @@ export default function ClientsPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Contracts Info */}
             {selectedClient.contracts && selectedClient.contracts.length > 0 && (
               <div className="space-y-4">
@@ -605,7 +605,7 @@ export default function ClientsPage() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="mt-4 flex justify-between items-center">
                         <p className="text-xs text-text-muted">
                           Fecha: {dayjs(contract.contractDate).format('DD/MM/YYYY')}

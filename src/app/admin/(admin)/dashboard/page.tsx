@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -18,10 +18,10 @@ import {
   Area,
   AreaChart
 } from 'recharts'
-import { 
-  DollarSign, 
-  AlertTriangle, 
-  TrendingUp, 
+import {
+  DollarSign,
+  AlertTriangle,
+  TrendingUp,
   Users,
   Clock,
   Phone,
@@ -45,7 +45,7 @@ import { Button } from '@/components/ui/Button'
 
 export default function AdminDashboard() {
   const { admin, isAuthenticated } = useAdminAuthStore()
-    const [data, setData] = useState({
+  const [data, setData] = useState({
     cartera: { valorTotalCartera: 0, totalRecaudado: 0, totalPendiente: 0, porcentajeRecaudo: 0 },
     mora: { totalContratosActivos: 0, contratosAlDia: 0, contratosMora1a15: 0, contratosMora16a30: 0, contratosMora31a60: 0, contratosMora60plus: 0, porcentajeMora: 0, dineroEnMora: 0 },
     recaudoMensual: { mesActual: 0, mesAnterior: 0, variacion: 0 },
@@ -74,21 +74,21 @@ export default function AdminDashboard() {
   // Load real dashboard data
   const loadDashboardData = async () => {
     if (!isAuthenticated || isFetching.current) return
-    
+
     isFetching.current = true
     try {
       setLoading(true)
       setStatsLoading(true)
       setChartsLoading(true)
       setActionsLoading(true)
-      
+
       // Load dashboard summary, ensuring client store is hydrated
       const [dashboardResponse, recaudoResponse] = await Promise.all([
         adminApi.getDashboardSummary(),
         adminApi.getRecaudoMensual(),
         fetchClientsIfNeeded() // Use store to fetch/cache clients
       ])
-      
+
       if (dashboardResponse.data.success) {
         const dashboardData = dashboardResponse.data.data
         setData({
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
           ...prev,
           total: dashboardData.totalClients || storeTotal
         }))
-        
+
         // Create mora chart data from real data
         setMoraData([
           { name: 'Al día', value: Number(dashboardData.mora.contratosAlDia) || 0, color: '#10b981' },
@@ -139,9 +139,9 @@ export default function AdminDashboard() {
 
       // Simulate staggered loading for better UX
       setTimeout(() => setStatsLoading(false), 300)
-      setTimeout(() => setChartsLoading(false), 600) 
+      setTimeout(() => setChartsLoading(false), 600)
       setTimeout(() => setActionsLoading(false), 900)
-      
+
     } catch (error) {
 
       // Only show error for standard admins since superadmins don't use this data
@@ -173,29 +173,29 @@ export default function AdminDashboard() {
 
   // Calculate real behavior data
   const realComportamientoData = [
-    { 
-      name: 'Dispuestos', 
-      value: clientStats.total > 0 ? Math.round((clientStats.dispuestos / clientStats.total) * 100) : 0, 
+    {
+      name: 'Dispuestos',
+      value: clientStats.total > 0 ? Math.round((clientStats.dispuestos / clientStats.total) * 100) : 0,
       count: clientStats.dispuestos,
-      color: '#10b981' 
+      color: '#10b981'
     },
-    { 
-      name: 'Indecisos', 
-      value: clientStats.total > 0 ? Math.round((clientStats.indecisos / clientStats.total) * 100) : 0, 
+    {
+      name: 'Indecisos',
+      value: clientStats.total > 0 ? Math.round((clientStats.indecisos / clientStats.total) * 100) : 0,
       count: clientStats.indecisos,
-      color: '#f59e0b' 
+      color: '#f59e0b'
     },
-    { 
-      name: 'Evasivos', 
-      value: clientStats.total > 0 ? Math.round((clientStats.evasivos / clientStats.total) * 100) : 0, 
+    {
+      name: 'Evasivos',
+      value: clientStats.total > 0 ? Math.round((clientStats.evasivos / clientStats.total) * 100) : 0,
       count: clientStats.evasivos,
-      color: '#ef4444' 
+      color: '#ef4444'
     },
-    { 
-      name: 'No definido', 
-      value: clientStats.total > 0 ? Math.round((clientStats.noDefinido / clientStats.total) * 100) : 0, 
+    {
+      name: 'No definido',
+      value: clientStats.total > 0 ? Math.round((clientStats.noDefinido / clientStats.total) * 100) : 0,
       count: clientStats.noDefinido,
-      color: '#94a3b8' 
+      color: '#94a3b8'
     }
   ]
 
@@ -223,8 +223,8 @@ export default function AdminDashboard() {
           <p className="font-medium text-text-primary">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: {entry.name.includes('meta') || entry.name.includes('recaudado') 
-                ? formatCurrency(entry.value) 
+              {entry.name}: {entry.name.includes('meta') || entry.name.includes('recaudado')
+                ? formatCurrency(entry.value)
                 : formatNumber(entry.value)
               }
             </p>
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
 
   if (admin?.role === 'superadmin') {
     return (
-      <div className="space-y-6 md:space-y-8 p-4 md:p-6">
+      <div className="space-y-6 md:space-y-8 px-1 py-2 md:p-6">
         <div className="animate-fade-in-up">
           <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
             Bienvenido, <span className="gradient-text">{admin.fullName}</span>
@@ -289,7 +289,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8 p-4 md:p-6">
+    <div className="space-y-6 md:space-y-8 px-1 py-2 md:p-6">
       <div className="animate-fade-in-up">
         <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
           <span className="gradient-text">
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
           </span>
         </h1>
         <p className="text-text-secondary text-responsive-base">
-          {data.isSeller 
+          {data.isSeller
             ? `Has realizado ${data.totalSales} ventas y gestionas ${clientStats.total} clientes`
             : `Resumen general del sistema de cobranza inmobiliaria (${clientStats.total} clientes registrados)`
           }

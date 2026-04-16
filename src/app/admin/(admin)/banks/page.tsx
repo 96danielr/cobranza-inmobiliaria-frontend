@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { 
-  Building2, 
-  Upload, 
-  Plus, 
-  Search, 
-  Trash2, 
-  Edit2, 
-  CheckCircle, 
-  X, 
+import {
+  Building2,
+  Upload,
+  Plus,
+  Search,
+  Trash2,
+  Edit2,
+  CheckCircle,
+  X,
   AlertCircle,
   FileSpreadsheet,
   Download,
@@ -94,7 +94,7 @@ export default function BanksPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de Bancos</h1>
@@ -103,15 +103,15 @@ export default function BanksPage() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="glass-button border-glass-border"
             onClick={() => setIsImportModalOpen(true)}
           >
             <Upload className="w-4 h-4 mr-2" />
             Carga Masiva
           </Button>
-          <Button 
+          <Button
             className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             onClick={() => {
               setEditingBank(null)
@@ -145,35 +145,35 @@ export default function BanksPage() {
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="sticky top-0 z-20">
-                <SortHeader 
-                  label="TIPO" 
-                  field="type" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="TIPO"
+                  field="type"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                 />
-                <SortHeader 
-                  label="CÓDIGO" 
-                  field="code" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="CÓDIGO"
+                  field="code"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                 />
-                <SortHeader 
-                  label="SIGLA" 
-                  field="acronym" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="SIGLA"
+                  field="acronym"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                 />
-                <SortHeader 
-                  label="DENOMINACIÓN SOCIAL" 
-                  field="socialDenomination" 
-                  currentSortBy={pagination.sortBy} 
-                  currentSortOrder={pagination.sortOrder} 
+                <SortHeader
+                  label="DENOMINACIÓN SOCIAL"
+                  field="socialDenomination"
+                  currentSortBy={pagination.sortBy}
+                  currentSortOrder={pagination.sortOrder}
                   onSort={pagination.handleSort}
                   className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                 />
@@ -207,10 +207,10 @@ export default function BanksPage() {
                     <td className="py-4 px-6 text-center">
                       <div className="flex items-center justify-center space-x-2">
                         {(!bank.tenantId && admin?.role === 'superadmin') || bank.tenantId ? (
-                          <Button 
-                            variant="glass" 
-                            size="sm" 
-                            onClick={() => handleDeleteBank(bank._id)} 
+                          <Button
+                            variant="glass"
+                            size="sm"
+                            onClick={() => handleDeleteBank(bank._id)}
                             className="text-accent-red hover:bg-accent-red/20"
                             title={!bank.tenantId ? 'Desactivar Banco Global' : 'Eliminar Banco'}
                           >
@@ -254,13 +254,13 @@ export default function BanksPage() {
         title="Importar Bancos (SFC)"
         size="md"
       >
-        <div className="space-y-6">
+        <div className="space-y-6 px-1 py-2 md:p-6">
           {!importResult ? (
             <>
               <div className="p-6 border-2 border-dashed border-glass-border rounded-xl text-center hover:border-accent-blue transition-colors relative group">
-                <input 
-                  type="file" 
-                  accept=".xlsx,.xls" 
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
                   onChange={handleFileUpload}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                 />
@@ -289,8 +289,8 @@ export default function BanksPage() {
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="glass" onClick={() => setIsImportModalOpen(false)}>Cancelar</Button>
-                <Button 
-                  disabled={!selectedFile || isImporting} 
+                <Button
+                  disabled={!selectedFile || isImporting}
                   onClick={handleImport}
                   className="bg-accent-blue text-white shadow-glow"
                 >
@@ -308,7 +308,7 @@ export default function BanksPage() {
                 <h3 className="text-xl font-bold text-text-primary">¡Importación Completada!</h3>
                 <p className="text-text-secondary mt-1">Los bancos han sido procesados correctamente.</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-glass-primary/20 p-4 rounded-xl border border-glass-border">
                   <p className="text-2xl font-black text-accent-green">{importResult.created}</p>

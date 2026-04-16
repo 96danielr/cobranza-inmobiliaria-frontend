@@ -31,7 +31,7 @@ export default function SelectCompanyPage() {
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   // Create Tenant Form
   const [form, setForm] = useState({
     tenantName: '',
@@ -70,14 +70,14 @@ export default function SelectCompanyPage() {
   const fetchCompanies = async () => {
     try {
       setLoading(true)
-      const response = admin?.role === 'superadmin' 
+      const response = admin?.role === 'superadmin'
         ? await adminApi.getAllTenants()
         : await adminApi.getCompanies()
-        
+
       if (response.data.success) {
         const data = admin?.role === 'superadmin' ? response.data.data.tenants : response.data.data.companies
         setCompanies(data)
-        
+
         // Auto-select if only one company (and not superadmin)
         const activeCompanies = data.filter(
           (c: Company) => c.status === 'active'
@@ -175,7 +175,7 @@ export default function SelectCompanyPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in-up">
+    <div className="max-w-2xl mx-auto px-1 py-2 md:py-8 animate-fade-in-up">
       {/* Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-16 h-16 glass-card mb-4 shadow-glow border-accent-blue/30 rounded-2xl">
@@ -186,9 +186,9 @@ export default function SelectCompanyPage() {
             {admin?.role === 'superadmin' ? 'Administrar Empresas Clientes' : 'Seleccionar Empresa'}
           </h1>
           {admin?.role === 'superadmin' ? (
-            <Button 
-              variant="glass" 
-              size="sm" 
+            <Button
+              variant="glass"
+              size="sm"
               onClick={() => setIsModalOpen(true)}
               className="mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             >
@@ -196,9 +196,9 @@ export default function SelectCompanyPage() {
               Nueva Empresa / Admin
             </Button>
           ) : admin?.role === 'tenant_admin' ? (
-            <Button 
-              variant="glass" 
-              size="sm" 
+            <Button
+              variant="glass"
+              size="sm"
               onClick={() => setIsCompanyModalOpen(true)}
               className="mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             >
@@ -208,8 +208,8 @@ export default function SelectCompanyPage() {
           ) : null}
         </div>
         <p className="text-text-secondary mt-4">
-          {admin?.role === 'superadmin' 
-            ? 'Gestiona aquí los planes, suscripciones y módulos de tus clientes.' 
+          {admin?.role === 'superadmin'
+            ? 'Gestiona aquí los planes, suscripciones y módulos de tus clientes.'
             : 'Selecciona la empresa con la que deseas trabajar.'}
         </p>
       </div>
@@ -231,8 +231,8 @@ export default function SelectCompanyPage() {
               </thead>
               <tbody>
                 {companies.map((company) => (
-                  <tr 
-                    key={company._id} 
+                  <tr
+                    key={company._id}
                     className="border-b border-glass-border/50 hover:bg-white/5 transition-colors group"
                   >
                     <td className="px-6 py-4">
@@ -244,36 +244,35 @@ export default function SelectCompanyPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                       <span className="text-[10px] px-2 py-0.5 bg-accent-blue/10 text-accent-blue rounded-full font-bold uppercase border border-accent-blue/20">
+                      <span className="text-[10px] px-2 py-0.5 bg-accent-blue/10 text-accent-blue rounded-full font-bold uppercase border border-accent-blue/20">
                         {company.plan || 'basic'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${
-                        company.status === 'active' 
-                          ? 'bg-accent-green/10 text-accent-green border-accent-green/20' 
-                          : 'bg-accent-red/10 text-accent-red border-accent-red/20'
-                      }`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${company.status === 'active'
+                        ? 'bg-accent-green/10 text-accent-green border-accent-green/20'
+                        : 'bg-accent-red/10 text-accent-red border-accent-red/20'
+                        }`}>
                         {company.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="text-xs text-text-secondary font-medium">
-                        {company.subscriptionEnd 
+                        {company.subscriptionEnd
                           ? new Date(company.subscriptionEnd).toLocaleDateString()
                           : 'Ilimitado'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button 
+                        <button
                           onClick={(e) => handleOpenEdit(company, e)}
                           className="p-2 glass-button hover:bg-accent-blue/20 hover:text-accent-blue rounded-lg transition-all"
                           title="Gestionar Suscripción"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleSelectCompany(company)}
                           className="p-2 glass-button hover:bg-white/10 rounded-lg transition-all"
                           title="Administrar Empresa"
@@ -292,31 +291,30 @@ export default function SelectCompanyPage() {
           companies
             .filter((c) => c.status === 'active')
             .map((company) => (
-            <Card
-              key={company._id}
-              variant="default"
-              className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
-                selectedCompanyId === company._id
+              <Card
+                key={company._id}
+                variant="default"
+                className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] ${selectedCompanyId === company._id
                   ? 'ring-2 ring-accent-blue shadow-glow'
                   : ''
-              }`}
-              onClick={() => handleSelectCompany(company)}
-            >
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
-                    <Building2 className="w-6 h-6 text-white" />
+                  }`}
+                onClick={() => handleSelectCompany(company)}
+              >
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Building2 className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary">
+                        {company.name}
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-text-primary">
-                      {company.name}
-                    </h3>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-text-muted" />
-              </CardContent>
-            </Card>
-          ))
+                  <ChevronRight className="w-5 h-5 text-text-muted" />
+                </CardContent>
+              </Card>
+            ))
         )}
       </div>
 
@@ -438,70 +436,70 @@ export default function SelectCompanyPage() {
       >
         <form onSubmit={handleUpdateTenant} className="space-y-6 pt-4">
           <div className="grid grid-cols-2 gap-4">
-             <div className="space-y-2">
-                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Plan Contratado</label>
-                <select 
-                  value={editForm.plan}
-                  onChange={(e: any) => setEditForm({...editForm, plan: e.target.value})}
-                  className="w-full bg-dark-secondary border border-glass-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-accent-blue outline-none text-white"
-                >
-                  <option value="basic">Basic</option>
-                  <option value="premium">Premium</option>
-                  <option value="enterprise">Enterprise</option>
-                </select>
-             </div>
-             <div className="space-y-2">
-                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Estado Equipo</label>
-                <select 
-                  value={editForm.status}
-                  onChange={(e: any) => setEditForm({...editForm, status: e.target.value})}
-                  className="w-full bg-dark-secondary border border-glass-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-accent-blue outline-none text-white"
-                >
-                  <option value="active">Activo</option>
-                  <option value="suspended">Suspendido</option>
-                  <option value="trial">Prueba (Trial)</option>
-                </select>
-             </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Plan Contratado</label>
+              <select
+                value={editForm.plan}
+                onChange={(e: any) => setEditForm({ ...editForm, plan: e.target.value })}
+                className="w-full bg-dark-secondary border border-glass-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-accent-blue outline-none text-white"
+              >
+                <option value="basic">Basic</option>
+                <option value="premium">Premium</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Estado Equipo</label>
+              <select
+                value={editForm.status}
+                onChange={(e: any) => setEditForm({ ...editForm, status: e.target.value })}
+                className="w-full bg-dark-secondary border border-glass-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-accent-blue outline-none text-white"
+              >
+                <option value="active">Activo</option>
+                <option value="suspended">Suspendido</option>
+                <option value="trial">Prueba (Trial)</option>
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             <Input 
-                label="Inicio de Suscripción"
-                type="date"
-                value={editForm.subscriptionStart}
-                onChange={(e) => setEditForm({...editForm, subscriptionStart: e.target.value})}
-             />
-             <Input 
-                label="Fin de Suscripción"
-                type="date"
-                value={editForm.subscriptionEnd}
-                onChange={(e) => setEditForm({...editForm, subscriptionEnd: e.target.value})}
-             />
+            <Input
+              label="Inicio de Suscripción"
+              type="date"
+              value={editForm.subscriptionStart}
+              onChange={(e) => setEditForm({ ...editForm, subscriptionStart: e.target.value })}
+            />
+            <Input
+              label="Fin de Suscripción"
+              type="date"
+              value={editForm.subscriptionEnd}
+              onChange={(e) => setEditForm({ ...editForm, subscriptionEnd: e.target.value })}
+            />
           </div>
 
           <div className="space-y-3">
-             <label className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-2">
-                <Shield className="w-4 h-4 text-accent-blue" />
-                Módulos Activos
-             </label>
-             <div className="grid grid-cols-2 gap-3">
-                {['cobranzas', 'contabilidad'].map((mod) => (
-                  <label key={mod} className="flex items-center gap-3 p-3 glass-card border-glass-border rounded-xl cursor-pointer hover:bg-glass-secondary transition-colors">
-                    <input 
-                      type="checkbox"
-                      checked={editForm.activeModules.includes(mod)}
-                      onChange={(e) => {
-                        const next = e.target.checked 
-                          ? [...editForm.activeModules, mod]
-                          : editForm.activeModules.filter(m => m !== mod)
-                        setEditForm({...editForm, activeModules: next})
-                      }}
-                      className="w-4 h-4 accent-accent-blue"
-                    />
-                    <span className="text-sm font-medium capitalize">{mod}</span>
-                  </label>
-                ))}
-             </div>
+            <label className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-2">
+              <Shield className="w-4 h-4 text-accent-blue" />
+              Módulos Activos
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {['cobranzas', 'contabilidad'].map((mod) => (
+                <label key={mod} className="flex items-center gap-3 p-3 glass-card border-glass-border rounded-xl cursor-pointer hover:bg-glass-secondary transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={editForm.activeModules.includes(mod)}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...editForm.activeModules, mod]
+                        : editForm.activeModules.filter(m => m !== mod)
+                      setEditForm({ ...editForm, activeModules: next })
+                    }}
+                    className="w-4 h-4 accent-accent-blue"
+                  />
+                  <span className="text-sm font-medium capitalize">{mod}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-glass-border">

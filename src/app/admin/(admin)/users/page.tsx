@@ -1,17 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  Users, 
-  UserPlus, 
-  Search, 
-  MoreVertical, 
-  Edit2, 
-  Trash2, 
-  Key, 
-  Mail, 
-  Shield, 
-  CheckCircle2, 
+import {
+  Users,
+  UserPlus,
+  Search,
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Key,
+  Mail,
+  Shield,
+  CheckCircle2,
   XCircle,
   RefreshCw,
   AlertTriangle
@@ -59,16 +59,16 @@ export default function UsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  
+
   // Selected user for editing/deleting
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
-  
+
   // Form state
   const [formData, setFormData] = useState({
     fullName: '',
@@ -115,7 +115,7 @@ export default function UsersPage() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser) return
-    
+
     try {
       const response = await adminApi.updateAdminUser(selectedUser.id, {
         fullName: formData.fullName,
@@ -135,7 +135,7 @@ export default function UsersPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser) return
-    
+
     try {
       const response = await adminApi.changeAdminPassword(selectedUser.id, formData.password)
       if (response.data.success) {
@@ -150,7 +150,7 @@ export default function UsersPage() {
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return
-    
+
     try {
       const response = await adminApi.deleteAdminUser(selectedUser.id)
       if (response.data.success) {
@@ -186,13 +186,13 @@ export default function UsersPage() {
     setIsDeleteModalOpen(true)
   }
 
-  const filteredUsers = users.filter((user) => 
+  const filteredUsers = users.filter((user) =>
     user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-1 py-2 md:p-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -201,8 +201,8 @@ export default function UsersPage() {
             Gestiona los usuarios con acceso al panel administrativo
           </p>
         </div>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           onClick={() => {
             setFormData({ fullName: '', email: '', password: '', role: 'agent', status: 'active' })
             setIsAddModalOpen(true)
@@ -239,18 +239,16 @@ export default function UsersPage() {
       ) : filteredUsers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
           {filteredUsers.map((user) => (
-            <Card 
-              key={user.id} 
-              className={`hover:shadow-glow transition-all duration-300 border-l-4 ${
-                user.role === 'tenant_admin' ? 'border-l-accent-purple' : 'border-l-accent-blue'
-              }`}
+            <Card
+              key={user.id}
+              className={`hover:shadow-glow transition-all duration-300 border-l-4 ${user.role === 'tenant_admin' ? 'border-l-accent-purple' : 'border-l-accent-blue'
+                }`}
             >
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${
-                      user.role === 'tenant_admin' ? 'bg-gradient-purple' : 'bg-gradient-primary'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${user.role === 'tenant_admin' ? 'bg-gradient-purple' : 'bg-gradient-primary'
+                      }`}>
                       <Users className="w-6 h-6" />
                     </div>
                     <div>
@@ -272,9 +270,8 @@ export default function UsersPage() {
                       ) : (
                         <XCircle className="w-4 h-4 text-accent-red" />
                       )}
-                      <span className={`text-[10px] uppercase font-bold ${
-                        user.status === 'active' ? 'text-accent-green' : 'text-accent-red'
-                      }`}>
+                      <span className={`text-[10px] uppercase font-bold ${user.status === 'active' ? 'text-accent-green' : 'text-accent-red'
+                        }`}>
                         {user.status === 'active' ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
@@ -282,27 +279,27 @@ export default function UsersPage() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-glass-border grid grid-cols-3 gap-2">
-                  <Button 
-                    variant="glass" 
-                    size="sm" 
+                  <Button
+                    variant="glass"
+                    size="sm"
                     onClick={() => openEditModal(user)}
                     className="flex-1 text-[11px] h-9"
                   >
                     <Edit2 className="w-3 h-3 mr-1" />
                     Editar
                   </Button>
-                  <Button 
-                    variant="glass" 
-                    size="sm" 
+                  <Button
+                    variant="glass"
+                    size="sm"
                     onClick={() => openPasswordModal(user)}
                     className="flex-1 text-[11px] h-9"
                   >
                     <Key className="w-3 h-3 mr-1" />
                     Clave
                   </Button>
-                  <Button 
-                    variant="glass" 
-                    size="sm" 
+                  <Button
+                    variant="glass"
+                    size="sm"
                     onClick={() => openDeleteModal(user)}
                     className="flex-1 text-[11px] h-9 text-accent-red hover:bg-accent-red/10"
                     disabled={user.id === currentAdmin?.id}
@@ -332,7 +329,7 @@ export default function UsersPage() {
         <form onSubmit={handleAddUser} className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Nombre Completo</label>
-            <Input 
+            <Input
               required
               placeholder="Ej. Carlos Rodríguez"
               value={formData.fullName}
@@ -341,7 +338,7 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Correo Electrónico</label>
-            <Input 
+            <Input
               type="email"
               required
               placeholder="correo@ejemplo.com"
@@ -351,7 +348,7 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Contraseña Inicial</label>
-            <Input 
+            <Input
               type="password"
               required
               placeholder="Mínimo 8 caracteres"
@@ -361,7 +358,7 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Rol del Usuario</label>
-            <select 
+            <select
               className="w-full h-10 px-3 rounded-lg bg-glass-primary border border-glass-border text-text-primary focus:ring-2 focus:ring-accent-blue outline-none transition-all cursor-pointer"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
@@ -392,7 +389,7 @@ export default function UsersPage() {
         <form onSubmit={handleUpdateUser} className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Nombre Completo</label>
-            <Input 
+            <Input
               required
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -400,7 +397,7 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Correo Electrónico</label>
-            <Input 
+            <Input
               type="email"
               required
               value={formData.email}
@@ -409,7 +406,7 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Rol del Usuario</label>
-            <select 
+            <select
               className="w-full h-10 px-3 rounded-lg bg-glass-primary border border-glass-border text-text-primary focus:ring-2 focus:ring-accent-blue outline-none transition-all"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
@@ -421,7 +418,7 @@ export default function UsersPage() {
             </select>
           </div>
           <div className="flex items-center gap-3 p-3 bg-glass-primary rounded-lg border border-glass-border">
-            <input 
+            <input
               type="checkbox"
               id="isActive"
               className="w-4 h-4 rounded border-glass-border text-accent-blue focus:ring-accent-blue bg-dark-primary"
@@ -456,7 +453,7 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-text-secondary">Nueva Contraseña</label>
-            <Input 
+            <Input
               type="password"
               required
               placeholder="Mínimo 8 caracteres"
@@ -499,8 +496,8 @@ export default function UsersPage() {
             <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
               Cancelar
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               className="bg-accent-red hover:bg-accent-red/80 text-white border-none"
               onClick={handleDeleteUser}
             >

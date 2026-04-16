@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  ScrollText, 
-  Search, 
-  Filter, 
+import {
+  ScrollText,
+  Search,
+  Filter,
   Calendar,
   User,
   Activity,
@@ -51,10 +51,10 @@ export default function SystemLogsPage() {
     setLoading(true)
     try {
       const response = await adminApi.getSystemLogs(
-        page, 
-        20, 
-        filters.search, 
-        filters.action, 
+        page,
+        20,
+        filters.search,
+        filters.action,
         filters.module
       )
       if (response.data.success) {
@@ -79,7 +79,7 @@ export default function SystemLogsPage() {
   }
 
   return (
-    <div className="space-y-6 pb-20 lg:pb-0">
+    <div className="space-y-6 px-1 py-2 md:p-6 pb-20 lg:pb-0">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -108,7 +108,7 @@ export default function SystemLogsPage() {
                 className="pl-10 glass-input"
               />
             </div>
-            
+
             <div className="relative group">
               <select
                 value={filters.module}
@@ -164,10 +164,10 @@ export default function SystemLogsPage() {
                 </tr>
               ) : (
                 logs.map((log) => (
-                  <motion.tr 
+                  <motion.tr
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    key={log._id} 
+                    key={log._id}
                     className="hover:bg-glass-primary/5 transition-colors group"
                   >
                     <td className="px-6 py-4">
@@ -199,9 +199,9 @@ export default function SystemLogsPage() {
                       <span className={cn(
                         "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border",
                         log.module === 'PAYMENTS' ? "bg-accent-green/10 border-accent-green/20 text-accent-green" :
-                        log.module === 'SALES' ? "bg-accent-blue/10 border-accent-blue/20 text-accent-blue" :
-                        log.module === 'LOTS' ? "bg-accent-purple/10 border-accent-purple/20 text-accent-purple" :
-                        "bg-glass-primary border-glass-border text-text-muted"
+                          log.module === 'SALES' ? "bg-accent-blue/10 border-accent-blue/20 text-accent-blue" :
+                            log.module === 'LOTS' ? "bg-accent-purple/10 border-accent-purple/20 text-accent-purple" :
+                              "bg-glass-primary border-glass-border text-text-muted"
                       )}>
                         {log.module}
                       </span>
@@ -254,7 +254,7 @@ export default function SystemLogsPage() {
           </div>
         )}
       </Card>
-      
+
       {/* Footer Info */}
       <div className="flex items-center gap-2 p-4 bg-accent-blue/5 border border-accent-blue/10 rounded-2xl">
         <Info className="w-4 h-4 text-accent-blue shrink-0" />

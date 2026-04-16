@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { 
+import {
   MessageSquare,
   Phone,
   Send,
@@ -100,7 +100,7 @@ export default function CollectionsPage() {
       }
 
       let payments = response.data.data.payments || []
-      
+
       // Apply filters (we'll simulate based on index for consistency)
       if (typeFilter !== 'ALL') {
         payments = payments.filter((_: any, index: number) => index % 3 === 0) // Every 3rd item
@@ -234,7 +234,7 @@ export default function CollectionsPage() {
   const successfulContacts = Math.floor(totalActivities * 0.25) // 25% success rate
 
   return (
-    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -373,7 +373,7 @@ export default function CollectionsPage() {
       </Card>
 
       {/* Activities List - Hybrid View (Table for Desktop, Cards for Mobile) */}
-      
+
       {/* Collections List - Hybrid View with Independent Scroll */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Fixed Header */}
@@ -391,52 +391,52 @@ export default function CollectionsPage() {
             <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="sticky top-0 z-20">
-                  <SortHeader 
-                    label="Cliente" 
-                    field="client.name" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Cliente"
+                    field="client.name"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <SortHeader 
-                    label="Lote" 
-                    field="lot.nomenclatura" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Lote"
+                    field="lot.nomenclatura"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Tipo</th>
-                  <SortHeader 
-                    label="Estado" 
-                    field="status" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Estado"
+                    field="status"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <SortHeader 
-                    label="Monto Adeudado" 
-                    field="valorMora" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Monto Adeudado"
+                    field="valorMora"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <SortHeader 
-                    label="Días Mora" 
-                    field="diasMora" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Días Mora"
+                    field="diasMora"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <SortHeader 
-                    label="Fecha" 
-                    field="createdAt" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Fecha"
+                    field="createdAt"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
@@ -448,18 +448,18 @@ export default function CollectionsPage() {
                   Array.from({ length: 8 }).map((_, index) => (
                     <TableRowSkeleton key={index} columns={8} />
                   ))
-                  ) : pagination.total === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="py-12 text-center text-text-muted">
-                        <div className="flex flex-col items-center space-y-3">
-                          <MessageSquare className="w-12 h-12 text-text-disabled" />
-                          <p className="text-lg font-medium">No hay actividades de cobranza</p>
-                          <p className="text-sm">Crea una nueva campaña para comenzar</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    pagination.data.map((activity) => (
+                ) : pagination.total === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-text-muted">
+                      <div className="flex flex-col items-center space-y-3">
+                        <MessageSquare className="w-12 h-12 text-text-disabled" />
+                        <p className="text-lg font-medium">No hay actividades de cobranza</p>
+                        <p className="text-sm">Crea una nueva campaña para comenzar</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  pagination.data.map((activity) => (
                     <tr key={activity.id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
                       <td className="py-4 px-4 md:px-6">
                         <div>
@@ -491,12 +491,11 @@ export default function CollectionsPage() {
                         </span>
                       </td>
                       <td className="py-4 px-4 md:px-6">
-                        <span className={`font-medium ${
-                          activity.diasMora === 0 ? 'text-accent-green' :
+                        <span className={`font-medium ${activity.diasMora === 0 ? 'text-accent-green' :
                           activity.diasMora <= 15 ? 'text-accent-yellow' :
-                          activity.diasMora <= 30 ? 'text-accent-purple' :
-                          'text-accent-red'
-                        }`}>
+                            activity.diasMora <= 30 ? 'text-accent-purple' :
+                              'text-accent-red'
+                          }`}>
                           {activity.diasMora} días
                         </span>
                       </td>
@@ -532,8 +531,8 @@ export default function CollectionsPage() {
                         </div>
                       </td>
                     </tr>
-                    ))
-                  )}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -552,9 +551,9 @@ export default function CollectionsPage() {
                   <p className="text-lg font-medium text-text-secondary">No hay actividades de cobranza</p>
                   <p className="text-sm text-text-muted">Crea una nueva campaña para comenzar</p>
                   {(pagination.search || typeFilter !== 'ALL' || statusFilter !== 'ALL') && (
-                    <Button 
-                      variant="glass" 
-                      onClick={() => { 
+                    <Button
+                      variant="glass"
+                      onClick={() => {
                         pagination.handleSearch('')
                         setStatusFilter('ALL')
                         setTypeFilter('ALL')
@@ -660,12 +659,11 @@ export default function CollectionsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">Días en Mora</p>
-                  <p className={`font-medium text-lg ${
-                    selectedActivity.diasMora === 0 ? 'text-accent-green' :
+                  <p className={`font-medium text-lg ${selectedActivity.diasMora === 0 ? 'text-accent-green' :
                     selectedActivity.diasMora <= 15 ? 'text-accent-yellow' :
-                    selectedActivity.diasMora <= 30 ? 'text-accent-purple' :
-                    'text-accent-red'
-                  }`}>
+                      selectedActivity.diasMora <= 30 ? 'text-accent-purple' :
+                        'text-accent-red'
+                    }`}>
                     {selectedActivity.diasMora} días
                   </p>
                 </div>
@@ -738,11 +736,10 @@ export default function CollectionsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={() => setCampaignType('WHATSAPP')}
-                className={`p-4 border rounded-xl text-left transition-colors glass-button min-h-[44px] ${
-                  campaignType === 'WHATSAPP' 
-                    ? 'border-accent-green/50 bg-accent-green/20 text-accent-green' 
-                    : 'border-glass-border hover:bg-glass-primary/20'
-                }`}
+                className={`p-4 border rounded-xl text-left transition-colors glass-button min-h-[44px] ${campaignType === 'WHATSAPP'
+                  ? 'border-accent-green/50 bg-accent-green/20 text-accent-green'
+                  : 'border-glass-border hover:bg-glass-primary/20'
+                  }`}
               >
                 <div className="flex items-center mb-2">
                   <MessageSquare className="w-5 h-5 text-accent-green mr-2" />
@@ -752,11 +749,10 @@ export default function CollectionsPage() {
               </button>
               <button
                 onClick={() => setCampaignType('AI_CALL')}
-                className={`p-4 border rounded-xl text-left transition-colors glass-button min-h-[44px] ${
-                  campaignType === 'AI_CALL' 
-                    ? 'border-accent-blue/50 bg-accent-blue/20 text-accent-blue' 
-                    : 'border-glass-border hover:bg-glass-primary/20'
-                }`}
+                className={`p-4 border rounded-xl text-left transition-colors glass-button min-h-[44px] ${campaignType === 'AI_CALL'
+                  ? 'border-accent-blue/50 bg-accent-blue/20 text-accent-blue'
+                  : 'border-glass-border hover:bg-glass-primary/20'
+                  }`}
               >
                 <div className="flex items-center mb-2">
                   <Phone className="w-5 h-5 text-accent-blue mr-2" />
@@ -838,16 +834,15 @@ export default function CollectionsPage() {
                         const isSelected = targetCriteria.behaviorTags.includes(behavior)
                         setTargetCriteria(prev => ({
                           ...prev,
-                          behaviorTags: isSelected 
+                          behaviorTags: isSelected
                             ? prev.behaviorTags.filter(tag => tag !== behavior)
                             : [...prev.behaviorTags, behavior]
                         }))
                       }}
-                      className={`px-3 py-1 rounded-full text-sm transition-colors glass-button min-h-[44px] ${
-                        targetCriteria.behaviorTags.includes(behavior)
-                          ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/30'
-                          : 'bg-glass-primary/20 text-text-secondary border-glass-border hover:bg-glass-primary/30'
-                      }`}
+                      className={`px-3 py-1 rounded-full text-sm transition-colors glass-button min-h-[44px] ${targetCriteria.behaviorTags.includes(behavior)
+                        ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/30'
+                        : 'bg-glass-primary/20 text-text-secondary border-glass-border hover:bg-glass-primary/30'
+                        }`}
                     >
                       {behavior}
                     </button>

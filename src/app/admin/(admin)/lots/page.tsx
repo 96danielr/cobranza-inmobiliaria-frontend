@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { 
+import {
   Search,
   Plus,
   Edit,
@@ -66,11 +66,11 @@ export default function LotsPage() {
   const [isCreatingNewClient, setIsCreatingNewClient] = useState(false)
   const [sellers, setSellers] = useState<any[]>([])
   const [loadingSellers, setLoadingSellers] = useState(false)
-  
+
   const [isSaleDetailModalOpen, setIsSaleDetailModalOpen] = useState(false)
   const [saleDetail, setSaleDetail] = useState<any>(null)
   const [loadingSaleDetail, setLoadingSaleDetail] = useState(false)
-  
+
   const { clients, fetchClientsIfNeeded, loading: clientsLoading } = useClientStore()
 
   const [formData, setFormData] = useState({
@@ -81,7 +81,7 @@ export default function LotsPage() {
     area: '',
     price: ''
   })
-  
+
   const [sellFormData, setSellFormData] = useState({
     clientId: '',
     totalValue: '',
@@ -262,7 +262,7 @@ export default function LotsPage() {
   const handleSellLot = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedLot) return
-    
+
     setIsSubmitting(true)
     try {
       const payload: any = {
@@ -312,7 +312,7 @@ export default function LotsPage() {
 
   const handleUploadImages = async () => {
     if (!selectedLot || selectedFiles.length === 0) return
-    
+
     setIsUploading(true)
     try {
       const formData = new FormData()
@@ -351,7 +351,7 @@ export default function LotsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -361,7 +361,7 @@ export default function LotsPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button 
+          <Button
             onClick={copyCatalogLink}
             variant="outline"
             className="glass-button min-h-[44px]"
@@ -370,7 +370,7 @@ export default function LotsPage() {
             Link Catálogo
           </Button>
           {admin?.role !== 'vendedor' && (
-            <Button 
+            <Button
               onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
               className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
             >
@@ -420,27 +420,27 @@ export default function LotsPage() {
             <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="sticky top-0 z-20">
-                  <SortHeader 
-                    label="Lote" 
-                    field="lotNumber" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Lote"
+                    field="lotNumber"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <SortHeader 
-                    label="Área" 
-                    field="area" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Área"
+                    field="area"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <SortHeader 
-                    label="Precio" 
-                    field="price" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Precio"
+                    field="price"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
@@ -480,11 +480,10 @@ export default function LotsPage() {
                         {lot.price ? formatCurrency(lot.price) : '-'}
                       </td>
                       <td className="py-4 px-4 md:px-6">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          lot.status === 'vendido' 
-                            ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' 
-                            : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${lot.status === 'vendido'
+                          ? 'bg-accent-red/20 text-accent-red border border-accent-red/30'
+                          : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                          }`}>
                           {lot.status === 'vendido' ? 'Vendido' : 'Disponible'}
                         </span>
                       </td>
@@ -510,9 +509,9 @@ export default function LotsPage() {
                             <span className="text-xs text-text-disabled">Sin imágenes</span>
                           )}
                           {admin?.role !== 'vendedor' && (
-                            <Button 
-                              variant="glass" 
-                              size="sm" 
+                            <Button
+                              variant="glass"
+                              size="sm"
                               onClick={() => openImageModal(lot)}
                               className="p-1 min-h-[32px] min-w-[32px]"
                             >
@@ -575,7 +574,7 @@ export default function LotsPage() {
 
           {/* Mobile Cards View */}
           <div className="lg:hidden p-4 space-y-4">
-             {pagination.data.map((lot: Lot) => (
+            {pagination.data.map((lot: Lot) => (
               <Card key={lot._id} variant="elevated">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-4">
@@ -583,24 +582,23 @@ export default function LotsPage() {
                       <h3 className="font-bold text-text-primary">{lot.stage} - {lot.lotNumber}</h3>
                       <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
                       <p className="text-xs text-text-muted mt-1">Vendedor: {lot.sellerId?.accountId?.fullName || 'N/A'}</p>
-                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                        lot.status === 'vendido' 
-                          ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' 
-                          : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
-                      }`}>
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${lot.status === 'vendido'
+                        ? 'bg-accent-red/20 text-accent-red border border-accent-red/30'
+                        : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                        }`}>
                         {lot.status === 'vendido' ? 'Vendido' : 'Disponible'}
                       </span>
                     </div>
                     <div className="flex space-x-2">
-                       {lot.status === 'vendido' ? (
-                         <Button size="sm" variant="outline" onClick={() => handleViewSaleDetail(lot)} className="glass-button text-accent-purple">
+                      {lot.status === 'vendido' ? (
+                        <Button size="sm" variant="outline" onClick={() => handleViewSaleDetail(lot)} className="glass-button text-accent-purple">
                           <Eye className="w-4 h-4" />
                         </Button>
-                       ) : (
-                         <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
                           <ShoppingCart className="w-4 h-4" />
                         </Button>
-                       )}
+                      )}
                       {admin?.role !== 'vendedor' && (
                         <>
                           <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button">
@@ -614,11 +612,11 @@ export default function LotsPage() {
                     </div>
                   </div>
                   {lot.images && lot.images.length > 0 && (
-                     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                        {lot.images.map((img, i) => (
-                          <img key={i} src={img} className="w-16 h-16 object-cover rounded-lg border border-glass-border flex-shrink-0" />
-                        ))}
-                     </div>
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                      {lot.images.map((img, i) => (
+                        <img key={i} src={img} className="w-16 h-16 object-cover rounded-lg border border-glass-border flex-shrink-0" />
+                      ))}
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -719,16 +717,16 @@ export default function LotsPage() {
           </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-glass-border">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => setIsCreateModalOpen(false)}
               className="glass-button"
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting}
               className="glass-button bg-accent-blue text-white hover:bg-accent-blue/80"
             >
@@ -754,23 +752,23 @@ export default function LotsPage() {
       >
         <div className="space-y-6 pt-2">
           {selectedLot && selectedLot.images && selectedLot.images.length > 0 && (
-             <div className="grid grid-cols-3 gap-2">
-                {selectedLot.images.map((img, i) => (
-                  <div key={i} className="aspect-square rounded-lg overflow-hidden border border-glass-border relative group">
-                    <img src={img} className="w-full h-full object-cover" />
-                  </div>
-                ))}
-             </div>
+            <div className="grid grid-cols-3 gap-2">
+              {selectedLot.images.map((img, i) => (
+                <div key={i} className="aspect-square rounded-lg overflow-hidden border border-glass-border relative group">
+                  <img src={img} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
           )}
 
           <div className="border-2 border-dashed border-glass-border rounded-xl p-8 text-center hover:border-accent-blue/50 transition-colors">
-            <input 
-              type="file" 
-              multiple 
-              accept="image/*" 
+            <input
+              type="file"
+              multiple
+              accept="image/*"
               onChange={handleFileChange}
-              id="file-upload" 
-              className="hidden" 
+              id="file-upload"
+              className="hidden"
             />
             <label htmlFor="file-upload" className="cursor-pointer">
               <div className="flex flex-col items-center">
@@ -792,7 +790,7 @@ export default function LotsPage() {
             <Button variant="outline" onClick={() => setIsImageModalOpen(false)} className="glass-button">
               Cerrar
             </Button>
-            <Button 
+            <Button
               disabled={selectedFiles.length === 0 || isUploading}
               onClick={handleUploadImages}
               className="glass-button bg-accent-blue text-white"
@@ -920,7 +918,7 @@ export default function LotsPage() {
                 <DollarSign className="w-4 h-4 mr-2 text-accent-green" />
                 Valores del Contrato
               </label>
-              
+
               <div className="space-y-2">
                 <label className="text-xs text-text-secondary">Valor Total de Venta</label>
                 <div className="relative">
@@ -1175,11 +1173,10 @@ export default function LotsPage() {
                           {formatCurrency(quota.value)}
                         </td>
                         <td className="py-3 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            quota.status === 'pagada' 
-                              ? 'bg-accent-green/10 text-accent-green' 
-                              : 'bg-accent-red/10 text-accent-red'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${quota.status === 'pagada'
+                            ? 'bg-accent-green/10 text-accent-green'
+                            : 'bg-accent-red/10 text-accent-red'
+                            }`}>
                             {quota.status}
                           </span>
                         </td>

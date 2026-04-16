@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { 
+import {
   Upload,
   Download,
   FileSpreadsheet,
@@ -100,7 +100,7 @@ export default function ImportPage() {
       'application/vnd.ms-excel',
       'text/csv'
     ]
-    
+
     if (!allowedTypes.includes(file.type)) {
       toast.error('Solo se permiten archivos Excel (.xlsx, .xls) o CSV')
       return
@@ -111,7 +111,7 @@ export default function ImportPage() {
       toast.error('El archivo no debe superar los 10MB')
       return
     }
-    
+
     toast.success('Archivo cargado correctamente')
 
     setSelectedFile(file)
@@ -174,7 +174,7 @@ export default function ImportPage() {
       // Show results
       setLoadingResults(true)
       setShowResultModal(true)
-      
+
       // Simulate loading time for results processing
       setTimeout(() => {
         setLoadingResults(false)
@@ -187,10 +187,10 @@ export default function ImportPage() {
 
     } catch (error: any) {
 
-      
+
       // Handle different error cases
       let errorMessage = 'Error desconocido en la importación'
-      
+
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message
       } else if (error?.message) {
@@ -227,7 +227,7 @@ export default function ImportPage() {
 
       setLoadingResults(true)
       setShowResultModal(true)
-      
+
       setTimeout(() => {
         setLoadingResults(false)
         toast.error(errorMessage)
@@ -256,17 +256,17 @@ export default function ImportPage() {
     try {
       toast.loading('Generando plantilla...', { id: 'download-template-toast' })
       const response = await adminApi.downloadTemplate()
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
       link.setAttribute('download', 'plantilla-importacion-cobranza.xlsx')
       document.body.appendChild(link)
       link.click()
-      
+
       link.parentNode?.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       toast.success('Plantilla descargada correctamente', { id: 'download-template-toast' })
     } catch (error) {
 
@@ -278,7 +278,7 @@ export default function ImportPage() {
     try {
       toast.loading('Generando archivo de exportación...', { id: 'export-toast' })
       const response = await adminApi.exportExcel()
-      
+
       // Create a URL for the blob
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
@@ -286,11 +286,11 @@ export default function ImportPage() {
       link.setAttribute('download', `export-cobranza-${new Date().toISOString().split('T')[0]}.xlsx`)
       document.body.appendChild(link)
       link.click()
-      
+
       // Cleanup
       link.parentNode?.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       toast.success('Datos exportados correctamente', { id: 'export-toast' })
     } catch (error) {
 
@@ -299,7 +299,7 @@ export default function ImportPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-1 py-2 md:p-6">
       {/* Header */}
       <div className="flex justify-between items-start flex-wrap">
         <div>
@@ -313,8 +313,8 @@ export default function ImportPage() {
             <Download className="w-4 h-4 mr-2" />
             Descargar Plantilla
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={handleExportData}
             className="bg-accent-purple/20 text-accent-purple border-accent-purple/30 hover:bg-accent-purple/30"
           >
@@ -381,14 +381,14 @@ export default function ImportPage() {
                 onChange={handleFileInputChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              
+
               <div className="space-y-4">
                 <div className="flex justify-center">
                   <div className="w-16 h-16 bg-glass-primary/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-glass-border">
                     <Upload className="w-8 h-8 text-text-muted" />
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-responsive-lg font-medium text-text-primary mb-1">
                     Arrastra y suelta tu archivo aquí
@@ -399,7 +399,7 @@ export default function ImportPage() {
                     </button>
                   </p>
                 </div>
-                
+
                 <p className="text-sm text-text-muted">
                   Archivos soportados: Excel (.xlsx, .xls) y CSV • Máximo 10MB
                 </p>
@@ -441,7 +441,7 @@ export default function ImportPage() {
                     </span>
                   </div>
                   <div className="w-full bg-glass-primary/30 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-accent-blue h-2 rounded-full transition-all duration-500"
                       style={{ width: `${importProgress.progress}%` }}
                     />
@@ -452,7 +452,7 @@ export default function ImportPage() {
               {/* Import Button */}
               {!importProgress.isImporting && !importProgress.result && (
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     onClick={handleStartImport}
                     size="lg"
                     className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
@@ -509,7 +509,7 @@ export default function ImportPage() {
                 </p>
                 <p className="text-sm text-text-secondary">Clientes</p>
               </div>
-              
+
               <div className="bg-accent-green/15 border border-accent-green/20 rounded-lg p-4 text-center">
                 <MapPin className="w-8 h-8 text-accent-green mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
@@ -517,7 +517,7 @@ export default function ImportPage() {
                 </p>
                 <p className="text-sm text-text-secondary">Lotes</p>
               </div>
-              
+
               <div className="glass-card hover:shadow-glow rounded-lg p-4 text-center">
                 <FileText className="w-8 h-8 text-accent-purple mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
@@ -525,7 +525,7 @@ export default function ImportPage() {
                 </p>
                 <p className="text-sm text-text-secondary">Contratos</p>
               </div>
-              
+
               <div className="glass-card hover:shadow-glow rounded-lg p-4 text-center">
                 <DollarSign className="w-8 h-8 text-accent-yellow mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
@@ -574,7 +574,7 @@ export default function ImportPage() {
                     </p>
                   </div>
                 )}
-                
+
                 {importProgress.result.warnings.length > 0 && (
                   <div className="bg-accent-yellow/15 border border-accent-yellow/20 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">

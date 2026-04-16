@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Camera, 
-  Save, 
+import {
+  User,
+  Mail,
+  Lock,
+  Camera,
+  Save,
   CheckCircle,
   AlertCircle,
   Key
@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   // Profile state
   const [profileForm, setProfileForm] = useState({
     fullName: admin?.fullName || '',
@@ -51,7 +51,7 @@ export default function ProfilePage() {
       const response = await adminApi.updateProfile({
         fullName: profileForm.fullName
       })
-      
+
       if (response.data.success) {
         updateAdmin({ fullName: profileForm.fullName })
         toast.success('Perfil actualizado correctamente')
@@ -65,7 +65,7 @@ export default function ProfilePage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       toast.error('Las contraseñas no coinciden')
       return
@@ -79,7 +79,7 @@ export default function ProfilePage() {
     setIsChangingPassword(true)
     try {
       const response = await adminApi.changeMyPassword(passwordForm.newPassword)
-      
+
       if (response.data.success) {
         toast.success('Contraseña actualizada correctamente')
         setPasswordForm({
@@ -97,22 +97,22 @@ export default function ProfilePage() {
   const handlePhotoClick = () => {
     fileInputRef.current?.click()
   }
-  
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
+
     // Validations
     if (!file.type.startsWith('image/')) {
       toast.error('Por favor, selecciona una imagen válida')
       return
     }
-    
+
     if (file.size > 5 * 1024 * 1024) {
       toast.error('La imagen no debe superar los 5MB')
       return
     }
-    
+
     const reader = new FileReader()
     reader.onload = () => {
       setSelectedImage(reader.result as string)
@@ -123,13 +123,13 @@ export default function ProfilePage() {
   const handleCropComplete = async (croppedImageBlob: Blob) => {
     // Convert blob to file for the FormData
     const file = new File([croppedImageBlob], 'profile-photo.jpg', { type: 'image/jpeg' })
-    
+
     const formData = new FormData()
     formData.append('image', file)
-    
+
     setIsUploadingPhoto(true)
     setSelectedImage(null) // Close modal
-    
+
     try {
       const response = await adminApi.uploadProfileImage(formData)
       if (response.data.success) {
@@ -145,7 +145,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 p-4 md:p-6 pb-24 lg:pb-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-1 py-2 md:p-6 pb-24 lg:pb-6">
       <div className="animate-fade-in-up">
         <h1 className="text-responsive-2xl font-bold text-text-primary">Mi Perfil</h1>
         <p className="text-text-secondary mt-2">
@@ -162,9 +162,9 @@ export default function ProfilePage() {
               <div className="relative -mt-12 mb-4 group">
                 <div className="w-24 h-24 rounded-full border-4 border-dark-primary bg-dark-secondary flex items-center justify-center overflow-hidden shadow-glow">
                   {admin?.profileImage ? (
-                    <img 
-                      src={admin.profileImage} 
-                      alt={admin.fullName} 
+                    <img
+                      src={admin.profileImage}
+                      alt={admin.fullName}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -178,14 +178,14 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-                <input 
+                <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept="image/*"
                   className="hidden"
                 />
-                <button 
+                <button
                   onClick={handlePhotoClick}
                   className="absolute bottom-0 right-0 p-2 bg-accent-blue text-white rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95 border-2 border-dark-primary"
                   title="Cambiar foto de perfil"
@@ -193,16 +193,16 @@ export default function ProfilePage() {
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
-              
+
               <h2 className="text-xl font-bold text-text-primary text-center">
                 {admin?.fullName}
               </h2>
               <p className="text-xs text-accent-blue font-bold uppercase tracking-widest mt-1 text-center">
                 {admin?.role}
               </p>
-              
+
               <div className="w-full h-px bg-glass-border my-6" />
-              
+
               <div className="w-full space-y-4">
                 <div className="flex items-center text-sm text-text-secondary">
                   <Mail className="w-4 h-4 mr-3 text-text-muted flex-shrink-0" />
@@ -239,12 +239,12 @@ export default function ProfilePage() {
                   Información General
                 </h3>
               </div>
-              
+
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-text-secondary">Nombre Completo</label>
-                    <Input 
+                    <Input
                       value={profileForm.fullName}
                       onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
                       placeholder="Tu nombre"
@@ -253,7 +253,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="space-y-2 opacity-70">
                     <label className="text-sm font-medium text-text-secondary">Correo Electrónico</label>
-                    <Input 
+                    <Input
                       value={profileForm.email}
                       disabled
                       icon={Mail}
@@ -266,8 +266,8 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="pt-4 flex justify-end">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     loading={isSaving}
                     className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/40 min-w-[140px]"
                   >
@@ -285,12 +285,12 @@ export default function ProfilePage() {
                 <Lock className="w-5 h-5 mr-3 text-accent-red" />
                 Seguridad
               </h3>
-              
+
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-text-secondary">Nueva Contraseña</label>
-                    <Input 
+                    <Input
                       type="password"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
@@ -300,7 +300,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-text-secondary">Confirmar Nueva Contraseña</label>
-                    <Input 
+                    <Input
                       type="password"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
@@ -311,8 +311,8 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="pt-4 flex justify-end">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     loading={isChangingPassword}
                     variant="outline"
                     className="glass-button border-accent-red/30 text-accent-red hover:bg-accent-red/10 min-w-[140px]"
@@ -336,7 +336,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-      
+
       {/* Crop Modal */}
       {selectedImage && (
         <CropImageModal

@@ -119,7 +119,7 @@ export default function PortfolioPage() {
       behaviorTag: client.behavior || 'INDECISO',
       daysInArrears: client.diasMora || 0,
       lastContact: client.lastContact || undefined,
-      contracts: [] 
+      contracts: []
     }))
 
     return {
@@ -177,7 +177,7 @@ export default function PortfolioPage() {
     setSelectedClient(client)
     setIsModalOpen(true)
     setModalLoading(true)
-    
+
     try {
       const response = await adminApi.getClient(client.clientId)
       if (response.data.success) {
@@ -191,15 +191,15 @@ export default function PortfolioPage() {
           totalValue: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalValue || 0), 0) || 0,
           totalPaid: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalPagado || 0), 0) || 0,
           totalPending: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalValue - c.totalPagado || 0), 0) || 0,
-          averageRecaudo: fullClient.contracts?.length ? 
-            Math.round((fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalPagado || 0), 0) / 
-            fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalValue || 1), 0)) * 100) : 0,
+          averageRecaudo: fullClient.contracts?.length ?
+            Math.round((fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalPagado || 0), 0) /
+              fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalValue || 1), 0)) * 100) : 0,
           behaviorTag: fullClient.behavior || 'INDECISO',
           daysInArrears: client.daysInArrears,
           contracts: fullClient.contracts.map((c: any) => ({
             id: c._id,
             project: c.negotiation || 'Proyecto sin nombre',
-            manzana: 'N/A', 
+            manzana: 'N/A',
             nomenclatura: 'N/A',
             valorTotal: c.totalValue,
             totalPagado: c.totalPagado,
@@ -220,7 +220,7 @@ export default function PortfolioPage() {
             valorCuota: c.valorCuota,
             diasMora: c.diasMora,
             status: c.status,
-            proximoVencimiento: c.startDate 
+            proximoVencimiento: c.startDate
           }))
         })
       }
@@ -243,7 +243,7 @@ export default function PortfolioPage() {
 
 
   return (
-    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
@@ -394,19 +394,19 @@ export default function PortfolioPage() {
             <table className="w-full border-separate border-spacing-0">
               <thead>
                 <tr className="sticky top-0 z-20">
-                  <SortHeader 
-                    label="Cliente" 
-                    field="name" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Cliente"
+                    field="name"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border sticky left-0 z-30"
                   />
-                  <SortHeader 
-                    label="Cédula" 
-                    field="idNumber" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Cédula"
+                    field="idNumber"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
@@ -416,11 +416,11 @@ export default function PortfolioPage() {
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Pendiente</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">% Recaudo</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Estado Mora</th>
-                  <SortHeader 
-                    label="Comportamiento" 
-                    field="behavior" 
-                    currentSortBy={pagination.sortBy} 
-                    currentSortOrder={pagination.sortOrder} 
+                  <SortHeader
+                    label="Comportamiento"
+                    field="behavior"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
@@ -719,14 +719,14 @@ export default function PortfolioPage() {
                           <div className="flex-1 bg-glass-primary/30 rounded-full h-2 mr-2">
                             <div
                               className="bg-accent-purple h-2 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                              style={{ 
-                                width: `${(contract as any).totalCuotasIniciales > 0 ? 
-                                  ((contract as any).cuotasInicialesPagadas / (contract as any).totalCuotasIniciales) * 100 : 0}%` 
-                                }}
+                              style={{
+                                width: `${(contract as any).totalCuotasIniciales > 0 ?
+                                  ((contract as any).cuotasInicialesPagadas / (contract as any).totalCuotasIniciales) * 100 : 0}%`
+                              }}
                             />
                           </div>
                           <span className="text-xs font-bold text-accent-purple">
-                            {(contract as any).totalCuotasIniciales > 0 ? 
+                            {(contract as any).totalCuotasIniciales > 0 ?
                               (((contract as any).cuotasInicialesPagadas / (contract as any).totalCuotasIniciales) * 100).toFixed(0) : 0}%
                           </span>
                         </div>
@@ -752,15 +752,15 @@ export default function PortfolioPage() {
                           <div className="flex-1 bg-glass-primary/30 rounded-full h-2 mr-2">
                             <div
                               className="bg-accent-blue h-2 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]"
-                              style={{ 
-                                width: `${(contract as any).totalCuotasNormales > 0 ? 
-                                  ((contract as any).cuotasNormalesPagadas / (contract as any).totalCuotasNormales) * 100 : 0}%` 
-                                }}
+                              style={{
+                                width: `${(contract as any).totalCuotasNormales > 0 ?
+                                  ((contract as any).cuotasNormalesPagadas / (contract as any).totalCuotasNormales) * 100 : 0}%`
+                              }}
                             />
                           </div>
                           <span className="text-xs font-bold text-accent-blue">
-                            {(contract as any).totalCuotasNormales > 0 ? 
-                                (((contract as any).cuotasNormalesPagadas / (contract as any).totalCuotasNormales) * 100).toFixed(0) : 0}%
+                            {(contract as any).totalCuotasNormales > 0 ?
+                              (((contract as any).cuotasNormalesPagadas / (contract as any).totalCuotasNormales) * 100).toFixed(0) : 0}%
                           </span>
                         </div>
                       </div>
