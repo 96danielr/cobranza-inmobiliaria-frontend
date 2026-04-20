@@ -46,7 +46,7 @@ interface Lot {
   area: number
   price?: number
   images?: string[]
-  status: 'disponible' | 'vendido'
+  status: 'disponible' | 'apartado' | 'separado' | 'vendido'
   createdAt: string
   sellerId?: {
     accountId: {
@@ -70,6 +70,17 @@ export default function LotsPage() {
   const [isSaleDetailModalOpen, setIsSaleDetailModalOpen] = useState(false)
   const [saleDetail, setSaleDetail] = useState<any>(null)
   const [loadingSaleDetail, setLoadingSaleDetail] = useState(false)
+
+  const [isReserveModalOpen, setIsReserveModalOpen] = useState(false)
+  const [reserveFormData, setReserveFormData] = useState({
+    type: 'apartado',
+    clientId: '',
+    clientName: '',
+    clientIdNumber: '',
+    clientPhone: '',
+    amount: '',
+    observations: ''
+  })
 
   const { clients, fetchClientsIfNeeded, loading: clientsLoading } = useClientStore()
 
@@ -310,6 +321,64 @@ export default function LotsPage() {
     setSellFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const handleReserveClick = (lot: Lot) => {
+    setSelectedLot(lot)
+    setIsCreatingNewClient(false)
+    setReserveFormData({
+      type: 'apartado',
+      clientId: '',
+      clientName: '',
+      clientIdNumber: '',
+      clientPhone: '',
+      amount: '',
+      observations: ''
+    })
+    setIsReserveModalOpen(true)
+    fetchClientsIfNeeded()
+  }
+
+  const handleReserveLot = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedLot) return
+
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        type: reserveFormData.type,
+        amount: reserveFormData.amount ? parseFloat(reserveFormData.amount) : undefined,
+        observations: reserveFormData.observations
+      }
+
+      if (isCreatingNewClient) {
+        payload.clientData = {
+          name: reserveFormData.clientName,
+          idNumber: reserveFormData.clientIdNumber,
+          phone: reserveFormData.clientPhone
+        }
+      } else {
+        payload.clientId = reserveFormData.clientId
+        if (!payload.clientId) {
+          toast.error('Debe seleccionar un cliente')
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      const response = await adminApi.reserveLot(selectedLot._id, payload)
+      if (response.data.success) {
+        toast.success(`Lote ${reserveFormData.type} correctamente`)
+        setIsReserveModalOpen(false)
+        pagination.refresh()
+      } else {
+        toast.error(response.data.message || 'Error en la operación')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al conectar con el servidor')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleUploadImages = async () => {
     if (!selectedLot || selectedFiles.length === 0) return
 
@@ -480,11 +549,15 @@ export default function LotsPage() {
                         {lot.price ? formatCurrency(lot.price) : '-'}
                       </td>
                       <td className="py-4 px-4 md:px-6">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${lot.status === 'vendido'
-                          ? 'bg-accent-red/20 text-accent-red border border-accent-red/30'
-                          : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
-                          }`}>
-                          {lot.status === 'vendido' ? 'Vendido' : 'Disponible'}
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          lot.status === 'vendido' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
+                          lot.status === 'separado' ? 'bg-accent-purple/20 text-accent-purple border border-accent-purple/30' :
+                          lot.status === 'apartado' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
+                          'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                        }`}>
+                          {lot.status === 'vendido' ? 'Vendido' : 
+                           lot.status === 'separado' ? 'Separado' :
+                           lot.status === 'apartado' ? 'Apartado' : 'Disponible'}
                         </span>
                       </td>
                       <td className="py-4 px-4 md:px-6 text-sm text-text-secondary whitespace-nowrap">
@@ -533,15 +606,26 @@ export default function LotsPage() {
                               <Eye className="w-4 h-4" />
                             </Button>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSellClick(lot)}
-                              className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
-                              title="Vender Lote"
-                            >
-                              <ShoppingCart className="w-4 h-4" />
-                            </Button>
+                            <div className="flex space-x-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSellClick(lot)}
+                                className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
+                                title="Vender Lote"
+                              >
+                                <ShoppingCart className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleReserveClick(lot)}
+                                className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
+                                title="Apartar/Separar Lote"
+                              >
+                                <Users className="w-4 h-4" />
+                              </Button>
+                            </div>
                           )}
                           {admin?.role !== 'vendedor' && (
                             <>
@@ -582,11 +666,15 @@ export default function LotsPage() {
                       <h3 className="font-bold text-text-primary">{lot.stage} - {lot.lotNumber}</h3>
                       <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
                       <p className="text-xs text-text-muted mt-1">Vendedor: {lot.sellerId?.accountId?.fullName || 'N/A'}</p>
-                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${lot.status === 'vendido'
-                        ? 'bg-accent-red/20 text-accent-red border border-accent-red/30'
-                        : 'bg-accent-green/20 text-accent-green border border-accent-green/30'
-                        }`}>
-                        {lot.status === 'vendido' ? 'Vendido' : 'Disponible'}
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        lot.status === 'vendido' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
+                        lot.status === 'separado' ? 'bg-accent-purple/20 text-accent-purple border border-accent-purple/30' :
+                        lot.status === 'apartado' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
+                        'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                      }`}>
+                        {lot.status === 'vendido' ? 'Vendido' : 
+                         lot.status === 'separado' ? 'Separado' :
+                         lot.status === 'apartado' ? 'Apartado' : 'Disponible'}
                       </span>
                     </div>
                     <div className="flex space-x-2">
@@ -595,9 +683,14 @@ export default function LotsPage() {
                           <Eye className="w-4 h-4" />
                         </Button>
                       ) : (
-                        <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
-                          <ShoppingCart className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
+                            <ShoppingCart className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleReserveClick(lot)} className="glass-button text-accent-blue">
+                            <Users className="w-4 h-4" />
+                          </Button>
+                        </div>
                       )}
                       {admin?.role !== 'vendedor' && (
                         <>
@@ -1198,6 +1291,168 @@ export default function LotsPage() {
             No se pudieron cargar los detalles de la venta
           </div>
         )}
+      </Modal>
+      {/* Reserve Modal */}
+      <Modal
+        isOpen={isReserveModalOpen}
+        onClose={() => setIsReserveModalOpen(false)}
+        title={`Reservar Lote: ${selectedLot?.stage} - ${selectedLot?.lotNumber}`}
+        size="lg"
+      >
+        <form onSubmit={handleReserveLot} className="space-y-6 pt-2">
+          {/* Reservation Type */}
+          <div className="space-y-4">
+            <label className="text-sm font-semibold text-text-primary flex items-center">
+              <Layers className="w-4 h-4 mr-2 text-accent-blue" />
+              Tipo de Reserva
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setReserveFormData(prev => ({ ...prev, type: 'apartado' }))}
+                className={`p-4 rounded-xl border transition-all text-left ${
+                  reserveFormData.type === 'apartado'
+                    ? 'bg-accent-blue/10 border-accent-blue'
+                    : 'bg-glass-primary/10 border-glass-border hover:border-accent-blue/50'
+                }`}
+              >
+                <p className="font-bold text-text-primary">Apartado</p>
+                <p className="text-xs text-text-muted mt-1">Sin dinero. Validez 5 días.</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setReserveFormData(prev => ({ ...prev, type: 'separado' }))}
+                className={`p-4 rounded-xl border transition-all text-left ${
+                  reserveFormData.type === 'separado'
+                    ? 'bg-accent-purple/10 border-accent-purple'
+                    : 'bg-glass-primary/10 border-glass-border hover:border-accent-purple/50'
+                }`}
+              >
+                <p className="font-bold text-text-primary">Separado</p>
+                <p className="text-xs text-text-muted mt-1">Mínimo $500,000. Validez 1 mes.</p>
+              </button>
+            </div>
+          </div>
+
+          {/* Client Selection */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-text-primary flex items-center">
+                <Users className="w-4 h-4 mr-2 text-accent-blue" />
+                Información del Cliente
+              </label>
+              <Button
+                type="button"
+                variant="glass"
+                size="sm"
+                onClick={() => setIsCreatingNewClient(!isCreatingNewClient)}
+                className="text-xs h-8"
+              >
+                {isCreatingNewClient ? 'Seleccionar existente' : 'Nuevo cliente'}
+              </Button>
+            </div>
+
+            {isCreatingNewClient ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Nombre Completo</label>
+                  <Input
+                    value={reserveFormData.clientName}
+                    onChange={(e) => setReserveFormData(prev => ({ ...prev, clientName: e.target.value }))}
+                    placeholder="Nombre"
+                    required
+                    className="glass-input h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Cédula</label>
+                  <Input
+                    value={reserveFormData.clientIdNumber}
+                    onChange={(e) => setReserveFormData(prev => ({ ...prev, clientIdNumber: e.target.value }))}
+                    placeholder="Documento"
+                    required
+                    className="glass-input h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Teléfono</label>
+                  <Input
+                    value={reserveFormData.clientPhone}
+                    onChange={(e) => setReserveFormData(prev => ({ ...prev, clientPhone: e.target.value }))}
+                    placeholder="Contacto"
+                    required
+                    className="glass-input h-9"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                <select
+                  value={reserveFormData.clientId}
+                  onChange={(e) => setReserveFormData(prev => ({ ...prev, clientId: e.target.value }))}
+                  required={!isCreatingNewClient}
+                  className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
+                >
+                  <option value="">Seleccione un cliente...</option>
+                  {clients.map(c => (
+                    <option key={c._id} value={c._id}>
+                      {c.name} - {c.idNumber}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Users className="w-4 h-4 text-text-disabled" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {reserveFormData.type === 'separado' && (
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-text-primary flex items-center">
+                <DollarSign className="w-4 h-4 mr-2 text-accent-green" />
+                Monto del Pago (Mínimo $500,000)
+              </label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" />
+                <Input
+                  type="number"
+                  value={reserveFormData.amount}
+                  onChange={(e) => setReserveFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  placeholder="500000"
+                  required
+                  className="glass-input pl-10"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-text-primary">Observaciones</label>
+            <Input
+              value={reserveFormData.observations}
+              onChange={(e) => setReserveFormData(prev => ({ ...prev, observations: e.target.value }))}
+              placeholder="Detalles adicionales..."
+              className="glass-input"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-glass-border">
+            <Button type="button" variant="outline" onClick={() => setIsReserveModalOpen(false)} className="glass-button">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="glass-button bg-accent-blue text-white flex-1 sm:flex-none">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                `Confirmar ${reserveFormData.type === 'apartado' ? 'Apartado' : 'Separación'}`
+              )}
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   )

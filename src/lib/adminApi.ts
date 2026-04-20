@@ -134,6 +134,9 @@ export const adminApi = {
   getLotSaleDetail: (id: string) =>
     apiAdmin.get(`/lots/${id}/sale-detail?companyId=${getCompanyId()}`),
 
+  reserveLot: (id: string, data: any) =>
+    apiAdmin.post(`/lots/${id}/reserve?companyId=${getCompanyId()}`, data),
+
   getLotsPublic: (companyId: string, search?: string) => {
     const params = new URLSearchParams({
       ...(search && { search }),
