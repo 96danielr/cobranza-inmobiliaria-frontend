@@ -49,16 +49,17 @@ export function BottomNavigation() {
   const { admin, logout } = useAdminAuthStore()
   const [moreOpen, setMoreOpen] = useState(false)
 
+  const isPortal = pathname.startsWith('/portal')
   const userRole = (admin?.role || 'agent') as AdminNavRole
-  const filtered = filterAdminNavItems(
-    adminNavItems,
-    userRole,
-    admin?.activeModules
-  )
-  const withoutLogout = filtered.filter((i) => i.href !== 'logout')
+  
+  const filtered = isPortal 
+    ? require('@/lib/portalNavItems').portalNavItems 
+    : filterAdminNavItems(adminNavItems, userRole, admin?.activeModules)
+
+  const withoutLogout = filtered.filter((i: any) => i.href !== 'logout')
   const dockItems = withoutLogout.slice(0, MOBILE_DOCK_VISIBLE)
   const moreItems = withoutLogout.slice(MOBILE_DOCK_VISIBLE)
-  const logoutItem = filtered.find((i) => i.href === 'logout')
+  const logoutItem = filtered.find((i: any) => i.href === 'logout')
   const showMoreTab = moreItems.length > 0
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export function BottomNavigation() {
 
   const handleLogout = () => {
     logout()
-    router.push('/admin/login')
+    router.push(isPortal ? '/login' : '/admin/login')
   }
 
   const renderTab = (item: (typeof filtered)[0]) => {
@@ -282,8 +283,17 @@ export function BottomNavigation() {
 
 export function QuickActionFAB() {
   const pathname = usePathname()
+  const isPortal = pathname.startsWith('/portal')
 
   const getQuickAction = () => {
+    if (pathname.startsWith('/portal/payments')) {
+      return {
+        icon: Upload,
+        label: 'Reportar Pago',
+        action: () => window.open('https://tu-link-de-pago.com', '_blank'),
+        color: 'bg-accent-green hover:bg-accent-green/80',
+      }
+    }
     if (pathname.startsWith('/admin/payments')) {
       return {
         icon: Upload,
@@ -309,10 +319,10 @@ export function QuickActionFAB() {
       }
     }
     return {
-      icon: Settings,
-      label: 'Configuración',
-      action: () => {},
-      color: 'bg-glass-primary hover:bg-glass-secondary',
+      icon: isPortal ? Upload : Settings,
+      label: isPortal ? 'Reportar Pago' : 'Configuración',
+      action: () => isPortal ? window.open('https://tu-link-de-pago.com', '_blank') : {},
+      color: isPortal ? 'bg-accent-blue shadow-glow' : 'bg-glass-primary hover:bg-glass-secondary',
     }
   }
 

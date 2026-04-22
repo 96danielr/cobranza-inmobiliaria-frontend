@@ -18,11 +18,12 @@ export interface AdminUser {
   id: string
   email: string
   fullName: string
-  role: 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor'
+  role: 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor' | 'cliente'
   tenantId: string
   tenantName: string
   plan: 'basic' | 'premium' | 'enterprise'
   activeModules: string[]
+  clientId?: string
   profileImage?: string
   subscriptionStart?: string
   subscriptionEnd?: string

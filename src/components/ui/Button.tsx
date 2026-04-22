@@ -49,7 +49,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       `,
       outline: `
         border-2 border-accent-blue/50 text-accent-blue bg-transparent
-        hover:bg-accent-blue hover:text-dark-primary focus:ring-accent-blue/50
+        hover:bg-accent-blue hover:text-white focus:ring-accent-blue/50
       `,
       glass: `
         glass-button text-text-primary

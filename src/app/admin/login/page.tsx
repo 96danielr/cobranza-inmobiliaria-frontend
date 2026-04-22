@@ -31,6 +31,7 @@ export default function AdminLoginPage() {
     login,
     selectTenant,
     isAuthenticated,
+    admin,
     isLoading,
     requiresTenantSelection,
     pendingAccountId,
@@ -50,17 +51,27 @@ export default function AdminLoginPage() {
   const passwordValue = watch('password', '')
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/admin/select-company')
+    if (isAuthenticated && admin) {
+      if (admin.role === 'cliente') {
+        router.push('/portal/dashboard')
+      } else {
+        router.push('/admin/select-company')
+      }
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, admin, router])
 
   const onSubmit = async (data: AdminLoginFormData) => {
     const result = await login(data.email, data.password)
 
     if (result.success && !result.requiresTenantSelection) {
-      toast.success('¡Bienvenido al panel!')
-      router.push('/admin/select-company')
+      toast.success('Sesión iniciada correctamente')
+      // Immediate redirect based on store state
+      const currentAdmin = useAdminAuthStore.getState().admin
+      if (currentAdmin?.role === 'cliente') {
+        router.push('/portal/dashboard')
+      } else {
+        router.push('/admin/select-company')
+      }
     } else if (result.success && result.requiresTenantSelection) {
       toast('Selecciona tu equipo de trabajo', { icon: '🏢' })
     } else {
@@ -82,7 +93,11 @@ export default function AdminLoginPage() {
   }
 
   if (isAuthenticated) {
-    return null
+    return (
+      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-accent-blue border-t-transparent rounded-full animate-spin shadow-glow" />
+      </div>
+    )
   }
 
   // Tenant selection view

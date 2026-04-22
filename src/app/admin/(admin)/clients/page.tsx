@@ -81,7 +81,8 @@ export default function ClientsPage() {
     phone: '',
     email: '',
     address: '',
-    behavior: 'INDECISO'
+    behavior: 'INDECISO',
+    password: ''
   })
 
   // Fetch clients with pagination and filtering
@@ -166,7 +167,8 @@ export default function ClientsPage() {
         phone: '',
         email: '',
         address: '',
-        behavior: 'INDECISO'
+        behavior: 'INDECISO',
+        password: ''
       })
       pagination.refresh()
     } catch (error: any) {
@@ -697,6 +699,17 @@ export default function ClientsPage() {
                 onChange={(e) => setNewClient({ ...newClient, address: e.target.value })}
                 className="glass-input"
               />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium text-text-secondary">Contraseña para el Portal (Opcional)</label>
+              <Input
+                type="password"
+                placeholder="Asigna una contraseña para que el cliente ingrese"
+                value={newClient.password}
+                onChange={(e) => setNewClient({ ...newClient, password: e.target.value })}
+                className="glass-input"
+              />
+              <p className="text-[10px] text-text-muted">Si ingresas una contraseña y el cliente tiene email, se habilitará su acceso automáticamente.</p>
             </div>
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-medium text-text-secondary">Estado / Comportamiento inicial</label>

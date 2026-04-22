@@ -7,7 +7,7 @@ import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
-import { adminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
+import { adminNavItems, filterAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
 import { useState, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useClickAway } from '@/hooks/useClickAway'
@@ -34,13 +34,18 @@ export default function AdminLayout({
   useClickAway(profileRef, () => setIsProfileOpen(false))
 
   useEffect(() => {
-    if (!_hasHydrated) return // wait for localStorage hydration
+    if (!_hasHydrated) return
 
     if (!isAuthenticated) {
-
       router.push('/admin/login')
+      return
     }
-  }, [isAuthenticated, _hasHydrated, router])
+
+    // If a client accidentally enters the admin area, redirect to portal
+    if (admin?.role === 'cliente') {
+      router.push('/portal/dashboard')
+    }
+  }, [isAuthenticated, _hasHydrated, admin, router])
 
   const getBreadcrumbs = () => {
     const path = pathname.split('/').filter(Boolean)
@@ -92,6 +97,13 @@ export default function AdminLayout({
   const currentPageInfo = getCurrentPageInfo()
   const userRole = (admin?.role || 'agent') as AdminNavRole
 
+  // Filter items using centralized permission logic
+  const filteredNavItems = filterAdminNavItems(
+    adminNavItems,
+    admin?.role,
+    admin?.activeModules
+  )
+
   return (
     <div className="min-h-screen bg-dark-primary">
       {/* Enhanced Mobile Header */}
@@ -124,13 +136,7 @@ export default function AdminLayout({
 
             <nav className="flex-1 px-4 py-6 overflow-y-auto">
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-0 lg:space-y-2">
-                {adminNavItems
-                  .filter((item) => {
-                    const hasRole = item.roles.includes(userRole)
-                    if (!hasRole) return false
-                    if (item.module && !admin?.activeModules?.includes(item.module)) return false
-                    return true
-                  })
+                {filteredNavItems
                   .map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href || 

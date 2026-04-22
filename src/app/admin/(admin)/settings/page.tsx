@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Building2,
   Users,
@@ -97,8 +97,48 @@ export default function SettingsPage() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [showApiKeys, setShowApiKeys] = useState<{ [key: string]: boolean }>({})
   const [isSaving, setIsSaving] = useState(false)
-  const [configLoading, setConfigLoading] = useState(false)
+  const [configLoading, setConfigLoading] = useState(true)
   const [usersLoading, setUsersLoading] = useState(false)
+
+  const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
+
+  // Fetch company config
+  const fetchCompanyConfig = async () => {
+    if (!selectedCompanyId) return
+    setConfigLoading(true)
+    try {
+      const response = await adminApi.getCompany(selectedCompanyId)
+      if (response.data.success) {
+        const companyData = response.data.data.company
+        setTenantConfig({
+          id: companyData._id,
+          name: companyData.name,
+          nit: companyData.nit || '',
+          address: companyData.address || '',
+          phone: companyData.phone || '',
+          email: companyData.email || '',
+          bankInfo: companyData.bankInfo || {
+            banco: '',
+            tipoCuenta: 'Ahorros',
+            numeroCuenta: ''
+          },
+          integrations: companyData.integrations || {
+            whatsappEnabled: false,
+            daptaEnabled: false
+          }
+        })
+      }
+    } catch (error) {
+      toast.error('Error al cargar la configuración')
+    } finally {
+      setConfigLoading(false)
+    }
+  }
+
+  // Load data on mount or company change
+  useEffect(() => {
+    fetchCompanyConfig()
+  }, [selectedCompanyId])
 
   // User form state
   const [userForm, setUserForm] = useState({
@@ -139,26 +179,37 @@ export default function SettingsPage() {
   })
 
   const handleSaveCompanyInfo = async () => {
+    if (!selectedCompanyId) return
     setIsSaving(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      alert('Información de la empresa guardada exitosamente')
-    } catch (error) {
-      alert('Error al guardar la información')
+      await adminApi.updateCompany(selectedCompanyId, {
+        name: tenantConfig.name,
+        nit: tenantConfig.nit,
+        address: tenantConfig.address,
+        phone: tenantConfig.phone,
+        email: tenantConfig.email,
+        bankInfo: tenantConfig.bankInfo
+      })
+      toast.success('Información de la empresa guardada exitosamente')
+      fetchCompanyConfig() // Refresh data
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al guardar la información')
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleSaveIntegrations = async () => {
+    if (!selectedCompanyId) return
     setIsSaving(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      alert('Configuración de integraciones guardada exitosamente')
-    } catch (error) {
-      alert('Error al guardar las integraciones')
+      await adminApi.updateCompany(selectedCompanyId, {
+        integrations: tenantConfig.integrations
+      })
+      toast.success('Configuración de integraciones guardada exitosamente')
+      fetchCompanyConfig() // Refresh data
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al guardar las integraciones')
     } finally {
       setIsSaving(false)
     }
@@ -373,51 +424,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* Bank Information */}
-              <Card variant="elevated" className="animate-fade-in-up animate-fade-in-up-delay">
-                <CardContent className="p-4 md:p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-6">Información Bancaria</h3>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <Input
-                      label="Banco"
-                      value={tenantConfig.bankInfo.banco}
-                      onChange={(e) => setTenantConfig(prev => ({
-                        ...prev,
-                        bankInfo: { ...prev.bankInfo, banco: e.target.value }
-                      }))}
-                      placeholder="Nombre del banco"
-                    />
-
-                    <div>
-                      <label className="block text-sm font-medium text-text-primary mb-2">
-                        Tipo de Cuenta
-                      </label>
-                      <select
-                        value={tenantConfig.bankInfo.tipoCuenta}
-                        onChange={(e) => setTenantConfig(prev => ({
-                          ...prev,
-                          bankInfo: { ...prev.bankInfo, tipoCuenta: e.target.value }
-                        }))}
-                        className="glass-input w-full min-h-[44px] px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-                      >
-                        <option value="Ahorros">Ahorros</option>
-                        <option value="Corriente">Corriente</option>
-                      </select>
-                    </div>
-
-                    <Input
-                      label="Número de Cuenta"
-                      value={tenantConfig.bankInfo.numeroCuenta}
-                      onChange={(e) => setTenantConfig(prev => ({
-                        ...prev,
-                        bankInfo: { ...prev.bankInfo, numeroCuenta: e.target.value }
-                      }))}
-                      placeholder="1234567890"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Bank Information hidden */}
             </>
           )}
         </div>
@@ -760,6 +767,8 @@ export default function SettingsPage() {
               className="glass-input w-full min-h-[44px] px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
             >
               <option value="agent">Agente (Cobros)</option>
+              <option value="vendedor">Vendedor</option>
+              <option value="cliente">Cliente (Portal del Cliente)</option>
               <option value="company_admin">Admin de Empresa</option>
               <option value="tenant_admin">Dueño de Empresa (Tenant Admin)</option>
               <option value="superadmin">Superadmin (Plataforma)</option>
