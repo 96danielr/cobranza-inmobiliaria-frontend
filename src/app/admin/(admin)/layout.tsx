@@ -18,6 +18,8 @@ const roleLabels: Record<AdminNavRole, string> = {
   company_admin: 'Admin Empresa',
   agent: 'Agente',
   vendedor: 'Vendedor',
+  cliente: 'Cliente',
+  cobrador: 'Cobrador',
 }
 
 export default function AdminLayout({
@@ -127,7 +129,7 @@ export default function AdminLayout({
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <div className="ml-3 min-w-0">
-                  <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter">
+                  <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter text-company-highlight">
                     Sistema Cobranza
                   </h2>
                 </div>
@@ -236,7 +238,7 @@ export default function AdminLayout({
               {selectedCompanyName && (
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center bg-accent-blue/10 px-6 py-2.5 rounded-2xl border border-accent-blue/20 shadow-lg shadow-accent-blue/5">
                   <Building2 className="w-5 h-5 text-accent-blue mr-3" />
-                  <span className="text-sm font-black text-accent-blue tracking-wide uppercase">
+                  <span className="text-sm font-black text-accent-blue/80 tracking-wide uppercase text-company-highlight">
                     {selectedCompanyName}
                   </span>
                 </div>

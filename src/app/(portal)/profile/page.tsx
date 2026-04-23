@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { User, Shield, LogOut, Eye, EyeOff } from 'lucide-react'
+import { User, Shield, LogOut, Eye, EyeOff, Moon, Sun, Monitor } from 'lucide-react'
 
 import { useAuthStore } from '@/stores/authStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { authService } from '@/lib/auth'
 import { formatPin } from '@/lib/utils'
 
@@ -45,6 +46,7 @@ export default function ProfilePage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const { client, logout } = useAuthStore()
+  const { theme, setTheme } = useThemeStore()
 
   const {
     register,
@@ -185,6 +187,55 @@ export default function ProfilePage() {
               <strong className="text-text-primary">Nota:</strong> Para actualizar tus datos personales, 
               contacta directamente a la inmobiliaria.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Appearance Settings */}
+      <Card variant="elevated" className="glass-card animate-fade-in-up-delay-2">
+        <CardHeader>
+          <h2 className="text-responsive-base font-semibold text-text-primary flex items-center">
+            <Moon className="w-5 h-5 mr-2 text-accent-purple" />
+            Apariencia
+          </h2>
+          <p className="text-sm text-text-secondary">
+            Personaliza cómo se ve el portal
+          </p>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setTheme('dark')}
+              className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3 ${
+                theme === 'dark' 
+                  ? 'border-accent-blue bg-accent-blue/10' 
+                  : 'border-glass-border hover:border-glass-border-hover bg-glass-card'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center shadow-lg">
+                <Moon className="w-6 h-6 text-accent-blue" />
+              </div>
+              <span className={`text-sm font-medium ${theme === 'dark' ? 'text-accent-blue' : 'text-text-primary'}`}>
+                Modo Oscuro
+              </span>
+            </button>
+
+            <button
+              onClick={() => setTheme('light')}
+              className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3 ${
+                theme === 'light' 
+                  ? 'border-accent-blue bg-accent-blue/10' 
+                  : 'border-glass-border hover:border-glass-border-hover bg-glass-card'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center shadow-lg">
+                <Sun className="w-6 h-6 text-accent-yellow" />
+              </div>
+              <span className={`text-sm font-medium ${theme === 'light' ? 'text-accent-blue' : 'text-text-primary'}`}>
+                Modo Claro
+              </span>
+            </button>
           </div>
         </CardContent>
       </Card>

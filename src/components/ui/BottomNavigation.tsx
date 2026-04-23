@@ -80,7 +80,7 @@ export function BottomNavigation() {
     return pathname.startsWith(href)
   }
 
-  const moreContainsActive = moreItems.some((item) => isActive(item.href))
+  const moreContainsActive = moreItems.some((item: any) => isActive(item.href))
 
   const handleLogout = () => {
     logout()
@@ -133,7 +133,7 @@ export function BottomNavigation() {
               key="admin-more-backdrop"
               type="button"
               aria-label="Cerrar menú de navegación"
-              className="fixed inset-0 z-[45] bg-dark-primary/70 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-[45] bg-black/40 backdrop-blur-sm lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -147,7 +147,7 @@ export function BottomNavigation() {
             aria-labelledby="admin-more-sheet-title"
             className={cn(
               'fixed left-2 right-2 z-[48] lg:hidden rounded-2xl border border-glass-border origin-bottom',
-              'bg-dark-primary/95 backdrop-blur-glass shadow-glow',
+              'bg-white dark:bg-surface/98 backdrop-blur-xl shadow-glow',
               'bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-h-[min(70vh,28rem)] flex flex-col overflow-hidden'
             )}
             initial={{ y: 56, scale: 0.94, opacity: 0 }}
@@ -183,7 +183,7 @@ export function BottomNavigation() {
               </button>
             </div>
             <div className="overflow-y-auto p-3 grid grid-cols-3 gap-2">
-              {moreItems.map((item) => {
+              {moreItems.map((item: any) => {
                 const Icon = item.icon
                 const active = isActive(item.href)
                 return (
@@ -230,9 +230,9 @@ export function BottomNavigation() {
       </AnimatePresence>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-        <div className="absolute inset-0 bg-dark-primary/80 backdrop-blur-glass border-t border-glass-border" />
+        <div className="absolute inset-0 bg-white dark:bg-surface/95 backdrop-blur-xl border-t border-glass-border" />
         <div className="relative flex items-stretch justify-around py-1.5 gap-0.5 px-1">
-          {dockItems.map((item) => renderTab(item))}
+          {dockItems.map((item: any) => renderTab(item))}
           {showMoreTab && (
             <button
               type="button"
@@ -275,7 +275,7 @@ export function BottomNavigation() {
             </button>
           )}
         </div>
-        <div className="h-safe-area-inset-bottom bg-dark-primary/80" />
+        <div className="h-safe-area-inset-bottom bg-white dark:bg-surface/95" />
       </nav>
     </>
   )
@@ -352,7 +352,7 @@ export function MobileBreadcrumbs({ breadcrumbs }: { breadcrumbs: Array<{ label:
   if (breadcrumbs.length <= 1) return null
 
   return (
-    <div className="lg:hidden px-4 py-2 border-b border-glass-border bg-dark-primary/50 backdrop-blur-glass">
+    <div className="lg:hidden px-4 py-2 border-b border-glass-border bg-background/50 backdrop-blur-glass">
       <div className="flex items-center space-x-2 overflow-x-auto scrollbar-hide">
         {breadcrumbs.map((crumb, index) => (
           <div key={crumb.href} className="flex items-center flex-shrink-0">
@@ -390,21 +390,21 @@ export function MobileHeader({
   useClickAway(dropdownRef, () => setIsOpen(false))
 
   return (
-    <div className="lg:hidden bg-dark-primary/80 backdrop-blur-glass border-b border-glass-border sticky top-0 z-40">
+    <div className="lg:hidden bg-white dark:bg-background/80 backdrop-blur-glass border-b border-glass-border sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left: Empty space to balance the header */}
         <div className="w-10 h-10 flex-shrink-0" />
 
         <div className="flex-1 text-center px-4 overflow-hidden">
           <h1 className="text-md font-bold text-text-primary truncate">{title}</h1>
-          {subtitle && <p className="text-[10px] text-text-secondary truncate uppercase tracking-widest">{subtitle}</p>}
+          {subtitle && <p className="text-[10px] text-accent-blue/70 truncate uppercase font-bold tracking-widest text-company-highlight">{subtitle}</p>}
         </div>
 
         {/* Right: User Profile Dropdown */}
         <div className="relative flex-shrink-0" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="w-10 h-10 bg-dark-secondary rounded-full flex items-center justify-center shadow-glow border border-glass-border transition-transform active:scale-95 overflow-hidden"
+            className="w-10 h-10 bg-surface rounded-full flex items-center justify-center shadow-glow border border-glass-border transition-transform active:scale-95 overflow-hidden"
           >
             {admin?.profileImage ? (
               <img 

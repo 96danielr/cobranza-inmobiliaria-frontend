@@ -40,7 +40,7 @@ export default function MyLotsPage() {
     fetchLots()
   }, [])
 
-  const filteredLots = lots.filter(lot => 
+  const filteredLots = lots.filter((lot: any) => 
     lot.lotNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lot.stage?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lot.nomenclature?.toLowerCase().includes(searchTerm.toLowerCase())

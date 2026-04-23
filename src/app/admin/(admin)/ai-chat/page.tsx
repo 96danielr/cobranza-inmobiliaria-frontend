@@ -229,7 +229,7 @@ export default function AIChatPage() {
         </Button>
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0 glass-card rounded-2xl border border-glass-border overflow-hidden shadow-2xl">
+      <div className="flex-1 flex flex-col min-h-0 glass-card rounded-2xl border border-glass-border overflow-hidden">
         {/* Messages Dashboard */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar">
           {messages.map((message, index) => (
@@ -261,9 +261,9 @@ export default function AIChatPage() {
                   <div className={cn(
                     "px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-700 relative overflow-hidden",
                     message.role === 'user'
-                      ? "bg-gradient-primary text-white rounded-tr-none shadow-lg"
-                      : "bg-dark-secondary/50 text-text-primary border border-glass-border rounded-tl-none backdrop-blur-sm",
-                    (message as any).isFinished && "ring-2 ring-accent-blue/30 shadow-[0_0_20px_rgba(0,149,255,0.2)]",
+                      ? "bg-gradient-primary text-white rounded-tr-none"
+                      : "bg-glass-primary/50 text-text-primary border border-glass-border rounded-tl-none backdrop-blur-sm",
+                    (message as any).isFinished && "ring-2 ring-accent-blue/30 shadow-glow",
                     (message as any).isFinished && "animate-rainbow-burst animate-mirror-shine",
                     message.content === '' && message.role === 'assistant' && "animate-rainbow-loading border-2"
                   )}>
@@ -303,7 +303,7 @@ export default function AIChatPage() {
                             className={cn(
                               "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
                               message.tableData.length > 5
-                                ? "bg-accent-green/20 text-accent-green border border-accent-green/30 hover:bg-accent-green/30 shadow-[0_0_15px_rgba(16,185,129,0.2)] animate-pulse"
+                                ? "bg-accent-green/20 text-accent-green border border-accent-green/30 hover:bg-accent-green/30 shadow-glow animate-pulse"
                                 : "bg-white/5 text-text-secondary border border-white/10 hover:bg-white/10"
                             )}
                           >
@@ -349,12 +349,12 @@ export default function AIChatPage() {
           {isThinking && (
             <div className="flex justify-start animate-in fade-in zoom-in duration-500">
               <div className="flex max-w-[75%] gap-3 items-start">
-                <div className="w-8 h-8 rounded-full bg-dark-secondary border border-accent-blue/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,149,255,0.3)] animate-pulse">
+                <div className="w-8 h-8 rounded-full bg-dark-secondary border border-accent-blue/40 flex items-center justify-center shadow-glow animate-pulse">
                   <Sparkles className="w-4 h-4 text-accent-blue" />
                 </div>
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-accent-blue to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-                  <div className="relative px-5 py-3 bg-dark-secondary/80 backdrop-blur-xl border border-glass-border rounded-2xl rounded-tl-none flex items-center gap-3">
+                  <div className="relative px-5 py-3 bg-glass-primary/80 backdrop-blur-xl border border-glass-border rounded-2xl rounded-tl-none flex items-center gap-3">
                     <div className="flex gap-1">
                       <span className="w-1.5 h-1.5 bg-accent-blue rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                       <span className="w-1.5 h-1.5 bg-accent-blue rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -372,7 +372,7 @@ export default function AIChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-dark-secondary/30 border-t border-glass-border backdrop-blur-md">
+        <div className="p-4 border-t border-glass-border" style={{backgroundColor: 'var(--surface-glass-secondary)'}}>
           {/* Suggestions */}
           {messages.length === 1 && (
             <div className="flex flex-wrap gap-2 mb-4 animate-in fade-in slide-in-from-bottom-1 duration-500">
@@ -398,7 +398,7 @@ export default function AIChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Haz una pregunta sobre tus ventas o clientes..."
-              className="flex-1 bg-dark-primary/50 border border-glass-border rounded-xl px-4 py-3.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all pr-12"
+              className="flex-1 glass-input border border-glass-border rounded-xl px-4 py-3.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all pr-12"
             />
             {isLoading ? (
               <button

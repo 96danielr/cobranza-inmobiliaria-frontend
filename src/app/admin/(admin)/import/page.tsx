@@ -502,7 +502,7 @@ export default function ImportPage() {
 
             {/* Results Summary */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="glass-card hover:shadow-glow rounded-lg p-4 text-center">
+              <div className="glass-card stats-card stats-blue hover:shadow-glow rounded-lg p-4 text-center">
                 <Users className="w-8 h-8 text-accent-blue mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
                   {importProgress.result.summary.clientsCreated}
@@ -510,7 +510,7 @@ export default function ImportPage() {
                 <p className="text-sm text-text-secondary">Clientes</p>
               </div>
 
-              <div className="bg-accent-green/15 border border-accent-green/20 rounded-lg p-4 text-center">
+              <div className="glass-card stats-card stats-green hover:shadow-glow rounded-lg p-4 text-center">
                 <MapPin className="w-8 h-8 text-accent-green mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
                   {importProgress.result.summary.lotsCreated}
@@ -518,7 +518,7 @@ export default function ImportPage() {
                 <p className="text-sm text-text-secondary">Lotes</p>
               </div>
 
-              <div className="glass-card hover:shadow-glow rounded-lg p-4 text-center">
+              <div className="glass-card stats-card stats-purple hover:shadow-glow rounded-lg p-4 text-center">
                 <FileText className="w-8 h-8 text-accent-purple mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
                   {importProgress.result.summary.contractsCreated}
@@ -526,7 +526,7 @@ export default function ImportPage() {
                 <p className="text-sm text-text-secondary">Contratos</p>
               </div>
 
-              <div className="glass-card hover:shadow-glow rounded-lg p-4 text-center">
+              <div className="glass-card stats-card stats-yellow hover:shadow-glow rounded-lg p-4 text-center">
                 <DollarSign className="w-8 h-8 text-accent-yellow mx-auto mb-2" />
                 <p className="text-2xl font-bold text-text-primary">
                   {importProgress.result.summary.quotasMarkedPaid}

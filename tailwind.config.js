@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -11,36 +12,30 @@ module.exports = {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Glassmorphism dark theme
-        dark: {
-          primary: '#0f0f1a',
-          secondary: '#1a1a2e',
-          accent: '#16213e'
+        background: 'var(--bg-primary)',
+        surface: 'var(--bg-secondary)',
+        text: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)'
         },
         glass: {
-          primary: 'rgba(15, 23, 42, 0.6)',
-          secondary: 'rgba(15, 23, 42, 0.8)',
-          border: 'rgba(255, 255, 255, 0.15)',
-          'border-hover': 'rgba(255, 255, 255, 0.25)'
-        },
-        text: {
-          primary: '#ffffff',
-          secondary: '#e2e8f0', 
-          muted: '#cbd5e1'
+          primary: 'var(--surface-glass-primary)',
+          secondary: 'var(--surface-glass-secondary)',
+          border: 'var(--border-glass)',
+          'border-hover': 'var(--border-glass-hover)'
         },
         accent: {
-          blue: '#60a5fa',
-          green: '#4ade80',
-          yellow: '#fbbf24',
-          red: '#f87171',
-          purple: '#a78bfa'
+          blue: 'rgb(var(--accent-blue-rgb) / <alpha-value>)',
+          green: 'rgb(var(--accent-green-rgb) / <alpha-value>)',
+          yellow: 'rgb(var(--accent-yellow-rgb) / <alpha-value>)',
+          red: 'rgb(var(--accent-red-rgb) / <alpha-value>)',
+          purple: 'rgb(var(--accent-purple-rgb) / <alpha-value>)'
         }
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-dark': 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
-        'gradient-glass': 'linear-gradient(135deg, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.4) 100%)',
-        'gradient-primary': 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+        'gradient-primary': 'linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%)',
       },
       backdropBlur: {
         xs: '2px',
@@ -48,10 +43,10 @@ module.exports = {
         xl: '24px'
       },
       boxShadow: {
-        glass: '0 8px 32px rgba(0, 0, 0, 0.3)',
-        'glass-hover': '0 8px 32px rgba(0, 0, 0, 0.4)',
-        glow: '0 0 20px rgba(96, 165, 250, 0.3)',
-        'glow-hover': '0 0 30px rgba(96, 165, 250, 0.4)'
+        glass: 'var(--shadow-glass)',
+        'glass-hover': 'var(--shadow-glass-hover)',
+        glow: 'var(--shadow-glow)',
+        'glow-hover': 'var(--shadow-glow-hover)'
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.6s ease-out',

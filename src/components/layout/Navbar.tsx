@@ -36,7 +36,7 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
               <div className="flex items-center justify-center w-10 h-10 bg-gradient-primary rounded-xl mr-3 shadow-glow">
                 <Home className="w-5 h-5 text-white" />
               </div>
-              <span className="hidden sm:block text-lg font-semibold text-text-primary">
+              <span className="hidden sm:block text-lg font-semibold text-text-primary text-company-highlight">
                 Portal Cliente
               </span>
             </div>

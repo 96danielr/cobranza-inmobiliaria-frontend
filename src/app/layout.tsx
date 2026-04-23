@@ -15,15 +15,19 @@ export const viewport = {
   initialScale: 1,
 }
 
+import { ThemeProvider } from '@/components/layout/ThemeProvider'
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={inter.className}>
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         <Toaster 
           position="top-right"
           toastOptions={{

@@ -127,5 +127,5 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
 export const hasPermission = (role: string | undefined, permission: Permission): boolean => {
   if (!role) return false;
   const permissions = ROLE_PERMISSIONS[role] || [];
-  return permissions.includes(permission) || permissions.includes('ALL');
+  return (permissions as any[]).includes(permission) || (permissions as any[]).includes('ALL');
 };

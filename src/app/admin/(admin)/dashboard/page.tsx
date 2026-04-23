@@ -314,7 +314,7 @@ export default function AdminDashboard() {
           </>
         ) : (
           <>
-            <Card variant="interactive">
+            <Card variant="interactive" className="stats-card stats-blue">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
@@ -338,7 +338,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card variant="interactive">
+            <Card variant="interactive" className="stats-card stats-green">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
@@ -360,7 +360,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card variant="interactive">
+            <Card variant="interactive" className="stats-card stats-red">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
@@ -381,7 +381,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card variant="interactive">
+            <Card variant="interactive" className="stats-card stats-purple">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-purple">
               <CardContent className="p-4 md:p-6">
                 <h3 className="text-lg font-semibold text-text-primary mb-4">Estado de Contratos</h3>
                 <div className="h-80">
@@ -445,7 +445,11 @@ export default function AdminDashboard() {
                         cy="50%"
                         outerRadius={100}
                         dataKey="value"
-                        label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ x, y, textAnchor, name, percent }: any) => (
+                          <text x={x} y={y} fill="white" textAnchor={textAnchor} fontSize={12} dominantBaseline="central">
+                            {`${name} ${(percent * 100).toFixed(0)}%`}
+                          </text>
+                        )}
                       >
                         {moraData.map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
@@ -542,7 +546,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <Card variant="elevated">
+          <Card variant="elevated" className="stats-card stats-blue">
             <CardContent className="p-4 md:p-6">
               <h3 className="text-lg font-semibold text-text-primary mb-4">Acciones Rápidas</h3>
               <div className="space-y-3">

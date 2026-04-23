@@ -223,7 +223,7 @@ export default function ClientsPage() {
           </>
         ) : (
           <>
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-blue">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -237,7 +237,7 @@ export default function ClientsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-green">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -254,7 +254,7 @@ export default function ClientsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-red">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-red/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -271,7 +271,7 @@ export default function ClientsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-yellow">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-yellow/20 backdrop-blur-sm rounded-full border border-glass-border">

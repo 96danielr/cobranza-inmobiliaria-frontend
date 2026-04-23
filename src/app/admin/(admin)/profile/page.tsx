@@ -9,18 +9,22 @@ import {
   Save,
   CheckCircle,
   AlertCircle,
-  Key
+  Key,
+  Moon,
+  Sun
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { CropImageModal } from '@/components/ui/CropImageModal'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { adminApi } from '@/lib/adminApi'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
   const { admin, updateAdmin } = useAdminAuthStore()
+  const { theme, setTheme } = useThemeStore()
   const [isSaving, setIsSaving] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
@@ -224,6 +228,46 @@ export default function ProfilePage() {
               <div>
                 <p className="text-xs font-bold text-text-primary uppercase tracking-wider">Plan Actual</p>
                 <p className="text-sm text-text-secondary capitalize">{admin?.plan || 'Standard'}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card variant="elevated" className="animate-fade-in-up animate-fade-in-up-delay">
+            <CardHeader className="p-6 pb-0">
+              <h3 className="text-lg font-bold text-text-primary flex items-center">
+                <Moon className="w-5 h-5 mr-3 text-accent-purple" />
+                Apariencia
+              </h3>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => setTheme('dark')}
+                  className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                    theme === 'dark' 
+                      ? 'border-accent-blue bg-accent-blue/10' 
+                      : 'border-glass-border hover:border-glass-border-hover bg-dark-secondary'
+                  }`}
+                >
+                  <Moon className={`w-5 h-5 ${theme === 'dark' ? 'text-accent-blue' : 'text-text-muted'}`} />
+                  <span className={`text-xs font-bold ${theme === 'dark' ? 'text-accent-blue' : 'text-text-secondary'}`}>
+                    Oscuro
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setTheme('light')}
+                  className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                    theme === 'light' 
+                      ? 'border-accent-blue bg-accent-blue/10' 
+                      : 'border-glass-border hover:border-glass-border-hover bg-dark-secondary'
+                  }`}
+                >
+                  <Sun className={`w-5 h-5 ${theme === 'light' ? 'text-accent-yellow' : 'text-text-muted'}`} />
+                  <span className={`text-xs font-bold ${theme === 'light' ? 'text-accent-blue' : 'text-text-secondary'}`}>
+                    Claro
+                  </span>
+                </button>
               </div>
             </CardContent>
           </Card>

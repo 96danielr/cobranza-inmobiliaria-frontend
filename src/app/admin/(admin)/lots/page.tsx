@@ -452,7 +452,7 @@ export default function LotsPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
-        <Card variant="elevated">
+        <Card variant="elevated" className="stats-card stats-blue">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
               <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -567,7 +567,7 @@ export default function LotsPage() {
                         <div className="flex items-center space-x-2">
                           {lot.images && lot.images.length > 0 ? (
                             <div className="flex -space-x-2">
-                              {lot.images.slice(0, 3).map((img, i) => (
+                              {lot.images.slice(0, 3).map((img: any, i: number) => (
                                 <div key={i} className="w-8 h-8 rounded-md border border-white overflow-hidden bg-glass-primary">
                                   <img src={img} alt="lot" className="w-full h-full object-cover" />
                                 </div>

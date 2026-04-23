@@ -6,44 +6,107 @@
 
 :root {
   color-scheme: dark;
-  /* Glassmorphism Color Palette */
-  --color-dark-primary: #0f0f1a;
-  --color-dark-secondary: #1a1a2e;
-  --color-dark-accent: #16213e;
+  /* Glassmorphism Color Palette (Default Dark) */
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-accent: #16213e;
   
-  --color-glass-primary: rgba(15, 23, 42, 0.6);
-  --color-glass-secondary: rgba(15, 23, 42, 0.8);
-  --color-glass-border: rgba(255, 255, 255, 0.15);
-  --color-glass-border-hover: rgba(255, 255, 255, 0.25);
+  --surface-glass-primary: rgba(15, 23, 42, 0.6);
+  --surface-glass-secondary: rgba(15, 23, 42, 0.8);
+  --surface-glass-card: rgba(15, 15, 26, 0.7);
+  --surface-glass-card-hover: rgba(15, 15, 26, 0.8);
   
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #e2e8f0;
-  --color-text-muted: #cbd5e1;
+  --border-glass: rgba(255, 255, 255, 0.15);
+  --border-glass-hover: rgba(255, 255, 255, 0.25);
   
-  --color-accent-blue: #60a5fa;
-  --color-accent-green: #4ade80;
-  --color-accent-yellow: #fbbf24;
-  --color-accent-red: #f87171;
-  --color-accent-purple: #a78bfa;
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
+  
+  /* RGB components for Tailwind opacity support */
+  --accent-blue-rgb: 96, 165, 250;
+  --accent-green-rgb: 74, 222, 128;
+  --accent-yellow-rgb: 251, 191, 36;
+  --accent-red-rgb: 248, 113, 113;
+  --accent-purple-rgb: 167, 139, 250;
+  
+  --accent-blue: rgb(var(--accent-blue-rgb));
+  --accent-green: rgb(var(--accent-green-rgb));
+  --accent-yellow: rgb(var(--accent-yellow-rgb));
+  --accent-red: rgb(var(--accent-red-rgb));
+  --accent-purple: rgb(var(--accent-purple-rgb));
   
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-glass-hover: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 20px rgba(96, 165, 250, 0.3);
   --shadow-glow-hover: 0 0 30px rgba(96, 165, 250, 0.4);
+  
+  /* Layout specific */
+  --nav-bg: rgba(255, 255, 255, 0.08);
+  --header-bg: rgba(15, 15, 26, 0.95);
+  --input-bg: rgba(0, 0, 0, 0.2);
+  --input-bg-focus: rgba(0, 0, 0, 0.3);
+}
+
+.light {
+  color-scheme: light;
+  /* Glassmorphism Color Palette (Light Mode - Premium Tinted) */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-accent: #f1f5f9;
+  
+  --surface-glass-primary: rgba(255, 255, 255, 0.5);
+  --surface-glass-secondary: rgba(255, 255, 255, 0.8);
+  --surface-glass-card: #ffffff;
+  --surface-glass-card-hover: #ffffff;
+  
+  --border-glass: rgba(0, 0, 0, 0.08);
+  --border-glass-hover: rgba(59, 130, 246, 0.3);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  
+  /* RGB components for Tailwind opacity support in light mode */
+  --accent-blue-rgb: 37, 99, 235;
+  --accent-green-rgb: 16, 185, 129;
+  --accent-yellow-rgb: 217, 119, 6;
+  --accent-red-rgb: 220, 38, 38;
+  --accent-purple-rgb: 124, 58, 237;
+
+  --accent-blue: rgb(var(--accent-blue-rgb));
+  --accent-green: rgb(var(--accent-green-rgb));
+  --accent-yellow: rgb(var(--accent-yellow-rgb));
+  --accent-red: rgb(var(--accent-red-rgb));
+  --accent-purple: rgb(var(--accent-purple-rgb));
+  
+  /* No shadows in light mode as per user request */
+  --shadow-glass: none;
+  --shadow-glass-hover: none;
+  --shadow-glow: none;
+  --shadow-glow-hover: none;
+  
+  /* Layout specific - more color in buttons */
+  --nav-bg: #ffffff;
+  --header-bg: #ffffff;
+  --input-bg: #f8fafc;
+  --input-bg-focus: #ffffff;
 }
 
 @layer base {
   
   html {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    scroll-behavior: smooth;
   }
   
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: var(--color-dark-primary);
-    color: var(--color-text-primary);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     overflow-x: hidden;
     position: relative;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   body::before {
@@ -56,97 +119,37 @@
     pointer-events: none;
     z-index: 1;
     background: 
-      radial-gradient(circle at 20% 80%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 20% 80%, rgba(96, 165, 250, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
       radial-gradient(circle at 60% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
     opacity: 1;
   }
 
-  body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 5;
-    background-image: 
-      radial-gradient(3px 3px at 15% 25%, rgba(255, 255, 255, 0.8), transparent),
-      radial-gradient(2px 2px at 45% 75%, rgba(96, 165, 250, 0.7), transparent),
-      radial-gradient(2px 2px at 85% 35%, rgba(167, 139, 250, 0.6), transparent),
-      radial-gradient(1px 1px at 65% 15%, rgba(255, 255, 255, 0.9), transparent),
-      radial-gradient(1px 1px at 25% 85%, rgba(255, 255, 255, 0.8), transparent),
-      radial-gradient(2px 2px at 75% 95%, rgba(96, 165, 250, 0.6), transparent),
-      radial-gradient(1px 1px at 35% 55%, rgba(255, 255, 255, 0.7), transparent),
-      radial-gradient(1px 1px at 90% 70%, rgba(167, 139, 250, 0.5), transparent),
-      radial-gradient(1px 1px at 5% 45%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(2px 2px at 55% 5%, rgba(96, 165, 250, 0.8), transparent);
-    background-size: 800px 800px, 600px 600px, 400px 400px, 300px 300px, 500px 500px, 700px 700px, 350px 350px, 450px 450px, 250px 250px, 550px 550px;
-    background-repeat: repeat;
-    animation: twinkle 4s ease-in-out infinite;
-    opacity: 0.6;
+  html.light body::before {
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
   }
 
   /* Scrollbar Styling */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-  }
-
-  /* Hide scrollbar for mobile breadcrumbs */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Safe area support for devices with notches */
-  .h-safe-area-inset-bottom {
-    height: env(safe-area-inset-bottom);
-  }
-  
-  .pb-safe-area {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  /* Enhanced animations */
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Drop shadow glow for active states */
-  .drop-shadow-glow {
-    filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.4));
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    transition: background 0.3s ease;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--border-glass-hover);
+    border-radius: 10px;
   }
 
   /* Selection Styling */
   ::selection {
-    background-color: rgba(96, 165, 250, 0.3);
-    color: var(--color-text-primary);
+    background-color: var(--accent-blue);
+    color: #ffffff;
   }
 }
 
@@ -154,7 +157,7 @@
   /* Glass Card Base */
   .glass-card {
     @apply backdrop-blur-glass border border-glass-border rounded-2xl;
-    background-color: rgba(15, 15, 26, 0.7) !important;
+    background-color: var(--surface-glass-card);
     box-shadow: var(--shadow-glass);
     transition: all 0.2s cubic-bezier(0, 0, 0.2, 1);
     position: relative;
@@ -163,89 +166,223 @@
 
   .glass-card:hover {
     @apply border-glass-border-hover;
-    background-color: rgba(15, 15, 26, 0.8) !important;
+    background-color: var(--surface-glass-card-hover);
     box-shadow: var(--shadow-glass-hover);
     transform: translateY(-2px);
   }
 
-  /* Glass Button */
+  .light .glass-card {
+    @apply border-glass-border;
+  }
+
+  /* Stats Cards - Default/Dark Mode (Original Glassy Tints) */
+  .glass-card.stats-card.stats-blue { background-color: rgba(var(--accent-blue-rgb), 0.1); border-color: rgba(var(--accent-blue-rgb), 0.25); }
+  .glass-card.stats-card.stats-green { background-color: rgba(var(--accent-green-rgb), 0.1); border-color: rgba(var(--accent-green-rgb), 0.25); }
+  .glass-card.stats-card.stats-yellow { background-color: rgba(var(--accent-yellow-rgb), 0.1); border-color: rgba(var(--accent-yellow-rgb), 0.25); }
+  .glass-card.stats-card.stats-red { background-color: rgba(var(--accent-red-rgb), 0.1); border-color: rgba(var(--accent-red-rgb), 0.25); }
+  .glass-card.stats-card.stats-purple { background-color: rgba(var(--accent-purple-rgb), 0.1); border-color: rgba(var(--accent-purple-rgb), 0.25); }
+
+  /* Ensure icons keep their accent colors in dark mode inside stats-cards */
+  .glass-card.stats-card.stats-blue svg { color: var(--accent-blue); }
+  .glass-card.stats-card.stats-green svg { color: var(--accent-green); }
+  .glass-card.stats-card.stats-yellow svg { color: var(--accent-yellow); }
+  .glass-card.stats-card.stats-red svg { color: var(--accent-red); }
+  .glass-card.stats-card.stats-purple svg { color: var(--accent-purple); }
+
+  /* Accentuated titles for Dark Mode stats */
+  .glass-card.stats-card.stats-blue .text-text-secondary { color: var(--accent-blue); opacity: 0.9; }
+  .glass-card.stats-card.stats-green .text-text-secondary { color: var(--accent-green); opacity: 0.9; }
+  .glass-card.stats-card.stats-yellow .text-text-secondary { color: var(--accent-yellow); opacity: 0.9; }
+  .glass-card.stats-card.stats-red .text-text-secondary { color: var(--accent-red); opacity: 0.9; }
+  .glass-card.stats-card.stats-purple .text-text-secondary { color: var(--accent-purple); opacity: 0.9; }
+  .light .glass-card.stats-card.stats-blue {
+    background-color: var(--accent-blue) !important;
+    border-color: var(--accent-blue) !important;
+  }
+
+  .light .glass-card.stats-card.stats-green {
+    background-color: var(--accent-green) !important;
+    border-color: var(--accent-green) !important;
+  }
+
+  .light .glass-card.stats-card.stats-yellow {
+    background-color: var(--accent-yellow) !important;
+    border-color: var(--accent-yellow) !important;
+  }
+
+  .light .glass-card.stats-card.stats-red {
+    background-color: var(--accent-red) !important;
+    border-color: var(--accent-red) !important;
+  }
+
+  .light .glass-card.stats-card.stats-purple {
+    background-color: var(--accent-purple) !important;
+    border-color: var(--accent-purple) !important;
+  }
+
+  /* Force White Text and Icons inside colored Stats Cards - ONLY when a color marker is present */
+  .light .glass-card.stats-card.stats-blue p, .light .glass-card.stats-card.stats-blue span, .light .glass-card.stats-card.stats-blue h1, .light .glass-card.stats-card.stats-blue h2, .light .glass-card.stats-card.stats-blue h3, .light .glass-card.stats-card.stats-blue svg,
+  .light .glass-card.stats-card.stats-green p, .light .glass-card.stats-card.stats-green span, .light .glass-card.stats-card.stats-green h1, .light .glass-card.stats-card.stats-green h2, .light .glass-card.stats-card.stats-green h3, .light .glass-card.stats-card.stats-green svg,
+  .light .glass-card.stats-card.stats-yellow p, .light .glass-card.stats-card.stats-yellow span, .light .glass-card.stats-card.stats-yellow h1, .light .glass-card.stats-card.stats-yellow h2, .light .glass-card.stats-card.stats-yellow h3, .light .glass-card.stats-card.stats-yellow svg,
+  .light .glass-card.stats-card.stats-red p, .light .glass-card.stats-card.stats-red span, .light .glass-card.stats-card.stats-red h1, .light .glass-card.stats-card.stats-red h2, .light .glass-card.stats-card.stats-red h3, .light .glass-card.stats-card.stats-red svg,
+  .light .glass-card.stats-card.stats-purple p, .light .glass-card.stats-card.stats-purple span, .light .glass-card.stats-card.stats-purple h1, .light .glass-card.stats-card.stats-purple h2, .light .glass-card.stats-card.stats-purple h3, .light .glass-card.stats-card.stats-purple svg {
+    color: white !important;
+  }
+
+  /* Remove icon backgrounds in colored cards to avoid double tinting or white-on-white icons */
+  .light .glass-card.stats-card [class*="bg-accent-"],
+  .light .glass-card.stats-card .glass-card,
+  .light .glass-card.stats-card .glass-button {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    color: white !important;
+  }
+
+  .light .glass-card.stats-card .glass-button:hover {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  /* Keep solid color on hover for stats-cards */
+  .light .glass-card.stats-card.stats-blue:hover { background-color: var(--accent-blue) !important; }
+  .light .glass-card.stats-card.stats-green:hover { background-color: var(--accent-green) !important; }
+  .light .glass-card.stats-card.stats-yellow:hover { background-color: var(--accent-yellow) !important; }
+  .light .glass-card.stats-card.stats-red:hover { background-color: var(--accent-red) !important; }
+  .light .glass-card.stats-card.stats-purple:hover { background-color: var(--accent-purple) !important; }
+
+  /* Glass Button - Enhanced for Light Mode */
   .glass-button {
     @apply backdrop-blur-glass border border-glass-border rounded-xl px-4 py-2 text-text-primary;
-    @apply transition-all duration-200 hover:border-glass-border-hover;
-    background-color: rgba(255, 255, 255, 0.05) !important;
+    @apply transition-all duration-200;
+    background-color: var(--nav-bg);
+  }
+
+  /* Specific Action Buttons in Light Mode */
+  .light .glass-button {
+    border-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
+    font-weight: 500;
+    background-color: rgba(0, 0, 0, 0.03) !important;
+  }
+
+  /* Primary Action Buttons (Blue on Blue) - Fix for White Text on Solid Background */
+  .light .glass-button.text-accent-blue.bg-accent-blue\/20,
+  .light .glass-button.text-accent-blue.bg-accent-blue\/30,
+  .light .glass-button.text-accent-blue.bg-accent-blue\/40 {
+    background-color: var(--accent-blue) !important;
+    color: white !important;
+    border-color: var(--accent-blue) !important;
+    font-weight: 600;
+  }
+
+  /* Primary Action Buttons (Green) */
+  .light .glass-button.text-accent-green.bg-accent-green\/20,
+  .light .glass-button.text-accent-green.bg-accent-green\/30 {
+    background-color: var(--accent-green) !important;
+    color: white !important;
+    border-color: var(--accent-green) !important;
+    font-weight: 600;
+  }
+
+  .light .glass-button.text-accent-blue {
+    border-color: rgb(var(--accent-blue-rgb) / 0.2);
+    background-color: rgb(var(--accent-blue-rgb) / 0.1) !important;
+    color: var(--accent-blue);
   }
   
+  .light .glass-button.text-accent-green {
+    border-color: rgb(var(--accent-green-rgb) / 0.2);
+    background-color: rgb(var(--accent-green-rgb) / 0.1) !important;
+    color: var(--accent-green);
+  }
+  
+  .light .glass-button.text-accent-purple {
+    border-color: rgb(var(--accent-purple-rgb) / 0.2);
+    background-color: rgb(var(--accent-purple-rgb) / 0.1) !important;
+    color: var(--accent-purple);
+  }
+  
+  .light .glass-button.text-accent-red {
+    border-color: rgb(var(--accent-red-rgb) / 0.2);
+    background-color: rgb(var(--accent-red-rgb) / 0.1) !important;
+    color: var(--accent-red);
+  }
+
+  .light .glass-button.text-accent-yellow {
+    border-color: rgb(var(--accent-yellow-rgb) / 0.2);
+    background-color: rgb(var(--accent-yellow-rgb) / 0.1) !important;
+    color: var(--accent-yellow);
+  }
+
   .glass-button:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    @apply border-glass-border-hover;
+    background-color: var(--border-glass) !important;
+  }
+
+  .light .glass-button:hover {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    background-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .light .glass-button.text-accent-blue.bg-accent-blue\/20:hover {
+    opacity: 0.9;
+    background-color: var(--accent-blue) !important;
   }
 
   /* Glass Input */
   .glass-input {
     @apply backdrop-blur-glass border border-glass-border rounded-xl px-4 py-3;
     @apply text-text-primary placeholder-text-muted;
-    @apply focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20;
+    @apply focus:ring-2 focus:ring-accent-blue/20;
     @apply transition-all duration-200;
-    background-color: rgba(0, 0, 0, 0.2) !important;
+    background-color: var(--input-bg) !important;
   }
   
   .glass-input:focus {
-    background-color: rgba(0, 0, 0, 0.3) !important;
-    border-color: var(--color-accent-blue) !important;
-  }
-
-  /* Override any white/light backgrounds */
-  input, select, textarea, option {
-    background-color: var(--color-dark-secondary);
-    color: var(--color-text-primary);
-  }
-  
-  input::placeholder, select::placeholder, textarea::placeholder {
-    color: var(--color-text-muted);
-  }
-
-  /* Gradient Text */
-  .gradient-text {
-    @apply bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent;
+    background-color: var(--input-bg-focus) !important;
+    border-color: var(--accent-blue) !important;
   }
 
   /* Badge Variants */
   .badge-success {
-    @apply bg-accent-green/15 text-accent-green border border-accent-green/20 px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-accent-green/15 text-accent-green border border-accent-green/20 px-3 py-1 rounded-full text-xs font-bold;
   }
 
   .badge-warning {
-    @apply bg-accent-yellow/15 text-accent-yellow border border-accent-yellow/20 px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-accent-yellow/15 text-accent-yellow border border-accent-yellow/20 px-3 py-1 rounded-full text-xs font-bold;
   }
 
   .badge-danger {
-    @apply bg-accent-red/15 text-accent-red border border-accent-red/20 px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-accent-red/15 text-accent-red border border-accent-red/20 px-3 py-1 rounded-full text-xs font-bold;
   }
 
   .badge-info {
-    @apply bg-accent-blue/15 text-accent-blue border border-accent-blue/20 px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-accent-blue/15 text-accent-blue border border-accent-blue/20 px-3 py-1 rounded-full text-xs font-bold;
   }
 
   .badge-purple {
-    @apply bg-accent-purple/15 text-accent-purple border border-accent-purple/20 px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-accent-purple/15 text-accent-purple border border-accent-purple/20 px-3 py-1 rounded-full text-xs font-bold;
   }
 
   /* Navigation */
   .nav-mobile {
     @apply fixed bottom-0 left-0 right-0 z-50 backdrop-blur-glass border-t border-glass-border;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: var(--header-bg) !important;
   }
 
   .nav-desktop {
     @apply fixed inset-y-0 left-0 z-50 w-64 flex-col backdrop-blur-glass border-r border-glass-border;
     @apply transform transition-transform duration-300 ease-in-out;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: var(--nav-bg) !important;
     height: 100vh;
   }
 
-  /* Sidebar Admin: solo escritorio; en móvil la navegación va por la barra inferior */
+  .light .nav-desktop {
+    background-color: #ffffff !important;
+  }
+
   .sidebar-admin {
     @apply hidden lg:flex lg:flex-col fixed inset-y-0 left-0 z-50 w-64 backdrop-blur-glass border-r border-glass-border;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: var(--nav-bg) !important;
     height: 100vh;
     overflow-y: hidden;
   }
@@ -253,103 +390,9 @@
   /* Admin Header */
   .admin-header {
     @apply backdrop-blur-glass border-b border-glass-border sticky top-0 z-30;
-    @apply shadow-glass lg:rounded-none rounded-t-2xl;
-    background-color: rgba(15, 15, 26, 0.95) !important;
+    background-color: var(--header-bg) !important;
     backdrop-filter: blur(12px);
   }
 
-  /* Drag and Drop Areas */
-  .drag-drop-area {
-    @apply glass-card border-2 border-dashed border-glass-border rounded-xl;
-    @apply hover:border-glass-border-hover hover:bg-glass-secondary;
-    @apply transition-all duration-300 cursor-pointer;
-  }
-
-  .drag-drop-area.drag-active {
-    @apply border-accent-blue/50 bg-accent-blue/10 shadow-glow;
-  }
-
 }
-
-@layer utilities {
-  /* Scrollbar Hide */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Animation Utilities */
-  .animate-stagger {
-    animation-delay: calc(var(--stagger-delay, 0) * 100ms);
-  }
-
-  /* Touch Target */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
-  }
-
-  /* Glass Effects */
-  .glass-effect {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  .glass-hover-effect:hover {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  /* Responsive Text */
-  .text-responsive-xl {
-    @apply text-2xl md:text-3xl lg:text-4xl;
-  }
-
-  .text-responsive-lg {
-    @apply text-lg md:text-xl lg:text-2xl;
-  }
-
-  .text-responsive-base {
-    @apply text-sm md:text-base lg:text-lg;
-  }
-}
-
-/* Skeleton Shimmer Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.shimmer-animation {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.08) 25%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.08) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Reduce Motion Support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  
-  .shimmer-animation {
-    animation: none;
-    background: rgba(255, 255, 255, 0.08);
-  }
-}
+.light .text-company-highlight { color: rgba(37, 99, 235, 0.8) !important; }

@@ -234,11 +234,11 @@ export default function PortfolioPage() {
   // Calculate stats
   // Calculate stats from current page data
   const totalClients = pagination.total
-  const clientsAlDia = pagination.data.filter(c => c.daysInArrears === 0).length
-  const clientsEnMora = pagination.data.filter(c => c.daysInArrears > 0).length
+  const clientsAlDia = pagination.data.filter((c: any) => c.daysInArrears === 0).length
+  const clientsEnMora = pagination.data.filter((c: any) => c.daysInArrears > 0).length
   // Calculate stats from dashboard summary if available, otherwise from current page data (fallback)
-  const totalRecaudado = dashboardData?.cartera?.totalRecaudado ?? pagination.data.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
-  const ventasTotales = dashboardData?.cartera?.valorTotalCartera ?? pagination.data.reduce((sum, c) => sum + (c.totalValue || 0), 0)
+  const totalRecaudado = dashboardData?.cartera?.totalRecaudado ?? pagination.data.reduce((sum: number, c: any) => sum + (c.totalPaid || 0), 0)
+  const ventasTotales = dashboardData?.cartera?.valorTotalCartera ?? pagination.data.reduce((sum: number, c: any) => sum + (c.totalValue || 0), 0)
   const valorCartera = Math.max(0, ventasTotales - totalRecaudado)
 
 
@@ -265,7 +265,7 @@ export default function PortfolioPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 2xl:grid-cols-4 gap-4 md:gap-6 animate-fade-in-up animate-fade-in-up-delay">
-        <Card variant="elevated">
+        <Card variant="elevated" className="stats-card stats-green">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
               <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -281,7 +281,7 @@ export default function PortfolioPage() {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card variant="elevated" className="stats-card stats-blue">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
               <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -297,7 +297,7 @@ export default function PortfolioPage() {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card variant="elevated" className="stats-card stats-green">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
               <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -314,7 +314,7 @@ export default function PortfolioPage() {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card variant="elevated" className="stats-card stats-red">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
               <div className="p-3 bg-accent-red/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -444,7 +444,7 @@ export default function PortfolioPage() {
                     </td>
                   </tr>
                 ) : (
-                  pagination.data.map((client) => (
+                  pagination.data.map((client: any) => (
                     <tr key={client.clientId} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
                       <td className="py-4 px-4 md:px-6 sticky left-0 z-10 bg-glass-secondary/95 backdrop-blur-sm border-r border-glass-border/30">
                         <p className="font-semibold text-text-primary whitespace-nowrap min-w-max">{client.clientName}</p>
@@ -548,7 +548,7 @@ export default function PortfolioPage() {
                 </div>
               </div>
             ) : (
-              pagination.data.map((client) => (
+              pagination.data.map((client: any) => (
                 <PortfolioCard
                   key={client.clientId}
                   client={client}
@@ -649,7 +649,7 @@ export default function PortfolioPage() {
             <div>
               <h3 className="font-medium text-text-primary mb-3">Contratos</h3>
               <div className="space-y-3">
-                {selectedClient.contracts.map((contract) => (
+                {selectedClient.contracts.map((contract: any) => (
                   <div key={contract.id} className="border border-glass-border rounded-lg p-4 bg-glass-primary/20 backdrop-blur-glass">
                     <div className="flex justify-between items-start mb-3">
                       <div>

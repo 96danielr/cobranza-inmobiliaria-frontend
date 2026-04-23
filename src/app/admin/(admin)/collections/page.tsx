@@ -266,7 +266,7 @@ export default function CollectionsPage() {
           </>
         ) : (
           <>
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-blue">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -280,7 +280,7 @@ export default function CollectionsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-green">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -294,7 +294,7 @@ export default function CollectionsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-blue">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -308,7 +308,7 @@ export default function CollectionsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated">
+            <Card variant="elevated" className="stats-card stats-green">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">

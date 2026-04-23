@@ -44,7 +44,7 @@ export default function MyPaymentsPage() {
     fetchPayments()
   }, [])
 
-  const filteredPayments = payments.filter(p => 
+  const filteredPayments = payments.filter((p: any) => 
     p.referencia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.amount.toString().includes(searchTerm)
   )
@@ -130,7 +130,7 @@ export default function MyPaymentsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredPayments.map((payment) => (
+                filteredPayments.map((payment: any) => (
                   <tr key={payment._id} className="hover:bg-accent-blue/5 transition-all duration-300 group">
                     <td className="px-8 py-6">
                       <div className="flex items-center space-x-3">
