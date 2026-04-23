@@ -148,7 +148,7 @@ export default function MyLotsPage() {
                       <div className="flex items-center">
                         {lot.images && lot.images.length > 0 ? (
                           <div className="flex -space-x-3">
-                            {lot.images.slice(0, 3).map((img, i) => (
+                            {lot.images.slice(0, 3).map((img: string, i: number) => (
                               <div key={i} className="w-10 h-10 rounded-xl border-2 border-dark-primary overflow-hidden bg-glass-primary shadow-lg transition-transform group-hover:scale-110">
                                 <img src={img} alt="lot" className="w-full h-full object-cover" />
                               </div>
