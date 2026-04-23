@@ -14,7 +14,7 @@ import {
 
 import { PERMISSIONS, hasPermission, type Permission } from './permissions'
 
-export type AdminNavRole = 'superadmin' | 'admin' | 'agent' | 'vendedor' | 'cliente' | 'cobrador'
+export type AdminNavRole = 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor' | 'cliente' | 'cobrador'
 
 export interface AdminNavItem {
   icon: LucideIcon
