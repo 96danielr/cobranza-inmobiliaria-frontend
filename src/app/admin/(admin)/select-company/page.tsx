@@ -37,13 +37,16 @@ export default function SelectCompanyPage() {
     tenantName: '',
     fullName: '',
     email: '',
-    password: ''
+    password: '',
+    nit: '',
+    documentoIdentidad: ''
   })
 
   // Create Company Form
   const [companyForm, setCompanyForm] = useState({
     name: '',
-    rfc: ''
+    rfc: '',
+    nit: ''
   })
 
   // Edit Tenant Form
@@ -53,7 +56,9 @@ export default function SelectCompanyPage() {
     status: 'active',
     subscriptionStart: '',
     subscriptionEnd: '',
-    activeModules: ['cobranzas']
+    activeModules: ['cobranzas'],
+    aiChatLimitMonthly: 0,
+    aiChatLimitDaily: 0
   })
 
   const router = useRouter()
@@ -107,7 +112,7 @@ export default function SelectCompanyPage() {
       if (response.data.success) {
         toast.success('Empresa y administrador creados exitosamente')
         setIsModalOpen(false)
-        setForm({ tenantName: '', fullName: '', email: '', password: '' })
+        setForm({ tenantName: '', fullName: '', email: '', password: '', nit: '', documentoIdentidad: '' })
         fetchCompanies()
       }
     } catch (error: any) {
@@ -125,7 +130,7 @@ export default function SelectCompanyPage() {
       if (response.data.success) {
         toast.success('Empresa creada exitosamente')
         setIsCompanyModalOpen(false)
-        setCompanyForm({ name: '', rfc: '' })
+        setCompanyForm({ name: '', rfc: '', nit: '' })
         fetchCompanies()
       }
     } catch (error: any) {
@@ -135,16 +140,36 @@ export default function SelectCompanyPage() {
     }
   }
 
-  const handleOpenEdit = (tenant: Company, e: React.MouseEvent) => {
+  const handleOpenEdit = async (tenant: Company, e: React.MouseEvent) => {
     e.stopPropagation()
     setSelectedTenant(tenant)
-    setEditForm({
+    
+    // Default values
+    const newForm = {
       plan: tenant.plan || 'basic',
       status: tenant.status || 'active',
       subscriptionStart: tenant.subscriptionStart ? new Date(tenant.subscriptionStart).toISOString().split('T')[0] : '',
       subscriptionEnd: tenant.subscriptionEnd ? new Date(tenant.subscriptionEnd).toISOString().split('T')[0] : '',
-      activeModules: tenant.activeModules || ['cobranzas']
-    })
+      activeModules: tenant.activeModules || ['cobranzas'],
+      aiChatLimitMonthly: 0,
+      aiChatLimitDaily: 0
+    }
+
+    try {
+      // Fetch limits for this tenant
+      const limitsRes = await adminApi.getLimits({ targetId: tenant._id, targetType: 'tenant' })
+      if (limitsRes.data.success) {
+        const limits = limitsRes.data.data
+        const monthly = limits.find((l: any) => l.feature === 'ai_chat' && l.period === 'monthly')
+        const daily = limits.find((l: any) => l.feature === 'ai_chat' && l.period === 'daily')
+        if (monthly) newForm.aiChatLimitMonthly = monthly.limit
+        if (daily) newForm.aiChatLimitDaily = daily.limit
+      }
+    } catch (error) {
+      console.error('Error fetching tenant limits:', error)
+    }
+
+    setEditForm(newForm)
     setIsEditModalOpen(true)
   }
 
@@ -153,14 +178,40 @@ export default function SelectCompanyPage() {
     if (!selectedTenant) return
     try {
       setIsSubmitting(true)
-      const response = await adminApi.updateTenant(selectedTenant._id, editForm)
-      if (response.data.success) {
-        toast.success('Suscripción actualizada correctamente')
-        setIsEditModalOpen(false)
-        fetchCompanies()
-      }
+      
+      // Update tenant subscription info
+      const tenantUpdate = adminApi.updateTenant(selectedTenant._id, {
+        plan: editForm.plan,
+        status: editForm.status,
+        subscriptionStart: editForm.subscriptionStart,
+        subscriptionEnd: editForm.subscriptionEnd,
+        activeModules: editForm.activeModules
+      })
+
+      // Update AI Chat limits
+      const monthlyLimitUpdate = adminApi.setLimit({
+        targetType: 'tenant',
+        targetId: selectedTenant._id,
+        feature: 'ai_chat',
+        limit: editForm.aiChatLimitMonthly,
+        period: 'monthly'
+      })
+
+      const dailyLimitUpdate = adminApi.setLimit({
+        targetType: 'tenant',
+        targetId: selectedTenant._id,
+        feature: 'ai_chat',
+        limit: editForm.aiChatLimitDaily,
+        period: 'daily'
+      })
+
+      await Promise.all([tenantUpdate, monthlyLimitUpdate, dailyLimitUpdate])
+
+      toast.success('Configuración y límites actualizados correctamente')
+      setIsEditModalOpen(false)
+      fetchCompanies()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al actualizar suscripción')
+      toast.error(error.response?.data?.message || 'Error al actualizar configuración')
     } finally {
       setIsSubmitting(false)
     }
@@ -356,6 +407,13 @@ export default function SelectCompanyPage() {
               onChange={(e) => setForm({ ...form, tenantName: e.target.value })}
               required
             />
+            <Input
+              label="NIT de la Empresa"
+              placeholder="Ej: 900.123.456-1"
+              value={form.nit}
+              onChange={(e) => setForm({ ...form, nit: e.target.value })}
+              required
+            />
           </div>
 
           <div className="space-y-4 pt-2 border-t border-glass-border">
@@ -365,6 +423,13 @@ export default function SelectCompanyPage() {
               placeholder="Ej: Carlos Rodriguez"
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+              required
+            />
+            <Input
+              label="Documento de Identidad"
+              placeholder="Ej: 1.023.456.789"
+              value={form.documentoIdentidad}
+              onChange={(e) => setForm({ ...form, documentoIdentidad: e.target.value })}
               required
             />
             <Input
@@ -408,6 +473,13 @@ export default function SelectCompanyPage() {
             placeholder="Ej: Sede Norte"
             value={companyForm.name}
             onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
+            required
+          />
+          <Input
+            label="NIT de la Empresa"
+            placeholder="Ej: 900.123.456-1"
+            value={companyForm.nit}
+            onChange={(e) => setCompanyForm({ ...companyForm, nit: e.target.value })}
             required
           />
           <Input
@@ -475,6 +547,29 @@ export default function SelectCompanyPage() {
               value={editForm.subscriptionEnd}
               onChange={(e) => setEditForm({ ...editForm, subscriptionEnd: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-glass-border">
+            <h3 className="text-sm font-semibold text-accent-purple uppercase tracking-wider flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Límites y Recursos (IA)
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Chat IA - Mensual"
+                type="number"
+                value={editForm.aiChatLimitMonthly}
+                onChange={(e) => setEditForm({ ...editForm, aiChatLimitMonthly: parseInt(e.target.value) })}
+                placeholder="Ej: 1000"
+              />
+              <Input
+                label="Chat IA - Diario"
+                type="number"
+                value={editForm.aiChatLimitDaily}
+                onChange={(e) => setEditForm({ ...editForm, aiChatLimitDaily: parseInt(e.target.value) })}
+                placeholder="Ej: 50"
+              />
+            </div>
           </div>
 
           <div className="space-y-3">

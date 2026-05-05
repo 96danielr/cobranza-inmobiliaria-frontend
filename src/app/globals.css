@@ -42,7 +42,7 @@
   --shadow-glow-hover: 0 0 30px rgba(96, 165, 250, 0.4);
   
   /* Layout specific */
-  --nav-bg: rgba(255, 255, 255, 0.08);
+  --nav-bg: #0f0f1a;
   --header-bg: rgba(15, 15, 26, 0.95);
   --input-bg: rgba(0, 0, 0, 0.2);
   --input-bg-focus: rgba(0, 0, 0, 0.3);
@@ -377,6 +377,10 @@
   }
 
   .light .nav-desktop {
+    background-color: #ffffff !important;
+  }
+
+  .light .sidebar-admin {
     background-color: #ffffff !important;
   }
 

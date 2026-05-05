@@ -86,7 +86,7 @@ export default function AdminLayout({
 
   if (!_hasHydrated) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent-blue border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -107,7 +107,7 @@ export default function AdminLayout({
   )
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-background">
       {/* Enhanced Mobile Header */}
       <MobileHeader
         title={currentPageInfo.title}
@@ -197,7 +197,7 @@ export default function AdminLayout({
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-text-secondary font-mono truncate bg-dark-primary/30 px-2 py-1.5 rounded border border-glass-border/30">
+                  <span className="text-[10px] text-text-secondary font-mono truncate bg-background/30 px-2 py-1.5 rounded border border-glass-border/30">
                     {admin?.id || 'N/A'}
                   </span>
                 </div>
@@ -239,7 +239,7 @@ export default function AdminLayout({
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center bg-accent-blue/10 px-6 py-2.5 rounded-2xl border border-accent-blue/20 shadow-lg shadow-accent-blue/5">
                   <Building2 className="w-5 h-5 text-accent-blue mr-3" />
                   <span className="text-sm font-black text-accent-blue/80 tracking-wide uppercase text-company-highlight">
-                    {selectedCompanyName}
+                    {selectedCompanyName.replace('Empresa Principal - ', '')}
                   </span>
                 </div>
               )}
@@ -258,7 +258,7 @@ export default function AdminLayout({
                       {admin?.email}
                     </p>
                   </div>
-                  <div className="w-10 h-10 bg-dark-secondary rounded-full flex items-center justify-center shadow-glow flex-shrink-0 border-2 border-transparent group-hover:border-accent-blue/50 transition-all duration-300 overflow-hidden">
+                  <div className="w-10 h-10 bg-surface rounded-full flex items-center justify-center shadow-glow flex-shrink-0 border-2 border-transparent group-hover:border-accent-blue/50 transition-all duration-300 overflow-hidden">
                     {admin?.profileImage ? (
                       <img 
                         src={admin.profileImage} 

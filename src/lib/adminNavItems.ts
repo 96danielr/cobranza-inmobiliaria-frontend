@@ -10,6 +10,9 @@ import {
   Building2,
   Shield,
   ScrollText,
+  BarChart3,
+  MessageSquare,
+  MailCheck
 } from 'lucide-react'
 
 import { PERMISSIONS, hasPermission, type Permission } from './permissions'
@@ -27,12 +30,16 @@ export interface AdminNavItem {
 export const adminNavItems: AdminNavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' }, // Public for all logged in
   { icon: Building2, label: 'Empresas', href: '/admin/select-company', permission: PERMISSIONS.CONFIG_SUPER },
-  { icon: ScrollText, label: 'Logs', href: '/admin/system-logs', permission: PERMISSIONS.CONFIG_SUPER },
+  { icon: ScrollText, label: 'Logs Sistema', href: '/admin/system-logs', permission: PERMISSIONS.SYSTEM_LOGS },
+  { icon: Shield, label: 'Auditoría', href: '/admin/audit', permission: PERMISSIONS.SYSTEM_AUDIT },
   { icon: CreditCard, label: 'Pagos', href: '/admin/payments', permission: PERMISSIONS.PAGOS_VIEW },
+  { icon: BarChart3, label: 'Reportes', href: '/admin/reports', permission: PERMISSIONS.REPORTES_VIEW },
   { icon: Users, label: 'Cartera', href: '/admin/portfolio', permission: PERMISSIONS.CARTERA_DASHBOARD },
   { icon: Users, label: 'Clientes', href: '/admin/clients', permission: PERMISSIONS.CLIENTES_VIEW },
   { icon: Building2, label: 'Lotes', href: '/admin/lots', permission: PERMISSIONS.LOTES_VIEW },
   { icon: PhoneCall, label: 'Cobranzas', href: '/admin/collections', permission: PERMISSIONS.CARTERA_FOLLOWUP, module: 'cobranzas' },
+  { icon: MessageSquare, label: 'Mensajes', href: '/admin/messages', permission: PERMISSIONS.CARTERA_FOLLOWUP },
+  { icon: MailCheck, label: 'Plantillas WA', href: '/admin/whatsapp-templates', permission: PERMISSIONS.CARTERA_FOLLOWUP },
   { icon: Upload, label: 'Importar', href: '/admin/import', permission: PERMISSIONS.IMPORT_MANAGE },
   { icon: Shield, label: 'Equipo', href: '/admin/users', permission: PERMISSIONS.EQUIPO_VIEW },
   { icon: PhoneCall, label: 'Chat IA', href: '/admin/ai-chat', permission: PERMISSIONS.IA_CHAT },

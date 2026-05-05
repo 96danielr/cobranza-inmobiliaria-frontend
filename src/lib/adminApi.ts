@@ -30,6 +30,9 @@ export const adminApi = {
   createClient: (data: any) =>
     apiAdmin.post(`/clients?companyId=${getCompanyId()}`, data),
 
+  updateClient: (id: string, data: any) =>
+    apiAdmin.put(`/clients/${id}?companyId=${getCompanyId()}`, data),
+
   deleteClient: (id: string) =>
     apiAdmin.delete(`/clients/${id}?companyId=${getCompanyId()}`),
 
@@ -281,4 +284,46 @@ export const adminApi = {
       },
     }),
 
+  // Limits & Quotas
+  getLimits: (params?: any) => {
+    const searchParams = new URLSearchParams(params)
+    return apiAdmin.get(`/limits?${searchParams.toString()}`)
+  },
+
+  setLimit: (data: any) =>
+    apiAdmin.post('/limits', data),
+
+  getUsageStats: (params?: any) => {
+    const searchParams = new URLSearchParams(params)
+    return apiAdmin.get(`/limits/usage?${searchParams.toString()}`)
+  },
+  
+  // WhatsApp
+  getWhatsAppConversations: () =>
+    apiAdmin.get('/whatsapp/conversations'),
+  getWhatsAppTemplates: () =>
+    apiAdmin.get('/whatsapp/templates'),
+  createWhatsAppTemplate: (data: any) =>
+    apiAdmin.post('/whatsapp/templates', data),
+  deleteWhatsAppTemplate: (name: string) =>
+    apiAdmin.delete(`/whatsapp/templates/${name}`),
+    
+  getWhatsAppHistory: (clientId: string) =>
+    apiAdmin.get(`/whatsapp/history/${clientId}`),
+    
+  sendWhatsAppMessage: (data: { clientId?: string, phone?: string, text?: string, templateName?: string, components?: any[] }) =>
+    apiAdmin.post('/whatsapp/send', data),
+
+  // Reports
+  getSalesReport: () =>
+    apiAdmin.get(`/reports/sales?companyId=${getCompanyId()}`),
+
+  getCashFlowProjection: (months: number = 6) =>
+    apiAdmin.get(`/reports/projection?companyId=${getCompanyId()}&months=${months}`),
+
+  // Audit
+  getAuditLogs: (params: any) =>
+    apiAdmin.get('/audit', { params: { ...params, companyId: getCompanyId() } }),
+  getAuditMetadata: () =>
+    apiAdmin.get(`/audit/metadata?companyId=${getCompanyId()}`),
 }

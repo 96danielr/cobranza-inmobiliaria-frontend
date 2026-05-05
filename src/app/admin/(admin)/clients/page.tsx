@@ -35,6 +35,7 @@ import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
+import { WhatsAppChatModal } from '@/components/WhatsAppChatModal'
 
 interface Client {
   _id: string
@@ -70,7 +71,10 @@ export default function ClientsPage() {
   const { isAuthenticated } = useAdminAuthStore()
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false)
+  const [activeChatClient, setActiveChatClient] = useState<any>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [behaviorFilter, setBehaviorFilter] = useState<'ALL' | 'DISPUESTO' | 'INDECISO' | 'EVASIVO'>('ALL')
   const [statsLoading, setStatsLoading] = useState(false)
@@ -83,6 +87,16 @@ export default function ClientsPage() {
     address: '',
     behavior: 'INDECISO',
     password: ''
+  })
+
+  const [editClient, setEditClient] = useState({
+    _id: '',
+    name: '',
+    idNumber: '',
+    phone: '',
+    email: '',
+    address: '',
+    behavior: 'INDECISO'
   })
 
   // Fetch clients with pagination and filtering
@@ -147,6 +161,47 @@ export default function ClientsPage() {
   const handleViewClient = (client: Client) => {
     setSelectedClient(client)
     setIsModalOpen(true)
+  }
+
+  const handleOpenWhatsApp = (client: any) => {
+    setActiveChatClient(client)
+    setIsWhatsAppModalOpen(true)
+  }
+
+  const handleOpenEdit = (client: Client) => {
+    setEditClient({
+      _id: client._id,
+      name: client.name,
+      idNumber: client.idNumber,
+      phone: client.phone || '',
+      email: client.email || '',
+      address: client.address || '',
+      behavior: client.behavior || 'INDECISO'
+    })
+    setIsEditModalOpen(true)
+  }
+
+  const handleUpdateClient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editClient.name || !editClient.idNumber) {
+      toast.error('Nombre y Cédula son obligatorios')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      // Note: We need a putClient method in adminApi. Assuming it exists or using create pattern.
+      // Looking at adminApi.ts from previous views, it has createClient but might need updateClient.
+      // Wait, let me check adminApi.ts again if it has updateClient for clients.
+      await adminApi.updateClient(editClient._id, editClient)
+      toast.success('Cliente actualizado exitosamente')
+      setIsEditModalOpen(false)
+      pagination.refresh()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al actualizar cliente')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleCreateClient = async (e: React.FormEvent) => {
@@ -411,6 +466,7 @@ export default function ClientsPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleOpenEdit(client)}
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
                           >
                             <Edit className="w-4 h-4" />
@@ -418,6 +474,7 @@ export default function ClientsPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleOpenWhatsApp(client)}
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
                           >
                             <MessageSquare className="w-4 h-4" />
@@ -628,7 +685,11 @@ export default function ClientsPage() {
                 <FileText className="w-4 h-4 mr-2" />
                 Ver Historial
               </Button>
-              <Button variant="outline" className="glass-button text-accent-green border-accent-green/30 hover:bg-accent-green/20 min-h-[44px]">
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenWhatsApp(selectedClient)}
+                className="glass-button text-accent-green border-accent-green/30 hover:bg-accent-green/20 min-h-[44px]"
+              >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Enviar WhatsApp
               </Button>
@@ -742,6 +803,108 @@ export default function ClientsPage() {
               className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-w-[120px]"
             >
               Crear Cliente
+            </Button>
+          </div>
+        </form>
+      </Modal>
+      {/* WhatsApp Chat Modal */}
+      <WhatsAppChatModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => {
+          setIsWhatsAppModalOpen(false)
+          setActiveChatClient(null)
+        }}
+        client={activeChatClient}
+      />
+
+      {/* Edit Client Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Editar Cliente"
+        size="lg"
+      >
+        <form onSubmit={handleUpdateClient} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Nombre Completo *</label>
+              <Input
+                placeholder="Ej. Juan Pérez"
+                value={editClient.name}
+                onChange={(e) => setEditClient({ ...editClient, name: e.target.value })}
+                className="glass-input"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Cédula / ID *</label>
+              <Input
+                placeholder="Sin puntos ni comas"
+                value={editClient.idNumber}
+                onChange={(e) => setEditClient({ ...editClient, idNumber: e.target.value })}
+                className="glass-input"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Teléfono</label>
+              <Input
+                placeholder="Ej. 3101234567"
+                value={editClient.phone}
+                onChange={(e) => setEditClient({ ...editClient, phone: e.target.value })}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Email</label>
+              <Input
+                type="email"
+                placeholder="correo@ejemplo.com"
+                value={editClient.email}
+                onChange={(e) => setEditClient({ ...editClient, email: e.target.value })}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium text-text-secondary">Dirección</label>
+              <Input
+                placeholder="Dirección de residencia"
+                value={editClient.address}
+                onChange={(e) => setEditClient({ ...editClient, address: e.target.value })}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium text-text-secondary">Estado / Comportamiento inicial</label>
+              <Combobox
+                value={editClient.behavior}
+                onChange={(val) => setEditClient({ ...editClient, behavior: val as string })}
+                options={[
+                  { value: 'DISPUESTO', label: 'Dispuesto' },
+                  { value: 'INDECISO', label: 'Indeciso' },
+                  { value: 'EVASIVO', label: 'Evasivos' },
+                  { value: 'N/A', label: 'No definido' },
+                ]}
+                placeholder="Seleccione estado"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-glass-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditModalOpen(false)}
+              className="glass-button"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              loading={isSubmitting}
+              className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-w-[120px]"
+            >
+              Guardar Cambios
             </Button>
           </div>
         </form>

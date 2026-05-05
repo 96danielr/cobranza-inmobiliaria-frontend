@@ -31,6 +31,11 @@ module.exports = {
           yellow: 'rgb(var(--accent-yellow-rgb) / <alpha-value>)',
           red: 'rgb(var(--accent-red-rgb) / <alpha-value>)',
           purple: 'rgb(var(--accent-purple-rgb) / <alpha-value>)'
+        },
+        dark: {
+          primary: 'var(--bg-primary)',
+          secondary: 'var(--bg-secondary)',
+          accent: 'var(--bg-accent)',
         }
       },
       backgroundImage: {

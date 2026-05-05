@@ -147,7 +147,7 @@ export function BottomNavigation() {
             aria-labelledby="admin-more-sheet-title"
             className={cn(
               'fixed left-2 right-2 z-[48] lg:hidden rounded-2xl border border-glass-border origin-bottom',
-              'bg-white dark:bg-surface/98 backdrop-blur-xl shadow-glow',
+              'bg-surface/98 backdrop-blur-xl shadow-glow',
               'bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-h-[min(70vh,28rem)] flex flex-col overflow-hidden'
             )}
             initial={{ y: 56, scale: 0.94, opacity: 0 }}
@@ -230,7 +230,7 @@ export function BottomNavigation() {
       </AnimatePresence>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-        <div className="absolute inset-0 bg-white dark:bg-surface/95 backdrop-blur-xl border-t border-glass-border" />
+        <div className="absolute inset-0 bg-surface/95 backdrop-blur-xl border-t border-glass-border" />
         <div className="relative flex items-stretch justify-around py-1.5 gap-0.5 px-1">
           {dockItems.map((item: any) => renderTab(item))}
           {showMoreTab && (
@@ -275,7 +275,7 @@ export function BottomNavigation() {
             </button>
           )}
         </div>
-        <div className="h-safe-area-inset-bottom bg-white dark:bg-surface/95" />
+        <div className="h-safe-area-inset-bottom bg-surface/95" />
       </nav>
     </>
   )
@@ -390,14 +390,14 @@ export function MobileHeader({
   useClickAway(dropdownRef, () => setIsOpen(false))
 
   return (
-    <div className="lg:hidden bg-white dark:bg-background/80 backdrop-blur-glass border-b border-glass-border sticky top-0 z-40">
+    <div className="lg:hidden bg-background/80 backdrop-blur-glass border-b border-glass-border sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left: Empty space to balance the header */}
         <div className="w-10 h-10 flex-shrink-0" />
 
         <div className="flex-1 text-center px-4 overflow-hidden">
           <h1 className="text-md font-bold text-text-primary truncate">{title}</h1>
-          {subtitle && <p className="text-[10px] text-accent-blue/70 truncate uppercase font-bold tracking-widest text-company-highlight">{subtitle}</p>}
+          {subtitle && <p className="text-[10px] text-accent-blue/70 truncate uppercase font-bold tracking-widest text-company-highlight">{subtitle.replace('Empresa Principal - ', '')}</p>}
         </div>
 
         {/* Right: User Profile Dropdown */}

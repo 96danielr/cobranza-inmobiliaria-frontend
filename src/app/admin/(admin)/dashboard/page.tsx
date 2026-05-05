@@ -29,7 +29,8 @@ import {
   FileText,
   ArrowUpRight,
   ArrowDownRight,
-  Loader2
+  Loader2,
+  CheckSquare
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { StatsCardSkeleton, ChartPlaceholder, QuickActionSkeleton } from '@/components/ui/LoadingSpinner'
@@ -51,7 +52,14 @@ export default function AdminDashboard() {
     recaudoMensual: { mesActual: 0, mesAnterior: 0, variacion: 0 },
     operacion: { comprobantesPendientes: 0, clientesEscalados: 0, whatsappEnviadosMes: 0, llamadasAIMes: 0 },
     totalSales: 0,
-    isSeller: false
+    isSeller: false,
+    topAdvisor: null as { name: string, count: number } | null,
+    lotStats: {
+      separated: 0,
+      sold: 0,
+      available: 0,
+      byStage: [] as { stage: string, total: number, vendidos: number, disponibles: number, separados: number, porcentajeVendido: number }[]
+    }
   })
   const [loading, setLoading] = useState(true)
   const [statsLoading, setStatsLoading] = useState(true)
@@ -97,7 +105,9 @@ export default function AdminDashboard() {
           recaudoMensual: dashboardData.recaudoMensual,
           operacion: dashboardData.operacion,
           totalSales: dashboardData.totalSales || 0,
-          isSeller: dashboardData.isSeller || false
+          isSeller: dashboardData.isSeller || false,
+          topAdvisor: dashboardData.topAdvisor || null,
+          lotStats: dashboardData.lotStats || { separated: 0, sold: 0, available: 0, byStage: [] }
         })
 
         // Optimized: get total count directly from summary
@@ -407,6 +417,47 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      {/* Top Advisor Highlight (Only for Admins) */}
+      {!data.isSeller && data.topAdvisor && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="animate-fade-in-up-delay-2"
+        >
+          <Card variant="interactive" className="bg-gradient-to-r from-accent-blue/10 to-accent-purple/10 border-accent-blue/20 overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <TrendingUp className="w-32 h-32 text-accent-blue" />
+            </div>
+            <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-full bg-accent-blue/20 border-2 border-accent-blue/30 flex items-center justify-center text-accent-blue text-3xl font-black shadow-lg shadow-accent-blue/20">
+                  {data.topAdvisor.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-blue mb-1">Asesor Top del Mes</p>
+                  <h2 className="text-3xl font-black text-text-primary tracking-tighter">{data.topAdvisor.name}</h2>
+                  <p className="text-text-secondary flex items-center gap-2 mt-1">
+                    <CheckSquare className="w-4 h-4 text-accent-green" />
+                    <span className="font-bold text-accent-green">{data.topAdvisor.count} contratos</span> cerrados este mes
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                 <div className="text-center px-6 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                    <p className="text-[10px] uppercase font-bold text-text-muted mb-1 tracking-widest">Rendimiento</p>
+                    <p className="text-xl font-black text-text-primary">Excelente</p>
+                 </div>
+                 <Link href="/admin/users">
+                   <Button variant="primary" className="h-full px-8 rounded-2xl font-black uppercase tracking-widest text-xs">
+                     Ver Equipo
+                   </Button>
+                 </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-fade-in-up-delay-2">
         {chartsLoading ? (
           <>
@@ -605,6 +656,77 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         )}
+      </div>
+
+      {/* Lot Statistics Section */}
+      <div className="animate-fade-in-up-delay-3 pb-8">
+        <Card variant="elevated">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-black text-text-primary uppercase tracking-tighter">Estado del Inventario (Lotes)</h3>
+                <p className="text-xs text-text-secondary uppercase tracking-widest opacity-60">Resumen detallado por etapa y disponibilidad</p>
+              </div>
+              <div className="flex gap-4">
+                <div className="text-center px-4 py-2 bg-accent-blue/10 rounded-xl border border-accent-blue/20">
+                  <p className="text-[10px] font-bold text-accent-blue uppercase mb-1 tracking-tighter">Separados</p>
+                  <p className="text-xl font-black text-text-primary leading-none">{data.lotStats.separated}</p>
+                </div>
+                <div className="text-center px-4 py-2 bg-accent-green/10 rounded-xl border border-accent-green/20">
+                  <p className="text-[10px] font-bold text-accent-green uppercase mb-1 tracking-tighter">Vendidos</p>
+                  <p className="text-xl font-black text-text-primary leading-none">{data.lotStats.sold}</p>
+                </div>
+                <div className="text-center px-4 py-2 bg-text-muted/10 rounded-xl border border-text-muted/20">
+                  <p className="text-[10px] font-bold text-text-muted uppercase mb-1 tracking-tighter">Disponibles</p>
+                  <p className="text-xl font-black text-text-primary leading-none">{data.lotStats.available}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-glass-border">
+                    <th className="text-left py-4 px-2 text-[10px] font-black text-text-muted uppercase tracking-widest">Etapa</th>
+                    <th className="text-center py-4 px-2 text-[10px] font-black text-text-muted uppercase tracking-widest">Total Lotes</th>
+                    <th className="text-center py-4 px-2 text-[10px] font-black text-text-muted uppercase tracking-widest">Vendidos</th>
+                    <th className="text-center py-4 px-2 text-[10px] font-black text-text-muted uppercase tracking-widest">Disponibles</th>
+                    <th className="text-center py-4 px-2 text-[10px] font-black text-text-muted uppercase tracking-widest">Separados</th>
+                    <th className="text-right py-4 px-2 text-[10px] font-black text-text-muted uppercase tracking-widest">% Vendido</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-glass-border">
+                  {data.lotStats.byStage.map((stageStat, idx) => (
+                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
+                      <td className="py-4 px-2">
+                        <span className="text-sm font-black text-text-primary">Etapa {stageStat.stage}</span>
+                      </td>
+                      <td className="py-4 px-2 text-center text-sm font-bold text-text-secondary">{stageStat.total}</td>
+                      <td className="py-4 px-2 text-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-accent-green/20 text-accent-green text-[11px] font-bold">
+                          {stageStat.vendidos}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 text-center text-sm font-bold text-text-secondary">{stageStat.disponibles}</td>
+                      <td className="py-4 px-2 text-center text-sm font-bold text-accent-blue">{stageStat.separados}</td>
+                      <td className="py-4 px-2 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden hidden md:block">
+                            <div 
+                              className="h-full bg-accent-blue rounded-full" 
+                              style={{ width: `${stageStat.porcentajeVendido}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-black text-accent-blue">{stageStat.porcentajeVendido.toFixed(1)}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

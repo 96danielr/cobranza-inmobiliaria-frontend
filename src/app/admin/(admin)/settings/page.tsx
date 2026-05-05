@@ -91,7 +91,10 @@ const mockTenantConfig: TenantConfig = {
 
 export default function SettingsPage() {
   const { isAuthenticated } = useAdminAuthStore()
-  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations'>('company')
+  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas'>('company')
+  const [limits, setLimits] = useState<any[]>([])
+  const [usage, setUsage] = useState<any[]>([])
+  const [limitsLoading, setLimitsLoading] = useState(false)
   const [tenantConfig, setTenantConfig] = useState<TenantConfig>(mockTenantConfig)
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
@@ -135,10 +138,27 @@ export default function SettingsPage() {
     }
   }
 
+  const fetchLimits = async () => {
+    setLimitsLoading(true)
+    try {
+      const [limitsRes, usageRes] = await Promise.all([
+        adminApi.getLimits(),
+        adminApi.getUsageStats({ feature: 'ai_chat' })
+      ])
+      if (limitsRes.data.success) setLimits(limitsRes.data.data)
+      if (usageRes.data.success) setUsage(usageRes.data.data)
+    } catch (error) {
+      console.error('Error fetching limits:', error)
+    } finally {
+      setLimitsLoading(false)
+    }
+  }
+
   // Load data on mount or company change
   useEffect(() => {
     fetchCompanyConfig()
-  }, [selectedCompanyId])
+    if (activeTab === 'quotas') fetchLimits()
+  }, [selectedCompanyId, activeTab])
 
   // User form state
   const [userForm, setUserForm] = useState({
@@ -310,7 +330,8 @@ export default function SettingsPage() {
   const tabs = [
     { key: 'company', label: 'Información de la Empresa', icon: Building2 },
     { key: 'users', label: 'Usuarios Administradores', icon: Users },
-    { key: 'integrations', label: 'Integraciones', icon: Settings }
+    { key: 'integrations', label: 'Integraciones', icon: Settings },
+    { key: 'quotas', label: 'Límites y Cuotas', icon: Shield }
   ]
 
   return (
@@ -731,6 +752,146 @@ export default function SettingsPage() {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Quotas Tab */}
+      {activeTab === 'quotas' && (
+        <div className="space-y-4 md:space-y-6 animate-fade-in-up">
+          <Card variant="elevated" className="overflow-hidden">
+            <div className="bg-accent-blue/10 p-6 border-b border-glass-border">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-accent-blue/20 rounded-xl flex items-center justify-center border border-accent-blue/30">
+                  <Shield className="w-6 h-6 text-accent-blue" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-text-primary">Planes y Límites de Uso</h3>
+                  <p className="text-sm text-text-secondary">Monitorea el consumo de recursos de inteligencia artificial y servicios del sistema</p>
+                </div>
+              </div>
+            </div>
+            
+            <CardContent className="p-6">
+              {limitsLoading ? (
+                <div className="space-y-8 py-4">
+                  <StatsCardSkeleton className="h-32" />
+                  <StatsCardSkeleton className="h-32" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* AI Chat Limit Card */}
+                  <div className="glass-card p-6 border border-glass-border relative overflow-hidden group hover:border-accent-purple/50 transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <MessageSquare className="w-24 h-24 text-accent-purple" />
+                    </div>
+                    
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-10 h-10 bg-accent-purple/20 rounded-lg flex items-center justify-center border border-accent-purple/30">
+                        <MessageSquare className="w-5 h-5 text-accent-purple" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-text-primary">Chat con Inteligencia Artificial</h4>
+                        <p className="text-xs text-text-secondary">Mensajes mensuales asignados</p>
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const monthlyLimit = limits.find(l => l.feature === 'ai_chat' && l.period === 'monthly')?.limit || 0;
+                      const monthlyUsage = usage.find(u => u.periodType === 'monthly')?.count || 0;
+                      const percentage = monthlyLimit > 0 ? Math.min(Math.round((monthlyUsage / monthlyLimit) * 100), 100) : 0;
+                      const status = percentage > 90 ? 'critical' : percentage > 70 ? 'warning' : 'normal';
+                      
+                      return (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-end">
+                            <div className="space-y-1">
+                              <span className="text-3xl font-bold text-text-primary">{monthlyUsage}</span>
+                              <span className="text-text-secondary ml-2">/ {monthlyLimit || '∞'}</span>
+                            </div>
+                            <span className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
+                              status === 'critical' ? 'bg-accent-red/20 text-accent-red' :
+                              status === 'warning' ? 'bg-accent-yellow/20 text-accent-yellow' :
+                              'bg-accent-green/20 text-accent-green'
+                            }`}>
+                              {status === 'critical' ? 'Límite Crítico' : status === 'warning' ? 'Uso Elevado' : 'Consumo Normal'}
+                            </span>
+                          </div>
+
+                          <div className="w-full h-3 bg-glass-primary/30 rounded-full overflow-hidden border border-glass-border">
+                            <div 
+                              className={`h-full transition-all duration-1000 ease-out ${
+                                status === 'critical' ? 'bg-gradient-to-r from-accent-red to-orange-500' :
+                                status === 'warning' ? 'bg-gradient-to-r from-accent-yellow to-accent-orange' :
+                                'bg-gradient-to-r from-accent-blue to-accent-purple'
+                              }`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+
+                          <div className="flex justify-between text-[10px] font-medium uppercase tracking-widest text-text-muted">
+                            <span>0%</span>
+                            <span>{percentage}% utilizado</span>
+                            <span>100%</span>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+
+                  {/* Daily Limit Info Card */}
+                  <div className="glass-card p-6 border border-glass-border bg-glass-primary/10">
+                    <h4 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-accent-yellow" />
+                      Información del Plan
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-glass-primary/20 border border-glass-border">
+                        <span className="text-sm text-text-secondary">Límite Diario (IA)</span>
+                        <span className="font-bold text-text-primary">
+                          {limits.find(l => l.feature === 'ai_chat' && l.period === 'daily')?.limit || 'Sin límite'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-glass-primary/20 border border-glass-border">
+                        <span className="text-sm text-text-secondary">Renovación de Cuota</span>
+                        <span className="font-bold text-accent-blue">Mensual</span>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-accent-blue/5 border border-accent-blue/20 mt-4">
+                        <p className="text-xs text-text-secondary leading-relaxed">
+                          <span className="font-bold text-accent-blue block mb-1">¿Necesitas más capacidad?</span>
+                          Los límites son establecidos por el administrador de la plataforma según tu plan de suscripción actual.
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full mt-3 glass-button border-accent-blue/30 text-accent-blue hover:bg-accent-blue/10"
+                          onClick={() => window.open('mailto:soporte@tuplataforma.com')}
+                        >
+                          Solicitar Ampliación
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card variant="glass" className="border-accent-purple/20">
+            <CardContent className="p-4 flex items-start gap-4">
+              <div className="p-2 bg-accent-purple/20 rounded-lg">
+                <Shield className="w-5 h-5 text-accent-purple" />
+              </div>
+              <div>
+                <h5 className="font-semibold text-text-primary text-sm">Política de Uso Justo</h5>
+                <p className="text-xs text-text-secondary mt-1">
+                  Para garantizar la estabilidad del sistema, se aplican límites de tasa (rate-limiting) adicionales en todas nuestras APIs de IA.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
