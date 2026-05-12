@@ -536,7 +536,7 @@ export default function AdminDashboard() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: any) => [`${value} clientes`, name]} />
+                  <Tooltip formatter={(value: any, name?: string) => [`${value} clientes`, name ?? '']} />
                 </PieChart>
               </ResponsiveContainer>
             </div>

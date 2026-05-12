@@ -879,7 +879,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card variant="glass" className="border-accent-purple/20">
+          <Card variant="elevated" className="border-accent-purple/20">
             <CardContent className="p-4 flex items-start gap-4">
               <div className="p-2 bg-accent-purple/20 rounded-lg">
                 <Shield className="w-5 h-5 text-accent-purple" />
