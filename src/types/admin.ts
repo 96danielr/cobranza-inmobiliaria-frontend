@@ -124,6 +124,9 @@ export interface ClientAdmin {
   fullName: string
   cedula: string
   phone: string
+  phones?: string[]
+  address?: string
+  expeditionPlace?: string
   behaviorTag: 'DISPUESTO' | 'INDECISO' | 'EVASIVO'
   contracts: ContractSummary[]
   totalContracts: number
