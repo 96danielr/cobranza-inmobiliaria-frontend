@@ -18,6 +18,7 @@ import {
   Area,
   AreaChart
 } from 'recharts'
+import { motion } from 'framer-motion'
 import {
   DollarSign,
   AlertTriangle,
@@ -535,7 +536,7 @@ export default function AdminDashboard() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} clientes`, name]} />
+                  <Tooltip formatter={(value: any) => [`${value} clientes`, name]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>

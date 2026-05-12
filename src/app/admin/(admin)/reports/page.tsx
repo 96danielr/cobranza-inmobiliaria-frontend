@@ -282,7 +282,7 @@ export default function ReportsPage() {
                         borderRadius: '12px',
                         backdropFilter: 'blur(8px)'
                       }}
-                      formatter={(value: number) => [formatCurrency(value), 'Recaudo Esperado']}
+                      formatter={(value: any) => [formatCurrency(Number(value) || 0), 'Recaudo Esperado']}
                     />
                     <Area 
                       type="monotone" 
