@@ -22,8 +22,11 @@ import {
   UserPlus,
   Users,
   Eye,
-  Info
+  Info,
+  FileDown
 } from 'lucide-react'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -41,6 +44,7 @@ import dayjs from 'dayjs'
 interface Lot {
   _id: string
   stage: string
+  manzana?: string
   nomenclature: string
   lotNumber: string
   area: number
@@ -71,6 +75,13 @@ export default function LotsPage() {
   const [saleDetail, setSaleDetail] = useState<any>(null)
   const [loadingSaleDetail, setLoadingSaleDetail] = useState(false)
 
+  const [isReserveDetailModalOpen, setIsReserveDetailModalOpen] = useState(false)
+  const [reserveDetail, setReserveDetail] = useState<any>(null)
+  const [loadingReserveDetail, setLoadingReserveDetail] = useState(false)
+
+  const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
+  const [releaseFormData, setReleaseFormData] = useState({ reason: '', observations: '' })
+
   const [isReserveModalOpen, setIsReserveModalOpen] = useState(false)
   const [reserveFormData, setReserveFormData] = useState({
     type: 'apartado',
@@ -78,8 +89,10 @@ export default function LotsPage() {
     clientName: '',
     clientIdNumber: '',
     clientPhone: '',
+    clientEmail: '',
     amount: '',
-    observations: ''
+    observations: '',
+    expirationDays: ''
   })
 
   const { clients, fetchClientsIfNeeded, loading: clientsLoading } = useClientStore()
@@ -87,6 +100,7 @@ export default function LotsPage() {
   const [formData, setFormData] = useState({
     _id: '',
     stage: '',
+    manzana: '',
     nomenclature: '',
     lotNumber: '',
     area: '',
@@ -105,7 +119,10 @@ export default function LotsPage() {
     clientName: '',
     clientIdNumber: '',
     clientPhone: '',
-    sellerId: ''
+    clientEmail: '',
+    sellerId: '',
+    bonus: '',
+    bonusValue: '0'
   })
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -174,13 +191,14 @@ export default function LotsPage() {
   }
 
   const resetForm = () => {
-    setFormData({ _id: '', stage: '', nomenclature: '', lotNumber: '', area: '', price: '' })
+    setFormData({ _id: '', stage: '', manzana: '', nomenclature: '', lotNumber: '', area: '', price: '' })
   }
 
   const handleEdit = (lot: Lot) => {
     setFormData({
       _id: lot._id,
       stage: lot.stage || '',
+      manzana: lot.manzana || '',
       nomenclature: lot.nomenclature || '',
       lotNumber: lot.lotNumber || '',
       area: lot.area?.toString() || '',
@@ -249,7 +267,10 @@ export default function LotsPage() {
       clientName: '',
       clientIdNumber: '',
       clientPhone: '',
-      sellerId: ''
+      clientEmail: '',
+      sellerId: '',
+      bonus: '',
+      bonusValue: '0'
     })
     setIsSellModalOpen(true)
     fetchClientsIfNeeded()
@@ -283,14 +304,17 @@ export default function LotsPage() {
         initialQuotasCount: parseInt(sellFormData.initialQuotasCount),
         contractDate: sellFormData.contractDate,
         negotiation: sellFormData.negotiation,
-        sellerId: sellFormData.sellerId || undefined
+        sellerId: sellFormData.sellerId || undefined,
+        bonus: sellFormData.bonus,
+        bonusValue: parseFloat(sellFormData.bonusValue) || 0
       }
 
       if (isCreatingNewClient) {
         payload.clientData = {
           name: sellFormData.clientName,
           idNumber: sellFormData.clientIdNumber,
-          phone: sellFormData.clientPhone
+          phone: sellFormData.clientPhone,
+          email: sellFormData.clientEmail
         }
       } else {
         payload.clientId = sellFormData.clientId
@@ -330,8 +354,10 @@ export default function LotsPage() {
       clientName: '',
       clientIdNumber: '',
       clientPhone: '',
+      clientEmail: '',
       amount: '',
-      observations: ''
+      observations: '',
+      expirationDays: ''
     })
     setIsReserveModalOpen(true)
     fetchClientsIfNeeded()
@@ -346,14 +372,16 @@ export default function LotsPage() {
       const payload: any = {
         type: reserveFormData.type,
         amount: reserveFormData.amount ? parseFloat(reserveFormData.amount) : undefined,
-        observations: reserveFormData.observations
+        observations: reserveFormData.observations,
+        expirationDays: reserveFormData.expirationDays ? parseInt(reserveFormData.expirationDays) : undefined
       }
 
       if (isCreatingNewClient) {
         payload.clientData = {
           name: reserveFormData.clientName,
           idNumber: reserveFormData.clientIdNumber,
-          phone: reserveFormData.clientPhone
+          phone: reserveFormData.clientPhone,
+          email: reserveFormData.clientEmail
         }
       } else {
         payload.clientId = reserveFormData.clientId
@@ -374,6 +402,45 @@ export default function LotsPage() {
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al conectar con el servidor')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleViewReserveDetail = async (lot: Lot) => {
+    setSelectedLot(lot)
+    setIsReserveDetailModalOpen(true)
+    setLoadingReserveDetail(true)
+    setReserveDetail(null)
+    try {
+      const response = await adminApi.getLot(lot._id)
+      if (response.data.success) {
+        setReserveDetail(response.data.data)
+      }
+    } catch (error) {
+      toast.error('Error al cargar detalles de la reserva')
+    } finally {
+      setLoadingReserveDetail(false)
+    }
+  }
+
+  const handleReleaseLot = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedLot) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await adminApi.releaseLot(selectedLot._id, releaseFormData)
+      if (response.data.success) {
+        toast.success('Lote liberado correctamente')
+        setIsReleaseModalOpen(false)
+        setIsReserveDetailModalOpen(false)
+        pagination.refresh()
+      } else {
+        toast.error(response.data.message || 'Error al liberar lote')
+      }
+    } catch (error) {
+      toast.error('Error al conectar con el servidor')
     } finally {
       setIsSubmitting(false)
     }
@@ -411,12 +478,76 @@ export default function LotsPage() {
     toast.success('Enlace del catálogo copiado')
   }
 
-  const formatCurrency = (value: number) => {
+  const generatePaymentPlanPDF = () => {
+    if (!saleDetail || !selectedLot) return
+
+    const doc = new jsPDF()
+    
+    // Header
+    doc.setFontSize(20)
+    doc.setTextColor(44, 62, 80)
+    doc.text('Plan de Pagos', 105, 15, { align: 'center' })
+    
+    doc.setFontSize(10)
+    doc.setTextColor(100)
+    doc.text(`Generado el: ${dayjs().format('DD/MM/YYYY HH:mm')}`, 105, 22, { align: 'center' })
+
+    // Lot and Client Info
+    doc.setFontSize(12)
+    doc.setTextColor(0)
+    doc.text('Información del Lote', 14, 35)
+    doc.line(14, 37, 200, 37)
+    
+    doc.setFontSize(10)
+    doc.text(`Lote: ${selectedLot.stage} - ${selectedLot.lotNumber}`, 14, 45)
+    doc.text(`Nomenclatura: ${selectedLot.nomenclature || 'N/A'}`, 14, 50)
+    doc.text(`Precio de Venta: ${formatCurrency(saleDetail.contract.totalValue)}`, 14, 55)
+    
+    doc.text('Información del Cliente', 120, 35)
+    doc.text(`Nombre: ${saleDetail.contract.client?.name}`, 120, 45)
+    doc.text(`Cédula: ${saleDetail.contract.client?.idNumber}`, 120, 50)
+    doc.text(`Teléfono: ${saleDetail.contract.client?.phone}`, 120, 55)
+
+    // Quotas Table
+    const tableRows = saleDetail.quotas.map((q: any) => [
+      q.type === 'cuota' ? `Cuota ${q.number}` : q.type === 'inicial' ? `Cuota Inicial ${q.number}` : `Extra ${q.number}`,
+      dayjs(q.dueDate).format('DD/MM/YYYY'),
+      formatCurrency(q.value),
+      q.status === 'pagado' ? 'PAGADO' : 'PENDIENTE'
+    ])
+
+    autoTable(doc, {
+      startY: 65,
+      head: [['Descripción', 'Fecha de Vencimiento', 'Valor', 'Estado']],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    })
+
+    // Summary at the end
+    const finalY = (doc as any).lastAutoTable.finalY + 10
+    doc.setFontSize(12)
+    doc.text('Resumen del Plan', 14, finalY)
+    doc.line(14, finalY + 2, 200, finalY + 2)
+    
+    doc.setFontSize(10)
+    doc.text(`Total a Pagar: ${formatCurrency(saleDetail.contract.totalValue)}`, 14, finalY + 10)
+    doc.text(`Cuotas Totales: ${saleDetail.contract.installmentsCount}`, 14, finalY + 15)
+    doc.text(`Valor por Cuota: ${formatCurrency(saleDetail.contract.installmentValue)}`, 14, finalY + 20)
+
+    doc.save(`Plan_Pagos_${selectedLot.lotNumber}_${saleDetail.contract.client?.name.replace(/\s+/g, '_')}.pdf`)
+  }
+
+  const formatCurrency = (value: any) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value
+    if (isNaN(num) || num === null || num === undefined) return '$ 0'
+    
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0
-    }).format(value)
+    }).format(num)
   }
 
   return (
@@ -513,8 +644,15 @@ export default function LotsPage() {
                     onSort={pagination.handleSort}
                     className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                   />
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Estado</th>
-                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Vendedor</th>
+                  <SortHeader
+                    label="Estado"
+                    field="status"
+                    currentSortBy={pagination.sortBy}
+                    currentSortOrder={pagination.sortOrder}
+                    onSort={pagination.handleSort}
+                    className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
+                  />
+                  <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Ejecutivo Comercial</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Imágenes</th>
                   <th className="text-left py-3 px-4 md:px-6 font-semibold text-text-primary w-40 bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">Acciones</th>
                 </tr>
@@ -538,7 +676,7 @@ export default function LotsPage() {
                     <tr key={lot._id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
                       <td className="py-4 px-4 md:px-6">
                         <div>
-                          <p className="font-bold text-text-primary">{lot.stage || '-'} - {lot.lotNumber}</p>
+                          <p className="font-bold text-text-primary">E: {lot.stage || '-'} - M: {lot.manzana || '-'} - L: {lot.lotNumber}</p>
                           <p className="text-sm text-text-muted">Nom: {lot.nomenclature || '-'}</p>
                         </div>
                       </td>
@@ -549,11 +687,11 @@ export default function LotsPage() {
                         {lot.price ? formatCurrency(lot.price) : '-'}
                       </td>
                       <td className="py-4 px-4 md:px-6">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          lot.status === 'vendido' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
-                          lot.status === 'separado' ? 'bg-accent-purple/20 text-accent-purple border border-accent-purple/30' :
-                          lot.status === 'apartado' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
-                          'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                          lot.status === 'vendido' ? 'bg-red-100 text-red-700 border border-red-200 shadow-sm' :
+                          lot.status === 'separado' ? 'bg-purple-100 text-purple-700 border border-purple-200 shadow-sm' :
+                          lot.status === 'apartado' ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-sm' :
+                          'bg-green-100 text-green-700 border border-green-200 shadow-sm'
                         }`}>
                           {lot.status === 'vendido' ? 'Vendido' : 
                            lot.status === 'separado' ? 'Separado' :
@@ -627,6 +765,17 @@ export default function LotsPage() {
                               </Button>
                             </div>
                           )}
+                          {(lot.status === 'apartado' || lot.status === 'separado') && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewReserveDetail(lot)}
+                              className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
+                              title="Ver Detalles de Reserva"
+                            >
+                              <Info className="w-4 h-4" />
+                            </Button>
+                          )}
                           {admin?.role !== 'vendedor' && (
                             <>
                               <Button
@@ -663,14 +812,14 @@ export default function LotsPage() {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-bold text-text-primary">{lot.stage} - {lot.lotNumber}</h3>
+                      <h3 className="font-bold text-text-primary">E: {lot.stage} - M: {lot.manzana} - L: {lot.lotNumber}</h3>
                       <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
-                      <p className="text-xs text-text-muted mt-1">Vendedor: {lot.sellerId?.accountId?.fullName || 'N/A'}</p>
-                      <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                        lot.status === 'vendido' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
-                        lot.status === 'separado' ? 'bg-accent-purple/20 text-accent-purple border border-accent-purple/30' :
-                        lot.status === 'apartado' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
-                        'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                      <p className="text-xs text-text-muted mt-1">Ejecutivo: {lot.sellerId?.accountId?.fullName || 'N/A'}</p>
+                      <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        lot.status === 'vendido' ? 'bg-red-100 text-red-700 border border-red-200' :
+                        lot.status === 'separado' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                        lot.status === 'apartado' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                        'bg-green-100 text-green-700 border border-green-200'
                       }`}>
                         {lot.status === 'vendido' ? 'Vendido' : 
                          lot.status === 'separado' ? 'Separado' :
@@ -691,6 +840,11 @@ export default function LotsPage() {
                             <Users className="w-4 h-4" />
                           </Button>
                         </div>
+                      )}
+                      {(lot.status === 'apartado' || lot.status === 'separado') && (
+                        <Button size="sm" variant="outline" onClick={() => handleViewReserveDetail(lot)} className="glass-button text-accent-blue">
+                          <Info className="w-4 h-4" />
+                        </Button>
                       )}
                       {admin?.role !== 'vendedor' && (
                         <>
@@ -757,12 +911,12 @@ export default function LotsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Nomenclatura</label>
+              <label className="text-sm font-medium text-text-secondary">Manzana</label>
               <Input
-                name="nomenclature"
-                value={formData.nomenclature}
+                name="manzana"
+                value={formData.manzana}
                 onChange={handleInputChange}
-                placeholder="Ej: 42"
+                placeholder="Ej: MZ A"
                 required
                 className="glass-input"
               />
@@ -771,7 +925,7 @@ export default function LotsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Número de Lote</label>
+              <label className="text-sm font-medium text-text-secondary">Número de Lote (Lote)</label>
               <Input
                 name="lotNumber"
                 value={formData.lotNumber}
@@ -781,6 +935,19 @@ export default function LotsPage() {
                 className="glass-input"
               />
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Nomenclatura (Opcional)</label>
+              <Input
+                name="nomenclature"
+                value={formData.nomenclature}
+                onChange={handleInputChange}
+                placeholder="Ej: 42"
+                className="glass-input"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-text-secondary">Área (m²)</label>
               <Input
@@ -792,20 +959,19 @@ export default function LotsPage() {
                 className="glass-input"
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">Precio de Venta</label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" />
-              <Input
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleInputChange}
-                placeholder="Ej: 45000000"
-                className="glass-input pl-10"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Precio de Venta</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" />
+                <Input
+                  name="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  placeholder="Ej: 45000000"
+                  className="glass-input pl-10"
+                />
+              </div>
             </div>
           </div>
 
@@ -957,6 +1123,17 @@ export default function LotsPage() {
                     className="glass-input h-9"
                   />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Correo Electrónico</label>
+                  <Input
+                    name="clientEmail"
+                    value={sellFormData.clientEmail}
+                    onChange={handleSellInputChange}
+                    placeholder="email@ejemplo.com"
+                    type="email"
+                    className="glass-input h-9"
+                  />
+                </div>
               </div>
             ) : (
               <div className="space-y-2">
@@ -983,7 +1160,7 @@ export default function LotsPage() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-text-primary flex items-center">
                 <Users className="w-4 h-4 mr-2 text-accent-purple" />
-                Asignar Vendedor (Opcional)
+                Asignar Ejecutivo Comercial (Opcional)
               </label>
               <select
                 name="sellerId"
@@ -991,7 +1168,7 @@ export default function LotsPage() {
                 onChange={handleSellInputChange}
                 className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
               >
-                <option value="">Sin vendedor asignado</option>
+                <option value="">Sin ejecutivo comercial asignado</option>
                 {sellers.map((s: any) => (
                   <option key={s.id} value={s.id}>
                     {s.fullName}
@@ -1024,6 +1201,42 @@ export default function LotsPage() {
                     className="glass-input pl-10"
                     required
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-text-secondary">Bono de Descuento (Valor)</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-purple/50" />
+                    <Input
+                      name="bonusValue"
+                      type="number"
+                      value={sellFormData.bonusValue}
+                      onChange={handleSellInputChange}
+                      className="glass-input pl-10 border-accent-purple/30 focus:border-accent-purple"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-text-secondary">Descripción del Bono</label>
+                  <Input
+                    name="bonus"
+                    value={sellFormData.bonus}
+                    onChange={handleSellInputChange}
+                    className="glass-input border-accent-purple/30 focus:border-accent-purple"
+                    placeholder="Ej: Promo Mayo"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-accent-green/5 border border-accent-green/20">
+                <div className="flex justify-between items-center text-xs text-text-secondary">
+                  <span>Valor Neto a Financiar:</span>
+                  <span className="font-bold text-accent-green text-sm">
+                    {formatCurrency(Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0))}
+                  </span>
                 </div>
               </div>
 
@@ -1142,10 +1355,24 @@ export default function LotsPage() {
         ) : saleDetail ? (
           <div className="space-y-6 pt-2 animate-fade-in">
             {/* Lot & Contract Header */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
+              <div>
                 <p className="text-xs text-text-muted uppercase font-bold mb-1">Información del Lote</p>
                 <h4 className="text-xl font-bold text-text-primary">{selectedLot?.stage} - {selectedLot?.lotNumber}</h4>
+                <p className="text-sm text-text-secondary">Contrato Pro #{saleDetail.contract._id.slice(-6).toUpperCase()}</p>
+              </div>
+              <Button 
+                onClick={generatePaymentPlanPDF}
+                className="glass-button bg-accent-blue text-white w-full md:w-auto"
+              >
+                <FileDown className="w-4 h-4 mr-2" />
+                Descargar Plan
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-glass-primary/5 border border-glass-border">
+                <p className="text-xs text-text-muted uppercase font-bold mb-1">Estado del Pago</p>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm text-text-secondary flex justify-between">
                     <span>Nomenclatura:</span> <span className="text-text-primary font-medium">{selectedLot?.nomenclature}</span>
@@ -1190,7 +1417,7 @@ export default function LotsPage() {
               <div className="space-y-3">
                 <div className="flex items-center text-text-primary font-semibold border-b border-glass-border pb-2">
                   <UserPlus className="w-4 h-4 mr-2 text-accent-green" />
-                  Vendedor
+                  Ejecutivo Comercial
                 </div>
                 {saleDetail.contract.sellerId ? (
                   <div className="space-y-1">
@@ -1203,7 +1430,7 @@ export default function LotsPage() {
                   </div>
                 ) : (
                   <div className="flex items-center text-text-disabled italic text-sm py-4">
-                    Sin vendedor asignado
+                    Sin ejecutivo comercial asignado
                   </div>
                 )}
               </div>
@@ -1384,6 +1611,16 @@ export default function LotsPage() {
                     className="glass-input h-9"
                   />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-text-secondary">Correo Electrónico</label>
+                  <Input
+                    value={reserveFormData.clientEmail}
+                    onChange={(e) => setReserveFormData(prev => ({ ...prev, clientEmail: e.target.value }))}
+                    placeholder="email@ejemplo.com"
+                    type="email"
+                    className="glass-input h-9"
+                  />
+                </div>
               </div>
             ) : (
               <div className="relative">
@@ -1417,6 +1654,7 @@ export default function LotsPage() {
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" />
                 <Input
                   type="number"
+                  min="500000"
                   value={reserveFormData.amount}
                   onChange={(e) => setReserveFormData(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder="500000"
@@ -1427,14 +1665,26 @@ export default function LotsPage() {
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-text-primary">Observaciones</label>
-            <Input
-              value={reserveFormData.observations}
-              onChange={(e) => setReserveFormData(prev => ({ ...prev, observations: e.target.value }))}
-              placeholder="Detalles adicionales..."
-              className="glass-input"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-text-primary">Días de Vigencia</label>
+              <Input
+                type="number"
+                value={reserveFormData.expirationDays}
+                onChange={(e) => setReserveFormData(prev => ({ ...prev, expirationDays: e.target.value }))}
+                placeholder={reserveFormData.type === 'separado' ? '30' : '5'}
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-text-primary">Observaciones</label>
+              <Input
+                value={reserveFormData.observations}
+                onChange={(e) => setReserveFormData(prev => ({ ...prev, observations: e.target.value }))}
+                placeholder="Detalles adicionales..."
+                className="glass-input"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t border-glass-border">
@@ -1449,6 +1699,182 @@ export default function LotsPage() {
                 </>
               ) : (
                 `Confirmar ${reserveFormData.type === 'apartado' ? 'Apartado' : 'Separación'}`
+              )}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+ 
+      {/* Reserve Detail Modal */}
+      <Modal
+        isOpen={isReserveDetailModalOpen}
+        onClose={() => setIsReserveDetailModalOpen(false)}
+        title={`Detalles de Reserva: ${selectedLot?.stage} - ${selectedLot?.lotNumber}`}
+        size="lg"
+      >
+        {loadingReserveDetail ? (
+          <div className="py-12 flex justify-center">
+            <Loader2 className="w-10 h-10 animate-spin text-accent-blue" />
+          </div>
+        ) : reserveDetail ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Client Info */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider flex items-center">
+                  <Users className="w-4 h-4 mr-2" />
+                  Cliente
+                </h3>
+                <div className="p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
+                  <p className="font-bold text-text-primary text-lg">{reserveDetail.reservationBy?.name || 'N/A'}</p>
+                  <p className="text-sm text-text-secondary mt-1">C.C. {reserveDetail.reservationBy?.idNumber || 'N/A'}</p>
+                  <p className="text-sm text-text-secondary">Tel: {reserveDetail.reservationBy?.phone || 'N/A'}</p>
+                  <p className="text-sm text-text-secondary">Email: {reserveDetail.reservationBy?.email || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Reservation Stats */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider flex items-center">
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  Vigencia
+                </h3>
+                <div className="p-4 rounded-xl bg-glass-primary/10 border border-glass-border space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text-secondary">Estado:</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase ${
+                      reserveDetail.status === 'separado' ? 'bg-accent-purple/10 text-accent-purple' : 'bg-accent-blue/10 text-accent-blue'
+                    }`}>
+                      {reserveDetail.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text-secondary">Desde:</span>
+                    <span className="text-sm font-medium text-text-primary">
+                      {dayjs(reserveDetail.reservedAt).format('DD/MM/YYYY')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text-secondary">Vence:</span>
+                    <span className="text-sm font-bold text-accent-red">
+                      {reserveDetail.expiresAt ? dayjs(reserveDetail.expiresAt).format('DD/MM/YYYY') : 'N/A'}
+                    </span>
+                  </div>
+                  {reserveDetail.expiresAt && (
+                    <p className="text-[10px] text-right text-text-muted mt-1">
+                      (Quedan {dayjs(reserveDetail.expiresAt).diff(dayjs(), 'day')} días)
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card variant="elevated" className="p-4 bg-glass-secondary/50">
+                <div className="flex items-center mb-2">
+                  <Info className="w-4 h-4 mr-2 text-accent-blue" />
+                  <span className="font-bold text-text-primary">Observaciones</span>
+                </div>
+                <p className="text-sm text-text-secondary italic">
+                  {reserveDetail.reservationDetails || 'Sin observaciones registradas'}
+                </p>
+              </Card>
+
+              <Card variant="elevated" className="p-4 bg-glass-secondary/50">
+                <div className="flex items-center mb-2">
+                  <UserPlus className="w-4 h-4 mr-2 text-accent-green" />
+                  <span className="font-bold text-text-primary">Ejecutivo Comercial</span>
+                </div>
+                <p className="text-sm text-text-secondary">
+                  {reserveDetail.sellerId?.accountId?.fullName || 'No asignado'}
+                </p>
+                {reserveDetail.sellerId?.accountId?.email && (
+                  <p className="text-xs text-text-muted mt-1">
+                    {reserveDetail.sellerId.accountId.email}
+                  </p>
+                )}
+              </Card>
+            </div>
+
+            <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-glass-border">
+              {admin?.role !== 'vendedor' && (
+                <Button 
+                  onClick={() => {
+                    setIsReleaseModalOpen(true);
+                    setReleaseFormData({ reason: 'cancelacion_cliente', observations: '' });
+                  }} 
+                  variant="outline" 
+                  className="glass-button text-accent-red hover:bg-accent-red/10 border-accent-red/30"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Cancelar Reserva / Liberar Lote
+                </Button>
+              )}
+              <Button onClick={() => setIsReserveDetailModalOpen(false)} className="glass-button bg-accent-blue text-white">
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="py-12 text-center text-text-muted">
+            No se pudieron cargar los detalles de la reserva
+          </div>
+        )}
+      </Modal>
+
+      {/* Release Modal */}
+      <Modal
+        isOpen={isReleaseModalOpen}
+        onClose={() => setIsReleaseModalOpen(false)}
+        title="Liberar Lote / Cancelar Reserva"
+        size="md"
+      >
+        <form onSubmit={handleReleaseLot} className="space-y-6 pt-2">
+          <div className="p-4 bg-accent-red/10 border border-accent-red/20 rounded-xl">
+            <p className="text-sm text-accent-red font-medium">
+              ¿Estás seguro de liberar este lote? Se eliminarán los datos del cliente actual y el lote volverá a estar disponible para la venta.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-text-primary">Motivo de liberación</label>
+              <select
+                value={releaseFormData.reason}
+                onChange={(e) => setReleaseFormData(prev => ({ ...prev, reason: e.target.value }))}
+                required
+                className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
+              >
+                <option value="cancelacion_cliente">Cancelación por parte del cliente</option>
+                <option value="falta_pago">Falta de pago / Incumplimiento</option>
+                <option value="error_registro">Error en el registro</option>
+                <option value="otro">Otro motivo</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-text-primary">Observaciones adicionales</label>
+              <textarea
+                value={releaseFormData.observations}
+                onChange={(e) => setReleaseFormData(prev => ({ ...prev, observations: e.target.value }))}
+                className="w-full h-24 p-4 rounded-xl border border-glass-border bg-glass-primary/50 text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all resize-none"
+                placeholder="Explica brevemente el motivo..."
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-glass-border">
+            <Button type="button" variant="outline" onClick={() => setIsReleaseModalOpen(false)} className="glass-button">
+              No, mantener reserva
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="glass-button bg-accent-red text-white">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Liberando...
+                </>
+              ) : (
+                'Confirmar Liberación'
               )}
             </Button>
           </div>

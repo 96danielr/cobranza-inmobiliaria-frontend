@@ -21,7 +21,8 @@ import {
   Key,
   CheckCircle,
   X,
-  Search
+  Search,
+  Smartphone
 } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -61,6 +62,12 @@ interface TenantConfig {
   integrations: {
     whatsappEnabled: boolean
     whatsappApiKey?: string
+    whatsappWabaId?: string
+    whatsappPhoneId?: string
+    whatsappAccessToken?: string
+    whatsappDisplayPhone?: string
+    whatsappVerifiedName?: string
+    whatsappConnectedAt?: string
     daptaEnabled: boolean
     daptaApiKey?: string
   }
@@ -589,80 +596,7 @@ export default function SettingsPage() {
           ) : (
             <>
               {/* WhatsApp Integration */}
-              <Card variant="elevated" className="animate-fade-in-up">
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-accent-green/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 border border-glass-border">
-                        <MessageSquare className="w-5 h-5 text-accent-green" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-text-primary">WhatsApp Business API</h3>
-                        <p className="text-sm text-text-secondary">Envío automático de mensajes de cobranza</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-sm text-text-secondary mr-3">
-                        {tenantConfig.integrations.whatsappEnabled ? 'Habilitado' : 'Deshabilitado'}
-                      </span>
-                      <button
-                        onClick={() => setTenantConfig(prev => ({
-                          ...prev,
-                          integrations: {
-                            ...prev.integrations,
-                            whatsappEnabled: !prev.integrations.whatsappEnabled
-                          }
-                        }))}
-                        className={`
-                      relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                      ${tenantConfig.integrations.whatsappEnabled ? 'bg-accent-green' : 'bg-glass-primary/30'}
-                    `}
-                      >
-                        <span className={`
-                      inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                      ${tenantConfig.integrations.whatsappEnabled ? 'translate-x-6' : 'translate-x-1'}
-                    `} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {tenantConfig.integrations.whatsappEnabled && (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-text-primary mb-2">
-                          API Key de WhatsApp
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showApiKeys.whatsapp ? 'text' : 'password'}
-                            value={tenantConfig.integrations.whatsappApiKey || ''}
-                            onChange={(e) => setTenantConfig(prev => ({
-                              ...prev,
-                              integrations: {
-                                ...prev.integrations,
-                                whatsappApiKey: e.target.value
-                              }
-                            }))}
-                            className="glass-input w-full pr-10 px-3 py-2 min-h-[44px] focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-                            placeholder="Ingresa tu API Key de WhatsApp"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => toggleApiKeyVisibility('whatsapp')}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-muted hover:text-text-secondary transition-colors"
-                          >
-                            {showApiKeys.whatsapp ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <WhatsAppConfigCard tenantConfig={tenantConfig} setTenantConfig={setTenantConfig} />
 
               {/* Dapta Integration */}
               <Card variant="elevated" className="animate-fade-in-up animate-fade-in-up-delay">
@@ -973,5 +907,232 @@ export default function SettingsPage() {
         )}
       </Modal>
     </div>
+  )
+}
+
+function WhatsAppConfigCard({ tenantConfig, setTenantConfig }: any) {
+  const [connecting, setConnecting] = useState(false)
+  const [metaAppId, setMetaAppId] = useState('')
+
+  useEffect(() => {
+    adminApi.getWhatsAppConfig().then((res: any) => {
+      if (res.data?.data?.appId) setMetaAppId(res.data.data.appId)
+    }).catch(console.error)
+  }, [])
+
+  const handleConnect = () => {
+    if (!metaAppId) {
+      toast.error('META_APP_ID no configurado en el servidor')
+      return
+    }
+
+    setConnecting(true)
+
+    const loadFBSDK = () => {
+      return new Promise<void>((resolve) => {
+        if ((window as any).FB) {
+          resolve()
+          return
+        }
+
+        (window as any).fbAsyncInit = () => {
+          (window as any).FB.init({
+            appId: metaAppId,
+            cookie: true,
+            xfbml: true,
+            version: 'v21.0',
+          })
+          resolve()
+        }
+
+        const script = document.createElement('script')
+        script.src = 'https://connect.facebook.net/es_LA/sdk.js'
+        script.async = true
+        script.defer = true
+        document.body.appendChild(script)
+      })
+    }
+
+    let signupInfo: { waba_id?: string; phone_number_id?: string } = {}
+
+    const messageHandler = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.facebook.com' && 
+          event.origin !== 'https://web.facebook.com') return
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          if (data.event === 'FINISH' && data.data) {
+            signupInfo.waba_id = data.data.waba_id
+            signupInfo.phone_number_id = data.data.phone_number_id
+          }
+        }
+      } catch {}
+    }
+    window.addEventListener('message', messageHandler)
+
+    loadFBSDK().then(() => {
+      const FB = (window as any).FB
+      FB.login(
+        (response: any) => {
+          window.removeEventListener('message', messageHandler)
+          const code = response.authResponse?.code || response.authResponse?.accessToken
+          if (code) {
+            adminApi.connectWhatsApp({ code, wabaId: signupInfo.waba_id, phoneNumberId: signupInfo.phone_number_id })
+              .then((result: any) => {
+                toast.success(`WhatsApp conectado: ${result.data?.data?.displayPhoneNumber || 'OK'}`)
+                // Update local config
+                setTenantConfig((prev: any) => ({
+                  ...prev,
+                  integrations: {
+                    ...prev.integrations,
+                    whatsappEnabled: true,
+                    whatsappWabaId: result.data?.data?.wabaId,
+                    whatsappPhoneId: result.data?.data?.phoneNumberId,
+                    whatsappDisplayPhone: result.data?.data?.displayPhoneNumber,
+                    whatsappVerifiedName: result.data?.data?.verifiedName,
+                    whatsappConnectedAt: new Date().toISOString()
+                  }
+                }))
+              })
+              .catch((err: any) => {
+                toast.error(err.response?.data?.message || 'Error al conectar WhatsApp')
+              })
+              .finally(() => setConnecting(false))
+          } else {
+            toast.error('Conexión cancelada')
+            setConnecting(false)
+          }
+        },
+        {
+          config_id: '1656706408671794',
+          response_type: 'code',
+          override_default_response_type: true,
+          extras: {
+            version: 'v3',
+            setup: {},
+            featureType: 'whatsapp_business_app_onboarding',
+            sessionInfoVersion: '3',
+          },
+        }
+      )
+    }).catch(() => {
+      window.removeEventListener('message', messageHandler)
+      toast.error('Error al cargar Facebook SDK')
+      setConnecting(false)
+    })
+  }
+
+  const handleDisconnect = async () => {
+    if (confirm('¿Desconectar WhatsApp? Los mensajes dejarán de llegar al sistema.')) {
+      try {
+        await adminApi.disconnectWhatsApp()
+        toast.success('WhatsApp desconectado')
+        setTenantConfig((prev: any) => ({
+          ...prev,
+          integrations: {
+            ...prev.integrations,
+            whatsappEnabled: false,
+            whatsappWabaId: undefined,
+            whatsappPhoneId: undefined,
+            whatsappDisplayPhone: undefined,
+            whatsappVerifiedName: undefined,
+            whatsappConnectedAt: undefined
+          }
+        }))
+      } catch (err: any) {
+        toast.error('Error al desconectar WhatsApp')
+      }
+    }
+  }
+
+  const isConnected = !!tenantConfig.integrations.whatsappConnectedAt
+
+  return (
+    <Card variant="elevated" className="animate-fade-in-up">
+      <CardContent className="p-4 md:p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-accent-green/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4 border border-glass-border">
+              <MessageSquare className="w-5 h-5 text-accent-green" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary">WhatsApp Business API</h3>
+              <p className="text-sm text-text-secondary">Conexión oficial de WhatsApp (Coexistencia)</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-accent-green' : 'bg-gray-400'}`} />
+            <span className="text-sm font-medium text-text-primary">
+              {isConnected ? 'Conectado' : 'No conectado'}
+            </span>
+          </div>
+        </div>
+
+        {isConnected ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-glass-border bg-glass-primary/10 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold uppercase text-text-secondary">Número Activo</span>
+                <span className="inline-flex px-2 py-1 rounded text-[10px] font-bold bg-accent-green/20 text-accent-green">EN USO</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-glass-primary/30 rounded-md border border-glass-border">
+                  <Smartphone className="h-4 w-4 text-accent-green" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold font-mono text-text-primary">{tenantConfig.integrations.whatsappDisplayPhone || tenantConfig.integrations.whatsappPhoneId}</p>
+                  <p className="text-[10px] text-text-secondary">{tenantConfig.integrations.whatsappVerifiedName || 'Nombre no verificado'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-glass-border flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex px-2 py-1 rounded text-[10px] bg-glass-primary/30 text-text-secondary border border-glass-border">
+                  WABA ID: {tenantConfig.integrations.whatsappWabaId}
+                </span>
+                {tenantConfig.integrations.whatsappConnectedAt && (
+                  <span className="text-[10px] text-text-muted">
+                    Conectado el {new Date(tenantConfig.integrations.whatsappConnectedAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+              
+              <Button
+                variant="glass"
+                size="sm"
+                className="w-full text-accent-red hover:bg-accent-red/10 border-accent-red/20"
+                onClick={handleDisconnect}
+              >
+                Desconectar cuenta de WhatsApp
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-dashed border-glass-border p-6 text-center bg-glass-primary/5">
+              <MessageSquare className="mx-auto h-10 w-10 text-accent-green mb-3 opacity-80" />
+              <h4 className="text-sm font-semibold text-text-primary">Conexión de WhatsApp</h4>
+              <p className="text-xs text-text-secondary mt-2 max-w-[300px] mx-auto">
+                Conecta tu cuenta usando el flujo integrado de Facebook para gestionar mensajes.
+              </p>
+              <div className="mt-5">
+                <Button
+                  onClick={handleConnect}
+                  disabled={connecting}
+                  className="bg-[#25D366] hover:bg-[#20BD5A] text-white border-none shadow-md"
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  {connecting ? 'Conectando...' : 'Conectar con Facebook'}
+                </Button>
+              </div>
+              <p className="text-[10px] text-text-muted mt-4">
+                Compatible con Cloud API y modo Coexistencia.
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }

@@ -82,6 +82,9 @@ export const adminApi = {
   rejectPayment: (id: string, observacion: string) =>
     apiAdmin.put(`/payments/${id}/reject?companyId=${getCompanyId()}`, { observacion }),
 
+  resendReceipt: (id: string) =>
+    apiAdmin.post(`/payments/${id}/resend-receipt?companyId=${getCompanyId()}`),
+
   registerManualPayment: (formData: FormData) =>
     apiAdmin.post(`/payments/manual?companyId=${getCompanyId()}`, formData, {
       headers: {
@@ -137,8 +140,14 @@ export const adminApi = {
   getLotSaleDetail: (id: string) =>
     apiAdmin.get(`/lots/${id}/sale-detail?companyId=${getCompanyId()}`),
 
+  getLot: (id: string) =>
+    apiAdmin.get(`/lots/${id}`),
+
   reserveLot: (id: string, data: any) =>
     apiAdmin.post(`/lots/${id}/reserve?companyId=${getCompanyId()}`, data),
+
+  releaseLot: (id: string, data: any) =>
+    apiAdmin.post(`/lots/${id}/release?companyId=${getCompanyId()}`, data),
 
   getLotsPublic: (companyId: string, search?: string) => {
     const params = new URLSearchParams({
@@ -299,6 +308,12 @@ export const adminApi = {
   },
   
   // WhatsApp
+  getWhatsAppConfig: () =>
+    apiAdmin.get('/whatsapp/config'),
+  connectWhatsApp: (data: { code: string; wabaId?: string; phoneNumberId?: string }) =>
+    apiAdmin.post('/whatsapp/connect', data),
+  disconnectWhatsApp: () =>
+    apiAdmin.post('/whatsapp/disconnect', {}),
   getWhatsAppConversations: () =>
     apiAdmin.get('/whatsapp/conversations'),
   getWhatsAppTemplates: () =>

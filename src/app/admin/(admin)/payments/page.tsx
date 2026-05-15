@@ -21,7 +21,8 @@ import {
   Upload,
   Link as LinkIcon,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Mail
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -325,6 +326,18 @@ export default function PaymentsPage() {
       setIsProcessing(false)
     }
   }
+  
+  const handleResendReceipt = async (paymentId: string) => {
+    setIsProcessing(true)
+    try {
+      await adminApi.resendReceipt(paymentId)
+      toast.success('Recibo reenviado correctamente')
+    } catch (error) {
+      toast.error('Error al reenviar el recibo')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -595,6 +608,16 @@ export default function PaymentsPage() {
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
+                          <Button
+                            variant="glass"
+                            size="sm"
+                            className="glass-button text-accent-purple hover:bg-accent-purple/20"
+                            onClick={() => handleResendReceipt(payment.id)}
+                            title="Reenviar por Correo/SMS"
+                            disabled={isProcessing}
+                          >
+                            <Mail className="w-4 h-4" />
+                          </Button>
                         </div>
                       )}
                       {payment.status === 'PENDIENTE' && (
@@ -845,6 +868,16 @@ export default function PaymentsPage() {
                         title="Copiar Link"
                       >
                         <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="glass"
+                        size="sm"
+                        className="glass-button flex-1 bg-white/10"
+                        onClick={() => handleResendReceipt(selectedPayment.id)}
+                        disabled={isProcessing}
+                      >
+                        <Mail className="w-4 h-4 mr-2" />
+                        Reenviar
                       </Button>
                     </div>
                   )}
