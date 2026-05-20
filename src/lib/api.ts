@@ -136,4 +136,7 @@ export const apiPublic = {
 
   getBanks: (companySlug?: string) => 
     api.get(`/banks${companySlug ? `?companySlug=${companySlug}` : ''}`),
+
+  getCompanyAccounts: (companySlug: string) =>
+    api.get(`/public/accounts/${companySlug}`),
 }

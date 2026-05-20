@@ -22,7 +22,8 @@ import {
   CheckCircle,
   X,
   Search,
-  Smartphone
+  Smartphone,
+  Upload
 } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -50,6 +51,7 @@ interface AdminUser {
 interface TenantConfig {
   id: string
   name: string
+  slug?: string
   nit: string
   address: string
   phone: string
@@ -59,6 +61,15 @@ interface TenantConfig {
     tipoCuenta: string
     numeroCuenta: string
   }
+  bankAccounts?: Array<{
+    _id?: string
+    banco: string
+    tipoCuenta: string
+    numeroCuenta: string
+    titular?: string
+    qrCode?: string
+    isActive: boolean
+  }>
   integrations: {
     whatsappEnabled: boolean
     whatsappApiKey?: string
@@ -71,6 +82,8 @@ interface TenantConfig {
     daptaEnabled: boolean
     daptaApiKey?: string
   }
+  logo?: string
+  projectLogo?: string
 }
 
 // Mock data
@@ -88,12 +101,15 @@ const mockTenantConfig: TenantConfig = {
     tipoCuenta: 'Ahorros',
     numeroCuenta: '12345678901'
   },
+  bankAccounts: [],
   integrations: {
     whatsappEnabled: true,
     whatsappApiKey: 'sk_test_whatsapp_123***',
     daptaEnabled: false,
     daptaApiKey: undefined
-  }
+  },
+  logo: '',
+  projectLogo: ''
 }
 
 export default function SettingsPage() {
@@ -110,6 +126,19 @@ export default function SettingsPage() {
   const [configLoading, setConfigLoading] = useState(true)
   const [usersLoading, setUsersLoading] = useState(false)
 
+  // Bank accounts states
+  const [availableBanks, setAvailableBanks] = useState<any[]>([])
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false)
+  const [selectedBankIndex, setSelectedBankIndex] = useState<number | null>(null)
+  const [bankForm, setBankForm] = useState({
+    banco: '',
+    tipoCuenta: 'Ahorros',
+    numeroCuenta: '',
+    titular: '',
+    qrCode: '',
+    isActive: true
+  })
+
   const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
 
   // Fetch company config
@@ -123,6 +152,7 @@ export default function SettingsPage() {
         setTenantConfig({
           id: companyData._id,
           name: companyData.name,
+          slug: companyData.slug || '',
           nit: companyData.nit || '',
           address: companyData.address || '',
           phone: companyData.phone || '',
@@ -132,16 +162,30 @@ export default function SettingsPage() {
             tipoCuenta: 'Ahorros',
             numeroCuenta: ''
           },
+          bankAccounts: companyData.bankAccounts || [],
           integrations: companyData.integrations || {
             whatsappEnabled: false,
             daptaEnabled: false
-          }
+          },
+          logo: companyData.logo || '',
+          projectLogo: companyData.projectLogo || ''
         })
       }
     } catch (error) {
       toast.error('Error al cargar la configuración')
     } finally {
       setConfigLoading(false)
+    }
+  }
+
+  const fetchAvailableBanks = async () => {
+    try {
+      const response = await adminApi.getBanks(1, 100)
+      if (response.data.success) {
+        setAvailableBanks(response.data.data.banks)
+      }
+    } catch (error) {
+      console.error('Error fetching banks:', error)
     }
   }
 
@@ -161,9 +205,116 @@ export default function SettingsPage() {
     }
   }
 
+  const saveBankAccounts = async (newAccounts: any[]) => {
+    if (!selectedCompanyId) return
+    setIsSaving(true)
+    try {
+      await adminApi.updateCompany(selectedCompanyId, {
+        bankAccounts: newAccounts
+      })
+      toast.success('Cuentas bancarias actualizadas exitosamente')
+      fetchCompanyConfig()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al actualizar cuentas bancarias')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCreateBankAccount = () => {
+    setSelectedBankIndex(null)
+    setBankForm({
+      banco: '',
+      tipoCuenta: 'Ahorros',
+      numeroCuenta: '',
+      titular: '',
+      qrCode: '',
+      isActive: true
+    })
+    setIsBankModalOpen(true)
+  }
+
+  const handleEditBankAccount = (index: number) => {
+    const acc = tenantConfig.bankAccounts?.[index]
+    if (!acc) return
+    setSelectedBankIndex(index)
+    setBankForm({
+      banco: acc.banco,
+      tipoCuenta: acc.tipoCuenta,
+      numeroCuenta: acc.numeroCuenta,
+      titular: acc.titular || '',
+      qrCode: acc.qrCode || '',
+      isActive: acc.isActive
+    })
+    setIsBankModalOpen(true)
+  }
+
+  const handleDeleteBankAccount = async (index: number) => {
+    if (!confirm('¿Estás seguro de eliminar esta cuenta bancaria?')) return
+    const currentAccounts = tenantConfig.bankAccounts ? [...tenantConfig.bankAccounts] : []
+    currentAccounts.splice(index, 1)
+    await saveBankAccounts(currentAccounts)
+  }
+
+  const handleToggleBankAccountStatus = async (index: number) => {
+    const currentAccounts = tenantConfig.bankAccounts ? [...tenantConfig.bankAccounts] : []
+    if (!currentAccounts[index]) return
+    currentAccounts[index] = {
+      ...currentAccounts[index],
+      isActive: !currentAccounts[index].isActive
+    }
+    await saveBankAccounts(currentAccounts)
+  }
+
+  const handleQrCodeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('El archivo es demasiado grande (máximo 2MB)')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setBankForm(prev => ({
+        ...prev,
+        qrCode: reader.result as string
+      }))
+      toast.success('QR cargado exitosamente')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSaveBankAccount = async () => {
+    if (!bankForm.banco || !bankForm.numeroCuenta) {
+      toast.error('Banco y Número de cuenta son obligatorios')
+      return
+    }
+
+    const currentAccounts = tenantConfig.bankAccounts ? [...tenantConfig.bankAccounts] : []
+    
+    if (selectedBankIndex !== null) {
+      // Edit
+      currentAccounts[selectedBankIndex] = {
+        ...currentAccounts[selectedBankIndex],
+        ...bankForm
+      }
+    } else {
+      // Add new
+      currentAccounts.push({
+        ...bankForm
+      })
+    }
+
+    setIsBankModalOpen(false)
+    await saveBankAccounts(currentAccounts)
+  }
+
   // Load data on mount or company change
   useEffect(() => {
     fetchCompanyConfig()
+    fetchAvailableBanks()
     if (activeTab === 'quotas') fetchLimits()
   }, [selectedCompanyId, activeTab])
 
@@ -215,7 +366,9 @@ export default function SettingsPage() {
         address: tenantConfig.address,
         phone: tenantConfig.phone,
         email: tenantConfig.email,
-        bankInfo: tenantConfig.bankInfo
+        bankInfo: tenantConfig.bankInfo,
+        logo: tenantConfig.logo,
+        projectLogo: tenantConfig.projectLogo
       })
       toast.success('Información de la empresa guardada exitosamente')
       fetchCompanyConfig() // Refresh data
@@ -240,6 +393,16 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const copyAccountsLink = () => {
+    if (!tenantConfig.slug) {
+      toast.error('No se pudo generar el enlace. Falta el identificador de la empresa.')
+      return
+    }
+    const link = `${window.location.origin}/p/${tenantConfig.slug}/accounts`
+    navigator.clipboard.writeText(link)
+    toast.success('¡Enlace de cuentas copiado al portapapeles!')
   }
 
   const handleCreateUser = () => {
@@ -452,7 +615,415 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* Bank Information hidden */}
+              {/* Logos de la Empresa y del Proyecto */}
+              <Card variant="elevated" className="animate-fade-in-up mt-6">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-accent-blue animate-pulse" />
+                        Logos de Identidad de Marca
+                      </h3>
+                      <p className="text-sm text-text-secondary mt-1">
+                        Sube y configura los logos que aparecerán en los encabezados del Plan de Pagos (PDF) y de los recibos de caja.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Logo Empresa */}
+                    <div className="space-y-4 p-4 rounded-xl bg-glass-primary/5 border border-glass-border/30">
+                      <div>
+                        <span className="text-sm font-semibold text-text-primary block">Logo de la Empresa (Lado Izquierdo)</span>
+                        <span className="text-xs text-text-secondary block mt-1">Se muestra en la esquina superior izquierda del plan de pagos.</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {tenantConfig.logo ? (
+                          <div className="relative w-28 h-16 border border-glass-border bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+                            <img src={tenantConfig.logo} alt="Logo Empresa" className="max-w-full max-h-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTenantConfig(prev => ({ ...prev, logo: '' }))
+                                toast.success('Logo de la empresa removido. Guarda los cambios para aplicar.')
+                              }}
+                              className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-28 h-16 border-2 border-dashed border-glass-border rounded-lg flex items-center justify-center text-[10px] text-text-muted italic text-center px-2 leading-tight">
+                            Ningún logo configurado
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="company-logo-settings-input"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
+                                const base64 = event.target?.result as string
+                                setTenantConfig(prev => ({ ...prev, logo: base64 }))
+                                toast.success('Logo de la empresa cargado en caliente. Recuerda guardar los cambios.')
+                              }
+                              reader.readAsDataURL(file)
+                            }}
+                          />
+                          <label
+                            htmlFor="company-logo-settings-input"
+                            className="px-4 py-2 rounded-lg bg-accent-blue/15 hover:bg-accent-blue/25 text-accent-blue text-xs font-bold cursor-pointer transition-colors inline-block text-center w-full"
+                          >
+                            Cargar Logo
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Logo Proyecto */}
+                    <div className="space-y-4 p-4 rounded-xl bg-glass-primary/5 border border-glass-border/30">
+                      <div>
+                        <span className="text-sm font-semibold text-text-primary block">Logo del Proyecto (Lado Derecho)</span>
+                        <span className="text-xs text-text-secondary block mt-1">Se muestra en la esquina superior derecha del plan de pagos.</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {tenantConfig.projectLogo ? (
+                          <div className="relative w-28 h-16 border border-glass-border bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+                            <img src={tenantConfig.projectLogo} alt="Logo Proyecto" className="max-w-full max-h-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTenantConfig(prev => ({ ...prev, projectLogo: '' }))
+                                toast.success('Logo del proyecto removido. Guarda los cambios para aplicar.')
+                              }}
+                              className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-28 h-16 border-2 border-dashed border-glass-border rounded-lg flex items-center justify-center text-[10px] text-text-muted italic text-center px-2 leading-tight">
+                            Ningún logo configurado
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="project-logo-settings-input"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
+                                const base64 = event.target?.result as string
+                                setTenantConfig(prev => ({ ...prev, projectLogo: base64 }))
+                                toast.success('Logo del proyecto cargado en caliente. Recuerda guardar los cambios.')
+                              }
+                              reader.readAsDataURL(file)
+                            }}
+                          />
+                          <label
+                            htmlFor="project-logo-settings-input"
+                            className="px-4 py-2 rounded-lg bg-accent-blue/15 hover:bg-accent-blue/25 text-accent-blue text-xs font-bold cursor-pointer transition-colors inline-block text-center w-full"
+                          >
+                            Cargar Logo
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cuentas Bancarias de la Empresa */}
+              <Card variant="elevated" className="animate-fade-in-up mt-6">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                        <CreditCard className="w-5 h-5 text-accent-blue" />
+                        Cuentas Bancarias Autorizadas
+                      </h3>
+                      <p className="text-sm text-text-secondary mt-1">
+                        Configura las cuentas que verán tus clientes en su portal público para transferencias y pagos.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleCreateBankAccount}
+                      className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Agregar Cuenta
+                    </Button>
+                  </div>
+
+                  {/* Enlace de compartir */}
+                  {tenantConfig.slug && (
+                    <div className="p-4 rounded-xl border border-glass-border bg-glass-primary/10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-semibold text-text-primary">Enlace de Pago para Clientes</h4>
+                        <p className="text-xs text-text-secondary leading-relaxed">
+                          Comparte este enlace independiente para que tus clientes seleccionen una cuenta, escaneen el QR y paguen:
+                        </p>
+                        <p className="text-xs font-mono text-accent-blue truncate">
+                          {window.location.origin}/p/{tenantConfig.slug}/accounts
+                        </p>
+                      </div>
+                      <Button
+                        onClick={copyAccountsLink}
+                        size="sm"
+                        className="glass-button bg-accent-blue/15 border-accent-blue/20 text-accent-blue shrink-0 min-h-[38px]"
+                      >
+                        Copiar Enlace
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* List of accounts */}
+                  <div className="space-y-4">
+                    {!tenantConfig.bankAccounts || tenantConfig.bankAccounts.length === 0 ? (
+                      <div className="text-center py-8 rounded-xl border border-dashed border-glass-border bg-glass-primary/5">
+                        <CreditCard className="w-12 h-12 text-text-disabled mx-auto mb-3" />
+                        <p className="text-text-secondary font-medium">No has configurado ninguna cuenta bancaria aún.</p>
+                        <p className="text-text-muted text-xs mt-1">Presiona "Agregar Cuenta" para registrar tu primera cuenta con su código QR.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tenantConfig.bankAccounts.map((acc, index) => (
+                          <div 
+                            key={index}
+                            className={`p-4 rounded-xl border transition-all flex justify-between items-start gap-4 
+                              ${acc.isActive 
+                                ? 'bg-glass-primary/15 border-glass-border' 
+                                : 'bg-glass-primary/5 border-glass-border/30 opacity-70'
+                              }
+                            `}
+                          >
+                            <div className="space-y-2 flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-text-primary text-base truncate">{acc.banco}</span>
+                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider
+                                  ${acc.tipoCuenta === 'Ahorros' 
+                                    ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' 
+                                    : 'bg-accent-purple/20 text-accent-purple border border-accent-purple/30'
+                                  }
+                                `}>
+                                  {acc.tipoCuenta}
+                                </span>
+                              </div>
+                              <p className="text-sm font-semibold text-text-primary select-all">No. {acc.numeroCuenta}</p>
+                              {acc.titular && (
+                                <p className="text-xs text-text-secondary truncate">
+                                  <span className="font-medium text-text-muted">Titular:</span> {acc.titular}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2 pt-1">
+                                <span className="text-xs text-text-secondary">Visibilidad:</span>
+                                <button
+                                  onClick={() => handleToggleBankAccountStatus(index)}
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border backdrop-blur-sm transition-all
+                                    ${acc.isActive 
+                                      ? 'text-accent-green bg-accent-green/10 border-accent-green/20 hover:bg-accent-green/20' 
+                                      : 'text-accent-red bg-accent-red/10 border-accent-red/20 hover:bg-accent-red/20'
+                                    }
+                                  `}
+                                >
+                                  {acc.isActive ? 'Mostrado a Clientes' : 'Oculto'}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* QR code thumbnail */}
+                            <div className="flex flex-col items-end gap-3 shrink-0">
+                              {acc.qrCode ? (
+                                <div className="w-16 h-16 bg-white p-1 rounded-lg border border-glass-border overflow-hidden relative group/qr">
+                                  <img 
+                                    src={acc.qrCode} 
+                                    alt="QR de Pago" 
+                                    className="w-full h-full object-contain"
+                                  />
+                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/qr:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <span className="text-[9px] text-white font-bold uppercase tracking-wider">Preview</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="w-16 h-16 bg-glass-primary/10 rounded-lg border border-dashed border-glass-border flex flex-col items-center justify-center text-text-disabled">
+                                  <span className="text-[10px] text-center px-1">Sin QR</span>
+                                </div>
+                              )}
+
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="glass"
+                                  size="sm"
+                                  onClick={() => handleEditBankAccount(index)}
+                                  className="glass-button p-2 min-h-[32px] min-w-[32px]"
+                                >
+                                  <Edit className="w-3.5 h-3.5 text-text-secondary" />
+                                </Button>
+                                <Button
+                                  variant="glass"
+                                  size="sm"
+                                  onClick={() => handleDeleteBankAccount(index)}
+                                  className="glass-button p-2 min-h-[32px] min-w-[32px] text-accent-red hover:text-accent-red hover:bg-accent-red/10"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Modal de Agregar / Editar Cuenta Bancaria */}
+              <Modal 
+                isOpen={isBankModalOpen} 
+                onClose={() => setIsBankModalOpen(false)}
+                title={selectedBankIndex !== null ? "Editar Cuenta Bancaria" : "Agregar Cuenta Bancaria"}
+                size="lg"
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">Banco *</label>
+                      <select
+                        value={bankForm.banco}
+                        onChange={(e) => setBankForm(prev => ({ ...prev, banco: e.target.value }))}
+                        className="glass-input w-full min-h-[44px] px-3 py-2 bg-background-dark text-text-primary border border-glass-border focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue rounded-lg"
+                      >
+                        <option value="">Selecciona un banco...</option>
+                        {availableBanks.map(b => (
+                          <option key={b._id} value={b.acronym}>{b.acronym} - {b.socialDenomination}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">Tipo de Cuenta *</label>
+                      <select
+                        value={bankForm.tipoCuenta}
+                        onChange={(e) => setBankForm(prev => ({ ...prev, tipoCuenta: e.target.value }))}
+                        className="glass-input w-full min-h-[44px] px-3 py-2 bg-background-dark text-text-primary border border-glass-border focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue rounded-lg"
+                      >
+                        <option value="Ahorros">Ahorros</option>
+                        <option value="Corriente">Corriente</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Número de Cuenta *"
+                      value={bankForm.numeroCuenta}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, numeroCuenta: e.target.value }))}
+                      placeholder="Ej. 123456789"
+                    />
+
+                    <Input
+                      label="Titular de la Cuenta"
+                      value={bankForm.titular}
+                      onChange={(e) => setBankForm(prev => ({ ...prev, titular: e.target.value }))}
+                      placeholder="Ej. Juan Pérez"
+                    />
+                  </div>
+
+                  {/* QR Image Dropzone / Base64 upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                      <Upload className="w-4 h-4 text-accent-blue" />
+                      Código QR para la Cuenta (Imagen)
+                    </label>
+                    <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-glass-border bg-glass-primary/5">
+                      <div className="flex-1">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleQrCodeUpload}
+                          className="glass-input w-full min-h-[44px] pt-2 file:bg-glass-primary/30 file:border-0 file:rounded-md file:px-2 file:py-1 file:text-xs file:text-text-primary cursor-pointer"
+                        />
+                        <p className="text-[10px] text-text-muted mt-1">Carga el código QR oficial de tu banco en formato JPG, PNG o WebP. Máx 2MB.</p>
+                      </div>
+
+                      {bankForm.qrCode && (
+                        <div className="shrink-0 flex flex-col items-center gap-2">
+                          <div className="w-20 h-20 bg-white p-1 rounded-lg border border-glass-border overflow-hidden">
+                            <img 
+                              src={bankForm.qrCode} 
+                              alt="Previsualización" 
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setBankForm(prev => ({ ...prev, qrCode: '' }))}
+                            className="text-[10px] text-accent-red font-bold hover:underline"
+                          >
+                            Remover QR
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Active Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-glass-primary/10 border border-glass-border">
+                    <div>
+                      <span className="text-sm font-medium text-text-primary block">Mostrar en el Portal de Clientes</span>
+                      <span className="text-[10px] text-text-secondary">Si se desactiva, los clientes no verán esta cuenta como opción de pago.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setBankForm(prev => ({ ...prev, isActive: !prev.isActive }))}
+                      className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-all shrink-0 border
+                        ${bankForm.isActive 
+                          ? 'border-blue-600' 
+                          : 'bg-gray-300 dark:bg-glass-primary/30 border-gray-400 dark:border-glass-border/40'
+                        }
+                      `}
+                      style={{
+                        backgroundColor: bankForm.isActive ? '#2563eb' : undefined
+                      }}
+                    >
+                      <span className={`
+                        inline-block h-4 w-4 transform rounded-full transition-all shadow-md
+                        ${bankForm.isActive 
+                          ? 'translate-x-6 bg-white' 
+                          : 'translate-x-1 bg-gray-500 dark:bg-white'
+                        }
+                      `} />
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-glass-border">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsBankModalOpen(false)}
+                      className="glass-button border-glass-border text-text-secondary"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleSaveBankAccount}
+                      loading={isSaving}
+                      className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30"
+                    >
+                      Guardar Cuenta
+                    </Button>
+                  </div>
+                </div>
+              </Modal>
             </>
           )}
         </div>

@@ -70,7 +70,7 @@ interface PendingPayment {
 
 
 export default function PaymentsPage() {
-  const { isAuthenticated } = useAdminAuthStore()
+  const { isAuthenticated, admin } = useAdminAuthStore()
   const [selectedPayment, setSelectedPayment] = useState<PendingPayment | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDIENTE' | 'PAGADO' | 'MORA'>('ALL')
@@ -91,6 +91,7 @@ export default function PaymentsPage() {
   const [manualBank, setManualBank] = useState('')
   const [manualObservations, setManualObservations] = useState('')
   const [manualCapture, setManualCapture] = useState<File | null>(null)
+  const [manualPaymentMethod, setManualPaymentMethod] = useState<'efectivo' | 'transferencia'>('transferencia')
   const [companySlug, setCompanySlug] = useState('')
   const [banks, setBanks] = useState<any[]>([])
   const [loadingBanks, setLoadingBanks] = useState(false)
@@ -274,7 +275,7 @@ export default function PaymentsPage() {
       const formData = new FormData()
       formData.append('quotaId', quotaId)
       formData.append('amount', manualAmount || quotaValue.toString())
-      formData.append('bank', manualBank)
+      formData.append('bank', manualPaymentMethod === 'efectivo' ? 'EFECTIVO' : manualBank)
       formData.append('observations', manualObservations)
       if (manualCapture) {
         formData.append('capture', manualCapture)
@@ -292,6 +293,7 @@ export default function PaymentsPage() {
       setManualCapture(null)
       setSelectedClientId('')
       setClientDetails(null)
+      setManualPaymentMethod('transferencia')
 
       refresh()
     } catch (error) {
@@ -900,6 +902,7 @@ export default function PaymentsPage() {
           setManualBank('')
           setManualObservations('')
           setManualCapture(null)
+          setManualPaymentMethod('transferencia')
         }}
         title="Registrar Pago Manual"
         size="lg"
@@ -946,20 +949,65 @@ export default function PaymentsPage() {
                 </div>
               )}
 
+              {/* Payment Method Selector (Only for Logged-in Admins) */}
+              {['superadmin', 'tenant_admin', 'admin'].includes(admin?.role || '') && (
+                <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border space-y-3 animate-fade-in-up">
+                  <label className="block text-sm font-semibold text-text-primary flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-accent-blue" />
+                    Método de Pago
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setManualPaymentMethod('transferencia')}
+                      className={`h-12 rounded-xl border flex items-center justify-center font-bold transition-all duration-300 ${
+                        manualPaymentMethod === 'transferencia'
+                          ? 'bg-accent-blue/20 border-accent-blue text-accent-blue shadow-glow'
+                          : 'bg-glass-primary/10 border-glass-border text-text-muted hover:text-text-primary hover:bg-glass-primary/20'
+                      }`}
+                    >
+                      Transferencia Bancaria
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setManualPaymentMethod('efectivo')
+                        setManualBank('')
+                      }}
+                      className={`h-12 rounded-xl border flex items-center justify-center font-bold transition-all duration-300 ${
+                        manualPaymentMethod === 'efectivo'
+                          ? 'bg-accent-green/20 border-accent-green text-accent-green shadow-glow'
+                          : 'bg-glass-primary/10 border-glass-border text-text-muted hover:text-text-primary hover:bg-glass-primary/20'
+                      }`}
+                    >
+                      Efectivo / Caja
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" /> Banco
+                    <CreditCard className="w-4 h-4" /> Banco / Medio
                   </label>
-                  <Combobox
-                    options={banks.map(b => ({ value: b.acronym, label: b.acronym }))}
-                    value={manualBank}
-                    onChange={setManualBank}
-                    placeholder="Seleccione un banco..."
-                    searchPlaceholder="Buscar banco..."
-                    className="h-12"
-                  />
-                  {loadingBanks && <p className="text-[10px] text-text-muted mt-1 animate-pulse">Cargando bancos...</p>}
+                  {manualPaymentMethod === 'efectivo' && ['superadmin', 'tenant_admin', 'admin'].includes(admin?.role || '') ? (
+                    <div className="h-12 px-4 rounded-xl border border-glass-border/30 bg-glass-primary/20 flex items-center text-text-disabled select-none">
+                      Recibido en Efectivo (Caja)
+                    </div>
+                  ) : (
+                    <>
+                      <Combobox
+                        options={banks.map(b => ({ value: b.acronym, label: b.acronym }))}
+                        value={manualBank}
+                        onChange={setManualBank}
+                        placeholder="Seleccione un banco..."
+                        searchPlaceholder="Buscar banco..."
+                        className="h-12"
+                      />
+                      {loadingBanks && <p className="text-[10px] text-text-muted mt-1 animate-pulse">Cargando bancos...</p>}
+                    </>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
@@ -1023,18 +1071,25 @@ export default function PaymentsPage() {
                         className="flex items-center justify-between p-4 rounded-2xl border border-glass-border bg-glass-primary/10 hover:bg-glass-primary/20 transition-all hover:scale-[1.01]"
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${quota.type === 'inicial' ? 'bg-accent-purple/20 text-accent-purple' : 'bg-accent-blue/20 text-accent-blue'}`}>
-                            <span className="font-bold">#{quota.number}</span>
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${quota.number === 0 ? 'bg-accent-green/20 text-accent-green' : quota.type === 'inicial' ? 'bg-accent-purple/20 text-accent-purple' : 'bg-accent-blue/20 text-accent-blue'}`}>
+                            <span className="font-bold">{quota.number === 0 ? 'S' : `#${quota.number}`}</span>
                           </div>
                           <div>
-                            <p className={`font-bold ${quota.type === 'inicial' ? 'text-accent-purple' : 'text-text-primary'}`}>
-                              {quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'}
+                            <p className={`font-bold ${quota.number === 0 ? 'text-accent-green' : quota.type === 'inicial' ? 'text-accent-purple' : 'text-text-primary'}`}>
+                              {quota.number === 0 ? 'Separación' : quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'}
                             </p>
                             <p className="text-sm text-text-muted">Vence: {dayjs(quota.dueDate).format('DD/MM/YYYY')}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-6">
-                          <span className="text-xl font-bold text-text-primary">{formatCurrency(quota.value)}</span>
+                          <div className="text-right">
+                            <span className="text-xl font-bold text-text-primary">{formatCurrency(quota.value)}</span>
+                            {quota.amountPaid > 0 && (
+                              <p className="text-[10px] text-text-muted mt-0.5">
+                                Abonado: <span className="text-accent-green font-semibold">{formatCurrency(quota.amountPaid)}</span> | Pendiente: <span className="text-accent-red font-semibold">{formatCurrency(quota.value - quota.amountPaid)}</span>
+                              </p>
+                            )}
+                          </div>
                           <Button
                             size="lg"
                             className="bg-accent-green/20 text-accent-green border border-accent-green/30 hover:bg-accent-green/40 px-6 h-12 shadow-md shadow-accent-green/10"

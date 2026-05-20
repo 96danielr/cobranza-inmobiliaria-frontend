@@ -336,6 +336,9 @@ export const adminApi = {
   getCashFlowProjection: (months: number = 6) =>
     apiAdmin.get(`/reports/projection?companyId=${getCompanyId()}&months=${months}`),
 
+  getAdvancedReports: () =>
+    apiAdmin.get(`/reports/advanced?companyId=${getCompanyId()}`),
+
   // Audit
   getAuditLogs: (params: any) =>
     apiAdmin.get('/audit', { params: { ...params, companyId: getCompanyId() } }),

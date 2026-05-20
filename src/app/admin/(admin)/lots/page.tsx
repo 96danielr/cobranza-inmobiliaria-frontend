@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Search,
   Plus,
@@ -38,6 +38,7 @@ import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
+import { Combobox } from '@/components/ui/Combobox'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 
@@ -78,6 +79,57 @@ export default function LotsPage() {
   const [isReserveDetailModalOpen, setIsReserveDetailModalOpen] = useState(false)
   const [reserveDetail, setReserveDetail] = useState<any>(null)
   const [loadingReserveDetail, setLoadingReserveDetail] = useState(false)
+
+  const [companyLogo, setCompanyLogo] = useState<string>('')
+  const [projectLogo, setProjectLogo] = useState<string>('')
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'company' | 'project') => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string
+      try {
+        if (type === 'company') {
+          setCompanyLogo(base64)
+          if (selectedCompanyId) {
+            await adminApi.updateCompany(selectedCompanyId, { logo: base64 })
+          }
+          toast.success('Logo de la empresa guardado en la base de datos')
+        } else {
+          setProjectLogo(base64)
+          if (selectedCompanyId) {
+            await adminApi.updateCompany(selectedCompanyId, { projectLogo: base64 })
+          }
+          toast.success('Logo del proyecto guardado en la base de datos')
+        }
+      } catch (err) {
+        toast.error('Error al guardar el logo en la base de datos')
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleClearLogo = async (type: 'company' | 'project') => {
+    try {
+      if (type === 'company') {
+        setCompanyLogo('')
+        if (selectedCompanyId) {
+          await adminApi.updateCompany(selectedCompanyId, { logo: '' })
+        }
+        toast.success('Logo de la empresa eliminado de la base de datos')
+      } else {
+        setProjectLogo('')
+        if (selectedCompanyId) {
+          await adminApi.updateCompany(selectedCompanyId, { projectLogo: '' })
+        }
+        toast.success('Logo del proyecto eliminado de la base de datos')
+      }
+    } catch (err) {
+      toast.error('Error al eliminar el logo de la base de datos')
+    }
+  }
 
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
   const [releaseFormData, setReleaseFormData] = useState({ reason: '', observations: '' })
@@ -122,7 +174,10 @@ export default function LotsPage() {
     clientEmail: '',
     sellerId: '',
     bonus: '',
-    bonusValue: '0'
+    bonusValue: '0',
+    separationAmount: '0',
+    initialQuotaDueDate: dayjs().format('YYYY-MM-DD'),
+    paymentDay: '5'
   })
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -245,8 +300,17 @@ export default function LotsPage() {
       if (response.data.success) {
         setSaleDetail(response.data.data)
       }
-    } catch (error) {
 
+      // Also fetch current company logos from MongoDB
+      if (selectedCompanyId) {
+        const companyResponse = await adminApi.getCompany(selectedCompanyId)
+        if (companyResponse.data.success) {
+          const companyData = companyResponse.data.data.company
+          setCompanyLogo(companyData.logo || '')
+          setProjectLogo(companyData.projectLogo || '')
+        }
+      }
+    } catch (error) {
       toast.error('Error al cargar detalles de la venta')
     } finally {
       setLoadingSaleDetail(false)
@@ -270,7 +334,10 @@ export default function LotsPage() {
       clientEmail: '',
       sellerId: '',
       bonus: '',
-      bonusValue: '0'
+      bonusValue: '0',
+      separationAmount: lot.status === 'separado' ? '500000' : '0',
+      initialQuotaDueDate: dayjs().add(15, 'day').format('YYYY-MM-DD'),
+      paymentDay: '5'
     })
     setIsSellModalOpen(true)
     fetchClientsIfNeeded()
@@ -306,7 +373,10 @@ export default function LotsPage() {
         negotiation: sellFormData.negotiation,
         sellerId: sellFormData.sellerId || undefined,
         bonus: sellFormData.bonus,
-        bonusValue: parseFloat(sellFormData.bonusValue) || 0
+        bonusValue: parseFloat(sellFormData.bonusValue) || 0,
+        separationAmount: parseFloat(sellFormData.separationAmount) || 0,
+        initialQuotaDueDate: sellFormData.initialQuotaDueDate,
+        paymentDay: parseInt(sellFormData.paymentDay) || 5
       }
 
       if (isCreatingNewClient) {
@@ -483,41 +553,88 @@ export default function LotsPage() {
 
     const doc = new jsPDF()
     
-    // Header
-    doc.setFontSize(20)
-    doc.setTextColor(44, 62, 80)
-    doc.text('Plan de Pagos', 105, 15, { align: 'center' })
+    // Space for Company Logo (Left) and Project Logo (Right)
+    doc.setDrawColor(200, 200, 200)
     
-    doc.setFontSize(10)
-    doc.setTextColor(100)
-    doc.text(`Generado el: ${dayjs().format('DD/MM/YYYY HH:mm')}`, 105, 22, { align: 'center' })
+    // Company Logo space (Izquierda)
+    if (companyLogo) {
+      try {
+        doc.addImage(companyLogo, 'PNG', 14, 10, 45, 20)
+      } catch (err) {
+        doc.setLineDashPattern([2, 2], 0)
+        doc.rect(14, 10, 45, 20)
+        doc.setFontSize(8)
+        doc.setTextColor(150)
+        doc.text('[ LOGO EMPRESA ]', 36.5, 21, { align: 'center' })
+      }
+    } else {
+      doc.setLineDashPattern([2, 2], 0)
+      doc.rect(14, 10, 45, 20)
+      doc.setFontSize(8)
+      doc.setTextColor(150)
+      doc.text('[ LOGO EMPRESA ]', 36.5, 21, { align: 'center' })
+    }
+    
+    // Project Logo space (Derecha)
+    if (projectLogo) {
+      try {
+        doc.addImage(projectLogo, 'PNG', 151, 10, 45, 20)
+      } catch (err) {
+        doc.setLineDashPattern([2, 2], 0)
+        doc.rect(151, 10, 45, 20)
+        doc.setFontSize(8)
+        doc.setTextColor(150)
+        doc.text('[ LOGO PROYECTO ]', 173.5, 21, { align: 'center' })
+      }
+    } else {
+      doc.setLineDashPattern([2, 2], 0)
+      doc.rect(151, 10, 45, 20)
+      doc.setFontSize(8)
+      doc.setTextColor(150)
+      doc.text('[ LOGO PROYECTO ]', 173.5, 21, { align: 'center' })
+    }
+    
+    // Restore normal solid lines and colors
+    doc.setLineDashPattern([], 0)
+    doc.setDrawColor(0, 0, 0)
+
+    // Header Title (Centered)
+    doc.setFontSize(18)
+    doc.setTextColor(44, 62, 80)
+    doc.text('Plan de Pagos', 105, 18, { align: 'center' })
+    
+    doc.setFontSize(9)
+    doc.setTextColor(120)
+    doc.text(`Generado el: ${dayjs().format('DD/MM/YYYY HH:mm')}`, 105, 25, { align: 'center' })
 
     // Lot and Client Info
     doc.setFontSize(12)
-    doc.setTextColor(0)
-    doc.text('Información del Lote', 14, 35)
-    doc.line(14, 37, 200, 37)
+    doc.setTextColor(44, 62, 80)
+    doc.text('Información del Lote', 14, 40)
+    doc.text('Información del Cliente', 120, 40)
+    doc.line(14, 42, 200, 42)
     
     doc.setFontSize(10)
-    doc.text(`Lote: ${selectedLot.stage} - ${selectedLot.lotNumber}`, 14, 45)
-    doc.text(`Nomenclatura: ${selectedLot.nomenclature || 'N/A'}`, 14, 50)
-    doc.text(`Precio de Venta: ${formatCurrency(saleDetail.contract.totalValue)}`, 14, 55)
+    doc.setTextColor(0)
+    doc.text(`Lote: ${selectedLot.stage} - ${selectedLot.lotNumber}`, 14, 50)
+    doc.text(`Nomenclatura: ${selectedLot.nomenclature || 'N/A'}`, 14, 56)
+    doc.text(`Precio de Venta: ${formatCurrency(saleDetail.contract.totalValue)}`, 14, 62)
     
-    doc.text('Información del Cliente', 120, 35)
-    doc.text(`Nombre: ${saleDetail.contract.client?.name}`, 120, 45)
-    doc.text(`Cédula: ${saleDetail.contract.client?.idNumber}`, 120, 50)
-    doc.text(`Teléfono: ${saleDetail.contract.client?.phone}`, 120, 55)
+    doc.text(`Nombre: ${saleDetail.contract.client?.name}`, 120, 50)
+    doc.text(`Cédula: ${saleDetail.contract.client?.idNumber}`, 120, 56)
+    doc.text(`Teléfono: ${saleDetail.contract.client?.phone}`, 120, 62)
+    doc.text(`Correo: ${saleDetail.contract.client?.email || 'N/A'}`, 120, 68)
 
     // Quotas Table
     const tableRows = saleDetail.quotas.map((q: any) => [
-      q.type === 'cuota' ? `Cuota ${q.number}` : q.type === 'inicial' ? `Cuota Inicial ${q.number}` : `Extra ${q.number}`,
+      q.number === 0 ? 'Separación' : q.type === 'cuota' ? `Cuota ${q.number}` : q.type === 'inicial' ? `Cuota Inicial ${q.number}` : `Ordinaria ${q.number}`,
       dayjs(q.dueDate).format('DD/MM/YYYY'),
       formatCurrency(q.value),
-      q.status === 'pagado' ? 'PAGADO' : 'PENDIENTE'
+      q.status === 'pagado' || q.status === 'pagada' ? 'PAGADO' : 'PENDIENTE'
     ])
 
     autoTable(doc, {
-      startY: 65,
+      startY: 76,
       head: [['Descripción', 'Fecha de Vencimiento', 'Valor', 'Estado']],
       body: tableRows,
       theme: 'grid',
@@ -923,28 +1040,16 @@ export default function LotsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Número de Lote (Lote)</label>
-              <Input
-                name="lotNumber"
-                value={formData.lotNumber}
-                onChange={handleInputChange}
-                placeholder="Ej: 275-2"
-                required
-                className="glass-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Nomenclatura (Opcional)</label>
-              <Input
-                name="nomenclature"
-                value={formData.nomenclature}
-                onChange={handleInputChange}
-                placeholder="Ej: 42"
-                className="glass-input"
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Lote</label>
+            <Input
+              name="lotNumber"
+              value={formData.lotNumber}
+              onChange={handleInputChange}
+              placeholder="Ej: 275-2"
+              required
+              className="glass-input"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1137,20 +1242,13 @@ export default function LotsPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                <select
-                  name="clientId"
+                <Combobox
+                  options={clients.map(c => ({ value: c._id, label: `${c.name} - ${c.idNumber}` }))}
                   value={sellFormData.clientId}
-                  onChange={handleSellInputChange}
-                  required={!isCreatingNewClient}
-                  className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
-                >
-                  <option value="">Seleccione un cliente...</option>
-                  {clients.map(c => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} - {c.idNumber}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSellFormData(prev => ({ ...prev, clientId: val }))}
+                  placeholder="Seleccione un cliente..."
+                  searchPlaceholder="Buscar por nombre o cédula..."
+                />
                 {clientsLoading && <p className="text-xs text-text-muted animate-pulse">Cargando clientes...</p>}
               </div>
             )}
@@ -1264,6 +1362,21 @@ export default function LotsPage() {
                   />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-text-secondary font-medium">Monto de Separación (Descontar de la Inicial)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-green" />
+                  <Input
+                    name="separationAmount"
+                    type="number"
+                    value={sellFormData.separationAmount}
+                    onChange={handleSellInputChange}
+                    className="glass-input pl-10 border-accent-green/30 focus:border-accent-green"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -1285,31 +1398,86 @@ export default function LotsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-text-secondary"># Cuotas Ordinarias</label>
+                <label className="text-xs text-text-secondary">Fecha Pago Resto de Inicial</label>
                 <Input
-                  name="installmentsCount"
-                  type="number"
-                  value={sellFormData.installmentsCount}
+                  name="initialQuotaDueDate"
+                  type="date"
+                  value={sellFormData.initialQuotaDueDate}
                   onChange={handleSellInputChange}
                   className="glass-input"
                   required
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-text-secondary"># Cuotas Ordinarias</label>
+                  <Input
+                    name="installmentsCount"
+                    type="number"
+                    value={sellFormData.installmentsCount}
+                    onChange={handleSellInputChange}
+                    className="glass-input"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-text-secondary">Día de Pago Ordinario</label>
+                  <select
+                    name="paymentDay"
+                    value={sellFormData.paymentDay}
+                    onChange={handleSellInputChange}
+                    className="w-full h-11 px-3 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
+                    required
+                  >
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
+                      <option key={day} value={day}>
+                        Día {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Summary Preview */}
-          <div className="p-4 rounded-xl bg-accent-blue/5 border border-accent-blue/20">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-text-secondary">Por cobrar en cuotas:</span>
+          <div className="p-4 rounded-xl bg-accent-blue/5 border border-accent-blue/20 space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-text-secondary">Valor Neto Pactado:</span>
+              <span className="font-semibold text-text-primary">
+                {formatCurrency(Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-text-secondary">Total Inicial Pactado ({sellFormData.initialQuotaPercentage}%):</span>
+              <span className="font-semibold text-text-primary">
+                {formatCurrency((Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (Number(sellFormData.initialQuotaPercentage || 0) / 100))}
+              </span>
+            </div>
+            {Number(sellFormData.separationAmount || 0) > 0 && (
+              <div className="flex justify-between items-center text-xs text-accent-green font-medium">
+                <span>Descuento por Separación:</span>
+                <span>-{formatCurrency(Number(sellFormData.separationAmount || 0))}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
+              <span className="text-text-secondary font-semibold">Inicial Restante por cobrar ({sellFormData.initialQuotasCount} cuotas):</span>
               <span className="font-bold text-accent-blue">
-                {formatCurrency(parseFloat(sellFormData.totalValue || '0') * (1 - parseFloat(sellFormData.initialQuotaPercentage || '0') / 100))}
+                {formatCurrency(Math.max(0, (Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (Number(sellFormData.initialQuotaPercentage || 0) / 100) - Number(sellFormData.separationAmount || 0)))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
+              <span className="text-text-secondary font-semibold">Financiado Ordinario ({sellFormData.installmentsCount} cuotas):</span>
+              <span className="font-bold text-accent-purple">
+                {formatCurrency((Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100))}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs mt-1 text-text-muted italic">
-              <span>Valor cuota mensual estim.:</span>
+              <span>Cuota mensual ordinaria est.:</span>
               <span>
-                {formatCurrency((parseFloat(sellFormData.totalValue || '0') * (1 - parseFloat(sellFormData.initialQuotaPercentage || '0') / 100)) / (parseInt(sellFormData.installmentsCount) || 1))}
+                {formatCurrency(((Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100)) / (parseInt(sellFormData.installmentsCount) || 1))}
               </span>
             </div>
           </div>
@@ -1368,6 +1536,90 @@ export default function LotsPage() {
                 <FileDown className="w-4 h-4 mr-2" />
                 Descargar Plan
               </Button>
+            </div>
+
+            {/* Logo Configuration Section */}
+            <div className="p-4 rounded-xl bg-glass-primary/10 border border-glass-border/40 space-y-4">
+              <div className="flex items-center gap-2 border-b border-glass-border/30 pb-2">
+                <Building2 className="w-5 h-5 text-accent-blue animate-pulse" />
+                <div>
+                  <h4 className="font-bold text-sm text-text-primary">Configuración de Logos para el PDF</h4>
+                  <p className="text-[11px] text-text-secondary">Sube los logos de tu empresa y del proyecto para que aparezcan en el encabezado del plan de pagos descargable.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Logo Empresa */}
+                <div className="space-y-2 p-3 rounded-lg bg-glass-primary/5 border border-glass-border/30">
+                  <span className="text-xs font-semibold text-text-primary block">Logo de la Empresa (Izquierda)</span>
+                  <div className="flex items-center gap-3">
+                    {companyLogo ? (
+                      <div className="relative w-16 h-10 border border-glass-border bg-white rounded flex items-center justify-center overflow-hidden">
+                        <img src={companyLogo} alt="Logo Empresa" className="max-w-full max-h-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => handleClearLogo('company')}
+                          className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-16 h-10 border border-dashed border-glass-border rounded flex items-center justify-center text-[9px] text-text-muted italic text-center leading-none">
+                        Sin Logo
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="company-logo-input"
+                      className="hidden"
+                      onChange={(e) => handleLogoUpload(e, 'company')}
+                    />
+                    <label
+                      htmlFor="company-logo-input"
+                      className="px-3 py-1.5 rounded bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-blue text-xs font-bold cursor-pointer transition-colors"
+                    >
+                      Subir Imagen
+                    </label>
+                  </div>
+                </div>
+
+                {/* Logo Proyecto */}
+                <div className="space-y-2 p-3 rounded-lg bg-glass-primary/5 border border-glass-border/30">
+                  <span className="text-xs font-semibold text-text-primary block">Logo del Proyecto (Derecha)</span>
+                  <div className="flex items-center gap-3">
+                    {projectLogo ? (
+                      <div className="relative w-16 h-10 border border-glass-border bg-white rounded flex items-center justify-center overflow-hidden">
+                        <img src={projectLogo} alt="Logo Proyecto" className="max-w-full max-h-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => handleClearLogo('project')}
+                          className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-16 h-10 border border-dashed border-glass-border rounded flex items-center justify-center text-[9px] text-text-muted italic text-center leading-none">
+                        Sin Logo
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="project-logo-input"
+                      className="hidden"
+                      onChange={(e) => handleLogoUpload(e, 'project')}
+                    />
+                    <label
+                      htmlFor="project-logo-input"
+                      className="px-3 py-1.5 rounded bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-blue text-xs font-bold cursor-pointer transition-colors"
+                    >
+                      Subir Imagen
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1484,20 +1736,35 @@ export default function LotsPage() {
                   <tbody className="text-sm">
                     {saleDetail.quotas.map((quota: any) => (
                       <tr key={quota._id} className="border-b border-glass-border hover:bg-glass-primary/10">
-                        <td className="py-3 font-medium text-text-secondary">{quota.number}</td>
-                        <td className="py-3 capitalize text-text-muted">{quota.type}</td>
+                        <td className="py-3 font-medium text-text-secondary">{quota.number === 0 ? '-' : quota.number}</td>
+                        <td className="py-3 capitalize text-text-muted">
+                          {quota.number === 0 ? 'separación' : quota.type === 'extra' ? 'ordinaria' : quota.type}
+                        </td>
                         <td className="py-3 text-text-primary">
                           {dayjs(quota.dueDate).format('DD/MM/YYYY')}
                         </td>
-                        <td className="py-3 text-right font-bold text-text-primary">
-                          {formatCurrency(quota.value)}
+                        <td className="py-3 text-right text-text-primary">
+                          <div className="font-bold">{formatCurrency(quota.value)}</div>
+                          {quota.amountPaid > 0 && quota.amountPaid < quota.value && (
+                            <div className="text-[10px] text-text-muted mt-0.5 leading-tight">
+                              Abonado: <span className="text-accent-green font-semibold">{formatCurrency(quota.amountPaid)}</span><br />
+                              Saldo: <span className="text-accent-red font-semibold">{formatCurrency(quota.value - quota.amountPaid)}</span>
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${quota.status === 'pagada'
-                            ? 'bg-accent-green/10 text-accent-green'
-                            : 'bg-accent-red/10 text-accent-red'
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            quota.status === 'pagada' || quota.status === 'pagado'
+                              ? 'bg-accent-green/10 text-accent-green'
+                              : quota.amountPaid > 0
+                              ? 'bg-accent-yellow/10 text-accent-yellow'
+                              : 'bg-accent-red/10 text-accent-red'
                             }`}>
-                            {quota.status}
+                            {quota.status === 'pagada' || quota.status === 'pagado'
+                              ? 'PAGADO'
+                              : quota.amountPaid > 0
+                              ? 'ABONADA'
+                              : quota.status}
                           </span>
                         </td>
                       </tr>
@@ -1623,23 +1890,14 @@ export default function LotsPage() {
                 </div>
               </div>
             ) : (
-              <div className="relative">
-                <select
+              <div className="space-y-2">
+                <Combobox
+                  options={clients.map(c => ({ value: c._id, label: `${c.name} - ${c.idNumber}` }))}
                   value={reserveFormData.clientId}
-                  onChange={(e) => setReserveFormData(prev => ({ ...prev, clientId: e.target.value }))}
-                  required={!isCreatingNewClient}
-                  className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
-                >
-                  <option value="">Seleccione un cliente...</option>
-                  {clients.map(c => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} - {c.idNumber}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Users className="w-4 h-4 text-text-disabled" />
-                </div>
+                  onChange={(val) => setReserveFormData(prev => ({ ...prev, clientId: val }))}
+                  placeholder="Seleccione un cliente..."
+                  searchPlaceholder="Buscar por nombre o cédula..."
+                />
               </div>
             )}
           </div>
