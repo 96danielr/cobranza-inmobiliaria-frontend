@@ -124,7 +124,7 @@ export default function PaymentsPage() {
   const fetchBanks = async () => {
     try {
       setLoadingBanks(true)
-      const response = await adminApi.getBanks(1, 1000) // Get all banks
+      const response = await adminApi.getBanks(1, 1000, undefined, undefined, undefined, false) // Only get active/visible banks!
       if (response.data.success) {
         setBanks(response.data.data.banks)
       }
@@ -184,7 +184,8 @@ export default function PaymentsPage() {
 
   const pagination = useServerPagination({
     fetchData: fetchPayments,
-    initialLimit: 20
+    initialLimit: 20,
+    dependencies: [statusFilter]
   })
 
   const refresh = () => pagination.refresh()

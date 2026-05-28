@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { Eye, EyeOff, Building2, Shield, ChevronRight } from 'lucide-react'
 
 import { useAdminAuthStore, TenantMembership } from '@/stores/adminAuthStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -27,6 +28,17 @@ type AdminLoginFormData = z.infer<typeof adminLoginSchema>
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const { theme } = useThemeStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const logoSrc = mounted && theme === 'light'
+    ? '/PERFIL FONDO BLANCO.jpeg'
+    : '/PERFIL FONDO AZUL OSCURO.jpeg'
+
   const {
     login,
     selectTenant,
@@ -162,14 +174,18 @@ export default function AdminLoginPage() {
 
       <div className="relative w-full max-w-md animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 glass-card mb-6 shadow-glow border-accent-purple/30">
-            <Building2 className="w-12 h-12 text-accent-purple" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden glass-card mb-6 shadow-glow border-glass-border p-1">
+            <img 
+              src={logoSrc} 
+              alt="Logo" 
+              className="w-full h-full object-cover rounded-2xl" 
+            />
           </div>
           <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
             <span className="gradient-text">Panel Administrativo</span>
           </h1>
           <p className="text-text-secondary text-responsive-base">
-            Sistema de Cobranza Inmobiliaria
+            Operix - Sistema de Cobranza Inmobiliaria
           </p>
         </div>
 
@@ -235,7 +251,7 @@ export default function AdminLoginPage() {
         </Card>
 
         <div className="mt-8 text-center text-sm text-text-muted">
-          © 2026 Sistema de Cobranza Inmobiliaria - Panel Administrativo
+          © 2026 Operix - Panel Administrativo
         </div>
       </div>
     </div>

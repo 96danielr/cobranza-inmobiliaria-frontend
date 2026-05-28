@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   Search,
   Plus,
@@ -62,6 +63,9 @@ interface Lot {
 
 export default function LotsPage() {
   const { selectedCompanyId, admin } = useAdminAuthStore()
+  const searchParams = useSearchParams()
+  const initialStatus = searchParams.get('status') || ''
+  const [statusFilter, setStatusFilter] = useState(initialStatus)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null)
@@ -184,7 +188,7 @@ export default function LotsPage() {
 
   const fetchLots = async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     try {
-      const response = await adminApi.getLots(page, limit, search, sortBy, sortOrder)
+      const response = await adminApi.getLots(page, limit, search, sortBy, sortOrder, statusFilter)
       if (!response.data.success) {
         throw new Error('Error loading lots')
       }
@@ -204,7 +208,8 @@ export default function LotsPage() {
 
   const pagination = useServerPagination({
     fetchData: fetchLots,
-    initialLimit: 20
+    initialLimit: 20,
+    dependencies: [statusFilter]
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -715,17 +720,32 @@ export default function LotsPage() {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search & Filters */}
       <Card variant="interactive" className="animate-fade-in-up animate-fade-in-up-delay">
         <CardContent className="p-4 md:p-6">
-          <div className="flex-1">
-            <Input
-              placeholder="Buscar por etapa, nomenclatura o número de lote..."
-              value={pagination.search}
-              onChange={(e) => pagination.handleSearch(e.target.value)}
-              className="glass-input"
-              icon={Search}
-            />
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex-1 w-full">
+              <Input
+                placeholder="Buscar por etapa, nomenclatura o número de lote..."
+                value={pagination.search}
+                onChange={(e) => pagination.handleSearch(e.target.value)}
+                className="glass-input"
+                icon={Search}
+              />
+            </div>
+            <div className="w-full sm:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-4 py-2 bg-glass-primary/30 text-text-primary border border-glass-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-blue/50 text-sm font-medium transition-all"
+              >
+                <option value="" className="bg-slate-800 text-white">Todos los estados</option>
+                <option value="disponible" className="bg-slate-800 text-white">Disponible</option>
+                <option value="apartado" className="bg-slate-800 text-white">Apartado</option>
+                <option value="separado" className="bg-slate-800 text-white">Separado</option>
+                <option value="vendido" className="bg-slate-800 text-white">Vendido</option>
+              </select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1041,7 +1061,7 @@ export default function LotsPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">Lote</label>
+            <label className="text-sm font-medium text-text-secondary">Número de Lote</label>
             <Input
               name="lotNumber"
               value={formData.lotNumber}
@@ -1364,7 +1384,7 @@ export default function LotsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-text-secondary font-medium">Monto de Separación (Descontar de la Inicial)</label>
+                <label className="text-xs text-text-secondary font-medium">Monto de Separación</label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-green" />
                   <Input
@@ -1458,18 +1478,18 @@ export default function LotsPage() {
             </div>
             {Number(sellFormData.separationAmount || 0) > 0 && (
               <div className="flex justify-between items-center text-xs text-accent-green font-medium">
-                <span>Descuento por Separación:</span>
+                <span>Valor de la separación:</span>
                 <span>-{formatCurrency(Number(sellFormData.separationAmount || 0))}</span>
               </div>
             )}
             <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
-              <span className="text-text-secondary font-semibold">Inicial Restante por cobrar ({sellFormData.initialQuotasCount} cuotas):</span>
+              <span className="text-text-secondary font-semibold">Cuota inicial ({sellFormData.initialQuotasCount} cuotas):</span>
               <span className="font-bold text-accent-blue">
                 {formatCurrency(Math.max(0, (Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (Number(sellFormData.initialQuotaPercentage || 0) / 100) - Number(sellFormData.separationAmount || 0)))}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
-              <span className="text-text-secondary font-semibold">Financiado Ordinario ({sellFormData.installmentsCount} cuotas):</span>
+              <span className="text-text-secondary font-semibold">Valor financiado ({sellFormData.installmentsCount} cuotas):</span>
               <span className="font-bold text-accent-purple">
                 {formatCurrency((Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100))}
               </span>

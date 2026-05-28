@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { Eye, EyeOff, Home, ShieldCheck } from 'lucide-react'
 
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -23,6 +24,17 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const { theme } = useThemeStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const logoSrc = mounted && theme === 'light'
+    ? '/PERFIL FONDO BLANCO.jpeg'
+    : '/PERFIL FONDO AZUL OSCURO.jpeg'
+
   const { login, isAuthenticated, admin, isLoading } = useAdminAuthStore()
 
   const {
@@ -73,8 +85,12 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 glass-card mb-6 shadow-glow border-accent-blue/30">
-            <Home className="w-10 h-10 text-accent-blue" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden glass-card mb-6 shadow-glow border-glass-border p-1">
+            <img 
+              src={logoSrc} 
+              alt="Logo" 
+              className="w-full h-full object-cover rounded-2xl" 
+            />
           </div>
           <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
             <span className="gradient-text">Portal Cliente</span>
@@ -146,7 +162,7 @@ export default function LoginPage() {
         </Card>
 
         <div className="mt-8 text-center text-sm text-text-muted">
-          © 2026 Sistema de Cobranza Inmobiliaria
+          © 2026 Operix - Sistema de Cobranza Inmobiliaria
         </div>
       </div>
     </div>

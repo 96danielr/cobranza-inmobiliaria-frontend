@@ -11,7 +11,8 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Minus
+  Minus,
+  Download
 } from 'lucide-react'
 import { Button } from './Button'
 import { Card, CardContent } from './Card'
@@ -35,9 +36,10 @@ interface PortfolioCardProps {
     contracts?: any[]
   }
   onView: (client: any) => void
+  onDownloadStatement?: (client: any) => void
 }
 
-export function PortfolioCard({ client, onView }: PortfolioCardProps) {
+export function PortfolioCard({ client, onView, onDownloadStatement }: PortfolioCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   const formatCurrency = (value: number) => {
@@ -291,6 +293,17 @@ export function PortfolioCard({ client, onView }: PortfolioCardProps) {
 
           {/* Main Actions */}
           <div className="flex items-center gap-2">
+            {onDownloadStatement && (
+              <Button
+                variant="glass"
+                size="sm"
+                onClick={() => onDownloadStatement(client)}
+                className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
+                title="Descargar Estado de Cuenta"
+              >
+                <Download className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               variant="glass"
               size="sm"

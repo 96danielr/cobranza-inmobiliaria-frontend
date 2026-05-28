@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 import { adminNavItems, filterAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useClickAway } from '@/hooks/useClickAway'
 
@@ -30,6 +30,16 @@ export default function AdminLayout({
   const { isAuthenticated, _hasHydrated, admin, logout, selectedCompanyId, selectedCompanyName } = useAdminAuthStore()
   const router = useRouter()
   const pathname = usePathname()
+  const { theme } = useThemeStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const logoSrc = mounted && theme === 'light'
+    ? '/PERFIL FONDO BLANCO.jpeg'
+    : '/PERFIL FONDO AZUL OSCURO.jpeg'
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -123,16 +133,13 @@ export default function AdminLayout({
         <div className="sidebar-admin">
           <div className="flex flex-col h-full">
             {/* Sidebar Header - System Name */}
-            <div className="flex items-center px-6 py-4 border-b border-glass-border min-h-[73px]">
-              <div className="flex items-center overflow-hidden">
-                <div className="p-2 bg-gradient-primary rounded-lg shadow-glow flex-shrink-0">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <div className="ml-3 min-w-0">
-                  <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter text-company-highlight">
-                    Sistema Cobranza
-                  </h2>
-                </div>
+            <div className="flex flex-col items-center justify-center px-6 py-6 border-b border-glass-border min-h-[110px]">
+              <div className="w-24 h-16 rounded-2xl overflow-hidden p-1">
+                <img 
+                  src={logoSrc} 
+                  alt="Logo" 
+                  className="w-full h-full object-cover rounded-xl" 
+                />
               </div>
             </div>
 

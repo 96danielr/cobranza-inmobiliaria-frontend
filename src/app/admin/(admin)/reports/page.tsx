@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   TrendingUp, 
   Users, 
@@ -117,6 +118,7 @@ interface AdvancedReportData {
 }
 
 export default function ReportsPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'sales' | 'finance'>('sales')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<SalesReportData | null>(null)
@@ -235,13 +237,13 @@ export default function ReportsPage() {
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex bg-gray-100 dark:bg-glass-primary/30 backdrop-blur-sm p-1 rounded-2xl border border-gray-200 dark:border-glass-border self-start w-full max-w-md">
+      <div className="flex bg-glass-primary/40 backdrop-blur-sm p-1 rounded-2xl border border-glass-border self-start w-full max-w-md">
         <button
           onClick={() => setActiveTab('sales')}
           className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
             activeTab === 'sales' 
-              ? 'bg-blue-600 dark:bg-accent-blue text-white shadow-md' 
-              : 'text-gray-500 hover:text-gray-900 dark:text-text-secondary dark:hover:text-text-primary'
+              ? 'bg-blue-600 text-white shadow-md' 
+              : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
           }`}
         >
           <BarChart3 className="w-4 h-4" />
@@ -251,8 +253,8 @@ export default function ReportsPage() {
           onClick={() => setActiveTab('finance')}
           className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
             activeTab === 'finance' 
-              ? 'bg-blue-600 dark:bg-accent-blue text-white shadow-md' 
-              : 'text-gray-500 hover:text-gray-900 dark:text-text-secondary dark:hover:text-text-primary'
+              ? 'bg-blue-600 text-white shadow-md' 
+              : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
           }`}
         >
           <Wallet className="w-4 h-4" />
@@ -304,7 +306,11 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="interactive" className="stats-card stats-yellow">
+            <Card 
+              variant="interactive" 
+              className="stats-card stats-yellow cursor-pointer"
+              onClick={() => router.push('/admin/lots?status=separado')}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { 
   Home, 
@@ -10,6 +11,7 @@ import {
   LogOut 
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 
@@ -55,6 +57,16 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { logout, client } = useAuthStore()
+  const { theme } = useThemeStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const logoSrc = mounted && theme === 'light'
+    ? '/PERFIL FONDO BLANCO.jpeg'
+    : '/PERFIL FONDO AZUL OSCURO.jpeg'
 
   const handleNavigation = (href: string) => {
     router.push(href)
@@ -84,18 +96,14 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-glass-border">
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-12 h-12 glass-card mr-3 shadow-glow">
-                <Home className="w-6 h-6 text-accent-blue" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-text-primary">
-                  Portal Cliente
-                </h2>
-                <p className="text-sm text-text-secondary">
-                  Sistema Inmobiliario
-                </p>
+          <div className="p-6 border-b border-glass-border flex justify-center">
+            <div className="flex flex-col items-center">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden glass-card shadow-glow border border-glass-border p-1">
+                <img 
+                  src={logoSrc} 
+                  alt="Logo" 
+                  className="w-full h-full object-cover rounded-xl" 
+                />
               </div>
             </div>
           </div>

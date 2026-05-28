@@ -86,23 +86,63 @@ export default function BanksPage() {
     if (!confirm('¿Estás seguro de eliminar este banco?')) return
     try {
       await adminApi.deleteBank(id)
-      toast.success('Banco eliminado')
+      toast.success('Banco de la base de datos eliminado o desactivado')
       pagination.refresh()
     } catch (error) {
       toast.error('Error al eliminar banco')
     }
   }
 
+  const handleToggleBankActive = async (bank: any) => {
+    try {
+      const nextState = !bank.isActiveForCompany
+      await adminApi.updateBank(bank._id, { isActive: nextState })
+      toast.success(nextState ? 'Banco habilitado para este proyecto' : 'Banco deshabilitado para este proyecto')
+      pagination.refresh()
+    } catch (error) {
+      toast.error('Error al cambiar el estado del banco')
+    }
+  }
+
+  const handleToggleAll = async (action: 'enable' | 'disable') => {
+    const word = action === 'enable' ? 'hacer VISIBLES' : 'hacer NO VISIBLES'
+    if (!confirm(`¿Estás seguro de que deseas ${word} TODOS los bancos para este proyecto?`)) return
+    
+    try {
+      const response = await adminApi.toggleAllBanks(action)
+      if (response.data.success) {
+        toast.success(action === 'enable' ? 'Todos los bancos son ahora visibles' : 'Todos los bancos están ahora ocultos')
+        pagination.refresh()
+      }
+    } catch (error) {
+      toast.error('Error al cambiar la visibilidad masiva')
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start gap-4">
         <div>
           <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de Bancos</h1>
           <p className="text-text-secondary mt-2">
             Administra los bancos de tu empresa y consulta el listado oficial.
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="glass-button border-glass-border hover:bg-accent-green/10 hover:text-accent-green"
+            onClick={() => handleToggleAll('enable')}
+          >
+            Mostrar Todos
+          </Button>
+          <Button
+            variant="outline"
+            className="glass-button border-glass-border hover:bg-accent-red/10 hover:text-accent-red"
+            onClick={() => handleToggleAll('disable')}
+          >
+            Ocultar Todos
+          </Button>
           <Button
             variant="outline"
             className="glass-button border-glass-border"
@@ -178,17 +218,18 @@ export default function BanksPage() {
                   className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border"
                 />
                 <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border">DELEGATURA</th>
+                <th className="py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border text-center">VISIBILIDAD DEL BANCO</th>
                 <th className="text-left py-3 px-6 font-semibold text-text-primary bg-glass-primary/95 backdrop-blur-glass border-b border-glass-border text-center">ACCIONES</th>
               </tr>
             </thead>
             <tbody>
               {pagination.loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
-                  <TableRowSkeleton key={i} columns={6} />
+                  <TableRowSkeleton key={i} columns={7} />
                 ))
               ) : pagination.data.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-20 text-center">
+                  <td colSpan={7} className="py-20 text-center">
                     <div className="flex flex-col items-center space-y-3">
                       <Building2 className="w-12 h-12 text-text-disabled" />
                       <p className="text-lg font-medium text-text-secondary">No hay bancos registrados</p>
@@ -205,14 +246,29 @@ export default function BanksPage() {
                     <td className="py-4 px-6 font-medium text-text-primary">{bank.socialDenomination}</td>
                     <td className="py-4 px-6 text-xs text-text-muted">{bank.competentDelegation}</td>
                     <td className="py-4 px-6 text-center">
+                      <Button
+                        variant="glass"
+                        size="sm"
+                        onClick={() => handleToggleBankActive(bank)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${
+                          bank.isActiveForCompany 
+                            ? 'bg-accent-green/10 text-accent-green border-accent-green/20 hover:bg-accent-green/20' 
+                            : 'bg-accent-red/10 text-accent-red border-accent-red/20 hover:bg-accent-red/20'
+                        }`}
+                        title={bank.isActiveForCompany ? 'Haga clic para ocultar este banco' : 'Haga clic para mostrar este banco'}
+                      >
+                        {bank.isActiveForCompany ? 'Visible' : 'No Visible'}
+                      </Button>
+                    </td>
+                    <td className="py-4 px-6 text-center">
                       <div className="flex items-center justify-center space-x-2">
-                        {(!bank.tenantId && admin?.role === 'superadmin') || bank.tenantId ? (
+                        {bank.tenantId ? (
                           <Button
                             variant="glass"
                             size="sm"
                             onClick={() => handleDeleteBank(bank._id)}
                             className="text-accent-red hover:bg-accent-red/20"
-                            title={!bank.tenantId ? 'Desactivar Banco Global' : 'Eliminar Banco'}
+                            title="Eliminar Banco Personalizado"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

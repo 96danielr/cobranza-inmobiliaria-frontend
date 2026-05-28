@@ -54,11 +54,23 @@ module.exports = {
         'glow-hover': 'var(--shadow-glow-hover)'
       },
       animation: {
-        'fade-in-up': 'fadeInUp 0.6s ease-out',
+        'fade-in-up': 'fadeInUp 0.6s ease-out both',
         'fade-in-up-delay': 'fadeInUp 0.5s ease-out 0.1s both',
         'fade-in-up-delay-2': 'fadeInUp 0.5s ease-out 0.2s both',
         'fade-in-up-delay-3': 'fadeInUp 0.5s ease-out 0.3s both',
+        'fade-in-down': 'fadeInDown 0.5s ease-out both',
+        'fade-in-down-delay-1': 'fadeInDown 0.5s ease-out 0.1s both',
+        'fade-in-down-delay-2': 'fadeInDown 0.5s ease-out 0.2s both',
+        'fade-in-down-delay-3': 'fadeInDown 0.5s ease-out 0.3s both',
+        'fade-in-down-delay-4': 'fadeInDown 0.5s ease-out 0.4s both',
         'slide-in': 'slideIn 0.3s ease-out',
+        'slide-in-left': 'slideInLeft 0.6s ease-out both',
+        'slide-in-right': 'slideInRight 0.6s ease-out both',
+        'star-movement-bottom': 'starMovementBottom linear infinite alternate',
+        'star-movement-top': 'starMovementTop linear infinite alternate',
+        'spin-slow': 'spin 8s linear infinite',
+        'spin-slow-reverse': 'spin 10s linear infinite reverse',
+        'marquee': 'marquee 30s linear infinite',
         'glass-glow': 'glassGlow 2s ease-in-out infinite alternate',
         'twinkle': 'twinkle 3s ease-in-out infinite'
       },
@@ -73,11 +85,41 @@ module.exports = {
             transform: 'translateY(0)'
           }
         },
+        fadeInDown: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(-12px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
+        },
         slideIn: {
           '0%': {
             transform: 'translateX(-100%)'
           },
           '100%': {
+            transform: 'translateX(0)'
+          }
+        },
+        slideInLeft: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(-40px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateX(0)'
+          }
+        },
+        slideInRight: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(40px)'
+          },
+          '100%': {
+            opacity: '1',
             transform: 'translateX(0)'
           }
         },
@@ -88,6 +130,18 @@ module.exports = {
           '100%': {
             boxShadow: '0 0 30px rgba(96, 165, 250, 0.4)'
           }
+        },
+        starMovementBottom: {
+          '0%': { transform: 'translate(0%, 0%)', opacity: '1' },
+          '100%': { transform: 'translate(-100%, 0%)', opacity: '0' },
+        },
+        starMovementTop: {
+          '0%': { transform: 'translate(0%, 0%)', opacity: '1' },
+          '100%': { transform: 'translate(100%, 0%)', opacity: '0' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
         },
         twinkle: {
           '0%, 100%': {

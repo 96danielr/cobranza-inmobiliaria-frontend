@@ -8,7 +8,7 @@ import { z } from 'zod'
 import toast from 'react-hot-toast'
 import { ArrowLeft, CreditCard, Upload, AlertCircle } from 'lucide-react'
 
-import { apiClient } from '@/lib/api'
+import { apiClient, apiPublic } from '@/lib/api'
 import { PortalHomeData } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
@@ -19,7 +19,7 @@ import { Select } from '@/components/ui/Select'
 import { FileUpload } from '@/components/ui/FileUpload'
 import { CardSkeleton } from '@/components/ui/LoadingSpinner'
 
-const bancos = [
+const fallBackBancos = [
   { value: 'Bancolombia', label: 'Bancolombia' },
   { value: 'Davivienda', label: 'Davivienda' },
   { value: 'Nequi', label: 'Nequi' },
@@ -65,6 +65,8 @@ export default function ReportPaymentPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState<string>('')
   const [cuotasDisponibles, setCuotasDisponibles] = useState<CuotaOption[]>([])
+  const [banksList, setBanksList] = useState<{ value: string; label: string }[]>(fallBackBancos)
+  const [loadingBanks, setLoadingBanks] = useState(false)
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -93,7 +95,28 @@ export default function ReportPaymentPage() {
 
   useEffect(() => {
     loadHomeData()
+    fetchBanks()
   }, [])
+
+  const fetchBanks = async () => {
+    try {
+      setLoadingBanks(true)
+      const response = await apiPublic.getBanks()
+      if (response.data.success) {
+        const dbBanks = response.data.data.banks.map((b: any) => ({
+          value: b.acronym,
+          label: b.acronym
+        }))
+        const hasOtro = dbBanks.some((b: any) => b.value === 'Otro')
+        const finalBanks = hasOtro ? dbBanks : [...dbBanks, { value: 'Otro', label: 'Otro' }]
+        setBanksList(finalBanks)
+      }
+    } catch (error) {
+      console.error('Error loading active banks:', error)
+    } finally {
+      setLoadingBanks(false)
+    }
+  }
 
   useEffect(() => {
     if (homeData && watchedContractId) {
@@ -205,7 +228,7 @@ export default function ReportPaymentPage() {
       const response = await apiClient.reportPayment(formData)
       
       if (response.data.success) {
-        toast.success('✅ Comprobante enviado correctamente. Lo revisaremos pronto.')
+        toast.success('✅ Comprobante enviado correctamente. El tiempo de respuesta es de 1 a 2 días hábiles.')
         
         // Redirect after 2 seconds
         setTimeout(() => {
@@ -354,12 +377,13 @@ export default function ReportPaymentPage() {
                 <div>
                   <Select
                     label="Banco"
-                    options={bancos}
+                    options={banksList}
                     placeholder="Selecciona el banco"
                     error={errors.banco?.message}
                     className="glass-input"
                     {...field}
                   />
+                  {loadingBanks && <p className="text-[10px] text-text-secondary mt-1 animate-pulse">Cargando bancos...</p>}
                 </div>
               )}
             />

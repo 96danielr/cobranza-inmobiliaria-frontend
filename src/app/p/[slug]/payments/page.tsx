@@ -32,6 +32,8 @@ export default function PublicPaymentPage() {
 
   const [selectedContract, setSelectedContract] = useState<any>(null)
   const [selectedQuota, setSelectedQuota] = useState<any>(null)
+  const [activeContractId, setActiveContractId] = useState<string>('')
+  const [expandedContracts, setExpandedContracts] = useState<string[]>([])
 
   // Payment Form
   const [amount, setAmount] = useState('')
@@ -71,6 +73,9 @@ export default function PublicPaymentPage() {
       const response = await apiPublic.getClientInfo(slug as string, idNumber)
       if (response.data.success) {
         setClientData(response.data.data)
+        if (response.data.data.contracts?.length > 0) {
+          setActiveContractId(response.data.data.contracts[0]._id)
+        }
         setStep(2)
       }
     } catch (error: any) {
@@ -89,6 +94,14 @@ export default function PublicPaymentPage() {
     setSelectedQuota(quota)
     setAmount(quota.value.toString())
     setStep(3)
+  }
+
+  const toggleContractExpanded = (contractId: string) => {
+    setExpandedContracts(prev => 
+      prev.includes(contractId) 
+        ? prev.filter(id => id !== contractId) 
+        : [...prev, contractId]
+    )
   }
 
   const handleSubmitPayment = async (e: React.FormEvent) => {
@@ -180,62 +193,108 @@ export default function PublicPaymentPage() {
               <p className="text-text-secondary">Selecciona la cuota que deseas pagar</p>
             </div>
 
-            {clientData.contracts.map((contract: any) => (
-              <Card key={contract._id} variant="elevated" className="border-glass-border glass-effect">
-                <CardHeader className="pb-2 border-b border-glass-border">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-accent-green/20 rounded-full flex items-center justify-center border border-accent-green/30">
-                        <MapPin className="w-5 h-5 text-accent-green" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg text-text-primary">
-                          {contract.lot?.stage} - Mz {contract.lot?.lotNumber} Lote {contract.lot?.nomenclature}
-                        </CardTitle>
-                        <p className="text-xs text-text-muted italic">{contract.negotiation}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {contract.quotas
-                      .filter((q: any) => q.status !== 'pagado')
-                      .sort((a: any, b: any) => {
-                        if (a.type === 'inicial' && b.type !== 'inicial') return -1;
-                        if (a.type !== 'inicial' && b.type === 'inicial') return 1;
-                        return a.number - b.number;
-                      })
-                      .map((quota: any) => (
-                        <div
-                          key={quota._id}
-                          onClick={() => handleSelectQuota(quota)}
-                          className="flex items-center justify-between p-3 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-glass-primary/20 transition-all cursor-pointer group active:scale-[0.98]"
-                        >
-                          <div>
-                            <p className={`font-semibold ${quota.type === 'inicial' ? 'text-accent-purple' : 'text-text-primary'}`}>
-                              {quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'} #{quota.number}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Calendar className="w-3 h-3 text-text-muted" />
-                              <span className="text-xs text-text-muted">Vence: {dayjs(quota.dueDate).format('DD/MM/YYYY')}</span>
-                            </div>
+            {/* Lote Switcher tabs for multiple lots */}
+            {clientData.contracts.length > 1 && (
+              <div className="flex flex-wrap gap-2 justify-center p-1.5 bg-slate-100 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/80 max-w-max mx-auto mb-2">
+                {clientData.contracts.map((contract: any) => {
+                  const isActive = activeContractId === contract._id;
+                  return (
+                    <button
+                      key={contract._id}
+                      type="button"
+                      onClick={() => {
+                        setActiveContractId(contract._id);
+                        // Reset expansion on switch
+                        setExpandedContracts([]);
+                      }}
+                      className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700/80'
+                      }`}
+                    >
+                      Mz {contract.lot?.lotNumber} - Lote {contract.lot?.nomenclature}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {clientData.contracts
+              .filter((c: any) => c._id === activeContractId)
+              .map((contract: any) => {
+                const pendingQuotas = contract.quotas
+                  .filter((q: any) => q.status !== 'pagado')
+                  .sort((a: any, b: any) => {
+                    if (a.type === 'inicial' && b.type !== 'inicial') return -1;
+                    if (a.type !== 'inicial' && b.type === 'inicial') return 1;
+                    return a.number - b.number;
+                  });
+
+                const isExpanded = expandedContracts.includes(contract._id);
+                const visibleQuotas = isExpanded ? pendingQuotas : pendingQuotas.slice(0, 3);
+
+                return (
+                  <Card key={contract._id} variant="elevated" className="border-glass-border glass-effect">
+                    <CardHeader className="pb-2 border-b border-glass-border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-accent-green/20 rounded-full flex items-center justify-center border border-accent-green/30">
+                            <MapPin className="w-5 h-5 text-accent-green" />
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-text-primary">{formatCurrency(quota.value)}</span>
-                            <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-blue transition-colors" />
+                          <div>
+                            <CardTitle className="text-lg text-text-primary">
+                              {contract.lot?.stage} - Mz {contract.lot?.lotNumber} Lote {contract.lot?.nomenclature}
+                            </CardTitle>
+                            <p className="text-xs text-text-muted italic">{contract.negotiation}</p>
                           </div>
                         </div>
-                      ))}
-                    {contract.quotas.filter((q: any) => q.status !== 'pagado').length === 0 && (
-                      <div className="text-center py-6 text-text-muted">
-                        <p>No tienes cuotas pendientes para este contrato.</p>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        {visibleQuotas.map((quota: any) => (
+                          <div
+                            key={quota._id}
+                            onClick={() => handleSelectQuota(quota)}
+                            className="flex items-center justify-between p-3 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-glass-primary/20 transition-all cursor-pointer group active:scale-[0.98]"
+                          >
+                            <div>
+                              <p className={`font-semibold ${quota.type === 'inicial' ? 'text-accent-purple' : 'text-text-primary'}`}>
+                                {quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'} #{quota.number}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Calendar className="w-3 h-3 text-text-muted" />
+                                <span className="text-xs text-text-muted">Vence: {dayjs(quota.dueDate).format('DD/MM/YYYY')}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-text-primary">{formatCurrency(quota.value)}</span>
+                              <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-blue transition-colors" />
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {pendingQuotas.length > 3 && (
+                          <button
+                            type="button"
+                            onClick={() => toggleContractExpanded(contract._id)}
+                            className="w-full text-center text-xs font-semibold text-accent-blue hover:text-accent-blue/80 py-2.5 border border-dashed border-glass-border hover:border-accent-blue/30 rounded-xl bg-glass-primary/5 hover:bg-glass-primary/10 transition-colors mt-2"
+                          >
+                            {isExpanded ? 'Ver menos cuotas' : `Ver más cuotas (${pendingQuotas.length - 3} más)`}
+                          </button>
+                        )}
+
+                        {pendingQuotas.length === 0 && (
+                          <div className="text-center py-6 text-text-muted">
+                            <p>No tienes cuotas pendientes para este contrato.</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
 
             <Button
               variant="outline"
@@ -382,7 +441,7 @@ export default function PublicPaymentPage() {
             </div>
             <h2 className="text-3xl font-bold text-text-primary mb-2">¡Pago Reportado!</h2>
             <p className="text-text-secondary text-lg mb-8">
-              Tu reporte ha sido enviado exitosamente. En breve será revisado y aprobado por la administración, en breve te enviaremos un correo y un mensaje de confirmación.
+              Tu reporte ha sido enviado exitosamente. El tiempo de respuesta para la validación y aprobación de tu pago es de 1 a 2 días hábiles. Una vez procesado, te enviaremos un correo y un mensaje de confirmación.
             </p>
             <Button
               className="w-full h-12 glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30"

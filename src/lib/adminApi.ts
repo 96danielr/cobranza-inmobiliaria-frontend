@@ -106,7 +106,7 @@ export const adminApi = {
   },
 
   // Lots (company-scoped)
-  getLots: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {
+  getLots: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string, status?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -114,6 +114,7 @@ export const adminApi = {
       ...(search && { search }),
       ...(sortBy && { sortBy }),
       ...(order && { order }),
+      ...(status && { status }),
     })
     return apiAdmin.get(`/lots?${params.toString()}`)
   },
@@ -262,11 +263,12 @@ export const adminApi = {
     apiAdmin.put(`/tenants/${id}`, data),
 
   // Banks (global list, superadmin only for writes)
-  getBanks: (page: number = 1, limit: number = 100, search?: string, sortBy?: string, sortOrder?: string) => {
+  getBanks: (page: number = 1, limit: number = 100, search?: string, sortBy?: string, sortOrder?: string, adminView: boolean = true) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       companyId: getCompanyId(),
+      adminView: adminView ? 'true' : 'false',
       ...(search && { search }),
       ...(sortBy && { sortBy }),
       ...(sortOrder && { sortOrder }),
@@ -282,6 +284,9 @@ export const adminApi = {
 
   deleteBank: (id: string) =>
     apiAdmin.delete(`/banks/${id}?companyId=${getCompanyId()}`),
+
+  toggleAllBanks: (action: 'enable' | 'disable') =>
+    apiAdmin.put(`/banks/toggle-all?companyId=${getCompanyId()}`, { action }),
 
   bulkCreateBanks: (banks: any[]) =>
     apiAdmin.post(`/banks/bulk?companyId=${getCompanyId()}`, { banks }),

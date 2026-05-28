@@ -100,7 +100,7 @@ export default function SelectCompanyPage() {
 
   const handleSelectCompany = (company: Company) => {
     setSelectedCompany(company._id, company.name)
-    toast.success(`Empresa seleccionada: ${company.name}`)
+    toast.success(`Proyecto seleccionado: ${company.name}`)
     router.push('/admin/dashboard')
   }
 
@@ -128,13 +128,13 @@ export default function SelectCompanyPage() {
       setIsSubmitting(true)
       const response = await adminApi.createCompany(companyForm)
       if (response.data.success) {
-        toast.success('Empresa creada exitosamente')
+        toast.success('Proyecto creado exitosamente')
         setIsCompanyModalOpen(false)
         setCompanyForm({ name: '', rfc: '', nit: '' })
         fetchCompanies()
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al crear empresa')
+      toast.error(error.response?.data?.message || 'Error al crear proyecto')
     } finally {
       setIsSubmitting(false)
     }
@@ -234,7 +234,7 @@ export default function SelectCompanyPage() {
         </div>
         <div className="flex flex-col items-center justify-center gap-2">
           <h1 className="text-2xl font-bold text-text-primary">
-            {admin?.role === 'superadmin' ? 'Administrar Empresas Clientes' : 'Seleccionar Empresa'}
+            {admin?.role === 'superadmin' ? 'Administrar Proyectos Clientes' : 'Seleccionar Proyecto'}
           </h1>
           {admin?.role === 'superadmin' ? (
             <Button
@@ -244,7 +244,7 @@ export default function SelectCompanyPage() {
               className="mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Nueva Empresa / Admin
+              Nuevo Proyecto / Admin
             </Button>
           ) : admin?.role === 'tenant_admin' ? (
             <Button
@@ -254,14 +254,14 @@ export default function SelectCompanyPage() {
               className="mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Nueva Empresa
+              Nuevo Proyecto
             </Button>
           ) : null}
         </div>
         <p className="text-text-secondary mt-4">
           {admin?.role === 'superadmin'
             ? 'Gestiona aquí los planes, suscripciones y módulos de tus clientes.'
-            : 'Selecciona la empresa con la que deseas trabajar.'}
+            : 'Selecciona el proyecto inmobiliario con el que deseas trabajar.'}
         </p>
       </div>
 
@@ -374,10 +374,10 @@ export default function SelectCompanyPage() {
           <CardContent className="p-8 text-center">
             <Building2 className="w-12 h-12 text-text-muted mx-auto mb-4" />
             <h3 className="text-lg font-medium text-text-primary mb-2">
-              No hay empresas disponibles
+              No hay proyectos disponibles
             </h3>
             <p className="text-text-secondary mb-4">
-              Comienza creando tu primera empresa cliente.
+              Comienza creando tu primer proyecto inmobiliario.
             </p>
             <Button
               variant="glass"
@@ -465,26 +465,26 @@ export default function SelectCompanyPage() {
       <Modal
         isOpen={isCompanyModalOpen}
         onClose={() => setIsCompanyModalOpen(false)}
-        title="Crear Nueva Empresa"
+        title="Crear Nuevo Proyecto"
       >
         <form onSubmit={handleCreateCompany} className="space-y-4 pt-4">
           <Input
-            label="Nombre de la Empresa"
-            placeholder="Ej: Sede Norte"
+            label="Nombre del Proyecto"
+            placeholder="Ej: Proyecto Bosques del Este"
             value={companyForm.name}
             onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
             required
           />
           <Input
-            label="NIT de la Empresa"
+            label="NIT del Proyecto"
             placeholder="Ej: 900.123.456-1"
             value={companyForm.nit}
             onChange={(e) => setCompanyForm({ ...companyForm, nit: e.target.value })}
             required
           />
           <Input
-            label="RFC (Opcional)"
-            placeholder="RFC de la empresa"
+            label="RFC / Identificador (Opcional)"
+            placeholder="RFC del proyecto"
             value={companyForm.rfc}
             onChange={(e) => setCompanyForm({ ...companyForm, rfc: e.target.value })}
           />
@@ -494,7 +494,7 @@ export default function SelectCompanyPage() {
               Cancelar
             </Button>
             <Button variant="primary" type="submit" loading={isSubmitting}>
-              Crear Empresa
+              Crear Proyecto
             </Button>
           </div>
         </form>

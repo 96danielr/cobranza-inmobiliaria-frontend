@@ -29,7 +29,7 @@ export interface AdminNavItem {
 
 export const adminNavItems: AdminNavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' }, // Public for all logged in
-  { icon: Building2, label: 'Empresas', href: '/admin/select-company', permission: PERMISSIONS.CONFIG_SUPER },
+  { icon: Building2, label: 'Proyectos', href: '/admin/select-company', permission: PERMISSIONS.CONFIG_TENANT },
   { icon: ScrollText, label: 'Logs Sistema', href: '/admin/system-logs', permission: PERMISSIONS.SYSTEM_LOGS },
   { icon: Shield, label: 'Auditoría', href: '/admin/audit', permission: PERMISSIONS.SYSTEM_AUDIT },
   { icon: CreditCard, label: 'Pagos', href: '/admin/payments', permission: PERMISSIONS.PAGOS_VIEW },

@@ -31,6 +31,8 @@ import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface ClientPortfolio {
   clientId: string
@@ -228,6 +230,192 @@ export default function PortfolioPage() {
       toast.error('Error al cargar detalles del cliente')
     } finally {
       setModalLoading(false)
+    }
+  }
+
+  const generateClientStatementPDF = (client: ClientPortfolio) => {
+    if (!client) return
+
+    const doc = new jsPDF()
+
+    // Header Title (Centered)
+    doc.setFontSize(18)
+    doc.setTextColor(44, 62, 80)
+    doc.text('ESTADO DE CUENTA', 105, 18, { align: 'center' })
+    
+    doc.setFontSize(9)
+    doc.setTextColor(120)
+    doc.text(`Generado el: ${dayjs().format('DD/MM/YYYY HH:mm')}`, 105, 25, { align: 'center' })
+
+    // Client Info Card
+    doc.setFillColor(245, 247, 250)
+    doc.rect(14, 32, 182, 38, 'F')
+    doc.setDrawColor(220, 224, 230)
+    doc.rect(14, 32, 182, 38, 'S')
+
+    doc.setFontSize(10)
+    doc.setTextColor(100, 110, 120)
+    doc.text('Nombre del Cliente:', 18, 40)
+    doc.text('Identificación (Cédula):', 18, 48)
+    doc.text('Teléfono de Contacto:', 18, 56)
+    doc.text('Comportamiento de Pago:', 18, 64)
+
+    doc.setTextColor(44, 62, 80)
+    doc.setFont('helvetica', 'bold')
+    doc.text(client.clientName || 'N/A', 65, 40)
+    doc.text(client.cedula || 'N/A', 65, 48)
+    doc.text(client.phone || 'N/A', 65, 56)
+    doc.text(client.behaviorTag || 'N/A', 65, 64)
+
+    // Summary Card
+    doc.setFillColor(240, 248, 255)
+    doc.rect(14, 76, 182, 28, 'F')
+    doc.rect(14, 76, 182, 28, 'S')
+
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 110, 120)
+    doc.text('Valor Total Cartera', 22, 84)
+    doc.text('Total Recaudado', 72, 84)
+    doc.text('Monto Pendiente', 122, 84)
+    doc.text('% Recaudo', 172, 84, { align: 'center' })
+
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(44, 62, 80)
+    doc.text(formatCurrency(client.totalValue), 22, 94)
+    doc.setTextColor(40, 167, 69) // Green
+    doc.text(formatCurrency(client.totalPaid), 72, 94)
+    doc.setTextColor(220, 53, 69) // Red
+    doc.text(formatCurrency(client.totalPending), 122, 94)
+    doc.setTextColor(111, 66, 193) // Purple
+    doc.text(`${client.averageRecaudo}%`, 172, 94, { align: 'center' })
+
+    // Reset font
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(0, 0, 0)
+
+    // Table of Contracts
+    doc.setFontSize(12)
+    doc.setTextColor(44, 62, 80)
+    doc.text('Resumen de Contratos / Lotes', 14, 114)
+    doc.line(14, 116, 196, 116)
+
+    const tableRows = client.contracts.map((contract) => [
+      contract.project || 'Contrato',
+      `MZ: ${contract.manzana || 'N/A'} - Lote: ${contract.nomenclatura || 'N/A'}`,
+      formatCurrency(contract.valorTotal),
+      formatCurrency(contract.totalPagado),
+      formatCurrency(contract.valorTotal - contract.totalPagado),
+      `${contract.cuotasPagadas}/${contract.totalCuotas}`,
+      contract.diasMora > 0 ? `${contract.diasMora} días` : 'Al día'
+    ])
+
+    autoTable(doc, {
+      startY: 120,
+      head: [['Proyecto', 'Ubicación', 'Valor Total', 'Pagado', 'Pendiente', 'Cuotas', 'Mora']],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      styles: { fontSize: 8 },
+    })
+
+    // Detail breakdown section for each contract
+    let currentY = (doc as any).lastAutoTable.finalY + 15
+
+    client.contracts.forEach((contract, index) => {
+      // Check if page needs to break
+      if (currentY > 240) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(44, 62, 80)
+      doc.text(`Detalle de Financiación - Contrato #${index + 1}: ${contract.project}`, 14, currentY)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      currentY += 4
+      doc.line(14, currentY, 196, currentY)
+      currentY += 8
+
+      // Initial Quotas Breakdown
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(111, 66, 193)
+      doc.text('CUOTAS INICIALES', 18, currentY)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(44, 62, 80)
+      doc.text(`Cuotas pagadas: ${(contract as any).cuotasInicialesPagadas || 0} / ${(contract as any).totalCuotasIniciales || 0}`, 18, currentY + 6)
+      doc.text(`Monto recaudado: ${formatCurrency((contract as any).valorPagadoInicial || 0)}`, 18, currentY + 12)
+      doc.text(`Monto total inicial: ${formatCurrency((contract as any).valorTotalInicial || 0)}`, 18, currentY + 18)
+
+      // Ordinary Quotas Breakdown
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(0, 123, 255)
+      doc.text('CUOTAS ORDINARIAS / MENSUALES', 110, currentY)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(44, 62, 80)
+      doc.text(`Cuotas pagadas: ${(contract as any).cuotasNormalesPagadas || 0} / ${(contract as any).totalCuotasNormales || 0}`, 110, currentY + 6)
+      doc.text(`Monto recaudado: ${formatCurrency((contract as any).valorPagadoCuotas || 0)}`, 110, currentY + 12)
+      doc.text(`Monto total ordinarias: ${formatCurrency((contract as any).valorTotalCuotas || 0)}`, 110, currentY + 18)
+
+      currentY += 28
+    })
+
+    doc.save(`Estado_Cuenta_${client.clientName.replace(/\s+/g, '_')}.pdf`)
+  }
+
+  const handleDownloadStatement = async (client: any) => {
+    const loadingToastId = toast.loading('Generando estado de cuenta...')
+    try {
+      const response = await adminApi.getClient(client.clientId)
+      if (response.data.success) {
+        const fullClient = response.data.data
+        const mappedClient: ClientPortfolio = {
+          clientId: fullClient._id,
+          clientName: fullClient.name,
+          cedula: fullClient.idNumber,
+          phone: fullClient.phone,
+          totalContracts: fullClient.contracts?.length || 0,
+          totalValue: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalValue || 0), 0) || 0,
+          totalPaid: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalPagado || 0), 0) || 0,
+          totalPending: fullClient.contracts?.reduce((sum: number, c: any) => sum + (c.totalValue - c.totalPagado || 0), 0) || 0,
+          averageRecaudo: fullClient.contracts?.length ?
+            Math.round((fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalPagado || 0), 0) /
+              fullClient.contracts.reduce((sum: number, c: any) => sum + (c.totalValue || 1), 0)) * 100) : 0,
+          behaviorTag: fullClient.behavior || 'INDECISO',
+          daysInArrears: client.daysInArrears,
+          contracts: fullClient.contracts.map((c: any) => ({
+            id: c._id,
+            project: c.negotiation || 'Proyecto sin nombre',
+            manzana: 'N/A',
+            nomenclatura: 'N/A',
+            valorTotal: c.totalValue,
+            totalPagado: c.totalPagado,
+            valorTotalInicial: c.valorTotalInicial,
+            valorPagadoInicial: c.valorPagadoInicial,
+            valorTotalCuotas: c.valorTotalCuotas,
+            valorPagadoCuotas: c.valorPagadoCuotas,
+            cuotasInicialesPagadas: c.cuotasInicialesPagadas,
+            totalCuotasIniciales: c.totalCuotasIniciales,
+            cuotasNormalesPagadas: c.cuotasNormalesPagadas,
+            totalCuotasNormales: c.totalCuotasNormales,
+            initialQuotaPercentage: c.initialQuotaPercentage,
+            cuotasPagadas: c.cuotasPagadas,
+            totalCuotas: c.totalCuotas,
+            valorCuota: c.valorCuota,
+            diasMora: c.diasMora,
+            status: c.status,
+            proximoVencimiento: c.startDate
+          }))
+        }
+        generateClientStatementPDF(mappedClient)
+        toast.success('Estado de cuenta descargado', { id: loadingToastId })
+      } else {
+        toast.error('Error al cargar datos del cliente', { id: loadingToastId })
+      }
+    } catch (error) {
+      toast.error('Error al generar el estado de cuenta', { id: loadingToastId })
     }
   }
 
@@ -505,6 +693,15 @@ export default function PortfolioPage() {
                           <Button
                             variant="glass"
                             size="sm"
+                            onClick={() => handleDownloadStatement(client)}
+                            className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
+                            title="Descargar Estado de Cuenta"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="glass"
+                            size="sm"
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
                           >
                             <MessageSquare className="w-4 h-4" />
@@ -553,6 +750,7 @@ export default function PortfolioPage() {
                   key={client.clientId}
                   client={client}
                   onView={handleViewClient}
+                  onDownloadStatement={handleDownloadStatement}
                 />
               ))
             )}
@@ -594,7 +792,17 @@ export default function PortfolioPage() {
           <div className="space-y-6">
             {/* Client Info */}
             <div className="bg-glass-primary/30 backdrop-blur-glass border border-glass-border rounded-lg p-4">
-              <h3 className="font-medium text-text-primary mb-3">Información del Cliente</h3>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h3 className="font-medium text-text-primary">Información del Cliente</h3>
+                <Button
+                  onClick={() => generateClientStatementPDF(selectedClient)}
+                  variant="glass"
+                  className="glass-button text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20 min-h-[40px]"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Descargar Estado de Cuenta
+                </Button>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-text-secondary">Nombre Completo</p>
