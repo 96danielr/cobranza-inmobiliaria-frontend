@@ -67,6 +67,7 @@ export default function ReportPaymentPage() {
   const [cuotasDisponibles, setCuotasDisponibles] = useState<CuotaOption[]>([])
   const [banksList, setBanksList] = useState<{ value: string; label: string }[]>(fallBackBancos)
   const [loadingBanks, setLoadingBanks] = useState(false)
+  const [paymentOption, setPaymentOption] = useState<'minimo' | 'total' | 'otro'>('minimo')
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -177,12 +178,11 @@ export default function ReportPaymentPage() {
 
     setCuotasDisponibles(cuotas)
     
-    // Auto-select amount when cuota changes
     if (cuotas.length > 0) {
-      const selectedCuota = cuotas.find(c => c.value === watch('cuotaNumber'))
-      if (selectedCuota && !watchedAmount) {
-        setValue('amount', selectedCuota.monto)
-      }
+      const firstPending = cuotas[0]
+      setValue('cuotaNumber', firstPending.value)
+      setPaymentOption('minimo')
+      setValue('amount', firstPending.monto)
     }
   }
 
@@ -320,54 +320,130 @@ export default function ReportPaymentPage() {
               )}
             />
 
-            {/* Cuota Selection */}
-            <Controller
-              name="cuotaNumber"
-              control={control}
-              render={({ field: { onChange, value, ...field } }) => (
-                <div>
-                  <Select
-                    label="Número de Cuota"
-                    options={cuotaOptions}
-                    placeholder="Selecciona la cuota"
-                    error={errors.cuotaNumber?.message}
-                    value={value?.toString() || ''}
-                    className="glass-input"
-                    onChange={(e) => {
-                      const cuotaNum = parseInt(e.target.value)
-                      onChange(cuotaNum)
-                      
-                      // Auto-fill amount
-                      const selectedCuota = cuotasDisponibles.find(c => c.value === cuotaNum)
-                      if (selectedCuota) {
-                        setValue('amount', selectedCuota.monto)
-                      }
+            {/* Payment Options (Credit App Style) */}
+            {watchedContractId && cuotasDisponibles.length > 0 && (
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-text-primary">
+                  ¿Cuánto deseas pagar hoy?
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Pago Mínimo */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentOption('minimo')
+                      setValue('amount', cuotasDisponibles[0].monto)
                     }}
-                    {...field}
-                  />
+                    className={`p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] ${
+                      paymentOption === 'minimo'
+                        ? 'bg-accent-blue/10 border-accent-blue ring-1 ring-accent-blue'
+                        : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-accent-blue" />
+                        Pago Mínimo
+                      </p>
+                      <p className="text-[11px] text-text-secondary mt-1">Paga la cuota #{cuotasDisponibles[0].value} pendiente</p>
+                    </div>
+                    <p className="text-base font-extrabold text-text-primary mt-2">
+                      {formatCurrency(cuotasDisponibles[0].monto)}
+                    </p>
+                  </button>
+
+                  {/* Pago Total */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentOption('total')
+                      setValue('amount', cuotasDisponibles.reduce((sum, c) => sum + c.monto, 0))
+                    }}
+                    className={`p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] ${
+                      paymentOption === 'total'
+                        ? 'bg-accent-green/10 border-accent-green ring-1 ring-accent-green'
+                        : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-accent-green" />
+                        Pago Total
+                      </p>
+                      <p className="text-[11px] text-text-secondary mt-1">Paga saldo total de tu deuda</p>
+                    </div>
+                    <p className="text-base font-extrabold text-text-primary mt-2">
+                      {formatCurrency(cuotasDisponibles.reduce((sum, c) => sum + c.monto, 0))}
+                    </p>
+                  </button>
+
+                  {/* Abonar a tu deuda */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentOption('otro')
+                      setValue('amount', 0)
+                    }}
+                    className={`p-4 rounded-xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] ${
+                      paymentOption === 'otro'
+                        ? 'bg-accent-purple/10 border-accent-purple ring-1 ring-accent-purple'
+                        : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-accent-purple" />
+                        Otro valor
+                      </p>
+                      <p className="text-[11px] text-text-secondary mt-1">Abona un monto personalizado</p>
+                    </div>
+                    <p className="text-xs font-semibold text-text-secondary mt-2 italic">
+                      Ingresar monto...
+                    </p>
+                  </button>
                 </div>
-              )}
-            />
+              </div>
+            )}
 
             {/* Amount */}
-            <Controller
-              name="amount"
-              control={control}
-              render={({ field: { onChange, value, ...field } }) => (
-                <Input
-                  label="Monto"
-                  type="number"
-                  step="0.01"
-                  placeholder="0"
-                  error={errors.amount?.message}
-                  value={value || ''}
-                  onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-                  helperText="Valor en pesos colombianos"
-                  className="glass-input"
-                  {...field}
-                />
-              )}
-            />
+            {paymentOption === 'otro' ? (
+              <Controller
+                name="amount"
+                control={control}
+                render={({ field: { onChange, value, ...field } }) => (
+                  <Input
+                    label="Monto a Pagar"
+                    type="number"
+                    step="0.01"
+                    placeholder="Escribe el monto"
+                    error={errors.amount?.message}
+                    value={value || ''}
+                    onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+                    helperText="Ingresa el valor personalizado en pesos colombianos"
+                    className="glass-input"
+                    {...field}
+                  />
+                )}
+              />
+            ) : (
+              watchedContractId && cuotasDisponibles.length > 0 && (
+                <div className="p-4 rounded-xl bg-glass-primary/10 border border-glass-border flex justify-between items-center animate-fade-in">
+                  <div>
+                    <span className="text-xs font-semibold text-text-secondary block">Monto a reportar</span>
+                    <span className="text-xl font-extrabold text-text-primary">
+                      {formatCurrency(watchedAmount || 0)}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase ${
+                    paymentOption === 'minimo' 
+                      ? 'bg-accent-blue/10 text-accent-blue' 
+                      : 'bg-accent-green/10 text-accent-green'
+                  }`}>
+                    {paymentOption === 'minimo' ? 'Pago Mínimo' : 'Pago Total'}
+                  </span>
+                </div>
+              )
+            )}
 
             {/* Bank */}
             <Controller

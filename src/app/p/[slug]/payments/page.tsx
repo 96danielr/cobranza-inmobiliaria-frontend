@@ -45,6 +45,7 @@ export default function PublicPaymentPage() {
   const [submitting, setSubmitting] = useState(false)
   const [banks, setBanks] = useState<any[]>([])
   const [loadingBanks, setLoadingBanks] = useState(false)
+  const [paymentOption, setPaymentOption] = useState<'minimo' | 'total' | 'otro'>('minimo')
 
   useEffect(() => {
     fetchBanks()
@@ -252,40 +253,93 @@ export default function PublicPaymentPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-4">
-                      <div className="space-y-3">
-                        {visibleQuotas.map((quota: any) => (
-                          <div
-                            key={quota._id}
-                            onClick={() => handleSelectQuota(quota)}
-                            className="flex items-center justify-between p-3 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-glass-primary/20 transition-all cursor-pointer group active:scale-[0.98]"
-                          >
-                            <div>
-                              <p className={`font-semibold ${quota.type === 'inicial' ? 'text-accent-purple' : 'text-text-primary'}`}>
-                                {quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'} #{quota.number}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Calendar className="w-3 h-3 text-text-muted" />
-                                <span className="text-xs text-text-muted">Vence: {dayjs(quota.dueDate).format('DD/MM/YYYY')}</span>
+                      <div className="space-y-4 pt-2">
+                        {pendingQuotas.length > 0 ? (
+                          <div className="flex flex-col gap-3">
+                            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                              ¿Cuánto deseas pagar hoy?
+                            </p>
+                            
+                            {/* Pago Mínimo */}
+                            <div
+                              onClick={() => {
+                                const nextQuota = pendingQuotas[0]
+                                setSelectedQuota(nextQuota)
+                                setPaymentOption('minimo')
+                                setAmount(nextQuota.value.toString())
+                                setStep(3)
+                              }}
+                              className="flex items-center justify-between p-4 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-accent-blue/15 hover:border-accent-blue/40 transition-all cursor-pointer group active:scale-[0.99]"
+                            >
+                              <div>
+                                <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-accent-blue" />
+                                  Pago Mínimo
+                                </p>
+                                <p className="text-[11px] text-text-secondary mt-1">Pagar la cuota #{pendingQuotas[0].number} pendiente</p>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-extrabold text-text-primary text-base">
+                                  {formatCurrency(pendingQuotas[0].value)}
+                                </span>
+                                <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-blue transition-colors" />
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-text-primary">{formatCurrency(quota.value)}</span>
-                              <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-blue transition-colors" />
+
+                            {/* Pago Total */}
+                            <div
+                              onClick={() => {
+                                const nextQuota = pendingQuotas[0]
+                                const totalDebt = pendingQuotas.reduce((sum: number, q: any) => sum + q.value, 0)
+                                setSelectedQuota(nextQuota)
+                                setPaymentOption('total')
+                                setAmount(totalDebt.toString())
+                                setStep(3)
+                              }}
+                              className="flex items-center justify-between p-4 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-accent-green/15 hover:border-accent-green/40 transition-all cursor-pointer group active:scale-[0.99]"
+                            >
+                              <div>
+                                <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-accent-green" />
+                                  Pago Total de la Deuda
+                                </p>
+                                <p className="text-[11px] text-text-secondary mt-1">Pagar saldo total acumulado de tu lote</p>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-extrabold text-text-primary text-base">
+                                  {formatCurrency(pendingQuotas.reduce((sum: number, q: any) => sum + q.value, 0))}
+                                </span>
+                                <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-green transition-colors" />
+                              </div>
+                            </div>
+
+                            {/* Abonar a tu deuda */}
+                            <div
+                              onClick={() => {
+                                const nextQuota = pendingQuotas[0]
+                                setSelectedQuota(nextQuota)
+                                setPaymentOption('otro')
+                                setAmount('')
+                                setStep(3)
+                              }}
+                              className="flex items-center justify-between p-4 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-accent-purple/15 hover:border-accent-purple/40 transition-all cursor-pointer group active:scale-[0.99]"
+                            >
+                              <div>
+                                <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-accent-purple" />
+                                  Otro Valor (Abonar)
+                                </p>
+                                <p className="text-[11px] text-text-secondary mt-1">Abonar un monto personalizado libre</p>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-semibold text-text-secondary italic">
+                                  Ingresar monto...
+                                </span>
+                                <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-purple transition-colors" />
+                              </div>
                             </div>
                           </div>
-                        ))}
-                        
-                        {pendingQuotas.length > 3 && (
-                          <button
-                            type="button"
-                            onClick={() => toggleContractExpanded(contract._id)}
-                            className="w-full text-center text-xs font-semibold text-accent-blue hover:text-accent-blue/80 py-2.5 border border-dashed border-glass-border hover:border-accent-blue/30 rounded-xl bg-glass-primary/5 hover:bg-glass-primary/10 transition-colors mt-2"
-                          >
-                            {isExpanded ? 'Ver menos cuotas' : `Ver más cuotas (${pendingQuotas.length - 3} más)`}
-                          </button>
-                        )}
-
-                        {pendingQuotas.length === 0 && (
+                        ) : (
                           <div className="text-center py-6 text-text-muted">
                             <p>No tienes cuotas pendientes para este contrato.</p>
                           </div>
@@ -334,13 +388,27 @@ export default function PublicPaymentPage() {
                         <DollarSign className="w-4 h-4 text-accent-blue" />
                         Monto Pagado
                       </label>
-                      <Input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="glass-input h-12 text-lg"
-                        required
-                      />
+                      {paymentOption === 'otro' ? (
+                        <Input
+                          type="number"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          className="glass-input h-12 text-lg"
+                          required
+                          placeholder="Monto a pagar"
+                        />
+                      ) : (
+                        <div className="h-12 px-4 rounded-xl border border-glass-border bg-glass-primary/10 flex items-center justify-between">
+                          <span className="font-bold text-text-primary text-base">
+                            {formatCurrency(parseFloat(amount) || 0)}
+                          </span>
+                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase ${
+                            paymentOption === 'minimo' ? 'bg-accent-blue/15 text-accent-blue' : 'bg-accent-green/15 text-accent-green'
+                          }`}>
+                            {paymentOption === 'minimo' ? 'Mínimo' : 'Total'}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div>

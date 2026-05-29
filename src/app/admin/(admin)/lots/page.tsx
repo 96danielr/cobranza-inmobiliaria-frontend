@@ -53,6 +53,7 @@ interface Lot {
   price?: number
   images?: string[]
   status: 'disponible' | 'apartado' | 'separado' | 'vendido'
+  maxInstallments?: number
   createdAt: string
   sellerId?: {
     accountId: {
@@ -86,6 +87,7 @@ export default function LotsPage() {
 
   const [companyLogo, setCompanyLogo] = useState<string>('')
   const [projectLogo, setProjectLogo] = useState<string>('')
+  const [appliesBonus, setAppliesBonus] = useState(false)
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'company' | 'project') => {
     const file = e.target.files?.[0]
@@ -160,7 +162,8 @@ export default function LotsPage() {
     nomenclature: '',
     lotNumber: '',
     area: '',
-    price: ''
+    price: '',
+    maxInstallments: '24'
   })
 
   const [sellFormData, setSellFormData] = useState({
@@ -224,7 +227,8 @@ export default function LotsPage() {
       const payload = {
         ...formData,
         area: formData.area ? parseFloat(formData.area) : undefined,
-        price: formData.price ? parseFloat(formData.price) : undefined
+        price: formData.price ? parseFloat(formData.price) : undefined,
+        maxInstallments: formData.maxInstallments ? parseInt(formData.maxInstallments) : 24
       }
 
       let response
@@ -251,7 +255,7 @@ export default function LotsPage() {
   }
 
   const resetForm = () => {
-    setFormData({ _id: '', stage: '', manzana: '', nomenclature: '', lotNumber: '', area: '', price: '' })
+    setFormData({ _id: '', stage: '', manzana: '', nomenclature: '', lotNumber: '', area: '', price: '', maxInstallments: '24' })
   }
 
   const handleEdit = (lot: Lot) => {
@@ -262,7 +266,8 @@ export default function LotsPage() {
       nomenclature: lot.nomenclature || '',
       lotNumber: lot.lotNumber || '',
       area: lot.area?.toString() || '',
-      price: lot.price?.toString() || ''
+      price: lot.price?.toString() || '',
+      maxInstallments: lot.maxInstallments?.toString() || '24'
     })
     setIsCreateModalOpen(true)
   }
@@ -344,6 +349,7 @@ export default function LotsPage() {
       initialQuotaDueDate: dayjs().add(15, 'day').format('YYYY-MM-DD'),
       paymentDay: '5'
     })
+    setAppliesBonus(false)
     setIsSellModalOpen(true)
     fetchClientsIfNeeded()
     fetchSellers()
@@ -367,6 +373,13 @@ export default function LotsPage() {
     e.preventDefault()
     if (!selectedLot) return
 
+    const maxAllowed = selectedLot.maxInstallments !== undefined ? selectedLot.maxInstallments : 24
+    const enteredInstallments = parseInt(sellFormData.installmentsCount) || 0
+    if (enteredInstallments > maxAllowed) {
+      toast.error(`El número máximo de cuotas ordinarias permitido para este lote es ${maxAllowed}.`)
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const payload: any = {
@@ -377,8 +390,8 @@ export default function LotsPage() {
         contractDate: sellFormData.contractDate,
         negotiation: sellFormData.negotiation,
         sellerId: sellFormData.sellerId || undefined,
-        bonus: sellFormData.bonus,
-        bonusValue: parseFloat(sellFormData.bonusValue) || 0,
+        bonus: appliesBonus ? sellFormData.bonus : '',
+        bonusValue: appliesBonus ? (parseFloat(sellFormData.bonusValue) || 0) : 0,
         separationAmount: parseFloat(sellFormData.separationAmount) || 0,
         initialQuotaDueDate: sellFormData.initialQuotaDueDate,
         paymentDay: parseInt(sellFormData.paymentDay) || 5
@@ -556,6 +569,13 @@ export default function LotsPage() {
   const generatePaymentPlanPDF = () => {
     if (!saleDetail || !selectedLot) return
 
+    const getFormatFromBase64 = (base64: string): string => {
+      if (base64.startsWith('data:image/jpeg') || base64.startsWith('data:image/jpg')) return 'JPEG'
+      if (base64.startsWith('data:image/png')) return 'PNG'
+      if (base64.startsWith('data:image/webp')) return 'WEBP'
+      return 'PNG'
+    }
+
     const doc = new jsPDF()
     
     // Space for Company Logo (Left) and Project Logo (Right)
@@ -564,7 +584,8 @@ export default function LotsPage() {
     // Company Logo space (Izquierda)
     if (companyLogo) {
       try {
-        doc.addImage(companyLogo, 'PNG', 14, 10, 45, 20)
+        const format = getFormatFromBase64(companyLogo)
+        doc.addImage(companyLogo, format, 14, 10, 45, 20)
       } catch (err) {
         doc.setLineDashPattern([2, 2], 0)
         doc.rect(14, 10, 45, 20)
@@ -583,7 +604,8 @@ export default function LotsPage() {
     // Project Logo space (Derecha)
     if (projectLogo) {
       try {
-        doc.addImage(projectLogo, 'PNG', 151, 10, 45, 20)
+        const format = getFormatFromBase64(projectLogo)
+        doc.addImage(projectLogo, format, 151, 10, 45, 20)
       } catch (err) {
         doc.setLineDashPattern([2, 2], 0)
         doc.rect(151, 10, 45, 20)
@@ -671,6 +693,8 @@ export default function LotsPage() {
       minimumFractionDigits: 0
     }).format(num)
   }
+
+  const activeBonusValue = appliesBonus ? (Number(sellFormData.bonusValue) || 0) : 0
 
   return (
     <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
@@ -876,7 +900,7 @@ export default function LotsPage() {
                               size="sm"
                               onClick={() => handleViewSaleDetail(lot)}
                               className="glass-button min-h-[40px] min-w-[40px] text-accent-purple hover:bg-accent-purple/10"
-                              title="Ver Detalles de Venta"
+                              title="Plan de Pagos"
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -965,7 +989,7 @@ export default function LotsPage() {
                     </div>
                     <div className="flex space-x-2">
                       {lot.status === 'vendido' ? (
-                        <Button size="sm" variant="outline" onClick={() => handleViewSaleDetail(lot)} className="glass-button text-accent-purple">
+                        <Button size="sm" variant="outline" onClick={() => handleViewSaleDetail(lot)} className="glass-button text-accent-purple" title="Plan de Pagos">
                           <Eye className="w-4 h-4" />
                         </Button>
                       ) : (
@@ -1060,16 +1084,29 @@ export default function LotsPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">Número de Lote</label>
-            <Input
-              name="lotNumber"
-              value={formData.lotNumber}
-              onChange={handleInputChange}
-              placeholder="Ej: 275-2"
-              required
-              className="glass-input"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Número de Lote</label>
+              <Input
+                name="lotNumber"
+                value={formData.lotNumber}
+                onChange={handleInputChange}
+                placeholder="Ej: 275-2"
+                required
+                className="glass-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Cuotas Máximas Permitidas (Por defecto 24)</label>
+              <Input
+                name="maxInstallments"
+                type="number"
+                value={formData.maxInstallments}
+                onChange={handleInputChange}
+                placeholder="24"
+                className="glass-input"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1322,38 +1359,53 @@ export default function LotsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-text-secondary">Bono de Descuento (Valor)</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-purple/50" />
+              <div className="flex items-center space-x-2 my-2">
+                <input
+                  id="appliesBonus"
+                  type="checkbox"
+                  checked={appliesBonus}
+                  onChange={(e) => setAppliesBonus(e.target.checked)}
+                  className="w-4 h-4 text-accent-purple bg-glass-primary border-glass-border rounded focus:ring-accent-purple/50 focus:ring-2 cursor-pointer"
+                />
+                <label htmlFor="appliesBonus" className="text-xs text-text-primary font-medium cursor-pointer select-none">
+                  ¿Aplica Bono de Descuento?
+                </label>
+              </div>
+
+              {appliesBonus && (
+                <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                  <div className="space-y-2">
+                    <label className="text-xs text-text-secondary">Bono de Descuento (Valor)</label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-purple/50" />
+                      <Input
+                        name="bonusValue"
+                        type="number"
+                        value={sellFormData.bonusValue}
+                        onChange={handleSellInputChange}
+                        className="glass-input pl-10 border-accent-purple/30 focus:border-accent-purple"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-text-secondary">Descripción del Bono</label>
                     <Input
-                      name="bonusValue"
-                      type="number"
-                      value={sellFormData.bonusValue}
+                      name="bonus"
+                      value={sellFormData.bonus}
                       onChange={handleSellInputChange}
-                      className="glass-input pl-10 border-accent-purple/30 focus:border-accent-purple"
-                      placeholder="0"
+                      className="glass-input border-accent-purple/30 focus:border-accent-purple"
+                      placeholder="Ej: Promo Mayo"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-text-secondary">Descripción del Bono</label>
-                  <Input
-                    name="bonus"
-                    value={sellFormData.bonus}
-                    onChange={handleSellInputChange}
-                    className="glass-input border-accent-purple/30 focus:border-accent-purple"
-                    placeholder="Ej: Promo Mayo"
-                  />
-                </div>
-              </div>
+              )}
 
               <div className="p-3 rounded-lg bg-accent-green/5 border border-accent-green/20">
                 <div className="flex justify-between items-center text-xs text-text-secondary">
                   <span>Valor Neto a Financiar:</span>
                   <span className="font-bold text-accent-green text-sm">
-                    {formatCurrency(Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0))}
+                    {formatCurrency(Number(sellFormData.totalValue || 0) - activeBonusValue)}
                   </span>
                 </div>
               </div>
@@ -1418,7 +1470,7 @@ export default function LotsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-text-secondary">Fecha Pago Resto de Inicial</label>
+                <label className="text-xs text-text-secondary">Fecha de Pago Saldo de Cuota Inicial</label>
                 <Input
                   name="initialQuotaDueDate"
                   type="date"
@@ -1431,13 +1483,15 @@ export default function LotsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-text-secondary"># Cuotas Ordinarias</label>
+                  <label className="text-xs text-text-secondary"># Cuotas Ordinarias (Máx: {selectedLot?.maxInstallments !== undefined ? selectedLot.maxInstallments : 24})</label>
                   <Input
                     name="installmentsCount"
                     type="number"
                     value={sellFormData.installmentsCount}
                     onChange={handleSellInputChange}
                     className="glass-input"
+                    max={selectedLot?.maxInstallments !== undefined ? selectedLot.maxInstallments : 24}
+                    min="1"
                     required
                   />
                 </div>
@@ -1467,13 +1521,13 @@ export default function LotsPage() {
             <div className="flex justify-between items-center text-xs">
               <span className="text-text-secondary">Valor Neto Pactado:</span>
               <span className="font-semibold text-text-primary">
-                {formatCurrency(Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0))}
+                {formatCurrency(Number(sellFormData.totalValue || 0) - activeBonusValue)}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-text-secondary">Total Inicial Pactado ({sellFormData.initialQuotaPercentage}%):</span>
               <span className="font-semibold text-text-primary">
-                {formatCurrency((Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (Number(sellFormData.initialQuotaPercentage || 0) / 100))}
+                {formatCurrency((Number(sellFormData.totalValue || 0) - activeBonusValue) * (Number(sellFormData.initialQuotaPercentage || 0) / 100))}
               </span>
             </div>
             {Number(sellFormData.separationAmount || 0) > 0 && (
@@ -1485,19 +1539,19 @@ export default function LotsPage() {
             <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
               <span className="text-text-secondary font-semibold">Cuota inicial ({sellFormData.initialQuotasCount} cuotas):</span>
               <span className="font-bold text-accent-blue">
-                {formatCurrency(Math.max(0, (Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (Number(sellFormData.initialQuotaPercentage || 0) / 100) - Number(sellFormData.separationAmount || 0)))}
+                {formatCurrency(Math.max(0, (Number(sellFormData.totalValue || 0) - activeBonusValue) * (Number(sellFormData.initialQuotaPercentage || 0) / 100) - Number(sellFormData.separationAmount || 0)))}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
               <span className="text-text-secondary font-semibold">Valor financiado ({sellFormData.installmentsCount} cuotas):</span>
               <span className="font-bold text-accent-purple">
-                {formatCurrency((Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100))}
+                {formatCurrency((Number(sellFormData.totalValue || 0) - activeBonusValue) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100))}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs mt-1 text-text-muted italic">
               <span>Cuota mensual ordinaria est.:</span>
               <span>
-                {formatCurrency(((Number(sellFormData.totalValue || 0) - Number(sellFormData.bonusValue || 0)) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100)) / (parseInt(sellFormData.installmentsCount) || 1))}
+                {formatCurrency(((Number(sellFormData.totalValue || 0) - activeBonusValue) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100)) / (parseInt(sellFormData.installmentsCount) || 1))}
               </span>
             </div>
           </div>

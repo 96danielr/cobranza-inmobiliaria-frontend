@@ -121,11 +121,10 @@ export default function HomePage() {
             </span>
           </div>
 
-          {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-white/90">
             <a href="#inicio" className="hover:text-white transition-colors animate-fade-in-down">Inicio</a>
             <a href="#beneficios" className="hover:text-white transition-colors animate-fade-in-down-delay-1">Beneficios</a>
-            <a href="#nosotros" className="hover:text-white transition-colors animate-fade-in-down-delay-2">Sobre Nosotros</a>
+            <a href="#planes" className="hover:text-white transition-colors animate-fade-in-down-delay-2">Planes</a>
             <a href="#seguridad" className="hover:text-white transition-colors animate-fade-in-down-delay-3">Seguridad</a>
           </nav>
 
@@ -442,6 +441,77 @@ export default function HomePage() {
           <svg className="relative block w-full h-[80px] sm:h-[120px]" viewBox="0 0 1440 120" preserveAspectRatio="none">
             <path d="M0,40 C360,120 720,0 1080,40 C1260,60 1350,50 1440,60 L1440,120 L0,120 Z" fill="#ffffff" />
           </svg>
+        </div>
+      </section>
+
+      {/* 5.5 Planes Section */}
+      <section id="planes" className="py-24 bg-slate-50 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Subtle decorative glow in background */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/5 rounded-full filter blur-3xl pointer-events-none" />
+        <div className="absolute -top-10 right-10 w-72 h-72 bg-lime-500/5 rounded-full filter blur-3xl pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight max-w-4xl mx-auto mt-6">
+              Planes a tu medida, <span className="text-blue-600">sin sorpresas</span>
+            </h2>
+            <p className="text-lg text-slate-500 max-w-2xl mx-auto mt-4 leading-relaxed font-medium">
+              Escala tu negocio inmobiliario pagando únicamente por lo que usas. Todos los beneficios incluidos desde el primer día.
+            </p>
+          </div>
+
+          <div className="max-w-md mx-auto">
+            {/* Premium pricing card with interactive glow and custom borders */}
+            <div className="relative group p-0.5 rounded-[2.5rem] bg-gradient-to-br from-blue-600 via-sky-400 to-[#d4fc34] shadow-2xl transition-all duration-500 hover:scale-[1.03] hover:shadow-lime-500/10">
+              {/* Card Glow Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-sky-400 to-[#d4fc34] opacity-20 blur-xl rounded-[2.5rem] pointer-events-none group-hover:opacity-35 transition-opacity" />
+              
+              <div className="relative bg-white rounded-[2.4rem] p-8 sm:p-10 flex flex-col justify-between h-full">
+                {/* Popularity Badge */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-slate-900 text-white rounded-full text-xs font-bold uppercase tracking-wider flex items-center shadow-lg border border-slate-800 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-lime-400 mr-2 animate-ping" />
+                  Plan Único Pro
+                </div>
+
+                <div>
+                  <div className="text-center pb-6 border-b border-slate-100">
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Acceso Completo</p>
+                    <div className="mt-4 flex items-center justify-center">
+                      <span className="text-5xl font-black text-slate-900 tracking-tight">$10.000</span>
+                      <span className="text-lg font-semibold text-slate-500 ml-2">COP / lote al mes</span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-400 mt-2 italic">+ IVA cobrado mensualmente</p>
+                  </div>
+
+                  <div className="py-8 space-y-4">
+                    <p className="text-sm font-bold text-slate-900 mb-2">Incluye acceso ilimitado a todos los módulos:</p>
+                    {[
+                      'Módulo completo de lotes e inventario interactivo',
+                      'Gestión inteligente de contratos y cuotas',
+                      'Pasarelas de recaudo digital e integración bancaria',
+                      'Portal del cliente 24/7 para consulta y pagos',
+                      'Automatización de recordatorios vía WhatsApp y Correo',
+                      'Recibos de caja digitales con auditoría legal',
+                      'Soporte técnico prioritario y actualizaciones sin costo',
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-emerald-500 drop-shadow-sm flex-shrink-0 mr-3 mt-0.5" />
+                        <span className="text-sm text-slate-600 font-medium">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Link 
+                  href="/login"
+                  className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-base font-bold transition-all duration-300 hover:scale-[1.02] flex items-center justify-center shadow-xl shadow-slate-950/10"
+                >
+                  Comenzar ahora
+                  <ArrowUpRight className="w-5 h-5 ml-2" />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
