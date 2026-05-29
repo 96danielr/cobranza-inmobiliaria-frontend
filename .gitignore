@@ -41,6 +41,10 @@ next-env.d.ts
 *.jpg
 *.jpeg
 *.gif
+!public/**/*.png
+!public/**/*.jpg
+!public/**/*.jpeg
+!public/**/*.gif
 
 # IDE
 .vscode/
