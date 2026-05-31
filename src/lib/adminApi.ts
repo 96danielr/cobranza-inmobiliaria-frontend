@@ -106,7 +106,19 @@ export const adminApi = {
   },
 
   // Lots (company-scoped)
-  getLots: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string, status?: string) => {
+  getLots: (
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    sortBy?: string,
+    order?: string,
+    status?: string,
+    manzana?: string,
+    stage?: string,
+    sellerId?: string,
+    minArea?: string,
+    maxArea?: string
+  ) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -115,6 +127,11 @@ export const adminApi = {
       ...(sortBy && { sortBy }),
       ...(order && { order }),
       ...(status && { status }),
+      ...(manzana && { manzana }),
+      ...(stage && { stage }),
+      ...(sellerId && { sellerId }),
+      ...(minArea && { minArea }),
+      ...(maxArea && { maxArea }),
     })
     return apiAdmin.get(`/lots?${params.toString()}`)
   },

@@ -109,16 +109,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center space-x-3 animate-fade-in-down">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-white/20 p-0.5 bg-white">
+            <div className="h-16 rounded-xl overflow-hidden p-0.5">
               <img 
-                src="/PERFIL FONDO BLANCO.jpeg" 
+                src="/logo fondo transparente.png" 
                 alt="Logo" 
                 className="w-full h-full object-cover rounded-lg" 
               />
             </div>
-            <span className="text-xl font-black tracking-tight text-white uppercase">
-              OPERIX <span className="text-lime-300 font-medium text-xs tracking-wider block -mt-1 font-mono">COBRANZA</span>
-            </span>
           </div>
 
           <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-white/90">

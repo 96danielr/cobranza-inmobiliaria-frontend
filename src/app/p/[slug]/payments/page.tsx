@@ -38,6 +38,7 @@ export default function PublicPaymentPage() {
   // Payment Form
   const [amount, setAmount] = useState('')
   const [bank, setBank] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('Transferencia bancaria')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [observations, setObservations] = useState('')
@@ -117,7 +118,8 @@ export default function PublicPaymentPage() {
       const formData = new FormData()
       formData.append('quotaId', selectedQuota._id)
       formData.append('amount', amount)
-      formData.append('bank', bank)
+      formData.append('bank', paymentMethod === 'Efectivo' ? 'EFECTIVO' : bank)
+      formData.append('paymentMethod', paymentMethod)
       formData.append('phone', phone)
       formData.append('email', email)
       formData.append('observations', observations)
@@ -385,7 +387,31 @@ export default function PublicPaymentPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-accent-blue" />
+                        <CreditCard className="w-4 h-4 text-accent-blue" />
+                        Forma de Pago
+                      </label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => {
+                          setPaymentMethod(e.target.value)
+                          if (e.target.value === 'Efectivo') {
+                            setBank('')
+                          }
+                        }}
+                        className="glass-input w-full px-4 py-3 text-base h-12"
+                      >
+                        <option value="Transferencia bancaria">Transferencia bancaria</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Consignación en corresponsal">Consignación en corresponsal</option>
+                        <option value="Consignación en banco">Consignación en banco</option>
+                        <option value="Transferencia interbancaria">Transferencia interbancaria</option>
+                        <option value="Cruce de cuentas">Cruce de cuentas</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-accent-green" />
                         Monto Pagado
                       </label>
                       {paymentOption === 'otro' ? (
@@ -410,21 +436,36 @@ export default function PublicPaymentPage() {
                         </div>
                       )}
                     </div>
+                  </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-accent-purple" />
-                        ¿Desde qué banco?
-                      </label>
-                      <Combobox
-                        options={banks.map((b: any) => ({ value: b.acronym, label: b.acronym }))}
-                        value={bank}
-                        onChange={setBank}
-                        placeholder="Selecciona tu banco..."
-                        searchPlaceholder="Escribir nombre del banco..."
-                        className="h-12"
-                      />
-                      {loadingBanks && <p className="text-[10px] text-text-muted mt-1 animate-pulse">Cargando bancos...</p>}
+                      {paymentMethod === 'Efectivo' ? (
+                        <div>
+                          <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-accent-purple" /> Banco
+                          </label>
+                          <div className="h-12 px-4 rounded-xl border border-glass-border/30 bg-glass-primary/20 flex items-center text-text-disabled select-none">
+                            Recibido en Efectivo (Caja)
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-accent-purple" />
+                            ¿Desde qué banco?
+                          </label>
+                          <Combobox
+                            options={banks.map((b: any) => ({ value: b.acronym, label: b.acronym }))}
+                            value={bank}
+                            onChange={setBank}
+                            placeholder="Selecciona tu banco..."
+                            searchPlaceholder="Escribir nombre del banco..."
+                            className="h-12"
+                          />
+                          {loadingBanks && <p className="text-[10px] text-text-muted mt-1 animate-pulse">Cargando bancos...</p>}
+                        </div>
+                      )}
                     </div>
                   </div>
 

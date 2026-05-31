@@ -85,7 +85,7 @@ export default function ClientsPage() {
     phone: '',
     email: '',
     address: '',
-    behavior: 'INDECISO',
+    behavior: 'N/A',
     password: ''
   })
 
@@ -96,7 +96,8 @@ export default function ClientsPage() {
     phone: '',
     email: '',
     address: '',
-    behavior: 'INDECISO'
+    behavior: 'N/A',
+    contractsCount: 0
   })
 
   // Fetch clients with pagination and filtering
@@ -176,7 +177,8 @@ export default function ClientsPage() {
       phone: client.phone || '',
       email: client.email || '',
       address: client.address || '',
-      behavior: client.behavior || 'INDECISO'
+      behavior: client.behavior || 'N/A',
+      contractsCount: client._count?.contracts || client.contracts?.length || 0
     })
     setIsEditModalOpen(true)
   }
@@ -222,7 +224,7 @@ export default function ClientsPage() {
         phone: '',
         email: '',
         address: '',
-        behavior: 'INDECISO',
+        behavior: 'N/A',
         password: ''
       })
       pagination.refresh()
@@ -449,9 +451,13 @@ export default function ClientsPage() {
                         </div>
                       </td>
                       <td className="py-2 px-4 md:px-6 w-48">
-                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(client.behavior)}`}>
-                          {client.behavior && client.behavior !== 'N/A' ? client.behavior : 'No definido'}
-                        </span>
+                        {(client._count?.contracts || client.contracts?.length || 0) > 0 ? (
+                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(client.behavior)}`}>
+                            {client.behavior && client.behavior !== 'N/A' ? client.behavior : 'No definido'}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-text-disabled font-medium italic">Sin compras</span>
+                        )}
                       </td>
                       <td className="py-2 px-4 md:px-6 w-56">
                         <div className="flex items-center space-x-2">
@@ -593,11 +599,15 @@ export default function ClientsPage() {
                     {dayjs(selectedClient.createdAt).format('DD/MM/YYYY')}
                   </p>
                 </div>
-                <div>
+                 <div>
                   <p className="text-sm text-text-secondary">Comportamiento</p>
-                  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(selectedClient.behavior)}`}>
-                    {selectedClient.behavior}
-                  </span>
+                  {(selectedClient._count?.contracts || selectedClient.contracts?.length || 0) > 0 ? (
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getBehaviorColor(selectedClient.behavior)}`}>
+                      {selectedClient.behavior}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-text-disabled font-medium italic">No aplica (Sin compras)</span>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">Contratos</p>
@@ -772,20 +782,6 @@ export default function ClientsPage() {
               />
               <p className="text-[10px] text-text-muted">Si ingresas una contraseña y el cliente tiene email, se habilitará su acceso automáticamente.</p>
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium text-text-secondary">Estado / Comportamiento inicial</label>
-              <Combobox
-                value={newClient.behavior}
-                onChange={(val) => setNewClient({ ...newClient, behavior: val as string })}
-                options={[
-                  { value: 'ALL', label: 'No definido' },
-                  { value: 'DISPUESTO', label: 'Dispuesto' },
-                  { value: 'INDECISO', label: 'Indeciso' },
-                  { value: 'EVASIVO', label: 'Evasivo' },
-                ]}
-                placeholder="Seleccione estado"
-              />
-            </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-glass-border">
@@ -874,20 +870,22 @@ export default function ClientsPage() {
                 className="glass-input"
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium text-text-secondary">Estado / Comportamiento inicial</label>
-              <Combobox
-                value={editClient.behavior}
-                onChange={(val) => setEditClient({ ...editClient, behavior: val as string })}
-                options={[
-                  { value: 'DISPUESTO', label: 'Dispuesto' },
-                  { value: 'INDECISO', label: 'Indeciso' },
-                  { value: 'EVASIVO', label: 'Evasivos' },
-                  { value: 'N/A', label: 'No definido' },
-                ]}
-                placeholder="Seleccione estado"
-              />
-            </div>
+            {editClient.contractsCount > 0 && (
+              <div className="space-y-2 md:col-span-2 animate-fade-in">
+                <label className="text-sm font-medium text-text-secondary">Estado / Comportamiento de pago</label>
+                <Combobox
+                  value={editClient.behavior}
+                  onChange={(val) => setEditClient({ ...editClient, behavior: val as string })}
+                  options={[
+                    { value: 'DISPUESTO', label: 'Dispuesto' },
+                    { value: 'INDECISO', label: 'Indeciso' },
+                    { value: 'EVASIVO', label: 'Evasivos' },
+                    { value: 'N/A', label: 'No definido' },
+                  ]}
+                  placeholder="Seleccione estado"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-glass-border">

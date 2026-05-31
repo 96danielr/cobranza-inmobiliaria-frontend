@@ -174,7 +174,7 @@ export default function AdminLoginPage() {
 
       <div className="relative w-full max-w-md animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden glass-card mb-6 shadow-glow border-glass-border p-1">
+          <div className="inline-flex items-center justify-center w-32 h-32 rounded-3xl overflow-hidden mb-0 p-1">
             <img 
               src={logoSrc} 
               alt="Logo" 

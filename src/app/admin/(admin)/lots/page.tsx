@@ -24,7 +24,10 @@ import {
   Users,
   Eye,
   Info,
-  FileDown
+  FileDown,
+  SlidersHorizontal,
+  Filter,
+  X
 } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -67,6 +70,15 @@ export default function LotsPage() {
   const searchParams = useSearchParams()
   const initialStatus = searchParams.get('status') || ''
   const [statusFilter, setStatusFilter] = useState(initialStatus)
+  
+  // Advanced Filter states
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
+  const [manzanaFilter, setManzanaFilter] = useState('')
+  const [stageFilter, setStageFilter] = useState('')
+  const [sellerFilter, setSellerFilter] = useState('')
+  const [minAreaFilter, setMinAreaFilter] = useState('')
+  const [maxAreaFilter, setMaxAreaFilter] = useState('')
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null)
@@ -76,6 +88,11 @@ export default function LotsPage() {
   const [isCreatingNewClient, setIsCreatingNewClient] = useState(false)
   const [sellers, setSellers] = useState<any[]>([])
   const [loadingSellers, setLoadingSellers] = useState(false)
+
+  // Load sellers on mount for advanced filters and sales modal
+  useEffect(() => {
+    fetchSellers()
+  }, [])
 
   const [isSaleDetailModalOpen, setIsSaleDetailModalOpen] = useState(false)
   const [saleDetail, setSaleDetail] = useState<any>(null)
@@ -191,7 +208,19 @@ export default function LotsPage() {
 
   const fetchLots = async (page: number, limit: number, search?: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     try {
-      const response = await adminApi.getLots(page, limit, search, sortBy, sortOrder, statusFilter)
+      const response = await adminApi.getLots(
+        page, 
+        limit, 
+        search, 
+        sortBy, 
+        sortOrder, 
+        statusFilter,
+        manzanaFilter || undefined,
+        stageFilter || undefined,
+        sellerFilter || undefined,
+        minAreaFilter || undefined,
+        maxAreaFilter || undefined
+      )
       if (!response.data.success) {
         throw new Error('Error loading lots')
       }
@@ -212,7 +241,7 @@ export default function LotsPage() {
   const pagination = useServerPagination({
     fetchData: fetchLots,
     initialLimit: 20,
-    dependencies: [statusFilter]
+    dependencies: [statusFilter, manzanaFilter, stageFilter, sellerFilter, minAreaFilter, maxAreaFilter]
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -750,27 +779,134 @@ export default function LotsPage() {
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex-1 w-full">
               <Input
-                placeholder="Buscar por etapa, nomenclatura o número de lote..."
+                placeholder="Buscar por manzana, número de lote, etapa, nomenclatura o referencia..."
                 value={pagination.search}
                 onChange={(e) => pagination.handleSearch(e.target.value)}
                 className="glass-input"
                 icon={Search}
               />
             </div>
-            <div className="w-full sm:w-48">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-4 py-2 bg-glass-primary/30 text-text-primary border border-glass-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-blue/50 text-sm font-medium transition-all"
+            <div className="w-full sm:w-auto">
+              <Button
+                onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+                variant={isFilterPanelOpen ? 'primary' : 'outline'}
+                className={`glass-button min-h-[44px] px-4 w-full sm:w-auto ${
+                  isFilterPanelOpen 
+                    ? 'bg-accent-blue/30 text-accent-blue border-accent-blue/50' 
+                    : 'text-text-secondary hover:text-text-primary border-glass-border hover:bg-glass-hover'
+                }`}
               >
-                <option value="" className="bg-slate-800 text-white">Todos los estados</option>
-                <option value="disponible" className="bg-slate-800 text-white">Disponible</option>
-                <option value="apartado" className="bg-slate-800 text-white">Apartado</option>
-                <option value="separado" className="bg-slate-800 text-white">Separado</option>
-                <option value="vendido" className="bg-slate-800 text-white">Vendido</option>
-              </select>
+                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                {isFilterPanelOpen ? 'Ocultar Filtros' : 'Filtros Avanzados'}
+              </Button>
             </div>
           </div>
+
+          {/* Advanced Expandable Filter Panel */}
+          {isFilterPanelOpen && (
+            <div className="mt-4 pt-4 border-t border-glass-border animate-fade-in-down">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* Estado */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Estado</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-glass-primary/30 text-text-primary border border-glass-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-blue/50 text-sm font-medium transition-all"
+                  >
+                    <option value="" className="bg-slate-800 text-white">Todos los estados</option>
+                    <option value="disponible" className="bg-slate-800 text-white">Disponible</option>
+                    <option value="apartado" className="bg-slate-800 text-white">Apartado</option>
+                    <option value="separado" className="bg-slate-800 text-white">Separado</option>
+                    <option value="vendido" className="bg-slate-800 text-white">Vendido</option>
+                  </select>
+                </div>
+
+                {/* Manzana */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Manzana (Block)</label>
+                  <Input
+                    placeholder="Ej: A, B, Mz 3..."
+                    value={manzanaFilter}
+                    onChange={(e) => setManzanaFilter(e.target.value)}
+                    className="glass-input h-[38px] py-1 px-3 text-sm focus:ring-2 focus:ring-accent-blue/50"
+                  />
+                </div>
+
+                {/* Etapa */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Etapa (Stage)</label>
+                  <Input
+                    placeholder="Ej: Etapa 1, Condominio..."
+                    value={stageFilter}
+                    onChange={(e) => setStageFilter(e.target.value)}
+                    className="glass-input h-[38px] py-1 px-3 text-sm focus:ring-2 focus:ring-accent-blue/50"
+                  />
+                </div>
+
+                {/* Vendedor */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Vendedor (Seller)</label>
+                  <select
+                    value={sellerFilter}
+                    onChange={(e) => setSellerFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-glass-primary/30 text-text-primary border border-glass-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-blue/50 text-sm font-medium transition-all"
+                  >
+                    <option value="" className="bg-slate-800 text-white">Todos los vendedores</option>
+                    {sellers.map((s: any) => (
+                      <option key={s._id} value={s._id} className="bg-slate-800 text-white">
+                        {s.accountId?.fullName || 'Vendedor sin nombre'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Rango de Área */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Rango de Área (m²)</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      placeholder="Mín"
+                      type="number"
+                      value={minAreaFilter}
+                      onChange={(e) => setMinAreaFilter(e.target.value)}
+                      className="glass-input h-[38px] py-1 px-3 text-sm flex-1 focus:ring-2 focus:ring-accent-blue/50"
+                    />
+                    <span className="text-text-secondary text-xs">-</span>
+                    <Input
+                      placeholder="Máx"
+                      type="number"
+                      value={maxAreaFilter}
+                      onChange={(e) => setMaxAreaFilter(e.target.value)}
+                      className="glass-input h-[38px] py-1 px-3 text-sm flex-1 focus:ring-2 focus:ring-accent-blue/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Clear Filters Toolbar */}
+              {(statusFilter || manzanaFilter || stageFilter || sellerFilter || minAreaFilter || maxAreaFilter) && (
+                <div className="flex justify-end mt-4 animate-fade-in">
+                  <Button
+                    onClick={() => {
+                      setStatusFilter('')
+                      setManzanaFilter('')
+                      setStageFilter('')
+                      setSellerFilter('')
+                      setMinAreaFilter('')
+                      setMaxAreaFilter('')
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="glass-button text-xs text-text-secondary hover:text-text-primary min-h-[32px] px-3 border border-glass-border hover:bg-glass-hover"
+                  >
+                    <X className="w-3.5 h-3.5 mr-1 text-accent-red" />
+                    Limpiar Filtros
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

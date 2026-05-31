@@ -85,13 +85,36 @@ export default function PaymentsPage() {
   const [clientDetails, setClientDetails] = useState<any>(null)
   const [selectedContractId, setSelectedContractId] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
+  const [manualPaymentOption, setManualPaymentOption] = useState<'minimo' | 'total' | 'otro'>('minimo')
+
+  const pendingQuotas = useMemo(() => {
+    if (!clientDetails || !selectedContractId) return []
+    const contract = clientDetails.contracts?.find((c: any) => c._id === selectedContractId)
+    if (!contract || !contract.quotas) return []
+    return contract.quotas
+      .filter((q: any) => q.status !== 'pagado')
+      .sort((a: any, b: any) => {
+        if (a.type === 'inicial' && b.type !== 'inicial') return -1;
+        if (a.type !== 'inicial' && b.type === 'inicial') return 1;
+        return a.number - b.number;
+      })
+  }, [clientDetails, selectedContractId])
+
+  const minPaymentAmount = useMemo(() => {
+    return pendingQuotas.length > 0 ? (pendingQuotas[0].value - (pendingQuotas[0].amountPaid || 0)) : 0
+  }, [pendingQuotas])
+
+  const totalPaymentAmount = useMemo(() => {
+    return pendingQuotas.reduce((sum: number, q: any) => sum + (q.value - (q.amountPaid || 0)), 0)
+  }, [pendingQuotas])
 
   // Manual Payment Form State
   const [manualAmount, setManualAmount] = useState('')
   const [manualBank, setManualBank] = useState('')
   const [manualObservations, setManualObservations] = useState('')
   const [manualCapture, setManualCapture] = useState<File | null>(null)
-  const [manualPaymentMethod, setManualPaymentMethod] = useState<'efectivo' | 'transferencia'>('transferencia')
+  const [manualPaymentMethod, setManualPaymentMethod] = useState<string>('Transferencia bancaria')
+  const [manualPaymentDate, setManualPaymentDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [companySlug, setCompanySlug] = useState('')
   const [banks, setBanks] = useState<any[]>([])
   const [loadingBanks, setLoadingBanks] = useState(false)
@@ -270,18 +293,42 @@ export default function PaymentsPage() {
     toast.success('Enlace del recibo copiado')
   }
 
-  const handleRegisterManualPayment = async (quotaId: string, quotaValue: number) => {
+  const handleRegisterManualPayment = async () => {
+    if (pendingQuotas.length === 0) {
+      toast.error('No hay cuotas pendientes para pagar')
+      return
+    }
+
+    let finalAmount = 0
+    if (manualPaymentOption === 'minimo') {
+      finalAmount = minPaymentAmount
+    } else if (manualPaymentOption === 'total') {
+      finalAmount = totalPaymentAmount
+    } else {
+      if (!manualAmount || parseFloat(manualAmount) <= 0) {
+        toast.error('Debe ingresar un monto válido a pagar')
+        return
+      }
+      finalAmount = parseFloat(manualAmount)
+    }
+
+    if (manualPaymentMethod === 'transferencia' && !manualBank) {
+      toast.error('Debe seleccionar un banco para la transferencia')
+      return
+    }
+
     setIsProcessing(true)
     try {
       const formData = new FormData()
-      formData.append('quotaId', quotaId)
-      formData.append('amount', manualAmount || quotaValue.toString())
-      formData.append('bank', manualPaymentMethod === 'efectivo' ? 'EFECTIVO' : manualBank)
+      formData.append('quotaId', pendingQuotas[0]._id)
+      formData.append('amount', finalAmount.toString())
+      formData.append('bank', manualPaymentMethod === 'Efectivo' ? 'EFECTIVO' : manualBank)
+      formData.append('paymentMethod', manualPaymentMethod)
       formData.append('observations', manualObservations)
       if (manualCapture) {
         formData.append('capture', manualCapture)
       }
-      formData.append('paymentDate', new Date().toISOString())
+      formData.append('paymentDate', manualPaymentDate)
 
       await adminApi.registerManualPayment(formData)
 
@@ -294,11 +341,12 @@ export default function PaymentsPage() {
       setManualCapture(null)
       setSelectedClientId('')
       setClientDetails(null)
-      setManualPaymentMethod('transferencia')
+      setManualPaymentMethod('Transferencia bancaria')
+      setManualPaymentOption('minimo')
+      setManualPaymentDate(dayjs().format('YYYY-MM-DD'))
 
       refresh()
     } catch (error) {
-
       toast.error('Error al registrar el pago')
     } finally {
       setIsProcessing(false)
@@ -903,7 +951,8 @@ export default function PaymentsPage() {
           setManualBank('')
           setManualObservations('')
           setManualCapture(null)
-          setManualPaymentMethod('transferencia')
+          setManualPaymentMethod('Transferencia bancaria')
+          setManualPaymentOption('minimo')
         }}
         title="Registrar Pago Manual"
         size="lg"
@@ -955,44 +1004,141 @@ export default function PaymentsPage() {
                 <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border space-y-3 animate-fade-in-up">
                   <label className="block text-sm font-semibold text-text-primary flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-accent-blue" />
-                    Método de Pago
+                    Forma de Pago
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setManualPaymentMethod('transferencia')}
-                      className={`h-12 rounded-xl border flex items-center justify-center font-bold transition-all duration-300 ${
-                        manualPaymentMethod === 'transferencia'
-                          ? 'bg-accent-blue/20 border-accent-blue text-accent-blue shadow-glow'
-                          : 'bg-glass-primary/10 border-glass-border text-text-muted hover:text-text-primary hover:bg-glass-primary/20'
-                      }`}
-                    >
-                      Transferencia Bancaria
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setManualPaymentMethod('efectivo')
+                  <select
+                    value={manualPaymentMethod}
+                    onChange={(e) => {
+                      setManualPaymentMethod(e.target.value)
+                      if (e.target.value === 'Efectivo') {
                         setManualBank('')
+                      }
+                    }}
+                    className="glass-input w-full px-4 py-3 text-base"
+                  >
+                    <option value="Transferencia bancaria">Transferencia bancaria</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Consignación en corresponsal">Consignación en corresponsal</option>
+                    <option value="Consignación en banco">Consignación en banco</option>
+                    <option value="Transferencia interbancaria">Transferencia interbancaria</option>
+                    <option value="Cruce de cuentas">Cruce de cuentas</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border space-y-4">
+                <label className="block text-sm font-semibold text-text-primary">
+                  ¿Cuánto desea registrar como pagado?
+                </label>
+                
+                {pendingQuotas.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Pago Mínimo */}
+                    <div
+                      onClick={() => {
+                        setManualPaymentOption('minimo')
+                        setManualAmount(minPaymentAmount.toString())
                       }}
-                      className={`h-12 rounded-xl border flex items-center justify-center font-bold transition-all duration-300 ${
-                        manualPaymentMethod === 'efectivo'
-                          ? 'bg-accent-green/20 border-accent-green text-accent-green shadow-glow'
-                          : 'bg-glass-primary/10 border-glass-border text-text-muted hover:text-text-primary hover:bg-glass-primary/20'
+                      className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none active:scale-[0.99] ${
+                        manualPaymentOption === 'minimo'
+                          ? 'bg-accent-blue/15 border-accent-blue shadow-glow'
+                          : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
                       }`}
                     >
-                      Efectivo / Caja
-                    </button>
+                      <div>
+                        <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-accent-blue" />
+                          Pago Mínimo
+                        </p>
+                        <p className="text-[10px] text-text-muted mt-1 leading-normal">Cuota #{pendingQuotas[0].number} pendiente</p>
+                      </div>
+                      <div className="mt-4 pt-2 border-t border-glass-border/30">
+                        <span className="font-extrabold text-text-primary text-base">
+                          {formatCurrency(minPaymentAmount)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Pago Total */}
+                    <div
+                      onClick={() => {
+                        setManualPaymentOption('total')
+                        setManualAmount(totalPaymentAmount.toString())
+                      }}
+                      className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none active:scale-[0.99] ${
+                        manualPaymentOption === 'total'
+                          ? 'bg-accent-green/15 border-accent-green shadow-glow'
+                          : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-accent-green" />
+                          Pago Total
+                        </p>
+                        <p className="text-[10px] text-text-muted mt-1 leading-normal">Pagar deuda total acumulada</p>
+                      </div>
+                      <div className="mt-4 pt-2 border-t border-glass-border/30">
+                        <span className="font-extrabold text-text-primary text-base">
+                          {formatCurrency(totalPaymentAmount)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Otro Valor */}
+                    <div
+                      onClick={() => {
+                        setManualPaymentOption('otro')
+                        setManualAmount('')
+                      }}
+                      className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none active:scale-[0.99] ${
+                        manualPaymentOption === 'otro'
+                          ? 'bg-accent-purple/15 border-accent-purple shadow-glow'
+                          : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-accent-purple" />
+                          Otro Valor (Abonar)
+                        </p>
+                        <p className="text-[10px] text-text-muted mt-1 leading-normal">Monto personalizado libre</p>
+                      </div>
+                      <div className="mt-4 pt-2 border-t border-glass-border/30">
+                        <span className="text-xs font-semibold text-text-secondary italic">
+                          Ingresar monto...
+                        </span>
+                      </div>
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-sm text-text-muted">No hay cuotas pendientes para este contrato.</p>
+                )}
+              </div>
+
+              {manualPaymentOption === 'otro' && pendingQuotas.length > 0 && (
+                <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border animate-fade-in">
+                  <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-accent-purple" />
+                    Ingrese el valor a registrar
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Escriba el monto a pagar..."
+                    value={manualAmount}
+                    onChange={(e) => setManualAmount(e.target.value)}
+                    className="glass-input h-12 text-lg"
+                    required
+                  />
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" /> Banco / Medio
+                    <CreditCard className="w-4 h-4" /> Banco / Medio de Recibo
                   </label>
-                  {manualPaymentMethod === 'efectivo' && ['superadmin', 'tenant_admin', 'admin'].includes(admin?.role || '') ? (
+                  {manualPaymentMethod === 'Efectivo' && ['superadmin', 'tenant_admin', 'admin'].includes(admin?.role || '') ? (
                     <div className="h-12 px-4 rounded-xl border border-glass-border/30 bg-glass-primary/20 flex items-center text-text-disabled select-none">
                       Recibido en Efectivo (Caja)
                     </div>
@@ -1012,15 +1158,28 @@ export default function PaymentsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" /> Monto Pagado (Opcional)
+                    <DollarSign className="w-4 h-4" /> Valor a Registrar
                   </label>
-                  <Input
-                    type="number"
-                    placeholder="Valor total por defecto"
-                    value={manualAmount}
-                    onChange={(e) => setManualAmount(e.target.value)}
-                    className="glass-input h-12"
-                  />
+                  <div className="h-12 px-4 rounded-xl border border-glass-border bg-glass-primary/20 flex items-center justify-between text-text-primary font-bold">
+                    <span>
+                      {formatCurrency(
+                        manualPaymentOption === 'minimo'
+                          ? minPaymentAmount
+                          : manualPaymentOption === 'total'
+                          ? totalPaymentAmount
+                          : parseFloat(manualAmount) || 0
+                      )}
+                    </span>
+                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase ${
+                      manualPaymentOption === 'minimo'
+                        ? 'bg-accent-blue/15 text-accent-blue'
+                        : manualPaymentOption === 'total'
+                        ? 'bg-accent-green/15 text-accent-green'
+                        : 'bg-accent-purple/15 text-accent-purple'
+                    }`}>
+                      {manualPaymentOption === 'minimo' ? 'Mínimo' : manualPaymentOption === 'total' ? 'Total' : 'Abono'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1042,6 +1201,19 @@ export default function PaymentsPage() {
               </div>
 
               <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-accent-blue" /> Fecha de Pago
+                </label>
+                <Input
+                  type="date"
+                  value={manualPaymentDate}
+                  onChange={(e) => setManualPaymentDate(e.target.value)}
+                  className="glass-input h-12 text-lg"
+                  required
+                />
+              </div>
+
+              <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
                 <label className="block text-sm font-medium text-text-primary mb-2">OBSERVACIONES</label>
                 <textarea
                   value={manualObservations}
@@ -1052,64 +1224,63 @@ export default function PaymentsPage() {
                 />
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 p-3 bg-accent-green/10 rounded-lg border border-accent-green/20">
-                  <CheckCircle className="w-5 h-5 text-accent-green" />
-                  <p className="text-sm font-medium text-accent-green">Paso 3: Seleccione la cuota que está pagando</p>
-                </div>
-                <div className="max-h-64 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                  {clientDetails.contracts
-                    .find((c: any) => c._id === selectedContractId)
-                    ?.quotas?.filter((q: any) => q.status !== 'pagado')
-                    .sort((a: any, b: any) => {
-                      if (a.type === 'inicial' && b.type !== 'inicial') return -1;
-                      if (a.type !== 'inicial' && b.type === 'inicial') return 1;
-                      return a.number - b.number;
-                    })
-                    .map((quota: any) => (
-                      <div
-                        key={quota._id}
-                        className="flex items-center justify-between p-4 rounded-2xl border border-glass-border bg-glass-primary/10 hover:bg-glass-primary/20 transition-all hover:scale-[1.01]"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${quota.number === 0 ? 'bg-accent-green/20 text-accent-green' : quota.type === 'inicial' ? 'bg-accent-purple/20 text-accent-purple' : 'bg-accent-blue/20 text-accent-blue'}`}>
-                            <span className="font-bold">{quota.number === 0 ? 'S' : `#${quota.number}`}</span>
-                          </div>
-                          <div>
-                            <p className={`font-bold ${quota.number === 0 ? 'text-accent-green' : quota.type === 'inicial' ? 'text-accent-purple' : 'text-text-primary'}`}>
-                              {quota.number === 0 ? 'Separación' : quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'}
-                            </p>
-                            <p className="text-sm text-text-muted">Vence: {dayjs(quota.dueDate).format('DD/MM/YYYY')}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-6">
-                          <div className="text-right">
-                            <span className="text-xl font-bold text-text-primary">{formatCurrency(quota.value)}</span>
-                            {quota.amountPaid > 0 && (
-                              <p className="text-[10px] text-text-muted mt-0.5">
-                                Abonado: <span className="text-accent-green font-semibold">{formatCurrency(quota.amountPaid)}</span> | Pendiente: <span className="text-accent-red font-semibold">{formatCurrency(quota.value - quota.amountPaid)}</span>
+              {pendingQuotas.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 p-3 bg-accent-green/10 rounded-lg border border-accent-green/20">
+                    <CheckCircle className="w-5 h-5 text-accent-green" />
+                    <p className="text-sm font-medium text-accent-green">Paso 3: Confirme y registre el pago</p>
+                  </div>
+                  
+                  {/* Read-only pending quotas list for reference */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                      Resumen de Cuotas Pendientes (Referencia)
+                    </p>
+                    <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                      {pendingQuotas.map((quota: any) => (
+                        <div
+                          key={quota._id}
+                          className="flex items-center justify-between p-3 rounded-xl border border-glass-border bg-glass-primary/5 text-xs"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${quota.number === 0 ? 'bg-accent-green/20 text-accent-green' : quota.type === 'inicial' ? 'bg-accent-purple/20 text-accent-purple' : 'bg-accent-blue/20 text-accent-blue'}`}>
+                              {quota.number === 0 ? 'S' : `#${quota.number}`}
+                            </div>
+                            <div>
+                              <p className="font-bold text-text-primary">
+                                {quota.number === 0 ? 'Separación' : quota.type === 'inicial' ? 'Cuota Inicial' : 'Cuota Ordinaria'}
                               </p>
-                            )}
+                              <p className="text-text-muted">Vence: {dayjs(quota.dueDate).format('DD/MM/YYYY')}</p>
+                            </div>
                           </div>
-                          <Button
-                            size="lg"
-                            className="bg-accent-green/20 text-accent-green border border-accent-green/30 hover:bg-accent-green/40 px-6 h-12 shadow-md shadow-accent-green/10"
-                            onClick={() => handleRegisterManualPayment(quota._id, quota.value)}
-                            disabled={isProcessing}
-                          >
-                            <DollarSign className="w-4 h-4 mr-2" />
-                            Pagar
-                          </Button>
+                          <div className="text-right font-bold text-text-primary">
+                            {formatCurrency(quota.value - (quota.amountPaid || 0))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  {clientDetails.contracts
-                    .find((c: any) => c._id === selectedContractId)
-                    ?.quotas?.filter((q: any) => q.status !== 'pagado').length === 0 && (
-                      <p className="text-center py-4 text-text-muted">No hay cuotas pendientes para este contrato.</p>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button
+                    size="lg"
+                    className="w-full bg-accent-green text-white hover:bg-accent-green/85 h-14 shadow-lg shadow-accent-green/10 text-base font-bold rounded-2xl flex items-center justify-center gap-2 mt-4"
+                    onClick={handleRegisterManualPayment}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Registrando Pago...
+                      </>
+                    ) : (
+                      <>
+                        <DollarSign className="w-5 h-5" />
+                        Registrar y Aprobar Pago
+                      </>
                     )}
+                  </Button>
                 </div>
-              </div>
+              )}
             </div>
           )}
 

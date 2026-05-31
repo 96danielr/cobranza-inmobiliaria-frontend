@@ -31,10 +31,20 @@ const fallBackBancos = [
   { value: 'Otro', label: 'Otro' }
 ]
 
+const paymentMethodsList = [
+  { value: 'Transferencia bancaria', label: 'Transferencia bancaria' },
+  { value: 'Efectivo', label: 'Efectivo' },
+  { value: 'Consignación en corresponsal', label: 'Consignación en corresponsal' },
+  { value: 'Consignación en banco', label: 'Consignación en banco' },
+  { value: 'Transferencia interbancaria', label: 'Transferencia interbancaria' },
+  { value: 'Cruce de cuentas', label: 'Cruce de cuentas' }
+]
+
 const reportPaymentSchema = z.object({
   contractId: z.string().min(1, 'Selecciona un contrato'),
   cuotaNumber: z.number().min(1, 'Selecciona una cuota'),
   amount: z.number().positive('El monto debe ser positivo'),
+  paymentMethod: z.string().min(1, 'Selecciona la forma de pago'),
   banco: z.string().min(1, 'Selecciona el banco'),
   bancoOtro: z.string().optional(),
   fechaPago: z.string().min(1, 'Selecciona la fecha de pago')
@@ -86,6 +96,7 @@ export default function ReportPaymentPage() {
     defaultValues: {
       contractId: contractIdParam || '',
       cuotaNumber: cuotaParam ? parseInt(cuotaParam) : undefined,
+      paymentMethod: 'Transferencia bancaria',
       fechaPago: new Date().toISOString().split('T')[0]
     }
   })
@@ -222,6 +233,7 @@ export default function ReportPaymentPage() {
       formData.append('cuotaNumber', data.cuotaNumber.toString())
       formData.append('amount', data.amount.toString())
       formData.append('banco', data.banco === 'Otro' ? data.bancoOtro! : data.banco)
+      formData.append('paymentMethod', data.paymentMethod)
       formData.append('fechaPago', data.fechaPago)
       formData.append('comprobante', selectedFile)
 
@@ -445,21 +457,54 @@ export default function ReportPaymentPage() {
               )
             )}
 
+            {/* Payment Method */}
+            <Controller
+              name="paymentMethod"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Forma de Pago"
+                  options={paymentMethodsList}
+                  placeholder="Selecciona la forma de pago"
+                  error={errors.paymentMethod?.message}
+                  className="glass-input"
+                  value={field.value}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    field.onChange(val)
+                    if (val === 'Efectivo') {
+                      setValue('banco', 'EFECTIVO')
+                    } else if (watch('banco') === 'EFECTIVO') {
+                      setValue('banco', '')
+                    }
+                  }}
+                />
+              )}
+            />
+
             {/* Bank */}
             <Controller
               name="banco"
               control={control}
               render={({ field }) => (
                 <div>
-                  <Select
-                    label="Banco"
-                    options={banksList}
-                    placeholder="Selecciona el banco"
-                    error={errors.banco?.message}
-                    className="glass-input"
-                    {...field}
-                  />
-                  {loadingBanks && <p className="text-[10px] text-text-secondary mt-1 animate-pulse">Cargando bancos...</p>}
+                  {watch('paymentMethod') === 'Efectivo' ? (
+                    <div className="h-12 px-4 rounded-xl border border-glass-border/30 bg-glass-primary/20 flex items-center text-text-disabled select-none mb-4">
+                      Recibido en Efectivo (Caja)
+                    </div>
+                  ) : (
+                    <>
+                      <Select
+                        label="Banco"
+                        options={banksList}
+                        placeholder="Selecciona el banco"
+                        error={errors.banco?.message}
+                        className="glass-input"
+                        {...field}
+                      />
+                      {loadingBanks && <p className="text-[10px] text-text-secondary mt-1 animate-pulse">Cargando bancos...</p>}
+                    </>
+                  )}
                 </div>
               )}
             />
