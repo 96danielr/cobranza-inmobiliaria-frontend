@@ -1001,7 +1001,7 @@ export default function PaymentsPage() {
               )}
 
               {/* Payment Method Selector (Only for Logged-in Admins) */}
-              {['superadmin', 'tenant_admin', 'admin'].includes(admin?.role || '') && (
+              {['superadmin', 'tenant_admin', 'company_admin'].includes(admin?.role || '') && (
                 <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border space-y-3 animate-fade-in-up">
                   <label className="block text-sm font-semibold text-text-primary flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-accent-blue" />
@@ -1022,7 +1022,7 @@ export default function PaymentsPage() {
                     <option value="Consignación en corresponsal">Consignación en corresponsal</option>
                     <option value="Consignación en banco">Consignación en banco</option>
                     <option value="Transferencia interbancaria">Transferencia interbancaria</option>
-                    {admin?.role === 'admin' && (
+                    {['superadmin', 'tenant_admin', 'company_admin'].includes(admin?.role || '') && (
                       <option value="Cruce de cuentas">Cruce de cuentas</option>
                     )}
                   </select>
