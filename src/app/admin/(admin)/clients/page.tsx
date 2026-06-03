@@ -632,7 +632,9 @@ export default function ClientsPage() {
                             {contract.negotiation || 'Contrato de Venta'}
                           </p>
                           <h4 className="font-bold text-text-primary text-lg">
-                            {contract.lot?.lotNumber ? `Lote ${contract.lot.lotNumber}` : `Contrato #${idx + 1}`}
+                            {contract.lot?.lotNumber 
+                              ? `Lote: E: ${contract.lot.stage || '-'} - M: ${contract.lot.manzana || '-'} - L: ${contract.lot.lotNumber}${contract.lot.nomenclature ? ` (${contract.lot.nomenclature})` : ''}` 
+                              : `Contrato #${idx + 1}`}
                           </h4>
                         </div>
                         <div className="text-right">

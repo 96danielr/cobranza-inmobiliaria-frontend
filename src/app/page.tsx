@@ -24,6 +24,7 @@ export default function HomePage() {
   const router = useRouter()
   const { isAuthenticated, admin } = useAdminAuthStore()
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [buttonHover, setButtonHover] = useState(false)
 
   useEffect(() => {
@@ -39,8 +40,13 @@ export default function HomePage() {
     // Force body background color to light to prevent any black margin bleed-through
     bodyElement.style.backgroundColor = '#f8fafc'
     bodyElement.style.color = '#0f172a'
+
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 1000)
     
     return () => {
+      clearTimeout(timer)
       bodyElement.style.backgroundColor = ''
       bodyElement.style.color = ''
       htmlElement.classList.remove('light')
@@ -87,10 +93,34 @@ export default function HomePage() {
     }
   ]
 
-  if (!mounted) {
+  if (loading || !mounted) {
     return (
-      <div className="min-h-screen bg-[#075985] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* Pulse rings in background */}
+        <div className="absolute w-[400px] h-[400px] rounded-full border border-sky-500/10 animate-ping opacity-70" />
+        <div className="absolute w-[250px] h-[250px] rounded-full border border-sky-400/20 animate-pulse" />
+        
+        {/* Animated logo container */}
+        <div className="relative z-10 flex flex-col items-center space-y-6">
+          <div className="h-28 overflow-hidden animate-bounce transition-all duration-1000">
+            <img 
+              src="/logo fondo transparente.png" 
+              alt="Logo" 
+              className="h-full w-auto object-contain filter drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]" 
+            />
+          </div>
+          {/* Custom bar loader */}
+          <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden relative">
+            <div className="absolute inset-y-0 left-0 bg-[#d4fc34] rounded-full w-0" style={{ animation: 'progress 1s linear forwards' }} />
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+          }
+        `}</style>
       </div>
     )
   }
@@ -157,6 +187,17 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
+          {/* Logo en el Hero */}
+          <div className="mb-10 flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="h-28 sm:h-36 overflow-hidden rounded-2xl p-1 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
+              <img 
+                src="/logo fondo transparente.png" 
+                alt="Logo Operix" 
+                className="h-full w-auto object-contain filter drop-shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
+              />
+            </div>
+          </div>
+
           {/* Main Slogan */}
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
             <span className="block animate-fade-in-up" style={{ animationDelay: '0.8s' }}>Construyendo el futuro de la</span>

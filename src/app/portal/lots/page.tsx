@@ -120,7 +120,7 @@ export default function MyLotsPage() {
                     <td className="py-5 px-8">
                       <div>
                         <p className="font-bold text-text-primary group-hover:text-accent-blue transition-colors">
-                          {lot.stage || '-'} - {lot.lotNumber}
+                          E: {lot.stage || '-'} - M: {lot.manzana || '-'} - L: {lot.lotNumber}
                         </p>
                         <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-0.5">
                           Nomenclatura: {lot.nomenclature || '-'}

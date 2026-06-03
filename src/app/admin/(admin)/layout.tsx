@@ -39,7 +39,7 @@ export default function AdminLayout({
 
   const logoSrc = mounted && theme === 'light'
     ? '/PERFIL FONDO BLANCO.jpeg'
-    : '/PERFIL FONDO AZUL OSCURO.jpeg'
+    : '/PERFIL PARA FONDOS OSCUROS SOLO NOMBRE EMPRESA.png'
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -133,12 +133,12 @@ export default function AdminLayout({
         <div className="sidebar-admin">
           <div className="flex flex-col h-full">
             {/* Sidebar Header - System Name */}
-            <div className="flex flex-col items-center justify-center px-6 py-6 border-b border-glass-border min-h-[110px]">
-              <div className="w-24 h-16 rounded-2xl overflow-hidden p-1">
+            <div className="flex flex-col items-center justify-center border-b border-glass-border min-h-[70px]">
+              <div className="w-48 h-16 rounded-xl overflow-hidden p-1 flex items-center justify-center">
                 <img 
                   src={logoSrc} 
                   alt="Logo" 
-                  className="w-full h-full object-cover rounded-xl" 
+                  className="w-full h-full object-contain" 
                 />
               </div>
             </div>

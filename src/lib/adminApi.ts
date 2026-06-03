@@ -186,6 +186,18 @@ export const adminApi = {
     })
   },
 
+  // Lot-only Excel Import (company-scoped)
+  uploadLotsExcel: (formData: FormData) => {
+    const companyId = getCompanyId()
+    formData.append('companyId', companyId)
+    return apiAdmin.post(`/import/excel-lots?companyId=${companyId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 240000,
+    })
+  },
+
   // Excel Export (company-scoped)
   exportExcel: () =>
     apiAdmin.get(`/import/export?companyId=${getCompanyId()}`, {
@@ -197,6 +209,13 @@ export const adminApi = {
     apiAdmin.get('/import/template', {
       responseType: 'blob',
     }),
+
+  // Lot-only Excel Template
+  downloadLotsTemplate: () =>
+    apiAdmin.get('/import/template-lots', {
+      responseType: 'blob',
+    }),
+
 
   // User Management (tenant_admin only)
   getAdminUsers: (page: number = 1, limit: number = 10, search?: string, sortBy?: string, order?: string) => {

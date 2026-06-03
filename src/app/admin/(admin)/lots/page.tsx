@@ -27,7 +27,10 @@ import {
   FileDown,
   SlidersHorizontal,
   Filter,
-  X
+  X,
+  Upload,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -79,7 +82,15 @@ export default function LotsPage() {
   const [minAreaFilter, setMinAreaFilter] = useState('')
   const [maxAreaFilter, setMaxAreaFilter] = useState('')
 
+  // Lot-only Import states
+  const [isImportLotsModalOpen, setIsImportLotsModalOpen] = useState(false)
+  const [lotFile, setLotFile] = useState<File | null>(null)
+  const [importingLots, setImportingLots] = useState(false)
+  const [importLotsResult, setImportLotsResult] = useState<any>(null)
+  const [dragActiveLots, setDragActiveLots] = useState(false)
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null)
   const [isSellModalOpen, setIsSellModalOpen] = useState(false)
@@ -243,6 +254,96 @@ export default function LotsPage() {
     initialLimit: 20,
     dependencies: [statusFilter, manzanaFilter, stageFilter, sellerFilter, minAreaFilter, maxAreaFilter]
   })
+
+  const handleLotsFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+      ]
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Solo se permiten archivos Excel (.xlsx, .xls) o CSV')
+        return
+      }
+      setLotFile(file)
+      toast.success('Archivo de lotes cargado correctamente')
+    }
+  }
+
+  const handleLotsDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActiveLots(true)
+    } else if (e.type === 'dragleave') {
+      setDragActiveLots(false)
+    }
+  }
+
+  const handleLotsDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActiveLots(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+      ]
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Solo se permiten archivos Excel (.xlsx, .xls) o CSV')
+        return
+      }
+      setLotFile(file)
+      toast.success('Archivo de lotes cargado correctamente')
+    }
+  }
+
+
+  const handleDownloadLotsTemplate = async () => {
+    try {
+      toast.loading('Generando plantilla de lotes...', { id: 'download-lots-toast' })
+      const response = await adminApi.downloadLotsTemplate()
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'plantilla-lotes.xlsx')
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode?.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      toast.success('Plantilla descargada correctamente', { id: 'download-lots-toast' })
+    } catch (error) {
+      toast.error('Error al descargar la plantilla', { id: 'download-lots-toast' })
+    }
+  }
+
+  const handleUploadLotsExcel = async () => {
+    if (!lotFile) return
+    setImportingLots(true)
+    setImportLotsResult(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', lotFile)
+
+      const response = await adminApi.uploadLotsExcel(formData)
+      if (response.data.success) {
+        setImportLotsResult(response.data)
+        toast.success('Importación de lotes finalizada con éxito')
+        pagination.refresh()
+      } else {
+        toast.error(response.data.message || 'Error en la importación')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al conectar con el servidor')
+    } finally {
+      setImportingLots(false)
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -484,6 +585,14 @@ export default function LotsPage() {
     e.preventDefault()
     if (!selectedLot) return
 
+    if (reserveFormData.type === 'separado') {
+      const expDays = reserveFormData.expirationDays ? parseInt(reserveFormData.expirationDays) : 30
+      if (expDays > 30) {
+        toast.error('El plazo de separación no puede superar los 30 días')
+        return
+      }
+    }
+
     setIsSubmitting(true)
     try {
       const payload: any = {
@@ -672,9 +781,10 @@ export default function LotsPage() {
     
     doc.setFontSize(10)
     doc.setTextColor(0)
-    doc.text(`Lote: ${selectedLot.stage} - ${selectedLot.lotNumber}`, 14, 50)
-    doc.text(`Nomenclatura: ${selectedLot.nomenclature || 'N/A'}`, 14, 56)
-    doc.text(`Precio de Venta: ${formatCurrency(saleDetail.contract.totalValue)}`, 14, 62)
+    doc.text(`Etapa: ${selectedLot.stage || '-'}`, 14, 50)
+    doc.text(`Manzana: ${selectedLot.manzana || '-'}`, 14, 56)
+    doc.text(`Lote: ${selectedLot.lotNumber || '-'}`, 14, 62)
+    doc.text(`Precio de Venta: ${formatCurrency(saleDetail.contract.totalValue)}`, 14, 68)
     
     doc.text(`Nombre: ${saleDetail.contract.client?.name}`, 120, 50)
     doc.text(`Cédula: ${saleDetail.contract.client?.idNumber}`, 120, 56)
@@ -683,19 +793,21 @@ export default function LotsPage() {
 
     // Quotas Table
     const tableRows = saleDetail.quotas.map((q: any) => [
-      q.number === 0 ? 'Separación' : q.type === 'cuota' ? `Cuota ${q.number}` : q.type === 'inicial' ? `Cuota Inicial ${q.number}` : `Ordinaria ${q.number}`,
+      q.number === 0 ? 'Separación' : q.type === 'cuota' ? `Cuota ${q.number}` : q.type === 'inicial' ? `Cuota Inicial ${q.number}` : `Cuota Ordinaria ${q.number}`,
       dayjs(q.dueDate).format('DD/MM/YYYY'),
+      q.paymentDate ? dayjs(q.paymentDate).format('DD/MM/YYYY') : '-',
       formatCurrency(q.value),
       q.status === 'pagado' || q.status === 'pagada' ? 'PAGADO' : 'PENDIENTE'
     ])
 
     autoTable(doc, {
       startY: 76,
-      head: [['Descripción', 'Fecha de Vencimiento', 'Valor', 'Estado']],
+      head: [['Descripción', 'Fecha de Vencimiento', 'Fecha de Pago', 'Valor', 'Estado']],
       body: tableRows,
       theme: 'grid',
       headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255] },
       alternateRowStyles: { fillColor: [245, 245, 245] },
+      styles: { cellPadding: 3, fontSize: 9 },
     })
 
     // Summary at the end
@@ -745,13 +857,23 @@ export default function LotsPage() {
             Link Catálogo
           </Button>
           {admin?.role !== 'vendedor' && (
-            <Button
-              onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
-              className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Lote
-            </Button>
+            <>
+              <Button
+                onClick={() => setIsImportLotsModalOpen(true)}
+                variant="outline"
+                className="glass-button min-h-[44px]"
+              >
+                <Upload className="w-4 h-4 mr-2 text-accent-green" />
+                Importar Lotes
+              </Button>
+              <Button
+                onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
+                className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo Lote
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -1187,6 +1309,126 @@ export default function LotsPage() {
         )}
       </Card>
 
+      {/* Import Lots Modal */}
+      <Modal
+        isOpen={isImportLotsModalOpen}
+        onClose={() => {
+          setIsImportLotsModalOpen(false)
+          setLotFile(null)
+          setImportLotsResult(null)
+        }}
+        title="Carga Masiva de Lotes (Proyectos Nuevos)"
+        size="lg"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="bg-glass-primary/10 border border-glass-border p-4 rounded-xl text-sm text-text-secondary space-y-2">
+            <p className="font-semibold text-text-primary">Instrucciones para Proyectos Nuevos:</p>
+            <p>1. Descarga la plantilla simplificada que solo requiere datos del lote.</p>
+            <p>2. Columnas obligatorias: <span className="font-semibold text-text-primary">Etapa, Manzana, Lote, Valor, Area</span>.</p>
+            <p>3. El sistema creará los lotes con estado <span className="text-accent-green font-semibold">Disponible</span>.</p>
+            <p>4. Si un lote ya existe, sus datos de área y valor serán actualizados sin duplicarse.</p>
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDownloadLotsTemplate}
+              className="glass-button w-full sm:w-auto"
+            >
+              <Download className="w-4 h-4 mr-2 text-accent-green" />
+              Descargar Plantilla de Lotes
+            </Button>
+          </div>
+
+          <div 
+            onDragEnter={handleLotsDrag}
+            onDragOver={handleLotsDrag}
+            onDragLeave={handleLotsDrag}
+            onDrop={handleLotsDrop}
+            className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 relative ${
+              dragActiveLots 
+                ? 'border-accent-blue bg-accent-blue/10 scale-[1.01] shadow-glow' 
+                : 'border-glass-border hover:border-accent-blue/50 hover:bg-glass-primary/10'
+            }`}
+          >
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleLotsFileChange}
+              id="lots-file-upload"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            <div className="pointer-events-none">
+              <div className="flex flex-col items-center">
+                <div className="p-3 bg-accent-blue/10 rounded-full mb-3">
+                  <Upload className="w-8 h-8 text-accent-blue" />
+                </div>
+                <p className="font-medium text-text-primary">
+                  {dragActiveLots ? '¡Suelta el archivo aquí!' : 'Arrastra tu archivo aquí o haz clic para seleccionar'}
+                </p>
+                <p className="text-xs text-text-muted mt-1">Archivos Excel (.xlsx, .xls) o CSV</p>
+                {lotFile && (
+                  <p className="mt-2 text-sm text-accent-green font-medium">
+                    {lotFile.name} ({(lotFile.size / 1024).toFixed(1)} KB)
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+
+          {importLotsResult && (
+            <div className="bg-glass-secondary border border-glass-border p-4 rounded-xl space-y-2 text-sm animate-fade-in">
+              <p className="font-bold text-text-primary">Resultado de la Carga:</p>
+              <div className="grid grid-cols-2 gap-2 text-text-secondary">
+                <p>Filas totales: <span className="text-text-primary font-semibold">{importLotsResult.summary.totalRows}</span></p>
+                <p>Creados: <span className="text-accent-green font-semibold">{importLotsResult.summary.lotsCreated}</span></p>
+                <p>Actualizados: <span className="text-accent-blue font-semibold">{importLotsResult.summary.lotsUpdated}</span></p>
+                <p>Omitidos: <span className="text-accent-yellow font-semibold">{importLotsResult.summary.rowsSkipped}</span></p>
+              </div>
+              {importLotsResult.errors && importLotsResult.errors.length > 0 && (
+                <div className="mt-2 p-2 bg-accent-red/10 border border-accent-red/20 rounded-lg text-xs max-h-32 overflow-y-auto font-mono text-accent-red">
+                  {importLotsResult.errors.map((err: string, idx: number) => (
+                    <div key={idx}>{err}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-glass-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsImportLotsModalOpen(false)
+                setLotFile(null)
+                setImportLotsResult(null)
+              }}
+              className="glass-button"
+            >
+              Cerrar
+            </Button>
+            <Button
+              type="button"
+              disabled={!lotFile || importingLots}
+              onClick={handleUploadLotsExcel}
+              className="glass-button bg-accent-blue text-white hover:bg-accent-blue/80"
+            >
+              {importingLots ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Cargando...
+                </>
+              ) : (
+                'Iniciar Carga'
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Lot Modal */}
       <Modal
         isOpen={isCreateModalOpen}
@@ -1363,7 +1605,7 @@ export default function LotsPage() {
       <Modal
         isOpen={isSellModalOpen}
         onClose={() => setIsSellModalOpen(false)}
-        title={`Vender Lote: ${selectedLot?.stage} - ${selectedLot?.lotNumber}`}
+        title={`Vender Lote: E: ${selectedLot?.stage || '-'} - M: ${selectedLot?.manzana || '-'} - L: ${selectedLot?.lotNumber || '-'}${selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}`}
         size="lg"
       >
         <form onSubmit={handleSellLot} className="space-y-6 pt-2">
@@ -1736,7 +1978,7 @@ export default function LotsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
               <div>
                 <p className="text-xs text-text-muted uppercase font-bold mb-1">Información del Lote</p>
-                <h4 className="text-xl font-bold text-text-primary">{selectedLot?.stage} - {selectedLot?.lotNumber}</h4>
+                <h4 className="text-xl font-bold text-text-primary">E: {selectedLot?.stage || '-'} - M: {selectedLot?.manzana || '-'} - L: {selectedLot?.lotNumber || '-'}{selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}</h4>
                 <p className="text-sm text-text-secondary">Contrato Pro #{saleDetail.contract._id.slice(-6).toUpperCase()}</p>
               </div>
               <Button 
@@ -1939,6 +2181,7 @@ export default function LotsPage() {
                       <th className="py-2">#</th>
                       <th className="py-2">Tipo</th>
                       <th className="py-2">Vencimiento</th>
+                      <th className="py-2">Fecha De Pago</th>
                       <th className="py-2 text-right">Valor</th>
                       <th className="py-2 text-center">Estado</th>
                     </tr>
@@ -1952,6 +2195,9 @@ export default function LotsPage() {
                         </td>
                         <td className="py-3 text-text-primary">
                           {dayjs(quota.dueDate).format('DD/MM/YYYY')}
+                        </td>
+                        <td className="py-3 text-text-primary">
+                          {quota.paymentDate ? dayjs(quota.paymentDate).format('DD/MM/YYYY') : '-'}
                         </td>
                         <td className="py-3 text-right text-text-primary">
                           <div className="font-bold">{formatCurrency(quota.value)}</div>
@@ -2000,7 +2246,7 @@ export default function LotsPage() {
       <Modal
         isOpen={isReserveModalOpen}
         onClose={() => setIsReserveModalOpen(false)}
-        title={`Reservar Lote: ${selectedLot?.stage} - ${selectedLot?.lotNumber}`}
+        title={`Reservar Lote: E: ${selectedLot?.stage || '-'} - M: ${selectedLot?.manzana || '-'} - L: ${selectedLot?.lotNumber || '-'}${selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}`}
         size="lg"
       >
         <form onSubmit={handleReserveLot} className="space-y-6 pt-2">
@@ -2135,12 +2381,15 @@ export default function LotsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-text-primary">Días de Vigencia</label>
+              <label className="text-sm font-semibold text-text-primary">
+                Días de Vigencia {reserveFormData.type === 'separado' && '(Máx: 30)'}
+              </label>
               <Input
                 type="number"
                 value={reserveFormData.expirationDays}
                 onChange={(e) => setReserveFormData(prev => ({ ...prev, expirationDays: e.target.value }))}
                 placeholder={reserveFormData.type === 'separado' ? '30' : '5'}
+                max={reserveFormData.type === 'separado' ? 30 : undefined}
                 className="glass-input"
               />
             </div>
@@ -2177,7 +2426,7 @@ export default function LotsPage() {
       <Modal
         isOpen={isReserveDetailModalOpen}
         onClose={() => setIsReserveDetailModalOpen(false)}
-        title={`Detalles de Reserva: ${selectedLot?.stage} - ${selectedLot?.lotNumber}`}
+        title={`Detalles de Reserva: E: ${selectedLot?.stage || '-'} - M: ${selectedLot?.manzana || '-'} - L: ${selectedLot?.lotNumber || '-'}${selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}`}
         size="lg"
       >
         {loadingReserveDetail ? (

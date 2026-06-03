@@ -36,8 +36,7 @@ const paymentMethodsList = [
   { value: 'Efectivo', label: 'Efectivo' },
   { value: 'Consignación en corresponsal', label: 'Consignación en corresponsal' },
   { value: 'Consignación en banco', label: 'Consignación en banco' },
-  { value: 'Transferencia interbancaria', label: 'Transferencia interbancaria' },
-  { value: 'Cruce de cuentas', label: 'Cruce de cuentas' }
+  { value: 'Transferencia interbancaria', label: 'Transferencia interbancaria' }
 ]
 
 const reportPaymentSchema = z.object({

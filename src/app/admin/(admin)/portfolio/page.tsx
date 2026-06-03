@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Search,
   Filter,
@@ -16,7 +16,9 @@ import {
   MessageSquare,
   Users,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -69,6 +71,15 @@ interface ContractSummary {
 
 export default function PortfolioPage() {
   const { isAuthenticated } = useAdminAuthStore()
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  const scrollTable = (direction: 'left' | 'right') => {
+    if (tableContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300
+      tableContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
+
   const [selectedClient, setSelectedClient] = useState<ClientPortfolio | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [behaviorFilter, setBehaviorFilter] = useState<'ALL' | 'DISPUESTO' | 'INDECISO' | 'EVASIVO'>('ALL')
@@ -134,7 +145,7 @@ export default function PortfolioPage() {
   }, [behaviorFilter, moraFilter])
 
   const pagination = useServerPagination({
-    initialLimit: 15,
+    initialLimit: 5,
     fetchData: fetchPortfolio,
     dependencies: [behaviorFilter, moraFilter]
   })
@@ -201,8 +212,8 @@ export default function PortfolioPage() {
           contracts: fullClient.contracts.map((c: any) => ({
             id: c._id,
             project: c.negotiation || 'Proyecto sin nombre',
-            manzana: 'N/A',
-            nomenclatura: 'N/A',
+            manzana: c.lot?.manzana || 'N/A',
+            nomenclatura: c.lot?.nomenclature || c.lot?.lotNumber || 'N/A',
             valorTotal: c.totalValue,
             totalPagado: c.totalPagado,
             // Value breakdown
@@ -311,7 +322,7 @@ export default function PortfolioPage() {
 
     autoTable(doc, {
       startY: 120,
-      head: [['Proyecto', 'Ubicación', 'Valor Total', 'Pagado', 'Pendiente', 'Cuotas', 'Mora']],
+      head: [['Proyecto', 'Nomenclatura', 'Valor Total', 'Pagado', 'Pendiente', 'Cuotas', 'Mora']],
       body: tableRows,
       theme: 'grid',
       headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold' },
@@ -365,6 +376,102 @@ export default function PortfolioPage() {
     doc.save(`Estado_Cuenta_${client.clientName.replace(/\s+/g, '_')}.pdf`)
   }
 
+  const generateContractStatementPDF = (client: ClientPortfolio, targetContract: ContractSummary) => {
+    if (!client || !targetContract) return
+
+    const doc = new jsPDF()
+
+    // Header Title (Centered)
+    doc.setFontSize(18)
+    doc.setTextColor(44, 62, 80)
+    doc.text('ESTADO DE CUENTA DE LOTE', 105, 18, { align: 'center' })
+    
+    doc.setFontSize(9)
+    doc.setTextColor(120)
+    doc.text(`Generado el: ${dayjs().format('DD/MM/YYYY HH:mm')}`, 105, 25, { align: 'center' })
+
+    // Client Info Card
+    doc.setFillColor(245, 247, 250)
+    doc.rect(14, 32, 182, 38, 'F')
+    doc.setDrawColor(220, 224, 230)
+    doc.rect(14, 32, 182, 38, 'S')
+
+    doc.setFontSize(10)
+    doc.setTextColor(100, 110, 120)
+    doc.text('Nombre del Cliente:', 18, 40)
+    doc.text('Identificación (Cédula):', 18, 48)
+    doc.text('Teléfono de Contacto:', 18, 56)
+    doc.text('Proyecto / Lote:', 18, 64)
+
+    doc.setTextColor(44, 62, 80)
+    doc.setFont('helvetica', 'bold')
+    doc.text(client.clientName || 'N/A', 65, 40)
+    doc.text(client.cedula || 'N/A', 65, 48)
+    doc.text(client.phone || 'N/A', 65, 56)
+    doc.text(`${targetContract.project} - Mz: ${targetContract.manzana || 'N/A'} Lote: ${targetContract.nomenclatura || 'N/A'}`, 65, 64)
+
+    // Summary Card
+    doc.setFillColor(240, 248, 255)
+    doc.rect(14, 76, 182, 28, 'F')
+    doc.rect(14, 76, 182, 28, 'S')
+
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 110, 120)
+    doc.text('Valor del Lote', 22, 84)
+    doc.text('Total Recaudado', 72, 84)
+    doc.text('Monto Pendiente', 122, 84)
+    doc.text('% Recaudo', 172, 84, { align: 'center' })
+
+    const totalPaid = targetContract.totalPagado || 0
+    const totalValue = targetContract.valorTotal || 0
+    const totalPending = Math.max(0, totalValue - totalPaid)
+    const averageRecaudo = totalValue > 0 ? Math.round((totalPaid / totalValue) * 100) : 0
+
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(44, 62, 80)
+    doc.text(formatCurrency(totalValue), 22, 94)
+    doc.setTextColor(40, 167, 69) // Green
+    doc.text(formatCurrency(totalPaid), 72, 94)
+    doc.setTextColor(220, 53, 69) // Red
+    doc.text(formatCurrency(totalPending), 122, 94)
+    doc.setTextColor(111, 66, 193) // Purple
+    doc.text(`${averageRecaudo}%`, 172, 94, { align: 'center' })
+
+    // Reset font
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(0, 0, 0)
+
+    // Table of Quotas
+    doc.setFontSize(12)
+    doc.setTextColor(44, 62, 80)
+    doc.text('Resumen de Financiación', 14, 114)
+    doc.line(14, 116, 196, 116)
+
+    let currentY = 122
+
+    // Initial Quotas Breakdown
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(111, 66, 193)
+    doc.text('CUOTAS INICIALES', 18, currentY)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(44, 62, 80)
+    doc.text(`Cuotas pagadas: ${(targetContract as any).cuotasInicialesPagadas || 0} / ${(targetContract as any).totalCuotasIniciales || 0}`, 18, currentY + 6)
+    doc.text(`Monto recaudado: ${formatCurrency((targetContract as any).valorPagadoInicial || 0)}`, 18, currentY + 12)
+    doc.text(`Monto total inicial: ${formatCurrency((targetContract as any).valorTotalInicial || 0)}`, 18, currentY + 18)
+
+    // Ordinary Quotas Breakdown
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 123, 255)
+    doc.text('CUOTAS ORDINARIAS / MENSUALES', 110, currentY)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(44, 62, 80)
+    doc.text(`Cuotas pagadas: ${(targetContract as any).cuotasNormalesPagadas || 0} / ${(targetContract as any).totalCuotasNormales || 0}`, 110, currentY + 6)
+    doc.text(`Monto recaudado: ${formatCurrency((targetContract as any).valorPagadoCuotas || 0)}`, 110, currentY + 12)
+    doc.text(`Monto total ordinarias: ${formatCurrency((targetContract as any).valorTotalCuotas || 0)}`, 110, currentY + 18)
+
+    doc.save(`Estado_Cuenta_${client.clientName.replace(/\s+/g, '_')}_Lote_${targetContract.nomenclatura}.pdf`)
+  }
+
   const handleDownloadStatement = async (client: any) => {
     const loadingToastId = toast.loading('Generando estado de cuenta...')
     try {
@@ -388,8 +495,8 @@ export default function PortfolioPage() {
           contracts: fullClient.contracts.map((c: any) => ({
             id: c._id,
             project: c.negotiation || 'Proyecto sin nombre',
-            manzana: 'N/A',
-            nomenclatura: 'N/A',
+            manzana: c.lot?.manzana || 'N/A',
+            nomenclatura: c.lot?.nomenclature || c.lot?.lotNumber || 'N/A',
             valorTotal: c.totalValue,
             totalPagado: c.totalPagado,
             valorTotalInicial: c.valorTotalInicial,
@@ -566,7 +673,7 @@ export default function PortfolioPage() {
       {/* Portfolio List - Hybrid View (Table for Desktop, Cards for Mobile) */}
 
       {/* Portfolio List - Hybrid View with Independent Scroll */}
-      <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
+      <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay relative group">
         {/* Fixed Header */}
         <div className="flex-shrink-0 border-b border-glass-border">
           <div className="lg:hidden p-4">
@@ -575,8 +682,24 @@ export default function PortfolioPage() {
           </div>
         </div>
 
+        {/* Horizontal Scroll Controls for Desktop */}
+        <button
+          onClick={() => scrollTable('left')}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-accent-purple text-white hover:bg-accent-purple/90 border border-accent-purple/35 rounded-full p-2.5 shadow-2xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 hidden lg:flex items-center justify-center min-h-[40px] min-w-[40px] hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
+          title="Desplazar a la izquierda"
+        >
+          <ChevronLeft className="w-5 h-5 font-bold" />
+        </button>
+        <button
+          onClick={() => scrollTable('right')}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-accent-purple text-white hover:bg-accent-purple/90 border border-accent-purple/35 rounded-full p-2.5 shadow-2xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 hidden lg:flex items-center justify-center min-h-[40px] min-w-[40px] hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
+          title="Desplazar a la derecha"
+        >
+          <ChevronRight className="w-5 h-5 font-bold" />
+        </button>
+
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
+        <div ref={tableContainerRef} className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">
@@ -859,16 +982,28 @@ export default function PortfolioPage() {
               <div className="space-y-3">
                 {selectedClient.contracts.map((contract: any) => (
                   <div key={contract.id} className="border border-glass-border rounded-lg p-4 bg-glass-primary/20 backdrop-blur-glass">
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
                       <div>
                         <h4 className="font-medium text-text-primary">{contract.project}</h4>
                         <p className="text-sm text-text-muted">
                           Manzana {contract.manzana} - Lote #{contract.nomenclatura}
                         </p>
                       </div>
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getMoraColor(contract.diasMora)}`}>
-                        {getMoraText(contract.diasMora)}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => generateContractStatementPDF(selectedClient, contract)}
+                          style={{ backgroundColor: 'var(--accent-green)', borderColor: 'rgba(var(--accent-green-rgb), 0.3)' }}
+                          className="text-white hover:opacity-90 border min-h-[34px] py-1.5 text-xs px-3.5 flex items-center shadow-lg hover:scale-105 active:scale-95 transition-all font-bold rounded-xl outline-none"
+                          title="Descargar Estado de Cuenta de este lote"
+                        >
+                          <Download className="w-3.5 h-3.5 mr-1" />
+                          Descargar Estado de Lote
+                        </button>
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getMoraColor(contract.diasMora)}`}>
+                          {getMoraText(contract.diasMora)}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">

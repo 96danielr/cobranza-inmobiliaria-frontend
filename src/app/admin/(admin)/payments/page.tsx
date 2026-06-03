@@ -623,7 +623,7 @@ export default function PaymentsPage() {
                   </td>
                   <td className="py-4 px-6 text-sm">
                     <p className="text-text-primary font-medium">{payment.contract?.lot?.project?.name || '---'}</p>
-                    <p className="text-xs text-text-muted">Mz {payment.contract?.lot?.manzana || '-'} Lote {payment.contract?.lot?.nomenclatura || '-'}</p>
+                    <p className="text-xs text-text-muted">E: {payment.contract?.lot?.project?.name || '-'} - Mz: {payment.contract?.lot?.manzana || '-'} - L: {payment.contract?.lot?.lotNumber || '-'}{payment.contract?.lot?.nomenclatura ? ` (${payment.contract?.lot?.nomenclatura})` : ''}</p>
                   </td>
                   <td className="py-4 px-6 text-text-primary font-medium">#{payment.cuotaNumber}</td>
                   <td className="py-4 px-6 text-text-primary font-medium">{formatCurrency(payment.amount)}</td>
@@ -778,7 +778,7 @@ export default function PaymentsPage() {
                 <div>
                   <p className="text-sm text-text-secondary">Lote</p>
                   <p className="font-medium text-text-primary">
-                    {selectedPayment.contract.lot.project.name} - Mz {selectedPayment.contract.lot.manzana} #{selectedPayment.contract.lot.nomenclatura}
+                    E: {selectedPayment.contract.lot.project.name || '-'} - M: {selectedPayment.contract.lot.manzana || '-'} - L: {selectedPayment.contract.lot.lotNumber || '-'}{selectedPayment.contract.lot.nomenclatura ? ` (${selectedPayment.contract.lot.nomenclatura})` : ''}
                   </p>
                 </div>
               </div>
@@ -1021,7 +1021,9 @@ export default function PaymentsPage() {
                     <option value="Consignación en corresponsal">Consignación en corresponsal</option>
                     <option value="Consignación en banco">Consignación en banco</option>
                     <option value="Transferencia interbancaria">Transferencia interbancaria</option>
-                    <option value="Cruce de cuentas">Cruce de cuentas</option>
+                    {admin?.role === 'admin' && (
+                      <option value="Cruce de cuentas">Cruce de cuentas</option>
+                    )}
                   </select>
                 </div>
               )}

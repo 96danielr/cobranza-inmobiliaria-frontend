@@ -66,7 +66,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
 
   const logoSrc = mounted && theme === 'light'
     ? '/PERFIL FONDO BLANCO.jpeg'
-    : '/PERFIL FONDO AZUL OSCURO.jpeg'
+    : '/PERFIL PARA FONDOS OSCUROS SOLO NOMBRE EMPRESA.png'
 
   const handleNavigation = (href: string) => {
     router.push(href)
@@ -98,11 +98,11 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-glass-border flex justify-center">
             <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden glass-card shadow-glow border border-glass-border p-1">
+              <div className="w-48 h-16 rounded-xl overflow-hidden glass-card shadow-glow border border-glass-border p-1 flex items-center justify-center">
                 <img 
                   src={logoSrc} 
                   alt="Logo" 
-                  className="w-full h-full object-cover rounded-xl" 
+                  className="w-full h-full object-contain" 
                 />
               </div>
             </div>

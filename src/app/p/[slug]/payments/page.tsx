@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Combobox } from '@/components/ui/Combobox'
+import { Select } from '@/components/ui/Select'
 import { apiPublic } from '@/lib/api'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
@@ -390,7 +391,7 @@ export default function PublicPaymentPage() {
                         <CreditCard className="w-4 h-4 text-accent-blue" />
                         Forma de Pago
                       </label>
-                      <select
+                      <Select
                         value={paymentMethod}
                         onChange={(e) => {
                           setPaymentMethod(e.target.value)
@@ -398,15 +399,16 @@ export default function PublicPaymentPage() {
                             setBank('')
                           }
                         }}
-                        className="glass-input w-full px-4 py-3 text-base h-12"
-                      >
-                        <option value="Transferencia bancaria">Transferencia bancaria</option>
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Consignación en corresponsal">Consignación en corresponsal</option>
-                        <option value="Consignación en banco">Consignación en banco</option>
-                        <option value="Transferencia interbancaria">Transferencia interbancaria</option>
-                        <option value="Cruce de cuentas">Cruce de cuentas</option>
-                      </select>
+                        placeholder="Selecciona la forma de pago"
+                        options={[
+                          { value: 'Transferencia bancaria', label: 'Transferencia bancaria' },
+                          { value: 'Efectivo', label: 'Efectivo' },
+                          { value: 'Consignación en corresponsal', label: 'Consignación en corresponsal' },
+                          { value: 'Consignación en banco', label: 'Consignación en banco' },
+                          { value: 'Transferencia interbancaria', label: 'Transferencia interbancaria' }
+                        ]}
+                        className="h-12"
+                      />
                     </div>
 
                     <div>
@@ -453,7 +455,7 @@ export default function PublicPaymentPage() {
                         <div>
                           <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
                             <CreditCard className="w-4 h-4 text-accent-purple" />
-                            ¿Desde qué banco?
+                            ¿A qué banco consignas?
                           </label>
                           <Combobox
                             options={banks.map((b: any) => ({ value: b.acronym, label: b.acronym }))}
