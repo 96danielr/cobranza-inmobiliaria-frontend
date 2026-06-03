@@ -59,6 +59,7 @@ interface PendingPayment {
     }
     lot: {
       manzana: string
+      lotNumber?: string
       nomenclatura: string
       project: {
         name: string
