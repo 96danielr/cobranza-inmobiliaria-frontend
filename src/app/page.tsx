@@ -136,7 +136,7 @@ export default function HomePage() {
               </Link>
             ) : (
               <Link 
-                href="/login"
+                href="/admin/login"
                 className="group px-6 py-2.5 rounded-full text-sm font-bold bg-[#d4fc34] hover:bg-[#c0e82c] text-slate-950 transition-all duration-200 shadow-lg shadow-lime-500/20 hover:scale-[1.03] active:scale-[0.97] flex items-center"
               >
                 Ingresar al Portal
@@ -171,7 +171,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-0 animate-fade-in-up" style={{ animationDelay: '2s' }}>
             <StarBorder
               as={Link}
-              href="/login"
+              href="/admin/login"
               color="white"
               speed="4s"
               thickness={2}
@@ -395,7 +395,7 @@ export default function HomePage() {
               </div>
 
               <Link 
-                href="/login"
+                href="/admin/login"
                 className="mt-8 px-6 py-3.5 bg-slate-950 text-white rounded-full text-sm font-bold hover:bg-slate-900 transition-all duration-300 hover:scale-[1.03] flex items-center justify-center"
               >
                 Ingresar al Sistema
@@ -500,7 +500,7 @@ export default function HomePage() {
                 </div>
 
                 <Link 
-                  href="/login"
+                  href="/admin/login"
                   className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-base font-bold transition-all duration-300 hover:scale-[1.02] flex items-center justify-center shadow-xl shadow-slate-950/10"
                 >
                   Comenzar ahora
@@ -542,7 +542,7 @@ export default function HomePage() {
             <p className="text-2xl sm:text-3xl font-bold mb-4 leading-tight">¿Listo para transformar tu cobranza?</p>
             <p className="text-slate-300 text-base sm:text-lg mb-8 max-w-2xl mx-auto font-medium">Únete a las inmobiliarias que ya optimizan sus recaudos con nuestra plataforma.</p>
             <Link 
-              href="/login"
+              href="/admin/login"
               className="inline-flex items-center px-10 py-4 rounded-full text-base font-bold bg-[#d4fc34] text-slate-950 hover:bg-[#c0e82c] transition-all duration-300 shadow-xl shadow-lime-500/20 hover:scale-[1.05]"
             >
               Comenzar ahora
@@ -598,7 +598,7 @@ export default function HomePage() {
 
           <div className="mt-16 text-center">
             <Link 
-              href="/login"
+              href="/admin/login"
               className="inline-flex items-center px-10 py-4 rounded-full text-base font-bold bg-[#d4fc34] hover:bg-[#c0e82c] text-slate-950 transition-all duration-300 shadow-xl shadow-lime-500/20 hover:scale-[1.05] active:scale-[0.95]"
             >
               Comenzar ahora
