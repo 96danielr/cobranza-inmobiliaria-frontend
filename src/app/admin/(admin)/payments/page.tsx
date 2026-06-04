@@ -993,7 +993,7 @@ export default function PaymentsPage() {
                   >
                     {clientDetails.contracts.map((c: any) => (
                       <option key={c._id} value={c._id}>
-                        {c.negotiation || 'Contrato'} - Mz {c.lotId?.manzana || '-'} Lote {c.lotId?.nomenclatura || '-'}
+                        {c.negotiation || 'Contrato'} - Mz {c.lot?.manzana || '-'} Lote {c.lot?.lotNumber || c.lot?.nomenclature || c.lot?.nomenclatura || '-'}
                       </option>
                     ))}
                   </select>

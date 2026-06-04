@@ -102,11 +102,11 @@ export default function HomePage() {
         
         {/* Animated logo container */}
         <div className="relative z-10 flex flex-col items-center space-y-6">
-          <div className="h-28 overflow-hidden animate-bounce transition-all duration-1000">
+          <div className="h-28 overflow-hidden animate-bounce transition-all duration-1000 bg-white p-4 rounded-2xl border border-white/20 shadow-lg shadow-white/5">
             <img 
               src="/logo fondo transparente.png" 
               alt="Logo" 
-              className="h-full w-auto object-contain filter drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]" 
+              className="h-full w-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]" 
             />
           </div>
           {/* Custom bar loader */}
@@ -136,14 +136,14 @@ export default function HomePage() {
         </div>
       {/* 1. Header/Nav */}
       <header className="sticky top-0 z-50 bg-[#0284c7] backdrop-blur-md border-b border-[#38bdf8]/20 transition-all duration-300 rounded-t-[2.5rem]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center space-x-3 animate-fade-in-down">
-            <div className="h-16 rounded-xl overflow-hidden p-0.5">
+            <div className="h-18 flex items-center">
               <img 
                 src="/logo fondo transparente.png" 
                 alt="Logo" 
-                className="w-full h-full object-cover rounded-lg" 
+                className="h-14 w-auto object-contain" 
               />
             </div>
           </div>
@@ -187,16 +187,6 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          {/* Logo en el Hero */}
-          <div className="mb-10 flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <div className="h-28 sm:h-36 overflow-hidden rounded-2xl p-1 bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
-              <img 
-                src="/logo fondo transparente.png" 
-                alt="Logo Operix" 
-                className="h-full w-auto object-contain filter drop-shadow-[0_4px_20px_rgba(255,255,255,0.15)]"
-              />
-            </div>
-          </div>
 
           {/* Main Slogan */}
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
