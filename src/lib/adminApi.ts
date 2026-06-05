@@ -288,7 +288,7 @@ export const adminApi = {
   getCompany: (id: string) =>
     apiAdmin.get(`/companies/${id}?companyId=${id}`), // Scoped anyway by tenant
 
-  // Tenants (superadmin only)
+  // Tenants
   getAllTenants: () =>
     apiAdmin.get('/tenants/all'),
 
@@ -297,6 +297,12 @@ export const adminApi = {
 
   updateTenant: (id: string, data: any) =>
     apiAdmin.put(`/tenants/${id}`, data),
+
+  getMyTenant: () =>
+    apiAdmin.get('/tenants/me'),
+
+  updateMyTenant: (data: any) =>
+    apiAdmin.put('/tenants/me', data),
 
   // Banks (global list, superadmin only for writes)
   getBanks: (page: number = 1, limit: number = 100, search?: string, sortBy?: string, sortOrder?: string, adminView: boolean = true) => {

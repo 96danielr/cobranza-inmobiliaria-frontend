@@ -337,6 +337,11 @@
     background-color: var(--input-bg) !important;
   }
   
+  select.glass-input option {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+  }
+  
   .glass-input:focus {
     background-color: var(--input-bg-focus) !important;
     border-color: var(--accent-blue) !important;

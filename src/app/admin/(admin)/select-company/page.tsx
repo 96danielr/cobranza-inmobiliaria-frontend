@@ -39,19 +39,30 @@ export default function SelectCompanyPage() {
     email: '',
     password: '',
     nit: '',
-    documentoIdentidad: ''
+    documentoIdentidad: '',
+    tenantAddress: '',
+    tenantPhone: '',
+    tenantEmail: ''
   })
 
   // Create Company Form
   const [companyForm, setCompanyForm] = useState({
     name: '',
     rfc: '',
-    nit: ''
+    nit: '',
+    address: '',
+    phone: '',
+    email: ''
   })
 
   // Edit Tenant Form
   const [selectedTenant, setSelectedTenant] = useState<Company | null>(null)
   const [editForm, setEditForm] = useState({
+    name: '',
+    nit: '',
+    address: '',
+    phone: '',
+    email: '',
     plan: 'basic',
     status: 'active',
     subscriptionStart: '',
@@ -112,7 +123,17 @@ export default function SelectCompanyPage() {
       if (response.data.success) {
         toast.success('Empresa y administrador creados exitosamente')
         setIsModalOpen(false)
-        setForm({ tenantName: '', fullName: '', email: '', password: '', nit: '', documentoIdentidad: '' })
+        setForm({ 
+          tenantName: '', 
+          fullName: '', 
+          email: '', 
+          password: '', 
+          nit: '', 
+          documentoIdentidad: '',
+          tenantAddress: '',
+          tenantPhone: '',
+          tenantEmail: ''
+        })
         fetchCompanies()
       }
     } catch (error: any) {
@@ -130,7 +151,7 @@ export default function SelectCompanyPage() {
       if (response.data.success) {
         toast.success('Proyecto creado exitosamente')
         setIsCompanyModalOpen(false)
-        setCompanyForm({ name: '', rfc: '', nit: '' })
+        setCompanyForm({ name: '', rfc: '', nit: '', address: '', phone: '', email: '' })
         fetchCompanies()
       }
     } catch (error: any) {
@@ -146,6 +167,11 @@ export default function SelectCompanyPage() {
     
     // Default values
     const newForm = {
+      name: tenant.name || '',
+      nit: (tenant as any).nit || '',
+      address: (tenant as any).address || '',
+      phone: (tenant as any).phone || '',
+      email: (tenant as any).email || '',
       plan: tenant.plan || 'basic',
       status: tenant.status || 'active',
       subscriptionStart: tenant.subscriptionStart ? new Date(tenant.subscriptionStart).toISOString().split('T')[0] : '',
@@ -181,6 +207,11 @@ export default function SelectCompanyPage() {
       
       // Update tenant subscription info
       const tenantUpdate = adminApi.updateTenant(selectedTenant._id, {
+        name: editForm.name,
+        nit: editForm.nit,
+        address: editForm.address,
+        phone: editForm.phone,
+        email: editForm.email,
         plan: editForm.plan,
         status: editForm.status,
         subscriptionStart: editForm.subscriptionStart,
@@ -226,22 +257,29 @@ export default function SelectCompanyPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-1 py-2 md:py-8 animate-fade-in-up">
+    <div className="max-w-2xl mx-auto px-2 py-3 md:py-8 animate-fade-in-up">
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 glass-card mb-4 shadow-glow border-accent-blue/30 rounded-2xl">
-          <Building2 className="w-8 h-8 text-accent-blue" />
+      <div className="text-center mb-4 md:mb-8">
+        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 glass-card mb-2 md:mb-4 shadow-glow border-accent-blue/30 rounded-2xl">
+          <Building2 className="w-6 h-6 md:w-8 md:h-8 text-accent-blue" />
         </div>
-        <div className="flex flex-col items-center justify-center gap-2">
-          <h1 className="text-2xl font-bold text-text-primary">
-            {admin?.role === 'superadmin' ? 'Administrar Proyectos Clientes' : 'Seleccionar Proyecto'}
+        <div className="flex flex-col items-center justify-center gap-1.5 md:gap-2">
+          <h1 className="text-xl md:text-2xl font-bold text-text-primary">
+            {admin?.role === 'superadmin' 
+              ? 'Administrar Proyectos Clientes' 
+              : `¡Bienvenido, ${admin?.tenantName || admin?.fullName || 'Usuario'}!`}
           </h1>
+          {admin?.role !== 'superadmin' && (
+            <span className="text-xs md:text-sm font-semibold text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full">
+              Selecciona un proyecto para empezar
+            </span>
+          )}
           {admin?.role === 'superadmin' ? (
             <Button
               variant="glass"
               size="sm"
               onClick={() => setIsModalOpen(true)}
-              className="mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
+              className="mt-1 md:mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Proyecto / Admin
@@ -251,17 +289,17 @@ export default function SelectCompanyPage() {
               variant="glass"
               size="sm"
               onClick={() => setIsCompanyModalOpen(true)}
-              className="mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
+              className="mt-1 md:mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Proyecto
             </Button>
           ) : null}
         </div>
-        <p className="text-text-secondary mt-4">
+        <p className="text-xs md:text-sm text-text-secondary mt-2 md:mt-4 hidden sm:block">
           {admin?.role === 'superadmin'
             ? 'Gestiona aquí los planes, suscripciones y módulos de tus clientes.'
-            : 'Selecciona el proyecto inmobiliario con el que deseas trabajar.'}
+            : 'Aquí tienes los proyectos inmobiliarios asociados a tu cuenta. Elige uno para ingresar al panel de control.'}
         </p>
       </div>
 
@@ -408,11 +446,29 @@ export default function SelectCompanyPage() {
               required
             />
             <Input
-              label="NIT de la Empresa"
+              label="NIT de la Empresa (Opcional)"
               placeholder="Ej: 900.123.456-1"
               value={form.nit}
               onChange={(e) => setForm({ ...form, nit: e.target.value })}
-              required
+            />
+            <Input
+              label="Dirección Comercial (Opcional)"
+              placeholder="Dirección fiscal/comercial"
+              value={form.tenantAddress}
+              onChange={(e) => setForm({ ...form, tenantAddress: e.target.value })}
+            />
+            <Input
+              label="Teléfono Corporativo (Opcional)"
+              placeholder="+57 300 123 4567"
+              value={form.tenantPhone}
+              onChange={(e) => setForm({ ...form, tenantPhone: e.target.value })}
+            />
+            <Input
+              label="Correo Corporativo (Opcional)"
+              type="email"
+              placeholder="facturacion@empresa.com"
+              value={form.tenantEmail}
+              onChange={(e) => setForm({ ...form, tenantEmail: e.target.value })}
             />
           </div>
 
@@ -426,11 +482,10 @@ export default function SelectCompanyPage() {
               required
             />
             <Input
-              label="Documento de Identidad"
+              label="Documento de Identidad (Opcional)"
               placeholder="Ej: 1.023.456.789"
               value={form.documentoIdentidad}
               onChange={(e) => setForm({ ...form, documentoIdentidad: e.target.value })}
-              required
             />
             <Input
               label="Correo Electrónico"
@@ -460,7 +515,7 @@ export default function SelectCompanyPage() {
           </div>
         </form>
       </Modal>
-
+ 
       {/* Modal for Tenant Admin to create Company */}
       <Modal
         isOpen={isCompanyModalOpen}
@@ -476,17 +531,35 @@ export default function SelectCompanyPage() {
             required
           />
           <Input
-            label="NIT del Proyecto"
+            label="NIT del Proyecto (Opcional)"
             placeholder="Ej: 900.123.456-1"
             value={companyForm.nit}
             onChange={(e) => setCompanyForm({ ...companyForm, nit: e.target.value })}
-            required
           />
           <Input
             label="RFC / Identificador (Opcional)"
             placeholder="RFC del proyecto"
             value={companyForm.rfc}
             onChange={(e) => setCompanyForm({ ...companyForm, rfc: e.target.value })}
+          />
+          <Input
+            label="Dirección del Proyecto (Opcional)"
+            placeholder="Ej: Calle 10 # 5-20, Bogotá"
+            value={companyForm.address}
+            onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
+          />
+          <Input
+            label="Teléfono de Contacto (Opcional)"
+            placeholder="Ej: 3101234567"
+            value={companyForm.phone}
+            onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
+          />
+          <Input
+            label="Correo Electrónico (Opcional)"
+            type="email"
+            placeholder="contacto@proyecto.com"
+            value={companyForm.email}
+            onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
           />
 
           <div className="flex justify-end gap-3 pt-4">
@@ -507,7 +580,46 @@ export default function SelectCompanyPage() {
         title={`Gestionar Suscripción: ${selectedTenant?.name}`}
       >
         <form onSubmit={handleUpdateTenant} className="space-y-6 pt-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-accent-blue uppercase tracking-wider">Datos de Identidad de la Empresa</h4>
+            <Input
+              label="Nombre de la Empresa"
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              required
+            />
+            <Input
+              label="NIT"
+              value={editForm.nit}
+              onChange={(e) => setEditForm({ ...editForm, nit: e.target.value })}
+              placeholder="NIT"
+            />
+            <Input
+              label="Dirección"
+              value={editForm.address}
+              onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+              placeholder="Dirección"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Teléfono"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                placeholder="Teléfono"
+              />
+              <Input
+                label="Correo de la Empresa"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                placeholder="Correo corporativo"
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-glass-border pt-4">
+            <h4 className="text-xs font-bold text-accent-blue uppercase tracking-wider mb-4">Suscripción y Módulos</h4>
+            <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Plan Contratado</label>
               <select
@@ -532,6 +644,7 @@ export default function SelectCompanyPage() {
                 <option value="trial">Prueba (Trial)</option>
               </select>
             </div>
+          </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

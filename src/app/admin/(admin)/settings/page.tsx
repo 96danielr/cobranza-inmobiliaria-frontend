@@ -113,7 +113,7 @@ const mockTenantConfig: TenantConfig = {
 }
 
 export default function SettingsPage() {
-  const { isAuthenticated } = useAdminAuthStore()
+  const { isAuthenticated, admin } = useAdminAuthStore()
   const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas'>('company')
   const [limits, setLimits] = useState<any[]>([])
   const [usage, setUsage] = useState<any[]>([])
@@ -125,6 +125,17 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [configLoading, setConfigLoading] = useState(true)
   const [usersLoading, setUsersLoading] = useState(false)
+
+  // Tenant-level state (MATRIZ)
+  const [tenantInfo, setTenantInfo] = useState({
+    name: '',
+    nit: '',
+    address: '',
+    phone: '',
+    email: ''
+  })
+  const [tenantLoading, setTenantLoading] = useState(false)
+  const [isSavingTenant, setIsSavingTenant] = useState(false)
 
   // Bank accounts states
   const [availableBanks, setAvailableBanks] = useState<any[]>([])
@@ -140,6 +151,46 @@ export default function SettingsPage() {
   })
 
   const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
+
+  // Fetch Tenant Config
+  const fetchTenantInfo = async () => {
+    if (admin?.role !== 'tenant_admin') return
+    setTenantLoading(true)
+    try {
+      const response = await adminApi.getMyTenant()
+      if (response.data.success) {
+        const t = response.data.data.tenant
+        setTenantInfo({
+          name: t.name || '',
+          nit: t.nit || '',
+          address: t.address || '',
+          phone: t.phone || '',
+          email: t.email || ''
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching tenant info:', error)
+    } finally {
+      setTenantLoading(false)
+    }
+  }
+
+  const handleSaveTenantInfo = async () => {
+    setIsSavingTenant(true)
+    try {
+      const response = await adminApi.updateMyTenant(tenantInfo)
+      if (response.data.success) {
+        toast.success('Información corporativa actualizada exitosamente')
+        if (tenantInfo.name && admin) {
+          useAdminAuthStore.getState().updateAdmin({ tenantName: tenantInfo.name })
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al guardar información corporativa')
+    } finally {
+      setIsSavingTenant(false)
+    }
+  }
 
   // Fetch company config
   const fetchCompanyConfig = async () => {
@@ -315,8 +366,9 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchCompanyConfig()
     fetchAvailableBanks()
+    if (admin?.role === 'tenant_admin') fetchTenantInfo()
     if (activeTab === 'quotas') fetchLimits()
-  }, [selectedCompanyId, activeTab])
+  }, [selectedCompanyId, activeTab, admin?.role])
 
   // User form state
   const [userForm, setUserForm] = useState({
@@ -549,10 +601,89 @@ export default function SettingsPage() {
             </>
           ) : (
             <>
+              {/* Tenant Corporate Info (Only for tenant_admin) */}
+              {admin?.role === 'tenant_admin' && (
+                <Card variant="elevated" className="animate-fade-in-up">
+                  {tenantLoading ? (
+                    <CardContent className="p-4 md:p-6"><ModalContentSkeleton /></CardContent>
+                  ) : (
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div>
+                          <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                            <Building2 className="w-5 h-5 text-accent-purple" />
+                            Información Corporativa (Matriz / Enterprise)
+                          </h3>
+                          <p className="text-xs text-text-secondary mt-1">Estos son los datos globales de la constructora/empresa dueña del SaaS.</p>
+                        </div>
+                        <Button
+                          onClick={handleSaveTenantInfo}
+                          loading={isSavingTenant}
+                          className="glass-button bg-accent-purple/20 text-accent-purple border-accent-purple/30 hover:bg-accent-purple/30 min-h-[44px]"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          Guardar Datos Corporativos
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <Input
+                            label="Razón Social / Nombre Empresa"
+                            value={tenantInfo.name}
+                            onChange={(e) => setTenantInfo(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Nombre corporativo"
+                          />
+
+                          <Input
+                            label="NIT Corporativo"
+                            value={tenantInfo.nit}
+                            onChange={(e) => setTenantInfo(prev => ({ ...prev, nit: e.target.value }))}
+                            placeholder="NIT principal"
+                          />
+
+                          <div>
+                            <label className="block text-sm font-medium text-text-primary mb-2">
+                              Dirección Principal (Oficinas)
+                            </label>
+                            <textarea
+                              value={tenantInfo.address}
+                              onChange={(e) => setTenantInfo(prev => ({ ...prev, address: e.target.value }))}
+                              rows={3}
+                              className="glass-input w-full px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
+                              placeholder="Dirección corporativa"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <Input
+                            label="Teléfono Corporativo"
+                            value={tenantInfo.phone}
+                            onChange={(e) => setTenantInfo(prev => ({ ...prev, phone: e.target.value }))}
+                            placeholder="Teléfono corporativo"
+                            icon={Phone}
+                          />
+
+                          <Input
+                            label="Correo Corporativo"
+                            type="email"
+                            value={tenantInfo.email}
+                            onChange={(e) => setTenantInfo(prev => ({ ...prev, email: e.target.value }))}
+                            placeholder="contacto@empresa.com"
+                            icon={Mail}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              )}
+
               <Card variant="elevated" className="animate-fade-in-up">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                    <h3 className="text-lg font-semibold text-text-primary">Información de la Empresa</h3>
+                    <h3 className="text-lg font-semibold text-text-primary">Información del Proyecto Activo</h3>
                     <Button
                       onClick={handleSaveCompanyInfo}
                       loading={isSaving}

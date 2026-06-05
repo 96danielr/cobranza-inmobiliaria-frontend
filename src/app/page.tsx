@@ -128,14 +128,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-x-hidden selection:bg-sky-500 selection:text-white">
       {/* Hero + Nav wrapper with margin and rainbow glow */}
-      <div className="p-4 relative overflow-hidden">
+      <div className="p-0 md:p-4 relative overflow-hidden">
         {/* Rainbow glow overlay */}
-        <div className={`absolute inset-0 pointer-events-none transition-opacity duration-700 rounded-[2.5rem] ${buttonHover ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`absolute inset-0 pointer-events-none transition-opacity duration-700 md:rounded-[2.5rem] ${buttonHover ? 'opacity-100' : 'opacity-0'}`}>
           <div className="absolute inset-0 bg-[conic-gradient(from_0deg,#ff0000,#ff8800,#ffee00,#00ff88,#0088ff,#8800ff,#ff0088,#ff0000)] opacity-60 blur-3xl animate-spin-slow"></div>
           <div className="absolute inset-0 bg-[conic-gradient(from_180deg,#ff0088,#8800ff,#0088ff,#00ff88,#ffee00,#ff8800,#ff0000,#ff0088)] opacity-60 blur-3xl animate-spin-slow-reverse"></div>
         </div>
       {/* 1. Header/Nav */}
-      <header className="sticky top-0 z-50 bg-[#0284c7] backdrop-blur-md border-b border-[#38bdf8]/20 transition-all duration-300 rounded-t-[2.5rem]">
+      <header className="sticky top-0 z-50 bg-[#0284c7] backdrop-blur-md border-b border-[#38bdf8]/20 transition-all duration-300 md:rounded-t-[2.5rem]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center space-x-3 animate-fade-in-down">
@@ -178,7 +178,7 @@ export default function HomePage() {
       </header>
 
       {/* 2. Hero Section */}
-      <section id="inicio" className="relative bg-gradient-to-b from-[#0284c7] via-[#075985] to-[#0c4a6e] text-white pt-20 pb-0 px-4 sm:px-6 lg:px-8 overflow-visible rounded-b-[2.5rem] shadow-xl">
+      <section id="inicio" className="relative bg-gradient-to-b from-[#0284c7] via-[#075985] to-[#0c4a6e] text-white pt-10 sm:pt-20 pb-0 px-2 sm:px-6 lg:px-8 overflow-visible rounded-b-[2.5rem] shadow-xl">
         {/* Self-contained Backdrop for blurs and gradients to allow the 3D carousel to overflow vertically */}
         <div className="absolute inset-0 overflow-hidden rounded-b-[3.5rem] pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(56,189,248,0.25)_0%,transparent_50%)] opacity-70" />
@@ -189,7 +189,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto text-center relative z-10">
 
           {/* Main Slogan */}
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 px-1">
             <span className="block animate-fade-in-up" style={{ animationDelay: '0.8s' }}>Construyendo el futuro de la</span>
             <span className="block animate-fade-in-down" style={{ animationDelay: '0.8s' }}><span className="bg-gradient-to-b from-lime-300 via-lime-300 to-white/50 bg-clip-text text-transparent">cobranza inmobiliaria inteligente</span></span>
           </h1>
@@ -199,7 +199,7 @@ export default function HomePage() {
           </p>
 
           {/* Call to action buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-0 animate-fade-in-up" style={{ animationDelay: '2s' }}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-0 animate-fade-in-up" style={{ animationDelay: '2s' }}>
             <StarBorder
               as={Link}
               href="/admin/login"
@@ -210,25 +210,33 @@ export default function HomePage() {
               onMouseEnter={() => setButtonHover(true)}
               onMouseLeave={() => setButtonHover(false)}
             >
-              <span className="flex items-center justify-center px-8 py-4 rounded-full text-base font-bold bg-[#d4fc34] hover:bg-[#c0e82c] text-slate-950 transition-all duration-300 shadow-xl shadow-lime-500/20 hover:scale-[1.05] active:scale-[0.95]">
+              <span className="flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-full text-sm sm:text-base font-bold bg-[#d4fc34] hover:bg-[#c0e82c] text-slate-950 transition-all duration-300 shadow-xl shadow-lime-500/20 hover:scale-[1.05] active:scale-[0.95]">
                 Comenzar Ahora
-                <ArrowUpRight className="w-5 h-5 ml-2" />
+                <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </span>
             </StarBorder>
             <a 
               href="#beneficios"
-              className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-bold bg-white/10 hover:bg-white/20 text-white border border-white/25 transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] flex items-center justify-center backdrop-blur-sm"
+              className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 rounded-full text-sm sm:text-base font-bold bg-white/10 hover:bg-white/20 text-white border border-white/25 transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] flex items-center justify-center backdrop-blur-sm"
             >
               Ver Beneficios
             </a>
           </div>
         </div>
         {/* 3D Curved Photo Carousel - Expanded to Full Screen Width with Deep Curved 3D & Lateral Fade */}
-        <div className="relative mt-0 w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-visible select-none pt-48 pb-20 [perspective:1500px] z-20 carousel-container-masked flex items-center justify-center animate-fade-in-up" style={{ animationDelay: '2.6s' }}>
+        <div className="relative mt-0 w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-visible select-none pt-24 pb-12 md:pt-48 md:pb-20 [perspective:1000px] md:[perspective:1500px] z-20 carousel-container-masked flex items-center justify-center animate-fade-in-up" style={{ animationDelay: '2.6s' }}>
           <style>{`
             .carousel-container-masked {
               -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
               mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+              --carousel-radius: 260px;
+              --carousel-hover-translate: 300px;
+            }
+            @media (min-width: 768px) {
+              .carousel-container-masked {
+                --carousel-radius: 640px;
+                --carousel-hover-translate: 700px;
+              }
             }
             @keyframes rotate-cylinder {
               0% { 
@@ -240,11 +248,17 @@ export default function HomePage() {
             }
             .carousel-track-curved-3d {
               position: relative;
-              width: 150px;
-              height: 150px;
+              width: 90px;
+              height: 90px;
               transform-style: preserve-3d;
               animation: rotate-cylinder 42s linear infinite;
               transition: transform 0.5s ease;
+            }
+            @media (min-width: 768px) {
+              .carousel-track-curved-3d {
+                width: 150px;
+                height: 150px;
+              }
             }
             .carousel-track-curved-3d:hover {
               animation-play-state: paused;
@@ -252,14 +266,21 @@ export default function HomePage() {
             .carousel-card-3d {
               position: absolute;
               inset: 0;
-              border-radius: 1rem;
+              border-radius: 0.5rem;
               overflow: hidden;
-              box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
-              border: 1.5px border-white/20;
+              box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+              border: 1px border-white/20;
               background: #075985; /* Solid backdrop matching the hero color theme */
               transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
               transform-style: preserve-3d;
               backface-visibility: hidden; /* Hide elements rotating in the back half for a clean foreground-only curve */
+            }
+            @media (min-width: 768px) {
+              .carousel-card-3d {
+                border-radius: 1rem;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+                border: 1.5px border-white/20;
+              }
             }
             /* Add high-fidelity gloss reflection overlay on hover */
             .carousel-card-3d::after {
@@ -275,9 +296,9 @@ export default function HomePage() {
               opacity: 1;
             }
             .carousel-card-3d:hover {
-              transform: rotateY(var(--card-rot)) translateZ(700px) scale(1.15) !important;
+              transform: rotateY(var(--card-rot)) translateZ(var(--carousel-hover-translate)) scale(1.12) !important;
               z-index: 100;
-              box-shadow: 0 25px 50px -10px rgba(212, 252, 52, 0.6), 0 0 20px 6px rgba(212, 252, 52, 0.35);
+              box-shadow: 0 20px 40px -10px rgba(212, 252, 52, 0.6), 0 0 15px 4px rgba(212, 252, 52, 0.35);
               border-color: rgba(212, 252, 52, 0.9);
             }
           `}</style>
@@ -307,7 +328,7 @@ export default function HomePage() {
                 key={`carousel-img-${idx}`}
                 className="carousel-card-3d cursor-pointer"
                 style={{
-                  transform: `rotateY(${idx * 20}deg) translateZ(640px)`,
+                  transform: `rotateY(${idx * 20}deg) translateZ(var(--carousel-radius))`,
                   // Custom property used by pure CSS hover scaling
                   ['--card-rot' as any]: `${idx * 20}deg`
                 }}

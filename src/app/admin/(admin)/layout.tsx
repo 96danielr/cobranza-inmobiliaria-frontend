@@ -325,7 +325,7 @@ export default function AdminLayout({
           </header>
 
           {/* Main Content with padding for mobile navigation */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 lg:pb-6">
+          <main className="flex-1 overflow-y-auto px-2 py-4 md:p-6 pb-20 lg:pb-6">
             {children}
           </main>
         </div>

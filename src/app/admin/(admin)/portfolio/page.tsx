@@ -57,6 +57,8 @@ interface ContractSummary {
   project: string
   manzana: string
   nomenclatura: string
+  stage?: string
+  lotNumber?: string
   valorTotal: number
   totalPagado: number
   cuotasPagadas: number
@@ -65,6 +67,7 @@ interface ContractSummary {
   diasMora: number
   status: string
   proximoVencimiento?: string
+  quotas?: any[]
 }
 
 
@@ -214,6 +217,8 @@ export default function PortfolioPage() {
             project: c.negotiation || 'Proyecto sin nombre',
             manzana: c.lot?.manzana || 'N/A',
             nomenclatura: c.lot?.nomenclature || c.lot?.lotNumber || 'N/A',
+            stage: c.lot?.stage || 'N/A',
+            lotNumber: c.lot?.lotNumber || 'N/A',
             valorTotal: c.totalValue,
             totalPagado: c.totalPagado,
             // Value breakdown
@@ -233,7 +238,8 @@ export default function PortfolioPage() {
             valorCuota: c.valorCuota,
             diasMora: c.diasMora,
             status: c.status,
-            proximoVencimiento: c.startDate
+            proximoVencimiento: c.startDate,
+            quotas: c.quotas || []
           }))
         })
       }
@@ -408,7 +414,7 @@ export default function PortfolioPage() {
     doc.text(client.clientName || 'N/A', 65, 40)
     doc.text(client.cedula || 'N/A', 65, 48)
     doc.text(client.phone || 'N/A', 65, 56)
-    doc.text(`${targetContract.project} - Mz: ${targetContract.manzana || 'N/A'} Lote: ${targetContract.nomenclatura || 'N/A'}`, 65, 64)
+    doc.text(`${targetContract.project} - E: ${targetContract.stage || 'N/A'} M: ${targetContract.manzana || 'N/A'} L: ${targetContract.lotNumber || 'N/A'}${targetContract.nomenclatura && targetContract.nomenclatura !== targetContract.lotNumber && targetContract.nomenclatura !== 'N/A' ? ` (${targetContract.nomenclatura})` : ''}`, 65, 64)
 
     // Summary Card
     doc.setFillColor(240, 248, 255)
@@ -469,6 +475,51 @@ export default function PortfolioPage() {
     doc.text(`Monto recaudado: ${formatCurrency((targetContract as any).valorPagadoCuotas || 0)}`, 110, currentY + 12)
     doc.text(`Monto total ordinarias: ${formatCurrency((targetContract as any).valorTotalCuotas || 0)}`, 110, currentY + 18)
 
+    // Detalle de Plan de Pagos
+    const quotas = targetContract.quotas || []
+    const quotaRows = quotas.map((q: any) => {
+      const isSeparation = q.number === 0 || q.number === '0';
+      const numText = isSeparation ? 'SEPAR.' : `${q.number}`;
+      const typeText = q.type === 'inicial' ? (isSeparation ? 'Separación' : 'Cuota Inicial') : 'Ordinaria';
+      const dueStr = q.dueDate ? dayjs(q.dueDate).format('DD/MM/YYYY') : 'N/A';
+      
+      let payDateStr = '-';
+      if (q.status === 'pagado') {
+        const pDate = q.paymentDate || q.updatedAt;
+        payDateStr = pDate ? dayjs(pDate).format('DD/MM/YYYY') : 'N/A';
+      }
+
+      const valueStr = formatCurrency(q.value);
+      const amountPaidStr = formatCurrency(q.amountPaid || 0);
+
+      let statusText = 'PENDIENTE';
+      if (q.status === 'pagado') {
+        statusText = 'PAGADA';
+      } else if (q.status === 'mora' || (q.status === 'pendiente' && q.dueDate && new Date(q.dueDate) < new Date())) {
+        statusText = 'EN MORA';
+      }
+
+      return [numText, typeText, dueStr, valueStr, amountPaidStr, payDateStr, statusText]
+    })
+
+    autoTable(doc, {
+      startY: currentY + 26,
+      head: [['Cuota', 'Tipo', 'Vencimiento', 'Valor Cuota', 'Valor Pagado', 'Fecha Pago', 'Estado']],
+      body: quotaRows.length > 0 ? quotaRows : [['-', 'No hay cuotas registradas', '-', '-', '-', '-', '-']],
+      theme: 'grid',
+      headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      styles: { fontSize: 8 },
+      columnStyles: {
+        0: { halign: 'center' },
+        2: { halign: 'center' },
+        3: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'center' },
+        6: { halign: 'center' }
+      }
+    })
+
     doc.save(`Estado_Cuenta_${client.clientName.replace(/\s+/g, '_')}_Lote_${targetContract.nomenclatura}.pdf`)
   }
 
@@ -497,6 +548,8 @@ export default function PortfolioPage() {
             project: c.negotiation || 'Proyecto sin nombre',
             manzana: c.lot?.manzana || 'N/A',
             nomenclatura: c.lot?.nomenclature || c.lot?.lotNumber || 'N/A',
+            stage: c.lot?.stage || 'N/A',
+            lotNumber: c.lot?.lotNumber || 'N/A',
             valorTotal: c.totalValue,
             totalPagado: c.totalPagado,
             valorTotalInicial: c.valorTotalInicial,
@@ -513,7 +566,8 @@ export default function PortfolioPage() {
             valorCuota: c.valorCuota,
             diasMora: c.diasMora,
             status: c.status,
-            proximoVencimiento: c.startDate
+            proximoVencimiento: c.startDate,
+            quotas: c.quotas || []
           }))
         }
         generateClientStatementPDF(mappedClient)
@@ -986,7 +1040,7 @@ export default function PortfolioPage() {
                       <div>
                         <h4 className="font-medium text-text-primary">{contract.project}</h4>
                         <p className="text-sm text-text-muted">
-                          Manzana {contract.manzana} - Lote #{contract.nomenclatura}
+                          E: {contract.stage || '-'} - M: {contract.manzana || '-'} - L: {contract.lotNumber || '-'}{contract.nomenclatura && contract.nomenclatura !== contract.lotNumber && contract.nomenclatura !== 'N/A' ? ` (${contract.nomenclatura})` : ''}
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">

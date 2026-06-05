@@ -76,7 +76,10 @@ export function Combobox({
       </div>
 
       {isOpen && (
-        <div className="lg:absolute relative z-[100] w-full mt-2 bg-[#1a1a2e]/98 border border-glass-border/30 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-fade-in origin-top backdrop-blur-2xl rounded-xl">
+        <div 
+          className="lg:absolute relative z-[100] w-full mt-2 border border-glass-border/30 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-fade-in origin-top backdrop-blur-2xl rounded-xl"
+          style={{ backgroundColor: '#131324' }}
+        >
           {/* Search bar inside dropdown */}
           <div className="p-3 border-b border-glass-border flex items-center bg-glass-primary/10">
             <Search className="w-4 h-4 text-accent-blue mr-3 opacity-70" />
