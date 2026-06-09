@@ -139,4 +139,16 @@ export const apiPublic = {
 
   getCompanyAccounts: (companySlug: string) =>
     api.get(`/public/accounts/${companySlug}`),
+
+  sendOTPCode: (companySlug: string, idNumber: string, type: 'email' | 'phone') =>
+    api.post(`/public/${companySlug}/verification/send-code`, { idNumber, type }),
+
+  verifyOTPCode: (companySlug: string, token: string, code: string) =>
+    api.post(`/public/${companySlug}/verification/verify-code`, { token, code }),
+
+  getClientByValidationToken: (companySlug: string, token: string) =>
+    api.get(`/public/${companySlug}/client-validation/${token}`),
+
+  confirmClientValidation: (companySlug: string, token: string, email: string, phone: string) =>
+    api.post(`/public/${companySlug}/client-validation/confirm`, { token, email, phone }),
 }

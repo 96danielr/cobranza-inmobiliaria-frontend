@@ -391,4 +391,23 @@ export const adminApi = {
     apiAdmin.get('/audit', { params: { ...params, companyId: getCompanyId() } }),
   getAuditMetadata: () =>
     apiAdmin.get(`/audit/metadata?companyId=${getCompanyId()}`),
+
+  // Bonuses (CRUD)
+  getBonuses: () =>
+    apiAdmin.get(`/bonuses?companyId=${getCompanyId()}`),
+
+  createBonus: (data: any) =>
+    apiAdmin.post(`/bonuses?companyId=${getCompanyId()}`, data),
+
+  updateBonus: (id: string, data: any) =>
+    apiAdmin.put(`/bonuses/${id}?companyId=${getCompanyId()}`, data),
+
+  deleteBonus: (id: string) =>
+    apiAdmin.delete(`/bonuses/${id}?companyId=${getCompanyId()}`),
+
+  resendPaymentPlan: (contractId: string) =>
+    apiAdmin.post(`/clients/resend-plan/${contractId}?companyId=${getCompanyId()}`),
+  
+  resendWelcomeDetails: (clientId: string) =>
+    apiAdmin.post(`/clients/resend-welcome/${clientId}?companyId=${getCompanyId()}`),
 }

@@ -64,7 +64,7 @@ export function Modal({
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-glass-border">
+          <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-glass-border">
             <h3 className="text-lg font-semibold text-text-primary">
               {title}
             </h3>

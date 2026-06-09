@@ -49,7 +49,7 @@ export function Combobox({
   }, [])
 
   return (
-    <div className={cn('relative w-full', className)} ref={containerRef}>
+    <div className={cn('relative w-full', isOpen && 'z-50', className)} ref={containerRef}>
       {label && (
         <label className="block text-sm font-medium text-text-primary mb-2">
           {label}
@@ -77,7 +77,7 @@ export function Combobox({
 
       {isOpen && (
         <div 
-          className="lg:absolute relative z-[100] w-full mt-2 border border-glass-border/30 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-fade-in origin-top backdrop-blur-2xl rounded-xl"
+          className="absolute z-[100] w-full mt-2 border border-glass-border/30 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-fade-in origin-top backdrop-blur-2xl rounded-xl"
           style={{ backgroundColor: '#131324' }}
         >
           {/* Search bar inside dropdown */}

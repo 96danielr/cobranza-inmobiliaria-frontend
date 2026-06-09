@@ -13,7 +13,10 @@ import {
   ArrowRight,
   Loader2,
   Calendar,
-  DollarSign
+  DollarSign,
+  Mail,
+  Phone,
+  ShieldCheck
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -24,12 +27,66 @@ import { apiPublic } from '@/lib/api'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 
+const rotateImageFile = (file: File, rotationDegrees: number): Promise<File> => {
+  return new Promise((resolve) => {
+    if (rotationDegrees === 0) {
+      resolve(file)
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          resolve(file)
+          return
+        }
+
+        if (rotationDegrees % 180 === 90) {
+          canvas.width = img.height
+          canvas.height = img.width
+        } else {
+          canvas.width = img.width
+          canvas.height = img.height
+        }
+
+        ctx.translate(canvas.width / 2, canvas.height / 2)
+        ctx.rotate((rotationDegrees * Math.PI) / 180)
+        ctx.drawImage(img, -img.width / 2, -img.height / 2)
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const rotatedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now(),
+            })
+            resolve(rotatedFile)
+          } else {
+            resolve(file)
+          }
+        }, file.type)
+      }
+      img.onerror = () => resolve(file)
+      img.src = event.target?.result as string
+    }
+    reader.onerror = () => resolve(file)
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function PublicPaymentPage() {
   const { slug } = useParams()
-  const [step, setStep] = useState(1) // 1: Cedula, 2: Selection, 3: Form, 4: Success
+  // steps: 1 (ID), 1.5 (Select OTP channel), 1.7 (Input OTP code), 2 (Quotas), 3 (Form), 4 (Success)
+  const [step, setStep] = useState<number>(1) 
   const [idNumber, setIdNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
+  const [maskedContact, setMaskedContact] = useState({ email: '', phone: '' })
+  const [selectedChannel, setSelectedChannel] = useState<'email' | 'phone' | ''>('')
+  const [otpToken, setOtpToken] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
 
   const [selectedContract, setSelectedContract] = useState<any>(null)
   const [selectedQuota, setSelectedQuota] = useState<any>(null)
@@ -44,6 +101,8 @@ export default function PublicPaymentPage() {
   const [email, setEmail] = useState('')
   const [observations, setObservations] = useState('')
   const [capture, setCapture] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [clientRotationAngle, setClientRotationAngle] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [banks, setBanks] = useState<any[]>([])
   const [loadingBanks, setLoadingBanks] = useState(false)
@@ -67,7 +126,8 @@ export default function PublicPaymentPage() {
     }
   }
 
-  const handleSearchClient = async (e?: React.FormEvent) => {
+  // Step 1: Search Client & mask contact details
+  const handleQueryClient = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!idNumber.trim()) return
 
@@ -75,11 +135,27 @@ export default function PublicPaymentPage() {
     try {
       const response = await apiPublic.getClientInfo(slug as string, idNumber)
       if (response.data.success) {
-        setClientData(response.data.data)
-        if (response.data.data.contracts?.length > 0) {
-          setActiveContractId(response.data.data.contracts[0]._id)
+        const client = response.data.data.client
+        if (client) {
+          // Mask email: j****@domain.com
+          let maskedEmail = ''
+          if (client.email && client.email.includes('@')) {
+            const [local, domain] = client.email.split('@')
+            maskedEmail = local.length > 2 
+              ? `${local[0]}${'*'.repeat(local.length - 2)}${local[local.length - 1]}@${domain}`
+              : `${local[0]}*@${domain}`
+          }
+          // Mask phone: *******123
+          let maskedPhone = ''
+          if (client.phone) {
+            const phStr = client.phone.toString()
+            maskedPhone = phStr.length > 4
+              ? '*'.repeat(phStr.length - 4) + phStr.slice(-4)
+              : phStr
+          }
+          setMaskedContact({ email: maskedEmail, phone: maskedPhone })
         }
-        setStep(2)
+        setStep(1.5)
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'No se encontró información para esta cédula')
@@ -88,9 +164,65 @@ export default function PublicPaymentPage() {
     }
   }
 
+  // Step 1.5: Send OTP Code
+  const handleSendOTP = async (channel: 'email' | 'phone') => {
+    setSelectedChannel(channel)
+    setLoading(true)
+    try {
+      const response = await apiPublic.sendOTPCode(slug as string, idNumber, channel)
+      if (response.data.success) {
+        setOtpToken(response.data.data.token)
+        toast.success(response.data.message)
+        setStep(1.7)
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al enviar el código OTP')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Step 1.7: Verify OTP Code
+  const handleVerifyOTP = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (!verificationCode.trim()) return
+
+    setLoading(true)
+    try {
+      const response = await apiPublic.verifyOTPCode(slug as string, otpToken, verificationCode)
+      if (response.data.success) {
+        setClientData(response.data.data)
+        const client = response.data.data.client
+        if (client) {
+          if (client.phone) setPhone(client.phone)
+          if (client.email) setEmail(client.email)
+        }
+        if (response.data.data.contracts?.length > 0) {
+          setActiveContractId(response.data.data.contracts[0]._id)
+        }
+        toast.success(response.data.message)
+        setStep(2)
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Código de verificación incorrecto o expirado')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFileChange = (file: File | null) => {
+    setCapture(file)
+    setClientRotationAngle(0)
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+    } else {
+      setPreviewUrl(null)
+    }
+  }
+
   const handleSelectContract = (contract: any) => {
     setSelectedContract(contract)
-    // If only one quota pending, select it? Or just let them pick
   }
 
   const handleSelectQuota = (quota: any) => {
@@ -113,9 +245,18 @@ export default function PublicPaymentPage() {
       toast.error('Por favor sube una captura del comprobante')
       return
     }
+    if (paymentMethod !== 'Efectivo' && !bank) {
+      toast.error('Por favor selecciona el banco receptor de la consignación')
+      return
+    }
 
     setSubmitting(true)
     try {
+      let finalCapture = capture
+      if (clientRotationAngle > 0) {
+        finalCapture = await rotateImageFile(capture, clientRotationAngle)
+      }
+
       const formData = new FormData()
       formData.append('quotaId', selectedQuota._id)
       formData.append('amount', amount)
@@ -124,8 +265,9 @@ export default function PublicPaymentPage() {
       formData.append('phone', phone)
       formData.append('email', email)
       formData.append('observations', observations)
-      formData.append('capture', capture)
+      formData.append('capture', finalCapture)
       formData.append('paymentDate', new Date().toISOString())
+      formData.append('otpToken', otpToken)
 
       const response = await apiPublic.reportPayment(formData)
       if (response.data.success) {
@@ -163,10 +305,10 @@ export default function PublicPaymentPage() {
                 <CreditCard className="w-8 h-8 text-accent-blue" />
               </div>
               <CardTitle className="text-responsive-2xl font-bold text-text-primary">Reportar mi Pago</CardTitle>
-              <p className="text-text-secondary mt-2">Ingresa tu cédula para ver tus cuotas pendientes</p>
+              <p className="text-text-secondary mt-2">Ingresa tu cédula para iniciar el proceso seguro de pago</p>
             </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleSearchClient} className="space-y-4">
+              <form onSubmit={handleQueryClient} className="space-y-4">
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
                   <Input
@@ -183,6 +325,112 @@ export default function PublicPaymentPage() {
                   disabled={loading}
                 >
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Consultar'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 1.5: Select OTP Destination */}
+        {step === 1.5 && (
+          <Card variant="elevated" className="border-glass-border glass-effect">
+            <CardHeader className="text-center pb-2">
+              <div className="w-16 h-16 bg-accent-purple/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-accent-purple/30">
+                <ShieldCheck className="w-8 h-8 text-accent-purple" />
+              </div>
+              <CardTitle className="text-xl font-bold text-text-primary">Verificación de Identidad</CardTitle>
+              <p className="text-text-secondary mt-2">Para proteger tus datos, selecciona dónde deseas recibir tu código de seguridad OTP de 6 dígitos:</p>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              {!maskedContact.email && !maskedContact.phone ? (
+                <div className="text-center p-6 rounded-xl border border-accent-red/20 bg-accent-red/10 text-accent-red space-y-3">
+                  <AlertCircle className="w-10 h-10 mx-auto" />
+                  <p className="font-bold text-base">Sin métodos de contacto registrados</p>
+                  <p className="text-sm text-text-secondary">
+                    No posees un correo electrónico ni un número de celular registrados en nuestro sistema. Por favor, comunícate con la administración de la constructora/inmobiliaria para registrar tus datos de contacto y poder habilitar tu acceso seguro.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {maskedContact.email && (
+                    <button
+                      onClick={() => handleSendOTP('email')}
+                      disabled={loading}
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-accent-blue/15 hover:border-accent-blue/40 transition-all text-left group"
+                    >
+                      <div className="p-3 bg-accent-blue/20 rounded-xl border border-accent-blue/30 text-accent-blue">
+                        <Mail className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-text-primary text-sm">Enviar por Correo Electrónico</p>
+                        <p className="text-[11px] text-text-muted mt-0.5">{maskedContact.email}</p>
+                      </div>
+                    </button>
+                  )}
+
+                  {maskedContact.phone && (
+                    <button
+                      onClick={() => handleSendOTP('phone')}
+                      disabled={loading}
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border border-glass-border bg-glass-primary/10 hover:bg-accent-purple/15 hover:border-accent-purple/40 transition-all text-left group"
+                    >
+                      <div className="p-3 bg-accent-purple/20 rounded-xl border border-accent-purple/30 text-accent-purple">
+                        <Phone className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-text-primary text-sm">Enviar por Celular (SMS / WhatsApp)</p>
+                        <p className="text-[11px] text-text-muted mt-0.5">{maskedContact.phone}</p>
+                      </div>
+                    </button>
+                  )}
+                </>
+              )}
+
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="w-full h-12 glass-button border-glass-border text-text-secondary mt-4"
+              >
+                Volver
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 1.7: Enter Verification Code */}
+        {step === 1.7 && (
+          <Card variant="elevated" className="border-glass-border glass-effect">
+            <CardHeader className="text-center pb-2">
+              <div className="w-16 h-16 bg-accent-blue/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-accent-blue/30">
+                <ShieldCheck className="w-8 h-8 text-accent-blue" />
+              </div>
+              <CardTitle className="text-xl font-bold text-text-primary">Código de Seguridad</CardTitle>
+              <p className="text-text-secondary mt-2">Hemos enviado un código OTP de 6 dígitos. Ingrésalo a continuación:</p>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleVerifyOTP} className="space-y-4">
+                <Input
+                  placeholder="Código de 6 dígitos"
+                  maxLength={6}
+                  className="glass-input h-12 text-center text-2xl tracking-[10px] font-bold"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
+                <Button
+                  type="submit"
+                  className="w-full h-12 text-lg glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30"
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Verificar y Continuar'}
+                </Button>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => setStep(1.5)}
+                  className="w-full h-12 glass-button border-glass-border text-text-secondary"
+                >
+                  Cambiar método de envío
                 </Button>
               </form>
             </CardContent>
@@ -208,7 +456,6 @@ export default function PublicPaymentPage() {
                       type="button"
                       onClick={() => {
                         setActiveContractId(contract._id);
-                        // Reset expansion on switch
                         setExpandedContracts([]);
                       }}
                       className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
@@ -234,9 +481,6 @@ export default function PublicPaymentPage() {
                     if (a.type !== 'inicial' && b.type === 'inicial') return 1;
                     return a.number - b.number;
                   });
-
-                const isExpanded = expandedContracts.includes(contract._id);
-                const visibleQuotas = isExpanded ? pendingQuotas : pendingQuotas.slice(0, 3);
 
                 return (
                   <Card key={contract._id} variant="elevated" className="border-glass-border glass-effect">
@@ -355,7 +599,11 @@ export default function PublicPaymentPage() {
 
             <Button
               variant="outline"
-              onClick={() => setStep(1)}
+              onClick={() => {
+                setStep(1)
+                setIdNumber('')
+                setVerificationCode('')
+              }}
               className="w-full h-12 glass-button border-glass-border text-text-secondary"
             >
               Volver
@@ -455,15 +703,15 @@ export default function PublicPaymentPage() {
                         <div>
                           <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
                             <CreditCard className="w-4 h-4 text-accent-purple" />
-                            ¿A qué banco consignas?
+                            ¿A qué banco consignas? *
                           </label>
                           <Combobox
                             options={banks.map((b: any) => ({ value: b.acronym, label: b.acronym }))}
                             value={bank}
                             onChange={setBank}
-                            placeholder="Selecciona tu banco..."
+                            placeholder="selecciona el banco"
                             searchPlaceholder="Escribir nombre del banco..."
-                            className="h-12"
+                            className="h-12 animate-fade-in-up"
                           />
                           {loadingBanks && <p className="text-[10px] text-text-muted mt-1 animate-pulse">Cargando bancos...</p>}
                         </div>
@@ -498,12 +746,12 @@ export default function PublicPaymentPage() {
                   <div>
                     <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
                       <Upload className="w-4 h-4 text-accent-green" />
-                      Captura del comprobante
+                      Captura del comprobante *
                     </label>
                     <div className="relative">
                       <Input
                         type="file"
-                        onChange={(e) => setCapture(e.target.files?.[0] || null)}
+                        onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
                         className="glass-input h-12 pt-2 file:hidden cursor-pointer"
                         accept="image/*"
                         required
@@ -519,6 +767,31 @@ export default function PublicPaymentPage() {
                         )}
                       </div>
                     </div>
+
+                    {previewUrl && capture?.type.startsWith('image/') && (
+                      <div className="mt-3 p-4 border border-glass-border bg-glass-primary/20 backdrop-blur-glass rounded-xl flex flex-col items-center justify-center space-y-3">
+                        <div className="flex justify-between items-center w-full mb-1">
+                          <span className="text-xs text-text-secondary font-medium">Vista Previa:</span>
+                          <Button
+                            type="button"
+                            variant="glass"
+                            size="sm"
+                            className="glass-button text-xs h-8 px-3 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/10"
+                            onClick={() => setClientRotationAngle(prev => (prev + 90) % 360)}
+                          >
+                            Girar Imagen 90°
+                          </Button>
+                        </div>
+                        <div className="relative max-w-full rounded-lg flex items-center justify-center p-4">
+                          <img
+                            src={previewUrl}
+                            alt="Vista previa"
+                            style={{ transform: `rotate(${clientRotationAngle}deg) scale(${clientRotationAngle % 180 !== 0 ? 0.65 : 1})` }}
+                            className="max-h-60 w-auto rounded shadow-md transition-all duration-300 origin-center object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -529,6 +802,7 @@ export default function PublicPaymentPage() {
                       value={observations}
                       onChange={(e) => setObservations(e.target.value)}
                     />
+                    <p className="text-xs text-text-muted mt-1 italic">Recuerda que si pagas más de lo que informas puedes escribirlo aquí</p>
                   </div>
                 </div>
 
@@ -554,18 +828,44 @@ export default function PublicPaymentPage() {
             <p className="text-text-secondary text-lg mb-8">
               Tu reporte ha sido enviado exitosamente. El tiempo de respuesta para la validación y aprobación de tu pago es de 1 a 2 días hábiles. Una vez procesado, te enviaremos un correo y un mensaje de confirmación.
             </p>
-            <Button
-              className="w-full h-12 glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30"
-              onClick={() => {
-                setStep(1)
-                setIdNumber('')
-                setCapture(null)
-                setBank('')
-                setAmount('')
-              }}
-            >
-              Realizar otro pago
-            </Button>
+            
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <Button
+                className="w-full sm:w-1/2 h-12 glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30"
+                onClick={() => {
+                  // Report another payment for the same client (reset payment fields, keep ID/cédula, and ask for a new OTP code)
+                  setCapture(null)
+                  setPreviewUrl(null)
+                  setAmount('')
+                  setObservations('')
+                  setVerificationCode('')
+                  setOtpToken('')
+                  setSelectedChannel('')
+                  setStep(1.5)
+                }}
+              >
+                Reportar otro pago para esta misma cédula
+              </Button>
+              <Button
+                className="w-full sm:w-1/2 h-12 glass-button bg-accent-purple/20 text-accent-purple border-accent-purple/30"
+                onClick={() => {
+                  // Report another person
+                  setStep(1)
+                  setIdNumber('')
+                  setCapture(null)
+                  setPreviewUrl(null)
+                  setBank('')
+                  setAmount('')
+                  setVerificationCode('')
+                  setOtpToken('')
+                  setObservations('')
+                  setSelectedChannel('')
+                  setClientData(null)
+                }}
+              >
+                Reportar pago de otra persona
+              </Button>
+            </div>
           </Card>
         )}
       </div>

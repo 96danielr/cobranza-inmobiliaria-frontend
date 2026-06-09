@@ -114,7 +114,7 @@ const mockTenantConfig: TenantConfig = {
 
 export default function SettingsPage() {
   const { isAuthenticated, admin } = useAdminAuthStore()
-  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas'>('company')
+  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas' | 'bonuses'>('company')
   const [limits, setLimits] = useState<any[]>([])
   const [usage, setUsage] = useState<any[]>([])
   const [limitsLoading, setLimitsLoading] = useState(false)
@@ -125,6 +125,103 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [configLoading, setConfigLoading] = useState(true)
   const [usersLoading, setUsersLoading] = useState(false)
+
+  // Bonuses Management State
+  const [bonuses, setBonuses] = useState<any[]>([])
+  const [bonusesLoading, setBonusesLoading] = useState(false)
+  const [isBonusModalOpen, setIsBonusModalOpen] = useState(false)
+  const [selectedBonus, setSelectedBonus] = useState<any>(null)
+  const [bonusForm, setBonusForm] = useState({
+    name: '',
+    value: '',
+    description: '',
+    isActive: true
+  })
+
+  const fetchBonuses = async () => {
+    setBonusesLoading(true)
+    try {
+      const response = await adminApi.getBonuses()
+      if (response.data.success) {
+        setBonuses(response.data.data.bonuses || response.data.data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching bonuses:', error)
+    } finally {
+      setBonusesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'bonuses') {
+      fetchBonuses()
+    }
+  }, [activeTab])
+
+  const handleSaveBonus = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!bonusForm.name || !bonusForm.value) {
+      toast.error('Nombre y valor son obligatorios')
+      return
+    }
+    setIsSaving(true)
+    try {
+      if (selectedBonus) {
+        await adminApi.updateBonus(selectedBonus._id, {
+          name: bonusForm.name,
+          value: parseFloat(bonusForm.value),
+          description: bonusForm.description,
+          isActive: bonusForm.isActive
+        })
+        toast.success('Bono actualizado exitosamente')
+      } else {
+        await adminApi.createBonus({
+          name: bonusForm.name,
+          value: parseFloat(bonusForm.value),
+          description: bonusForm.description,
+          isActive: bonusForm.isActive
+        })
+        toast.success('Bono creado exitosamente')
+      }
+      setIsBonusModalOpen(false)
+      fetchBonuses()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al guardar el bono')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteBonus = async (id: string) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este bono?')) return
+    try {
+      await adminApi.deleteBonus(id)
+      toast.success('Bono eliminado')
+      fetchBonuses()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al eliminar el bono')
+    }
+  }
+
+  const openBonusModal = (bonus: any = null) => {
+    setSelectedBonus(bonus)
+    if (bonus) {
+      setBonusForm({
+        name: bonus.name,
+        value: bonus.value.toString(),
+        description: bonus.description || '',
+        isActive: bonus.isActive
+      })
+    } else {
+      setBonusForm({
+        name: '',
+        value: '',
+        description: '',
+        isActive: true
+      })
+    }
+    setIsBonusModalOpen(true)
+  }
 
   // Tenant-level state (MATRIZ)
   const [tenantInfo, setTenantInfo] = useState({
@@ -553,7 +650,8 @@ export default function SettingsPage() {
     { key: 'company', label: 'Información de la Empresa', icon: Building2 },
     { key: 'users', label: 'Usuarios Administradores', icon: Users },
     { key: 'integrations', label: 'Integraciones', icon: Settings },
-    { key: 'quotas', label: 'Límites y Cuotas', icon: Shield }
+    { key: 'quotas', label: 'Límites y Cuotas', icon: Shield },
+    { key: 'bonuses', label: 'Bonos de Descuento', icon: CreditCard }
   ]
 
   return (
@@ -590,6 +688,158 @@ export default function SettingsPage() {
           })}
         </nav>
       </div>
+
+      {/* Bonuses Tab */}
+      {activeTab === 'bonuses' && (
+        <div className="space-y-4 md:space-y-6">
+          <Card variant="elevated" className="animate-fade-in-up">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-text-primary">Bonos de Descuento</h3>
+                  <p className="text-sm text-text-secondary mt-1">Configura y parametriza los bonos que tus vendedores y asesores pueden aplicar a las ventas de lotes.</p>
+                </div>
+                <Button
+                  onClick={() => openBonusModal()}
+                  className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Crear Nuevo Bono
+                </Button>
+              </div>
+
+              {bonusesLoading ? (
+                <TableRowSkeleton columns={5} />
+              ) : bonuses.length === 0 ? (
+                <div className="text-center py-10 border border-dashed border-glass-border rounded-xl">
+                  <CreditCard className="mx-auto h-12 w-12 text-text-muted mb-3 opacity-60" />
+                  <p className="text-text-secondary font-semibold">No hay bonos configurados</p>
+                  <p className="text-xs text-text-muted mt-1">Crea un bono para restringir los descuentos libres en la venta de lotes.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-glass-border">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-glass-primary/10 border-b border-glass-border text-text-secondary">
+                        <th className="p-3 md:p-4 font-semibold">Nombre del Bono</th>
+                        <th className="p-3 md:p-4 font-semibold text-right">Valor de Descuento</th>
+                        <th className="p-3 md:p-4 font-semibold">Descripción</th>
+                        <th className="p-3 md:p-4 font-semibold">Estado</th>
+                        <th className="p-3 md:p-4 font-semibold text-center">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-glass-border/30 text-text-primary">
+                      {bonuses.map((bonus) => (
+                        <tr key={bonus._id} className="hover:bg-glass-primary/5 transition-colors">
+                          <td className="p-3 md:p-4 font-bold">{bonus.name}</td>
+                          <td className="p-3 md:p-4 text-right font-semibold text-accent-green">
+                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(bonus.value)}
+                          </td>
+                          <td className="p-3 md:p-4 max-w-xs truncate">{bonus.description || '-'}</td>
+                          <td className="p-3 md:p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              bonus.isActive ? 'bg-accent-green/20 text-accent-green' : 'bg-accent-red/20 text-accent-red'
+                            }`}>
+                              {bonus.isActive ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="p-3 md:p-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant="glass"
+                                size="sm"
+                                onClick={() => openBonusModal(bonus)}
+                                className="p-2 text-accent-blue"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="glass"
+                                size="sm"
+                                onClick={() => handleDeleteBonus(bonus._id)}
+                                className="p-2 text-accent-red"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Bonus Modal */}
+          <Modal
+            isOpen={isBonusModalOpen}
+            onClose={() => setIsBonusModalOpen(false)}
+            title={selectedBonus ? 'Editar Bono de Descuento' : 'Crear Bono de Descuento'}
+          >
+            <form onSubmit={handleSaveBonus} className="space-y-4 p-4 md:p-6">
+              <Input
+                label="Nombre del Bono *"
+                placeholder="Ej: Descuento de Temporada"
+                value={bonusForm.name}
+                onChange={(e) => setBonusForm(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+
+              <Input
+                label="Valor en COP *"
+                type="number"
+                placeholder="Ej: 500000"
+                value={bonusForm.value}
+                onChange={(e) => setBonusForm(prev => ({ ...prev, value: e.target.value }))}
+                required
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">Descripción (Opcional)</label>
+                <textarea
+                  className="glass-input w-full p-3 h-20"
+                  placeholder="Detalles sobre las condiciones del bono..."
+                  value={bonusForm.description}
+                  onChange={(e) => setBonusForm(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2 my-2">
+                <input
+                  id="bonusIsActive"
+                  type="checkbox"
+                  checked={bonusForm.isActive}
+                  onChange={(e) => setBonusForm(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="w-4 h-4 text-accent-blue bg-glass-primary border-glass-border rounded focus:ring-accent-blue/50 focus:ring-2 cursor-pointer"
+                />
+                <label htmlFor="bonusIsActive" className="text-xs text-text-primary font-medium cursor-pointer select-none">
+                  Bono Activo (Se puede seleccionar para ventas)
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-glass-border">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsBonusModalOpen(false)}
+                  className="glass-button"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30"
+                >
+                  {isSaving ? 'Guardando...' : selectedBonus ? 'Guardar Cambios' : 'Crear Bono'}
+                </Button>
+              </div>
+            </form>
+          </Modal>
+        </div>
+      )}
 
       {/* Company Information Tab */}
       {activeTab === 'company' && (

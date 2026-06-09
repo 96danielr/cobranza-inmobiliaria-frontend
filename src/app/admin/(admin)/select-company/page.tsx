@@ -257,7 +257,8 @@ export default function SelectCompanyPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-2 py-3 md:py-8 animate-fade-in-up">
+    <>
+      <div className="max-w-2xl mx-auto px-2 py-3 md:py-8 animate-fade-in-up">
       {/* Header */}
       <div className="text-center mb-4 md:mb-8">
         <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 glass-card mb-2 md:mb-4 shadow-glow border-accent-blue/30 rounded-2xl">
@@ -270,9 +271,12 @@ export default function SelectCompanyPage() {
               : `¡Bienvenido, ${admin?.tenantName || admin?.fullName || 'Usuario'}!`}
           </h1>
           {admin?.role !== 'superadmin' && (
-            <span className="text-xs md:text-sm font-semibold text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full">
+            <span className="text-xs md:text-sm font-semibold text-accent-blue">
               Selecciona un proyecto para empezar
             </span>
+          )}
+          {admin?.role === 'tenant_admin' && (
+            <span className="text-xs text-text-muted mt-1">o</span>
           )}
           {admin?.role === 'superadmin' ? (
             <Button
@@ -292,15 +296,15 @@ export default function SelectCompanyPage() {
               className="mt-1 md:mt-2 bg-accent-blue/20 text-accent-blue border-accent-blue/30"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Nuevo Proyecto
+              Crea un proyecto
             </Button>
           ) : null}
         </div>
-        <p className="text-xs md:text-sm text-text-secondary mt-2 md:mt-4 hidden sm:block">
-          {admin?.role === 'superadmin'
-            ? 'Gestiona aquí los planes, suscripciones y módulos de tus clientes.'
-            : 'Aquí tienes los proyectos inmobiliarios asociados a tu cuenta. Elige uno para ingresar al panel de control.'}
-        </p>
+        {admin?.role === 'superadmin' && (
+          <p className="text-xs md:text-sm text-text-secondary mt-2 md:mt-4 hidden sm:block">
+            Gestiona aquí los planes, suscripciones y módulos de tus clientes.
+          </p>
+        )}
       </div>
 
       {/* Company/Tenant List */}
@@ -428,12 +432,14 @@ export default function SelectCompanyPage() {
           </CardContent>
         </Card>
       )}
+      </div>
 
       {/* Modal for Superadmin to create Tenant + Admin */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Crear Nueva Empresa y Administrador"
+        size="lg"
       >
         <form onSubmit={handleCreateTenant} className="space-y-4 pt-4">
           <div className="space-y-4">
@@ -521,46 +527,49 @@ export default function SelectCompanyPage() {
         isOpen={isCompanyModalOpen}
         onClose={() => setIsCompanyModalOpen(false)}
         title="Crear Nuevo Proyecto"
+        size="lg"
       >
         <form onSubmit={handleCreateCompany} className="space-y-4 pt-4">
-          <Input
-            label="Nombre del Proyecto"
-            placeholder="Ej: Proyecto Bosques del Este"
-            value={companyForm.name}
-            onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
-            required
-          />
-          <Input
-            label="NIT del Proyecto (Opcional)"
-            placeholder="Ej: 900.123.456-1"
-            value={companyForm.nit}
-            onChange={(e) => setCompanyForm({ ...companyForm, nit: e.target.value })}
-          />
-          <Input
-            label="RFC / Identificador (Opcional)"
-            placeholder="RFC del proyecto"
-            value={companyForm.rfc}
-            onChange={(e) => setCompanyForm({ ...companyForm, rfc: e.target.value })}
-          />
-          <Input
-            label="Dirección del Proyecto (Opcional)"
-            placeholder="Ej: Calle 10 # 5-20, Bogotá"
-            value={companyForm.address}
-            onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
-          />
-          <Input
-            label="Teléfono de Contacto (Opcional)"
-            placeholder="Ej: 3101234567"
-            value={companyForm.phone}
-            onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
-          />
-          <Input
-            label="Correo Electrónico (Opcional)"
-            type="email"
-            placeholder="contacto@proyecto.com"
-            value={companyForm.email}
-            onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Nombre del Proyecto"
+              placeholder="Ej: Proyecto Bosques del Este"
+              value={companyForm.name}
+              onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
+              required
+            />
+            <Input
+              label="NIT del Proyecto (Opcional)"
+              placeholder="Ej: 900.123.456-1"
+              value={companyForm.nit}
+              onChange={(e) => setCompanyForm({ ...companyForm, nit: e.target.value })}
+            />
+            <Input
+              label="RFC / Identificador (Opcional)"
+              placeholder="RFC del proyecto"
+              value={companyForm.rfc}
+              onChange={(e) => setCompanyForm({ ...companyForm, rfc: e.target.value })}
+            />
+            <Input
+              label="Dirección del Proyecto (Opcional)"
+              placeholder="Ej: Calle 10 # 5-20, Bogotá"
+              value={companyForm.address}
+              onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
+            />
+            <Input
+              label="Teléfono de Contacto (Opcional)"
+              placeholder="Ej: 3101234567"
+              value={companyForm.phone}
+              onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
+            />
+            <Input
+              label="Correo Electrónico (Opcional)"
+              type="email"
+              placeholder="contacto@proyecto.com"
+              value={companyForm.email}
+              onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+            />
+          </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="glass" type="button" onClick={() => setIsCompanyModalOpen(false)}>
@@ -720,6 +729,6 @@ export default function SelectCompanyPage() {
           </div>
         </form>
       </Modal>
-    </div>
+    </>
   )
 }

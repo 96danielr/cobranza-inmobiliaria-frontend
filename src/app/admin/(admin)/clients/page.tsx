@@ -22,7 +22,8 @@ import {
   ChevronUp,
   CreditCard,
   Upload,
-  DollarSign
+  DollarSign,
+  Mail
 } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
@@ -313,6 +314,42 @@ export default function ClientsPage() {
   const handleOpenWhatsApp = (client: any) => {
     setActiveChatClient(client)
     setIsWhatsAppModalOpen(true)
+  }
+
+  const [resendingPlanId, setResendingPlanId] = useState<string | null>(null)
+
+  const handleResendPaymentPlan = async (contractId: string) => {
+    try {
+      setResendingPlanId(contractId)
+      const response = await adminApi.resendPaymentPlan(contractId)
+      if (response.data.success) {
+        toast.success('Plan de pagos reenviado exitosamente al cliente')
+      } else {
+        toast.error(response.data.message || 'Error al reenviar el plan de pagos')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al conectar con el servidor')
+    } finally {
+      setResendingPlanId(null)
+    }
+  }
+
+  const [resendingWelcomeId, setResendingWelcomeId] = useState<string | null>(null)
+
+  const handleResendWelcomeDetails = async (clientId: string) => {
+    try {
+      setResendingWelcomeId(clientId)
+      const response = await adminApi.resendWelcomeDetails(clientId)
+      if (response.data.success) {
+        toast.success('Mensaje de bienvenida y validación de datos reenviado exitosamente')
+      } else {
+        toast.error(response.data.message || 'Error al reenviar el mensaje')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al conectar con el servidor')
+    } finally {
+      setResendingWelcomeId(null)
+    }
   }
 
   const handleOpenEdit = (client: Client) => {
@@ -721,8 +758,29 @@ export default function ClientsPage() {
           <div className="space-y-6">
             {/* Client Info */}
             <div className="bg-glass-primary/30 backdrop-blur-glass border border-glass-border rounded-lg p-4">
-              <h3 className="font-medium text-text-primary mb-3">Información Personal</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                <h3 className="font-medium text-text-primary">Información Personal</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs glass-button border-accent-purple/30 text-accent-purple hover:bg-accent-purple/10"
+                  onClick={() => handleResendWelcomeDetails(selectedClient._id)}
+                  disabled={resendingWelcomeId === selectedClient._id}
+                >
+                  {resendingWelcomeId === selectedClient._id ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      Reenviando...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-3.5 h-3.5 mr-1.5" />
+                      Reenviar Validación de Datos (Bienvenida)
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-text-secondary">Nombre Completo</p>
                   <p className="font-medium text-text-primary">{selectedClient.name}</p>
@@ -897,6 +955,28 @@ export default function ClientsPage() {
                               <CreditCard className="w-3 h-3 mr-1" />
                               Reportar Pago
                             </Button>
+
+                            {selectedClient?.email && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-[10px] py-1 px-2.5 glass-button border-accent-purple/30 text-accent-purple hover:bg-accent-purple/10"
+                                onClick={() => handleResendPaymentPlan(contract._id)}
+                                disabled={resendingPlanId === contract._id}
+                              >
+                                {resendingPlanId === contract._id ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    Enviando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mail className="w-3 h-3 mr-1" />
+                                    Enviar Plan al Correo
+                                  </>
+                                )}
+                              </Button>
+                            )}
                           </div>
                         </div>
 
@@ -1069,10 +1149,6 @@ export default function ClientsPage() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-glass-border">
-              <Button variant="outline" className="glass-button min-h-[44px]">
-                <FileText className="w-4 h-4 mr-2" />
-                Ver Historial
-              </Button>
               <Button 
                 variant="outline" 
                 onClick={() => handleOpenWhatsApp(selectedClient)}

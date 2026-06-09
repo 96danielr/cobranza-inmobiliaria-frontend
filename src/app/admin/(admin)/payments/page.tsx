@@ -78,6 +78,7 @@ export default function PaymentsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [observacion, setObservacion] = useState('')
   const [modalLoading, setModalLoading] = useState(false)
+  const [rotationAngle, setRotationAngle] = useState(0)
 
   // Manual Payment State
   const { clients, fetchClientsIfNeeded } = useClientStore()
@@ -227,6 +228,7 @@ export default function PaymentsPage() {
   const handleViewPayment = (payment: PendingPayment) => {
     setSelectedPayment(payment)
     setObservacion(payment.observacion || '')
+    setRotationAngle(0)
     setIsModalOpen(true)
   }
 
@@ -815,20 +817,33 @@ export default function PaymentsPage() {
             {/* Comprobante */}
             {selectedPayment.comprobante && (
               <div>
-                <h3 className="font-medium text-text-primary mb-3">Comprobante de Pago</h3>
-                <div className="border border-glass-border rounded-lg p-4 bg-glass-primary/20 backdrop-blur-glass overflow-hidden">
+                <h3 className="font-medium text-text-primary mb-3 flex items-center justify-between">
+                  <span>Comprobante de Pago</span>
+                  {selectedPayment.comprobante.match(/\.(jpeg|jpg|gif|png|webp)/i) && (
+                    <Button
+                      variant="glass"
+                      size="sm"
+                      className="glass-button text-xs h-8 px-3"
+                      onClick={() => setRotationAngle(prev => (prev + 90) % 360)}
+                    >
+                      Girar Imagen 90°
+                    </Button>
+                  )}
+                </h3>
+                <div className="border border-glass-border rounded-lg p-4 bg-glass-primary/20 backdrop-blur-glass flex flex-col items-center justify-center">
                   {selectedPayment.comprobante.match(/\.(jpeg|jpg|gif|png|webp)/i) ? (
-                    <div className="relative group">
+                    <div className="relative group max-w-full p-4">
                       <img
                         src={selectedPayment.comprobante}
                         alt="Comprobante"
-                        className="w-full h-auto rounded-lg shadow-lg cursor-zoom-in group-hover:scale-[1.02] transition-transform duration-300"
+                        style={{ transform: `rotate(${rotationAngle}deg) scale(${rotationAngle % 180 !== 0 ? 0.65 : 1})` }}
+                        className="max-h-[500px] w-auto rounded-lg shadow-lg cursor-zoom-in transition-all duration-300 origin-center object-contain"
                         onClick={() => window.open(selectedPayment.comprobante || '', '_blank')}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between w-full">
                       <div className="flex items-center">
                         <FileText className="w-6 h-6 text-text-muted mr-2" />
                         <span className="text-text-secondary truncate max-w-[200px]">
@@ -837,7 +852,7 @@ export default function PaymentsPage() {
                       </div>
                     </div>
                   )}
-                  <div className="mt-3 flex justify-end">
+                  <div className="mt-3 flex justify-end w-full">
                     <Button
                       variant="glass"
                       size="sm"
@@ -956,14 +971,10 @@ export default function PaymentsPage() {
           setManualPaymentOption('minimo')
         }}
         title="Registrar Pago Manual"
-        size="lg"
+        size="xl"
       >
         <div className="space-y-6">
           <div>
-            <div className="flex items-center gap-2 mb-4 p-3 bg-accent-blue/10 rounded-lg border border-accent-blue/20">
-              <User className="w-5 h-5 text-accent-blue" />
-              <p className="text-sm font-medium text-accent-blue">Paso 1: Seleccione el cliente</p>
-            </div>
             <label className="block text-sm font-medium text-text-primary mb-2">Cliente</label>
             <Combobox
               options={clients.map(c => ({ value: c._id, label: `${c.name} - ${c.idNumber}` }))}
@@ -978,56 +989,61 @@ export default function PaymentsPage() {
 
           {!modalLoading && clientDetails && (
             <div className="space-y-6 animate-fade-in-up">
-              <div className="flex items-center gap-2 mb-2 p-3 bg-accent-purple/10 rounded-lg border border-accent-purple/20">
-                <FileText className="w-5 h-5 text-accent-purple" />
-                <p className="text-sm font-medium text-accent-purple">Paso 2: Complete los detalles del pago</p>
+
+              {/* Row 1: Contrato/Lote & Forma de Pago */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {clientDetails.contracts?.length > 1 ? (
+                  <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                    <label className="block text-sm font-medium text-text-primary mb-3">CONTRATO / LOTE</label>
+                    <select
+                      value={selectedContractId}
+                      onChange={(e) => setSelectedContractId(e.target.value)}
+                      className="glass-input w-full px-4 py-3 text-lg"
+                    >
+                      {clientDetails.contracts.map((c: any) => (
+                        <option key={c._id} value={c._id}>
+                          {c.negotiation || 'Contrato'} - Mz {c.lot?.manzana || '-'} Lote {c.lot?.lotNumber || c.lot?.nomenclature || c.lot?.nomenclatura || '-'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border flex items-center">
+                    <p className="text-sm text-text-muted">
+                      Contrato único: {clientDetails.contracts?.[0]?.negotiation || 'Contrato'} - Mz {clientDetails.contracts?.[0]?.lot?.manzana || '-'} Lote {clientDetails.contracts?.[0]?.lot?.lotNumber || clientDetails.contracts?.[0]?.lot?.nomenclature || clientDetails.contracts?.[0]?.lot?.nomenclatura || '-'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Payment Method Selector (Only for Logged-in Admins) */}
+                {['superadmin', 'tenant_admin', 'company_admin'].includes(admin?.role || '') && (
+                  <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border space-y-3 animate-fade-in-up">
+                    <label className="block text-sm font-semibold text-text-primary flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-accent-blue" />
+                      Forma de Pago
+                    </label>
+                    <select
+                      value={manualPaymentMethod}
+                      onChange={(e) => {
+                        setManualPaymentMethod(e.target.value)
+                        if (e.target.value === 'Efectivo') {
+                          setManualBank('')
+                        }
+                      }}
+                      className="glass-input w-full px-4 py-3 text-base"
+                    >
+                      <option value="Transferencia bancaria">Transferencia bancaria</option>
+                      <option value="Efectivo">Efectivo</option>
+                      <option value="Consignación en corresponsal">Consignación en corresponsal</option>
+                      <option value="Consignación en banco">Consignación en banco</option>
+                      <option value="Transferencia interbancaria">Transferencia interbancaria</option>
+                      {['superadmin', 'tenant_admin', 'company_admin'].includes(admin?.role || '') && (
+                        <option value="Cruce de cuentas">Cruce de cuentas</option>
+                      )}
+                    </select>
+                  </div>
+                )}
               </div>
-
-              {clientDetails.contracts?.length > 1 && (
-                <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
-                  <label className="block text-sm font-medium text-text-primary mb-3">CONTRATO / LOTE</label>
-                  <select
-                    value={selectedContractId}
-                    onChange={(e) => setSelectedContractId(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-lg"
-                  >
-                    {clientDetails.contracts.map((c: any) => (
-                      <option key={c._id} value={c._id}>
-                        {c.negotiation || 'Contrato'} - Mz {c.lot?.manzana || '-'} Lote {c.lot?.lotNumber || c.lot?.nomenclature || c.lot?.nomenclatura || '-'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Payment Method Selector (Only for Logged-in Admins) */}
-              {['superadmin', 'tenant_admin', 'company_admin'].includes(admin?.role || '') && (
-                <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border space-y-3 animate-fade-in-up">
-                  <label className="block text-sm font-semibold text-text-primary flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-accent-blue" />
-                    Forma de Pago
-                  </label>
-                  <select
-                    value={manualPaymentMethod}
-                    onChange={(e) => {
-                      setManualPaymentMethod(e.target.value)
-                      if (e.target.value === 'Efectivo') {
-                        setManualBank('')
-                      }
-                    }}
-                    className="glass-input w-full px-4 py-3 text-base"
-                  >
-                    <option value="Transferencia bancaria">Transferencia bancaria</option>
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Consignación en corresponsal">Consignación en corresponsal</option>
-                    <option value="Consignación en banco">Consignación en banco</option>
-                    <option value="Transferencia interbancaria">Transferencia interbancaria</option>
-                    {['superadmin', 'tenant_admin', 'company_admin'].includes(admin?.role || '') && (
-                      <option value="Cruce de cuentas">Cruce de cuentas</option>
-                    )}
-                  </select>
-                </div>
-              )}
 
               <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border space-y-4">
                 <label className="block text-sm font-semibold text-text-primary">
@@ -1042,11 +1058,12 @@ export default function PaymentsPage() {
                         setManualPaymentOption('minimo')
                         setManualAmount(minPaymentAmount.toString())
                       }}
-                      className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none active:scale-[0.99] ${
+                      className={`flex flex-col justify-between p-4 rounded-xl border-2 transition-all cursor-pointer select-none active:scale-[0.99] ${
                         manualPaymentOption === 'minimo'
-                          ? 'bg-accent-blue/15 border-accent-blue shadow-glow'
-                          : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                          ? 'shadow-glow'
+                          : 'hover:bg-glass-primary/20'
                       }`}
+                      style={manualPaymentOption === 'minimo' ? { backgroundColor: 'rgba(var(--accent-blue-rgb), 0.25)', borderColor: 'rgba(var(--accent-blue-rgb), 0.35)' } : { borderColor: 'rgba(255,255,255,0.08)' }}
                     >
                       <div>
                         <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
@@ -1068,11 +1085,12 @@ export default function PaymentsPage() {
                         setManualPaymentOption('total')
                         setManualAmount(totalPaymentAmount.toString())
                       }}
-                      className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none active:scale-[0.99] ${
+                      className={`flex flex-col justify-between p-4 rounded-xl border-2 transition-all cursor-pointer select-none active:scale-[0.99] ${
                         manualPaymentOption === 'total'
-                          ? 'bg-accent-green/15 border-accent-green shadow-glow'
-                          : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                          ? 'shadow-glow'
+                          : 'hover:bg-glass-primary/20'
                       }`}
+                      style={manualPaymentOption === 'total' ? { backgroundColor: 'rgba(var(--accent-blue-rgb), 0.25)', borderColor: 'rgba(var(--accent-blue-rgb), 0.35)' } : { borderColor: 'rgba(255,255,255,0.08)' }}
                     >
                       <div>
                         <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
@@ -1094,11 +1112,12 @@ export default function PaymentsPage() {
                         setManualPaymentOption('otro')
                         setManualAmount('')
                       }}
-                      className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none active:scale-[0.99] ${
+                      className={`flex flex-col justify-between p-4 rounded-xl border-2 transition-all cursor-pointer select-none active:scale-[0.99] ${
                         manualPaymentOption === 'otro'
-                          ? 'bg-accent-purple/15 border-accent-purple shadow-glow'
-                          : 'bg-glass-primary/10 border-glass-border hover:bg-glass-primary/20'
+                          ? 'shadow-glow'
+                          : 'hover:bg-glass-primary/20'
                       }`}
+                      style={manualPaymentOption === 'otro' ? { backgroundColor: 'rgba(var(--accent-blue-rgb), 0.25)', borderColor: 'rgba(var(--accent-blue-rgb), 0.35)' } : { borderColor: 'rgba(255,255,255,0.08)' }}
                     >
                       <div>
                         <p className="font-bold text-text-primary text-sm flex items-center gap-1.5">
@@ -1186,34 +1205,37 @@ export default function PaymentsPage() {
                 </div>
               </div>
 
-              <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
-                <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-                  <Upload className="w-4 h-4" /> Comprobante / Captura
-                </label>
-                <div className="relative group">
-                  <Input
-                    type="file"
-                    onChange={(e) => setManualCapture(e.target.files?.[0] || null)}
-                    className="glass-input h-14 pt-3 flex-1 file:hidden cursor-pointer"
-                    accept="image/*,.pdf"
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-text-muted italic">
-                    {manualCapture ? manualCapture.name : 'Subir archivo (opcional)'}
+              {/* Row 3: Comprobante/Captura & Fecha de Pago */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                  <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                    <Upload className="w-4 h-4" /> Comprobante / Captura
+                  </label>
+                  <div className="relative group">
+                    <Input
+                      type="file"
+                      onChange={(e) => setManualCapture(e.target.files?.[0] || null)}
+                      className="glass-input h-14 pt-3 flex-1 file:hidden cursor-pointer"
+                      accept="image/*,.pdf"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-text-muted italic">
+                      {manualCapture ? manualCapture.name : 'Subir archivo (opcional)'}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
-                <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-accent-blue" /> Fecha de Pago
-                </label>
-                <Input
-                  type="date"
-                  value={manualPaymentDate}
-                  onChange={(e) => setManualPaymentDate(e.target.value)}
-                  className="glass-input h-12 text-lg"
-                  required
-                />
+                <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
+                  <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-accent-blue" /> Fecha de Pago
+                  </label>
+                  <Input
+                    type="date"
+                    value={manualPaymentDate}
+                    onChange={(e) => setManualPaymentDate(e.target.value)}
+                    className="glass-input h-12 text-lg"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border">
@@ -1229,10 +1251,6 @@ export default function PaymentsPage() {
 
               {pendingQuotas.length > 0 && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 p-3 bg-accent-green/10 rounded-lg border border-accent-green/20">
-                    <CheckCircle className="w-5 h-5 text-accent-green" />
-                    <p className="text-sm font-medium text-accent-green">Paso 3: Confirme y registre el pago</p>
-                  </div>
                   
                   {/* Read-only pending quotas list for reference */}
                   <div className="space-y-2">

@@ -116,6 +116,13 @@ export default function LotsPage() {
   const [companyLogo, setCompanyLogo] = useState<string>('')
   const [projectLogo, setProjectLogo] = useState<string>('')
   const [appliesBonus, setAppliesBonus] = useState(false)
+  const [activeBonuses, setActiveBonuses] = useState<any[]>([])
+  const [selectedBonusId, setSelectedBonusId] = useState<string>('')
+
+  // Round money to thousands helper (192,900 => 193,000)
+  const roundMoney = (val: number) => {
+    return Math.round(val / 1000) * 1000
+  }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'company' | 'project') => {
     const file = e.target.files?.[0]
@@ -479,10 +486,19 @@ export default function LotsPage() {
       initialQuotaDueDate: dayjs().add(15, 'day').format('YYYY-MM-DD'),
       paymentDay: '5'
     })
+    setSelectedBonusId('')
     setAppliesBonus(false)
     setIsSellModalOpen(true)
     fetchClientsIfNeeded()
     fetchSellers()
+    
+    // Fetch active company bonuses
+    adminApi.getBonuses().then((res: any) => {
+      if (res.data.success) {
+        const bonusesList = res.data.data.bonuses || res.data.data || []
+        setActiveBonuses(bonusesList.filter((b: any) => b.isActive))
+      }
+    }).catch(console.error)
   }
 
   const fetchSellers = async () => {
@@ -520,8 +536,7 @@ export default function LotsPage() {
         contractDate: sellFormData.contractDate,
         negotiation: sellFormData.negotiation,
         sellerId: sellFormData.sellerId || undefined,
-        bonus: appliesBonus ? sellFormData.bonus : '',
-        bonusValue: appliesBonus ? (parseFloat(sellFormData.bonusValue) || 0) : 0,
+        bonusId: appliesBonus ? (selectedBonusId || undefined) : undefined,
         separationAmount: parseFloat(sellFormData.separationAmount) || 0,
         initialQuotaDueDate: sellFormData.initialQuotaDueDate,
         paymentDay: parseInt(sellFormData.paymentDay) || 5
@@ -835,7 +850,11 @@ export default function LotsPage() {
     }).format(num)
   }
 
-  const activeBonusValue = appliesBonus ? (Number(sellFormData.bonusValue) || 0) : 0
+  const activeBonusValue = (() => {
+    if (!appliesBonus || !selectedBonusId) return 0
+    const matched = activeBonuses.find((b: any) => b._id === selectedBonusId)
+    return matched ? matched.value : 0
+  })()
 
   return (
     <div className="flex flex-col min-h-full space-y-4 md:space-y-6 px-1 py-2 md:p-6">
@@ -1605,110 +1624,137 @@ export default function LotsPage() {
       <Modal
         isOpen={isSellModalOpen}
         onClose={() => setIsSellModalOpen(false)}
-        title={`Vender Lote: E: ${selectedLot?.stage || '-'} - M: ${selectedLot?.manzana || '-'} - L: ${selectedLot?.lotNumber || '-'}${selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}`}
-        size="lg"
+        title={`Vender Lote: ${selectedLot?.nomenclature || `Etapa: ${selectedLot?.stage || '-'} - Manzana: ${selectedLot?.manzana || '-'} - Lote: ${selectedLot?.lotNumber || '-'}`}`}
+        size="xl"
       >
         <form onSubmit={handleSellLot} className="space-y-6 pt-2">
-          {/* Client Selection */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-text-primary flex items-center">
-                <Users className="w-4 h-4 mr-2 text-accent-blue" />
-                Información del Cliente
-              </label>
-              <Button
-                type="button"
-                variant="glass"
-                size="sm"
-                onClick={() => setIsCreatingNewClient(!isCreatingNewClient)}
-                className="text-xs h-8"
-              >
-                {isCreatingNewClient ? 'Seleccionar existente' : 'Nuevo cliente'}
-                {isCreatingNewClient ? <Users className="w-3 h-3 ml-2" /> : <UserPlus className="w-3 h-3 ml-2" />}
-              </Button>
+          {/* Client & Seller Selection Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-text-primary flex items-center">
+                  <Users className="w-4 h-4 mr-2 text-accent-blue" />
+                  Información del Cliente
+                </label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreatingNewClient(!isCreatingNewClient)}
+                  className="glass-button text-accent-blue text-xs h-8 flex items-center justify-center"
+                >
+                  {isCreatingNewClient ? 'Seleccionar existente' : 'Nuevo cliente'}
+                  {isCreatingNewClient ? <Users className="w-3 h-3 ml-2" /> : <UserPlus className="w-3 h-3 ml-2" />}
+                </Button>
+              </div>
+
+              {!isCreatingNewClient && (
+                <div className="space-y-2">
+                  <Combobox
+                    options={clients.map(c => ({ value: c._id, label: `${c.name} - ${c.idNumber}` }))}
+                    value={sellFormData.clientId}
+                    onChange={(val) => setSellFormData(prev => ({ ...prev, clientId: val }))}
+                    placeholder="Seleccione un cliente..."
+                    searchPlaceholder="Buscar por nombre o cédula..."
+                  />
+                  {clientsLoading && <p className="text-xs text-text-muted animate-pulse">Cargando clientes...</p>}
+                </div>
+              )}
             </div>
 
-            {isCreatingNewClient ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border animate-fade-in">
-                <div className="space-y-1">
-                  <label className="text-xs text-text-secondary">Nombre Completo</label>
-                  <Input
-                    name="clientName"
-                    value={sellFormData.clientName}
-                    onChange={handleSellInputChange}
-                    placeholder="Nombre del cliente"
-                    required
-                    className="glass-input h-9"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-text-secondary">Cédula</label>
-                  <Input
-                    name="clientIdNumber"
-                    value={sellFormData.clientIdNumber}
-                    onChange={handleSellInputChange}
-                    placeholder="Documento"
-                    required
-                    className="glass-input h-9"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-text-secondary">Teléfono</label>
-                  <Input
-                    name="clientPhone"
-                    value={sellFormData.clientPhone}
-                    onChange={handleSellInputChange}
-                    placeholder="Contacto"
-                    required
-                    className="glass-input h-9"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-text-secondary">Correo Electrónico</label>
-                  <Input
-                    name="clientEmail"
-                    value={sellFormData.clientEmail}
-                    onChange={handleSellInputChange}
-                    placeholder="email@ejemplo.com"
-                    type="email"
-                    className="glass-input h-9"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Combobox
-                  options={clients.map(c => ({ value: c._id, label: `${c.name} - ${c.idNumber}` }))}
-                  value={sellFormData.clientId}
-                  onChange={(val) => setSellFormData(prev => ({ ...prev, clientId: val }))}
-                  placeholder="Seleccione un cliente..."
-                  searchPlaceholder="Buscar por nombre o cédula..."
-                />
-                {clientsLoading && <p className="text-xs text-text-muted animate-pulse">Cargando clientes...</p>}
+            {admin?.role !== 'vendedor' && !isCreatingNewClient && (
+              <div className="space-y-4">
+                <label className="text-sm font-semibold text-text-primary flex items-center h-8">
+                  <Users className="w-4 h-4 mr-2 text-accent-purple" />
+                  Asignar Ejecutivo Comercial (Opcional)
+                </label>
+                <select
+                  name="sellerId"
+                  value={sellFormData.sellerId}
+                  onChange={handleSellInputChange}
+                  className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none glass-input"
+                >
+                  <option value="">Sin ejecutivo comercial asignado</option>
+                  {sellers.map((s: any) => (
+                    <option key={s.id} value={s.id}>
+                      {s.fullName}
+                    </option>
+                  ))}
+                </select>
+                {loadingSellers && <p className="text-xs text-text-muted animate-pulse">Cargando vendedores...</p>}
               </div>
             )}
           </div>
 
-          {admin?.role !== 'vendedor' && (
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-text-primary flex items-center">
-                <Users className="w-4 h-4 mr-2 text-accent-purple" />
-                Asignar Ejecutivo Comercial (Opcional)
-              </label>
-              <select
-                name="sellerId"
-                value={sellFormData.sellerId}
-                onChange={handleSellInputChange}
-                className="w-full h-11 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none"
-              >
-                <option value="">Sin ejecutivo comercial asignado</option>
-                {sellers.map((s: any) => (
-                  <option key={s.id} value={s.id}>
-                    {s.fullName}
-                  </option>
-                ))}
-              </select>
-              {loadingSellers && <p className="text-xs text-text-muted animate-pulse">Cargando vendedores...</p>}
+          {isCreatingNewClient && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border animate-fade-in">
+              <div className="md:col-span-3 space-y-1">
+                <label className="text-xs text-text-secondary">Nombre Completo</label>
+                <Input
+                  name="clientName"
+                  value={sellFormData.clientName}
+                  onChange={handleSellInputChange}
+                  placeholder="Nombre del cliente"
+                  required
+                  className="glass-input h-10"
+                />
+              </div>
+              <div className="md:col-span-3 space-y-1">
+                <label className="text-xs text-text-secondary">Cédula</label>
+                <Input
+                  name="clientIdNumber"
+                  value={sellFormData.clientIdNumber}
+                  onChange={handleSellInputChange}
+                  placeholder="Documento"
+                  required
+                  className="glass-input h-10"
+                />
+              </div>
+              <div className="md:col-span-3 space-y-1">
+                <label className="text-xs text-text-secondary">Teléfono</label>
+                <Input
+                  name="clientPhone"
+                  value={sellFormData.clientPhone}
+                  onChange={handleSellInputChange}
+                  placeholder="Contacto"
+                  required
+                  className="glass-input h-10"
+                />
+              </div>
+              <div className="md:col-span-3 space-y-1">
+                <label className="text-xs text-text-secondary">Correo Electrónico</label>
+                <Input
+                  name="clientEmail"
+                  value={sellFormData.clientEmail}
+                  onChange={handleSellInputChange}
+                  placeholder="email@ejemplo.com"
+                  type="email"
+                  className="glass-input h-10"
+                />
+              </div>
+
+              {admin?.role !== 'vendedor' && (
+                <div className="md:col-span-12 space-y-2 mt-2 pt-2 border-t border-glass-border/30">
+                  <label className="text-xs font-semibold text-text-primary flex items-center">
+                    <Users className="w-3.5 h-3.5 mr-2 text-accent-purple" />
+                    Asignar Ejecutivo Comercial (Opcional)
+                  </label>
+                  <select
+                    name="sellerId"
+                    value={sellFormData.sellerId}
+                    onChange={handleSellInputChange}
+                    className="w-full h-10 px-4 rounded-xl border border-glass-border bg-glass-primary/50 backdrop-blur-md text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all appearance-none glass-input"
+                  >
+                    <option value="">Sin ejecutivo comercial asignado</option>
+                    {sellers.map((s: any) => (
+                      <option key={s.id} value={s.id}>
+                        {s.fullName}
+                      </option>
+                    ))}
+                  </select>
+                  {loadingSellers && <p className="text-xs text-text-muted animate-pulse">Cargando vendedores...</p>}
+                </div>
+              )}
             </div>
           )}
 
@@ -1751,31 +1797,20 @@ export default function LotsPage() {
               </div>
 
               {appliesBonus && (
-                <div className="grid grid-cols-2 gap-4 animate-fade-in">
-                  <div className="space-y-2">
-                    <label className="text-xs text-text-secondary">Bono de Descuento (Valor)</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-purple/50" />
-                      <Input
-                        name="bonusValue"
-                        type="number"
-                        value={sellFormData.bonusValue}
-                        onChange={handleSellInputChange}
-                        className="glass-input pl-10 border-accent-purple/30 focus:border-accent-purple"
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-text-secondary">Descripción del Bono</label>
-                    <Input
-                      name="bonus"
-                      value={sellFormData.bonus}
-                      onChange={handleSellInputChange}
-                      className="glass-input border-accent-purple/30 focus:border-accent-purple"
-                      placeholder="Ej: Promo Mayo"
-                    />
-                  </div>
+                <div className="space-y-2 animate-fade-in">
+                  <label className="text-xs text-text-secondary">Bono de Descuento</label>
+                  <select
+                    value={selectedBonusId}
+                    onChange={(e) => setSelectedBonusId(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl border border-glass-border bg-glass-primary/50 text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all glass-input"
+                  >
+                    <option value="" className="bg-glass-primary text-text-primary">Selecciona un bono...</option>
+                    {activeBonuses.map((b: any) => (
+                      <option key={b._id} value={b._id} className="bg-glass-primary text-text-primary">
+                        {b.name} (- {formatCurrency(b.value)})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
@@ -1905,7 +1940,7 @@ export default function LotsPage() {
             <div className="flex justify-between items-center text-xs">
               <span className="text-text-secondary">Total Inicial Pactado ({sellFormData.initialQuotaPercentage}%):</span>
               <span className="font-semibold text-text-primary">
-                {formatCurrency((Number(sellFormData.totalValue || 0) - activeBonusValue) * (Number(sellFormData.initialQuotaPercentage || 0) / 100))}
+                {formatCurrency(roundMoney((Number(sellFormData.totalValue || 0) - activeBonusValue) * (Number(sellFormData.initialQuotaPercentage || 0) / 100)))}
               </span>
             </div>
             {Number(sellFormData.separationAmount || 0) > 0 && (
@@ -1917,19 +1952,19 @@ export default function LotsPage() {
             <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
               <span className="text-text-secondary font-semibold">Cuota inicial ({sellFormData.initialQuotasCount} cuotas):</span>
               <span className="font-bold text-accent-blue">
-                {formatCurrency(Math.max(0, (Number(sellFormData.totalValue || 0) - activeBonusValue) * (Number(sellFormData.initialQuotaPercentage || 0) / 100) - Number(sellFormData.separationAmount || 0)))}
+                {formatCurrency(Math.max(0, roundMoney((Number(sellFormData.totalValue || 0) - activeBonusValue) * (Number(sellFormData.initialQuotaPercentage || 0) / 100)) - Number(sellFormData.separationAmount || 0)))}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm border-t border-glass-border/30 pt-2">
               <span className="text-text-secondary font-semibold">Valor financiado ({sellFormData.installmentsCount} cuotas):</span>
               <span className="font-bold text-accent-purple">
-                {formatCurrency((Number(sellFormData.totalValue || 0) - activeBonusValue) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100))}
+                {formatCurrency(roundMoney((Number(sellFormData.totalValue || 0) - activeBonusValue) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100)))}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs mt-1 text-text-muted italic">
               <span>Cuota mensual ordinaria est.:</span>
               <span>
-                {formatCurrency(((Number(sellFormData.totalValue || 0) - activeBonusValue) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100)) / (parseInt(sellFormData.installmentsCount) || 1))}
+                {formatCurrency(roundMoney(((Number(sellFormData.totalValue || 0) - activeBonusValue) * (1 - Number(sellFormData.initialQuotaPercentage || 0) / 100)) / (parseInt(sellFormData.installmentsCount) || 1)))}
               </span>
             </div>
           </div>
@@ -1978,7 +2013,7 @@ export default function LotsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
               <div>
                 <p className="text-xs text-text-muted uppercase font-bold mb-1">Información del Lote</p>
-                <h4 className="text-xl font-bold text-text-primary">E: {selectedLot?.stage || '-'} - M: {selectedLot?.manzana || '-'} - L: {selectedLot?.lotNumber || '-'}{selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}</h4>
+                <h4 className="text-xl font-bold text-text-primary">{selectedLot?.nomenclature || `Etapa: ${selectedLot?.stage || '-'} - Manzana: ${selectedLot?.manzana || '-'} - Lote: ${selectedLot?.lotNumber || '-'}`}</h4>
                 <p className="text-sm text-text-secondary">Contrato Pro #{saleDetail.contract._id.slice(-6).toUpperCase()}</p>
               </div>
               <Button 

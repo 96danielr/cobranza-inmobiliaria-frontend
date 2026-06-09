@@ -4,13 +4,15 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon } from 'lucide-react'
+import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 import { adminNavItems, filterAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
 import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useClickAway } from '@/hooks/useClickAway'
+import toast from 'react-hot-toast'
+import { adminApi } from '@/lib/adminApi'
 
 const roleLabels: Record<AdminNavRole, string> = {
   superadmin: 'Super Admin',
@@ -27,7 +29,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, _hasHydrated, admin, logout, selectedCompanyId, selectedCompanyName } = useAdminAuthStore()
+  const { isAuthenticated, _hasHydrated, admin, logout, selectedCompanyId, selectedCompanyName, setSelectedCompany } = useAdminAuthStore()
   const router = useRouter()
   const pathname = usePathname()
   const { theme } = useThemeStore()
@@ -44,6 +46,41 @@ export default function AdminLayout({
   const profileRef = useRef<HTMLDivElement>(null)
 
   useClickAway(profileRef, () => setIsProfileOpen(false))
+
+  // Project Selector State
+  const [companies, setCompanies] = useState<any[]>([])
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false)
+  const selectorRef = useRef<HTMLDivElement>(null)
+
+  useClickAway(selectorRef, () => setIsSelectorOpen(false))
+
+  useEffect(() => {
+    if (isAuthenticated && admin?.role !== 'cliente') {
+      const loadCompanies = async () => {
+        try {
+          const response = admin?.role === 'superadmin'
+            ? await adminApi.getAllTenants()
+            : await adminApi.getCompanies()
+          if (response.data.success) {
+            const data = admin?.role === 'superadmin' 
+              ? response.data.data.tenants 
+               : response.data.data.companies
+             setCompanies(data.filter((c: any) => c.status === 'active'))
+           }
+         } catch (error) {
+           console.error('Error loading companies for selector:', error)
+         }
+       }
+       loadCompanies()
+     }
+   }, [isAuthenticated, admin?.role])
+
+   const handleSelectCompanyInHeader = (companyId: string, companyName: string) => {
+     setSelectedCompany(companyId, companyName)
+     setIsSelectorOpen(false)
+     toast.success(`Proyecto seleccionado: ${companyName}`)
+     window.location.href = '/admin/dashboard'
+   }
 
   useEffect(() => {
     if (!_hasHydrated) return
@@ -216,7 +253,7 @@ export default function AdminLayout({
         {/* Main Content Area */}
         <div className="flex-1 lg:ml-64 flex flex-col h-screen overflow-hidden">
           <header className="admin-header flex-shrink-0 hidden lg:block sticky top-0 z-50">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center justify-between px-6 py-4 relative">
               {/* Left Side: Breadcrumbs */}
               <nav className="overflow-hidden min-w-0">
                 <div className="flex items-center space-x-1 sm:space-x-2 text-sm">
@@ -241,13 +278,62 @@ export default function AdminLayout({
                 </div>
               </nav>
 
-              {/* Center: Company Name (Absolutely Centered) */}
+              {/* Center: Company Name Selector */}
               {selectedCompanyName && (
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center bg-accent-blue/10 px-6 py-2.5 rounded-2xl border border-accent-blue/20 shadow-lg shadow-accent-blue/5">
-                  <Building2 className="w-5 h-5 text-accent-blue mr-3" />
-                  <span className="text-sm font-black text-accent-blue/80 tracking-wide uppercase text-company-highlight">
-                    {selectedCompanyName.replace('Empresa Principal - ', '')}
-                  </span>
+                <div ref={selectorRef} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+                  <button
+                    onClick={() => {
+                      if (companies.length > 1) {
+                        setIsSelectorOpen(!isSelectorOpen)
+                      }
+                    }}
+                    title={companies.length > 1 ? "Cambiar de proyecto" : undefined}
+                    disabled={companies.length <= 1}
+                    className={cn(
+                      "flex items-center justify-center bg-accent-blue/5 px-4 py-2 rounded-2xl border border-glass-border shadow-md shadow-accent-blue/5 transition-all duration-300 group select-none",
+                      companies.length > 1 ? "hover:bg-accent-blue/15 hover:border-accent-blue/30 cursor-pointer" : "cursor-default"
+                    )}
+                  >
+                    <Building2 className="w-4 h-4 text-accent-blue/70 group-hover:text-accent-blue group-hover:scale-105 transition-all duration-300" />
+                    <span className="text-xs font-bold text-accent-blue/80 tracking-wider uppercase mx-2 text-company-highlight group-hover:text-accent-blue transition-colors">
+                      {selectedCompanyName.replace('Empresa Principal - ', '')}
+                    </span>
+                    {companies.length > 1 && (
+                      <ChevronsUpDown className="w-3.5 h-3.5 text-accent-blue/50 group-hover:text-accent-blue transition-colors duration-300" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {isSelectorOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, x: "-50%", scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
+                        exit={{ opacity: 0, y: 10, x: "-50%", scale: 0.95 }}
+                        className="absolute left-1/2 mt-2 w-64 glass-card p-2 z-[60] shadow-glow max-h-60 overflow-y-auto"
+                      >
+                        <div className="px-3 py-1.5 border-b border-glass-border mb-1">
+                          <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Mis Proyectos</p>
+                        </div>
+                        {companies.map((company) => (
+                          <button
+                            key={company._id}
+                            onClick={() => handleSelectCompanyInHeader(company._id, company.name)}
+                            className={cn(
+                              "w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-semibold transition-all duration-200 border border-transparent",
+                              selectedCompanyId === company._id
+                                ? "bg-gradient-primary text-white border-accent-blue/20"
+                                : "text-text-primary hover:bg-accent-blue/10 hover:text-accent-blue hover:border-accent-blue/30"
+                            )}
+                          >
+                            <span className="truncate">{company.name}</span>
+                            {selectedCompanyId === company._id && (
+                              <Check className="w-3.5 h-3.5 text-white flex-shrink-0" />
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
                 

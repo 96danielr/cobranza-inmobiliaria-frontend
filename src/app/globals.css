@@ -256,6 +256,62 @@
     background-color: var(--nav-bg);
   }
 
+  /* Colored Glass Buttons (Dark Mode) - Enhance contrast and interaction */
+  .glass-button.text-accent-blue {
+    background-color: rgba(var(--accent-blue-rgb), 0.15) !important;
+    border-color: rgba(var(--accent-blue-rgb), 0.35) !important;
+    color: var(--accent-blue) !important;
+  }
+  .glass-button.text-accent-blue:hover {
+    background-color: rgba(var(--accent-blue-rgb), 0.25) !important;
+    border-color: rgba(var(--accent-blue-rgb), 0.55) !important;
+    box-shadow: 0 0 15px rgba(var(--accent-blue-rgb), 0.2);
+  }
+
+  .glass-button.text-accent-green {
+    background-color: rgba(var(--accent-green-rgb), 0.15) !important;
+    border-color: rgba(var(--accent-green-rgb), 0.35) !important;
+    color: var(--accent-green) !important;
+  }
+  .glass-button.text-accent-green:hover {
+    background-color: rgba(var(--accent-green-rgb), 0.25) !important;
+    border-color: rgba(var(--accent-green-rgb), 0.55) !important;
+    box-shadow: 0 0 15px rgba(var(--accent-green-rgb), 0.2);
+  }
+
+  .glass-button.text-accent-red {
+    background-color: rgba(var(--accent-red-rgb), 0.15) !important;
+    border-color: rgba(var(--accent-red-rgb), 0.35) !important;
+    color: var(--accent-red) !important;
+  }
+  .glass-button.text-accent-red:hover {
+    background-color: rgba(var(--accent-red-rgb), 0.25) !important;
+    border-color: rgba(var(--accent-red-rgb), 0.55) !important;
+    box-shadow: 0 0 15px rgba(var(--accent-red-rgb), 0.2);
+  }
+
+  .glass-button.text-accent-purple {
+    background-color: rgba(var(--accent-purple-rgb), 0.15) !important;
+    border-color: rgba(var(--accent-purple-rgb), 0.35) !important;
+    color: var(--accent-purple) !important;
+  }
+  .glass-button.text-accent-purple:hover {
+    background-color: rgba(var(--accent-purple-rgb), 0.25) !important;
+    border-color: rgba(var(--accent-purple-rgb), 0.55) !important;
+    box-shadow: 0 0 15px rgba(var(--accent-purple-rgb), 0.2);
+  }
+
+  .glass-button.text-accent-yellow {
+    background-color: rgba(var(--accent-yellow-rgb), 0.15) !important;
+    border-color: rgba(var(--accent-yellow-rgb), 0.35) !important;
+    color: var(--accent-yellow) !important;
+  }
+  .glass-button.text-accent-yellow:hover {
+    background-color: rgba(var(--accent-yellow-rgb), 0.25) !important;
+    border-color: rgba(var(--accent-yellow-rgb), 0.55) !important;
+    box-shadow: 0 0 15px rgba(var(--accent-yellow-rgb), 0.2);
+  }
+
   /* Specific Action Buttons in Light Mode */
   .light .glass-button {
     border-color: rgba(0, 0, 0, 0.05);
@@ -405,3 +461,20 @@
 
 }
 .light .text-company-highlight { color: rgba(37, 99, 235, 0.8) !important; }
+
+/* Force white text on buttons and elements with gradient backgrounds to ensure high contrast and readability */
+[class*="bg-gradient-"],
+.glass-button[class*="bg-gradient-"],
+.glass-button[class*="bg-gradient-"].text-accent-blue,
+.glass-button[class*="bg-gradient-"].text-accent-green,
+.glass-button[class*="bg-gradient-"].text-accent-red,
+.glass-button[class*="bg-gradient-"].text-accent-purple,
+.glass-button[class*="bg-gradient-"].text-accent-yellow {
+  color: #ffffff !important;
+}
+
+[class*="bg-gradient-"] svg,
+[class*="bg-gradient-"] svg * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
