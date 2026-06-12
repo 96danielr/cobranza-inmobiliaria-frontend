@@ -232,6 +232,7 @@ export function WhatsAppChatModal({ isOpen, onClose, client }: WhatsAppChatModal
             type="submit" 
             disabled={!newMessage.trim() || sending}
             className="bg-accent-blue hover:bg-accent-blue/80 text-white min-h-[44px] min-w-[44px] p-0 flex items-center justify-center rounded-xl transition-all"
+            title="Enviar mensaje"
           >
             {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
           </Button>

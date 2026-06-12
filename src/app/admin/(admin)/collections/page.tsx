@@ -516,6 +516,7 @@ export default function CollectionsPage() {
                             size="sm"
                             onClick={() => handleViewActivity(activity)}
                             className="glass-button min-h-[44px] min-w-[44px]"
+                            title="Ver detalles de la gestión"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -524,6 +525,7 @@ export default function CollectionsPage() {
                               variant="glass"
                               size="sm"
                               className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
+                              title="Reintentar llamada AI"
                             >
                               <PlayCircle className="w-4 h-4" />
                             </Button>

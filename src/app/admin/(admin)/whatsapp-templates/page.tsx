@@ -239,6 +239,7 @@ export default function WhatsAppTemplatesPage() {
                   <button 
                     onClick={() => handleDelete(template.name)}
                     className="p-2 hover:bg-accent-red/20 text-text-muted hover:text-accent-red rounded-xl transition-all"
+                    title="Eliminar plantilla"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

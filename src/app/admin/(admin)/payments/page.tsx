@@ -639,7 +639,13 @@ export default function PaymentsPage() {
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-2">
-                      <Button variant="glass" size="sm" onClick={() => handleViewPayment(payment)} className="glass-button">
+                      <Button
+                        variant="glass"
+                        size="sm"
+                        onClick={() => handleViewPayment(payment)}
+                        className="glass-button"
+                        title="Ver Detalles"
+                      >
                         <Eye className="w-4 h-4" />
                       </Button>
                       {payment.receiptUrl && (
@@ -682,6 +688,7 @@ export default function PaymentsPage() {
                             className="glass-button text-accent-green hover:bg-accent-green/20"
                             onClick={() => handleApprovePayment(payment.id)}
                             disabled={isProcessing}
+                            title="Aprobar Pago"
                           >
                             <Check className="w-4 h-4" />
                           </Button>
@@ -690,6 +697,7 @@ export default function PaymentsPage() {
                             size="sm"
                             className="glass-button text-accent-red hover:bg-accent-red/20"
                             onClick={() => handleViewPayment(payment)}
+                            title="Rechazar Pago"
                           >
                             <X className="w-4 h-4" />
                           </Button>
