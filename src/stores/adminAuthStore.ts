@@ -45,7 +45,8 @@ interface AdminAuthState {
   companies: CompanyAccess[]
   // Actions
   setHasHydrated: (state: boolean) => void
-  login: (email: string, password: string) => Promise<{ success: boolean; message?: string; requiresTenantSelection?: boolean }>
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string; requiresTenantSelection?: boolean; requiresOtp?: boolean; otpData?: any }>
+  verifyOtp: (otpData: any, otpCode: string) => Promise<{ success: boolean; message?: string }>
   selectTenant: (accountId: string, tenantId: string) => Promise<{ success: boolean; message?: string }>
   setSelectedCompany: (companyId: string, companyName: string) => void
   logout: () => void
@@ -86,6 +87,11 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           if (response.data.success) {
             const { data } = response.data
 
+            if (data.requiresOtp) {
+              set({ isLoading: false })
+              return { success: true, requiresOtp: true, otpData: data }
+            }
+
             if (data.requiresTenantSelection) {
               // Multiple tenants — need selection
               set({
@@ -100,7 +106,6 @@ export const useAdminAuthStore = create<AdminAuthState>()(
             // Single tenant — direct login
             const { accessToken: token, user } = data
 
-            // Get companies from JWT (decoded client-side is unnecessary; use /auth/me)
             set({
               token,
               admin: user,
@@ -126,6 +131,46 @@ export const useAdminAuthStore = create<AdminAuthState>()(
             error.response?.data?.error || 
             'Error de conexión. Intente nuevamente.'
           
+          return { success: false, message: errorMessage }
+        }
+      },
+
+      verifyOtp: async (otpData: any, otpCode: string) => {
+        set({ isLoading: true })
+
+        try {
+          const { apiAdmin } = await import('@/lib/api')
+
+          const response = await apiAdmin.post('/auth/verify-client-otp', {
+            accountId: otpData.accountId,
+            userId: otpData.userId,
+            tenantId: otpData.tenantId,
+            clientId: otpData.clientId,
+            otpToken: otpData.otpToken,
+            otpCode,
+          })
+
+          if (response.data.success) {
+            const { accessToken: token, user } = response.data.data
+
+            set({
+              token,
+              admin: user,
+              isAuthenticated: true,
+              isLoading: false,
+            })
+
+            return { success: true }
+          } else {
+            set({ isLoading: false })
+            return {
+              success: false,
+              message: response.data.message || 'Código OTP incorrecto',
+            }
+          }
+        } catch (error: any) {
+          set({ isLoading: false })
+          const errorMessage = error.response?.data?.message || 'Error al verificar OTP'
           return { success: false, message: errorMessage }
         }
       },

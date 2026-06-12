@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
-import { LogOut, User, Building2, ChevronRight } from 'lucide-react'
+import { LogOut, User, Building2, ChevronRight, ChevronLeft } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 import { portalNavItems } from '@/lib/portalNavItems'
@@ -20,6 +20,7 @@ export default function PortalLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
   useClickAway(profileRef, () => setIsProfileOpen(false))
@@ -63,20 +64,29 @@ export default function PortalLayout({
 
       <div className="flex">
         {/* SIDEBAR - USING EXACT SAME CLASSES AS ADMIN */}
-        <div className="sidebar-admin">
+        <div className={cn("sidebar-admin transition-all duration-300", isCollapsed ? "lg:w-20" : "lg:w-64")}>
           <div className="flex flex-col h-full">
             {/* Sidebar Header */}
-            <div className="flex items-center px-6 py-4 border-b border-glass-border min-h-[73px]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-glass-border min-h-[73px]">
               <div className="flex items-center overflow-hidden">
                 <div className="p-2 bg-gradient-primary rounded-lg shadow-glow flex-shrink-0">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
-                <div className="ml-3 min-w-0">
-                  <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter">
-                    Portal Cliente
-                  </h2>
-                </div>
+                {!isCollapsed && (
+                  <div className="ml-3 min-w-0 animate-fade-in">
+                    <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter">
+                      Portal Cliente
+                    </h2>
+                  </div>
+                )}
               </div>
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-all"
+                title={isCollapsed ? "Expandir" : "Colapsar"}
+              >
+                <ChevronLeft className={cn("w-4 h-4 transition-transform duration-300", isCollapsed && "rotate-180")} />
+              </button>
             </div>
 
             <nav className="flex-1 px-4 py-6 overflow-y-auto">
@@ -92,24 +102,28 @@ export default function PortalLayout({
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 min-h-[48px] relative group',
+                        'flex items-center rounded-xl text-sm font-medium transition-all duration-300 min-h-[48px] relative group',
                         'hover:scale-[1.02] active:scale-[0.98]',
                         isActive 
                           ? 'bg-gradient-primary text-white shadow-glow' 
-                          : 'glass-button hover:shadow-glow hover:text-accent-blue hover:bg-accent-blue/10'
+                          : 'glass-button hover:shadow-glow hover:text-accent-blue hover:bg-accent-blue/10',
+                        isCollapsed ? 'lg:justify-center lg:px-0' : 'px-4 py-3'
                       )}
+                      title={isCollapsed ? item.label : undefined}
                     >
-                      {isActive && (
+                      {isActive && !isCollapsed && (
                         <div className="hidden lg:block absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
                       )}
                       
                       <Icon className={cn(
-                        'w-5 h-5 mr-3 transition-colors flex-shrink-0',
-                        isActive ? 'text-white' : 'text-text-secondary group-hover:text-accent-blue'
+                        'w-5 h-5 transition-colors flex-shrink-0',
+                        isActive ? 'text-white' : 'text-text-secondary group-hover:text-accent-blue',
+                        isCollapsed ? 'lg:mr-0' : 'mr-3'
                       )} />
                       <span className={cn(
-                        'truncate',
-                        isActive ? 'text-white' : 'text-text-primary'
+                        'truncate transition-all duration-300',
+                        isActive ? 'text-white' : 'text-text-primary',
+                        isCollapsed ? 'lg:hidden' : 'block'
                       )}>
                         {item.label}
                       </span>
@@ -122,18 +136,22 @@ export default function PortalLayout({
             {/* Bottom Section like Admin */}
             <div className="p-5 border-t border-glass-border">
               <div className="flex flex-col space-y-3">
-                <div className="flex items-center">
+                <div className={cn("flex items-center", isCollapsed && "lg:justify-center")}>
                   <div className="w-1.5 h-1.5 rounded-full bg-accent-blue mr-2 shadow-glow" />
-                  <span className="text-[10px] text-text-primary font-bold uppercase tracking-widest">
+                  <span className={cn("text-[10px] text-text-primary font-bold uppercase tracking-widest", isCollapsed && "lg:hidden")}>
                     Cliente
                   </span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center px-4 py-3 rounded-xl text-sm font-medium text-accent-red hover:bg-accent-red/10 transition-all duration-300 glass-button group border-transparent hover:border-accent-red/30"
+                  className={cn(
+                    "flex items-center rounded-xl text-sm font-medium text-accent-red hover:bg-accent-red/10 transition-all duration-300 glass-button group border-transparent hover:border-accent-red/30",
+                    isCollapsed ? "lg:justify-center lg:px-0" : "px-4 py-3"
+                  )}
+                  title={isCollapsed ? "Cerrar Sesión" : undefined}
                 >
-                  <LogOut className="w-5 h-5 mr-3 transition-transform group-hover:-translate-x-1" />
-                  Cerrar Sesión
+                  <LogOut className={cn("w-5 h-5 transition-transform group-hover:-translate-x-1", isCollapsed ? "lg:mr-0" : "mr-3")} />
+                  <span className={cn(isCollapsed && "lg:hidden")}>Cerrar Sesión</span>
                 </button>
               </div>
             </div>
@@ -141,7 +159,7 @@ export default function PortalLayout({
         </div>
 
         {/* Main Content Area - SAME STRUCTURE AS ADMIN */}
-        <div className="flex-1 lg:ml-64 flex flex-col h-screen overflow-hidden">
+        <div className={cn("flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300", isCollapsed ? "lg:ml-20" : "lg:ml-64")}>
           {/* Header Desktop - SAME AS ADMIN */}
           <header className="admin-header flex-shrink-0 hidden lg:block sticky top-0 z-50">
             <div className="flex items-center justify-between px-6 py-4">

@@ -52,7 +52,7 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div 
-        className="fixed inset-0 bg-dark-primary/80 backdrop-blur-glass transition-all duration-300"
+        className="fixed inset-0 w-screen h-screen h-[100dvh] w-screen bg-dark-primary/80 backdrop-blur-glass transition-all duration-300"
         onClick={onClose}
       />
       

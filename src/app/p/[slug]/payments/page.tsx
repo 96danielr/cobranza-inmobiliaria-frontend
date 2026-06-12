@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import {
   Search,
@@ -87,6 +87,8 @@ export default function PublicPaymentPage() {
   const [selectedChannel, setSelectedChannel] = useState<'email' | 'phone' | ''>('')
   const [otpToken, setOtpToken] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(''))
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const [selectedContract, setSelectedContract] = useState<any>(null)
   const [selectedQuota, setSelectedQuota] = useState<any>(null)
@@ -172,6 +174,8 @@ export default function PublicPaymentPage() {
       const response = await apiPublic.sendOTPCode(slug as string, idNumber, channel)
       if (response.data.success) {
         setOtpToken(response.data.data.token)
+        setOtpDigits(Array(6).fill(''))
+        setVerificationCode('')
         toast.success(response.data.message)
         setStep(1.7)
       }
@@ -181,6 +185,42 @@ export default function PublicPaymentPage() {
       setLoading(false)
     }
   }
+
+  // OTP digit box handlers
+  const handleOtpChange = useCallback((index: number, value: string) => {
+    const digit = value.replace(/\D/g, '')
+    if (!digit) return
+    const next = [...otpDigits]
+    next[index] = digit.slice(0, 1)
+    setOtpDigits(next)
+    setVerificationCode(next.join(''))
+    if (index < 5) otpRefs.current[index + 1]?.focus()
+  }, [otpDigits])
+
+  const handleOtpKeyDown = useCallback((index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace') {
+      if (otpDigits[index]) {
+        const next = [...otpDigits]
+        next[index] = ''
+        setOtpDigits(next)
+        setVerificationCode(next.join(''))
+      } else if (index > 0) {
+        otpRefs.current[index - 1]?.focus()
+      }
+    }
+  }, [otpDigits])
+
+  const handleOtpPaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (!pasted) return
+    const next = [...otpDigits]
+    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i]
+    setOtpDigits(next)
+    setVerificationCode(next.join(''))
+    const nextIdx = next.findIndex(d => !d)
+    otpRefs.current[nextIdx === -1 ? 5 : nextIdx]?.focus()
+  }, [otpDigits])
 
   // Step 1.7: Verify OTP Code
   const handleVerifyOTP = async (e?: React.FormEvent) => {
@@ -409,14 +449,23 @@ export default function PublicPaymentPage() {
             </CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleVerifyOTP} className="space-y-4">
-                <Input
-                  placeholder="Código de 6 dígitos"
-                  maxLength={6}
-                  className="glass-input h-12 text-center text-2xl tracking-[10px] font-bold"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                  required
-                />
+                <div className="flex gap-2 justify-center">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <input
+                      key={i}
+                      ref={el => { otpRefs.current[i] = el }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={otpDigits[i]}
+                      onChange={e => handleOtpChange(i, e.target.value)}
+                      onKeyDown={e => handleOtpKeyDown(i, e)}
+                      onPaste={i === 0 ? handleOtpPaste : undefined}
+                      className="w-11 h-14 text-center text-2xl font-bold rounded-xl border-2 border-glass-border bg-white/5 focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/30 outline-none transition-all"
+                      autoFocus={i === 0}
+                    />
+                  ))}
+                </div>
                 <Button
                   type="submit"
                   className="w-full h-12 text-lg glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30"

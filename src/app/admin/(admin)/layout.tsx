@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check } from 'lucide-react'
+import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check, ChevronLeft } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 import { adminNavItems, filterAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
@@ -34,6 +34,7 @@ export default function AdminLayout({
   const pathname = usePathname()
   const { theme } = useThemeStore()
   const [mounted, setMounted] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -164,22 +165,40 @@ export default function AdminLayout({
       
       {/* Mobile Breadcrumbs */}
       <MobileBreadcrumbs breadcrumbs={getBreadcrumbs()} />
-
+ 
       <div className="flex">
         {/* Enhanced Sidebar */}
-        <div className="sidebar-admin">
+        <div className={cn("sidebar-admin transition-all duration-300", isCollapsed ? "lg:w-20" : "lg:w-64")}>
           <div className="flex flex-col h-full">
             {/* Sidebar Header - System Name */}
-            <div className="flex flex-col items-center justify-center border-b border-glass-border min-h-[70px]">
-              <div className="w-48 h-16 rounded-xl overflow-hidden p-1 flex items-center justify-center">
-                <img 
-                  src={logoSrc} 
-                  alt="Logo" 
-                  className="w-full h-full object-contain" 
-                />
-              </div>
+            <div className="flex items-center justify-between border-b border-glass-border min-h-[70px] px-6">
+              {!isCollapsed && (
+                <div className="w-36 h-12 rounded-xl overflow-hidden p-1 flex items-center justify-center animate-fade-in">
+                  <img 
+                    src={logoSrc} 
+                    alt="Logo" 
+                    className="w-full h-full object-contain" 
+                  />
+                </div>
+              )}
+              {isCollapsed && (
+                <div className="w-8 h-8 rounded-lg overflow-hidden border border-glass-border p-0.5 bg-white flex items-center justify-center mx-auto animate-fade-in">
+                  <img 
+                    src="/PERFIL FONDO BLANCO.jpeg" 
+                    alt="M" 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+              )}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-all"
+                title={isCollapsed ? "Expandir" : "Colapsar"}
+              >
+                <ChevronLeft className={cn("w-4 h-4 transition-transform duration-300", isCollapsed && "rotate-180")} />
+              </button>
             </div>
-
+ 
             <nav className="flex-1 px-4 py-6 overflow-y-auto">
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-0 lg:space-y-2">
                 {filteredNavItems
@@ -199,27 +218,31 @@ export default function AdminLayout({
                         }
                       }}
                       className={cn(
-                        'flex items-center px-3 sm:px-4 py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 min-h-[48px] relative',
+                        'flex items-center rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 min-h-[48px] relative',
                         'hover:scale-[1.02] active:scale-[0.98]',
                         isActive 
                           ? 'bg-gradient-primary text-white shadow-glow' 
                           : 'glass-button hover:shadow-glow hover:text-accent-blue hover:bg-accent-blue/10',
-                        item.href === 'logout' && 'hover:text-accent-red hover:bg-accent-red/10'
+                        item.href === 'logout' && 'hover:text-accent-red hover:bg-accent-red/10',
+                        isCollapsed ? 'lg:justify-center lg:px-0' : 'px-3 sm:px-4 py-3'
                       )}
+                      title={isCollapsed ? item.label : undefined}
                     >
                       {/* Active indicator (Desktop only) */}
-                      {isActive && (
+                      {isActive && !isCollapsed && (
                         <div className="hidden lg:block absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
                       )}
                       
                       <Icon className={cn(
-                        'w-6 h-6 lg:w-5 lg:h-5 mb-2 lg:mb-0 lg:mr-3 transition-colors flex-shrink-0',
+                        'w-6 h-6 lg:w-5 lg:h-5 mb-2 lg:mb-0 transition-colors flex-shrink-0',
                         isActive ? 'text-white' : 'text-text-secondary',
-                        item.href === 'logout' && 'group-hover:text-accent-red'
+                        item.href === 'logout' && 'group-hover:text-accent-red',
+                        isCollapsed ? 'lg:mr-0' : 'lg:mr-3'
                       )} />
                       <span className={cn(
-                        'truncate',
-                        isActive ? 'text-white' : 'text-text-primary'
+                        'truncate transition-all duration-300',
+                        isActive ? 'text-white' : 'text-text-primary',
+                        isCollapsed ? 'lg:hidden' : 'block'
                       )}>
                         {item.label}
                       </span>
@@ -228,19 +251,19 @@ export default function AdminLayout({
                 })}
               </div>
             </nav>
-
+ 
             {/* Technical Info (Important for reviews/audits) */}
             <div className="p-5 border-t border-glass-border">
               <div className="flex flex-col space-y-2 opacity-80">
-                <div className="flex flex-col">
+                <div className={cn("flex flex-col", isCollapsed && "lg:items-center")}>
                   <div className="flex items-center mt-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-accent-blue mr-2 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                    <span className="text-xs text-text-primary font-bold uppercase tracking-widest">
+                    <span className={cn("text-xs text-text-primary font-bold uppercase tracking-widest", isCollapsed && "lg:hidden")}>
                       {roleLabels[userRole]}
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-col">
+                <div className={cn("flex flex-col", isCollapsed && "lg:hidden")}>
                   <span className="text-[10px] text-text-secondary font-mono truncate bg-background/30 px-2 py-1.5 rounded border border-glass-border/30">
                     {admin?.id || 'N/A'}
                   </span>
@@ -249,9 +272,9 @@ export default function AdminLayout({
             </div>
           </div>
         </div>
-
+ 
         {/* Main Content Area */}
-        <div className="flex-1 lg:ml-64 flex flex-col h-screen overflow-hidden">
+        <div className={cn("flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300", isCollapsed ? "lg:ml-20" : "lg:ml-64")}>
           <header className="admin-header flex-shrink-0 hidden lg:block sticky top-0 z-50">
             <div className="flex items-center justify-between px-6 py-4 relative">
               {/* Left Side: Breadcrumbs */}

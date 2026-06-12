@@ -8,6 +8,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { FullPageLoading } from '@/components/ui/LoadingSpinner'
+import { cn } from '@/lib/utils'
 
 export default function PortalLayout({
   children,
@@ -16,6 +17,7 @@ export default function PortalLayout({
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const router = useRouter()
   const { isAuthenticated, client } = useAuthStore()
 
@@ -60,10 +62,15 @@ export default function PortalLayout({
       <Sidebar 
         isOpen={isMobileMenuOpen} 
         onClose={closeMobileMenu}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:ml-64">
+      <div className={cn(
+        "flex-1 flex flex-col transition-all duration-300",
+        isCollapsed ? "md:ml-20" : "md:ml-64"
+      )}>
         {/* Mobile Header with Menu Toggle */}
         <div className="md:hidden backdrop-blur-glass border-b border-glass-border p-4 flex items-center justify-between" style={{backgroundColor: 'rgba(255, 255, 255, 0.08)'}}>
           <button

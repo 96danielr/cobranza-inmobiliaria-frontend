@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { CreditCard, FileText, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -21,6 +22,7 @@ export default function PaymentsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<PaymentStatus>('ALL')
   const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     loadPayments()
@@ -93,7 +95,7 @@ export default function PaymentsPage() {
   }
 
   const handleReportPayment = () => {
-    window.location.href = '/report-payment'
+    router.push('/report-payment')
   }
 
   const getFilterCounts = () => {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Bell, Wallet, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -18,6 +19,7 @@ export default function HomePage() {
   const [homeData, setHomeData] = useState<PortalHomeData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { client } = useAuthStore()
+  const router = useRouter()
 
   useEffect(() => {
     loadHomeData()
@@ -136,21 +138,21 @@ export default function HomePage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <button
-                  onClick={() => window.location.href = '/payments'}
+                  onClick={() => router.push('/payments')}
                   className="glass-button p-4 text-center rounded-xl hover:shadow-glow transition-all duration-300 min-h-[44px] touch-target group"
                 >
                   <FileText className="w-8 h-8 text-accent-blue mx-auto mb-2 group-hover:scale-110 transition-transform" />
                   <p className="text-sm font-medium text-text-primary">Mis Pagos</p>
                 </button>
                 <button
-                  onClick={() => window.location.href = '/report-payment'}
+                  onClick={() => router.push('/report-payment')}
                   className="glass-button p-4 text-center rounded-xl hover:shadow-glow transition-all duration-300 min-h-[44px] touch-target group"
                 >
                   <Wallet className="w-8 h-8 text-accent-green mx-auto mb-2 group-hover:scale-110 transition-transform" />
                   <p className="text-sm font-medium text-text-primary">Reportar Pago</p>
                 </button>
                 <button
-                  onClick={() => window.location.href = '/profile'}
+                  onClick={() => router.push('/profile')}
                   className="glass-button p-4 text-center rounded-xl hover:shadow-glow transition-all duration-300 min-h-[44px] touch-target group"
                 >
                   <Bell className="w-8 h-8 text-accent-purple mx-auto mb-2 group-hover:scale-110 transition-transform" />

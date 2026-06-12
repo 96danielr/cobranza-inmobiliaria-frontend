@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { 
   Map, 
   MapPin, 
@@ -62,7 +63,7 @@ export default function MyLotsPage() {
       {/* Page Header matching Admin Style */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
-          <h1 className="text-responsive-2xl font-bold text-text-primary">Mis Propiedades</h1>
+          <h1 className="text-responsive-2xl font-bold text-text-primary">Mis Lotes</h1>
           <p className="text-text-secondary mt-2">
             Consulta el estado, área e imágenes de tus lotes adquiridos
           </p>
@@ -165,13 +166,28 @@ export default function MyLotsPage() {
                       </div>
                     </td>
                     <td className="py-5 px-8 text-right">
-                      <Button
-                        variant="glass"
-                        size="sm"
-                        className="h-10 w-10 rounded-xl border-accent-blue/20 text-accent-blue hover:bg-accent-blue/10"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      {lot.contractId ? (
+                        <Link href={`/contract/${lot.contractId}`}>
+                          <Button
+                            variant="glass"
+                            size="sm"
+                            title="Ver detalle del lote"
+                            className="h-10 w-10 rounded-xl border-accent-blue/20 text-accent-blue hover:bg-accent-blue/10 flex items-center justify-center"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button
+                          variant="glass"
+                          size="sm"
+                          disabled
+                          className="h-10 w-10 rounded-xl border-glass-border text-text-disabled opacity-40 flex items-center justify-center cursor-not-allowed"
+                          title="Sin contrato activo"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))

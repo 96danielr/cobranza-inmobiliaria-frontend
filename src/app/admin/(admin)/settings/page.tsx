@@ -885,12 +885,39 @@ export default function SettingsPage() {
                             placeholder="Nombre corporativo"
                           />
 
-                          <Input
-                            label="NIT Corporativo"
-                            value={tenantInfo.nit}
-                            onChange={(e) => setTenantInfo(prev => ({ ...prev, nit: e.target.value }))}
-                            placeholder="NIT principal"
-                          />
+                          <div>
+                            <label className="block text-sm font-medium text-text-primary mb-2">
+                              NIT Corporativo
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <Input
+                                  value={tenantInfo.nit.includes('-') ? tenantInfo.nit.substring(0, tenantInfo.nit.lastIndexOf('-')) : tenantInfo.nit}
+                                  onChange={(e) => {
+                                    const body = e.target.value
+                                    const parts = tenantInfo.nit.split('-')
+                                    const dv = parts.length > 1 ? parts[parts.length - 1] : ''
+                                    setTenantInfo(prev => ({ ...prev, nit: dv ? `${body}-${dv}` : body }))
+                                  }}
+                                  placeholder="Ej: 901.855.684"
+                                />
+                              </div>
+                              <span className="text-text-secondary font-bold">-</span>
+                              <div className="w-20">
+                                <Input
+                                  value={tenantInfo.nit.includes('-') ? tenantInfo.nit.split('-').pop() || '' : ''}
+                                  onChange={(e) => {
+                                    const parts = tenantInfo.nit.split('-')
+                                    const body = parts.length > 1 ? parts.slice(0, -1).join('-') : tenantInfo.nit
+                                    const dv = e.target.value.substring(0, 1)
+                                    setTenantInfo(prev => ({ ...prev, nit: `${body}-${dv}` }))
+                                  }}
+                                  placeholder="DV"
+                                  maxLength={1}
+                                />
+                              </div>
+                            </div>
+                          </div>
 
                           <div>
                             <label className="block text-sm font-medium text-text-primary mb-2">
@@ -944,52 +971,24 @@ export default function SettingsPage() {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <Input
-                        label="Nombre de la Empresa"
-                        value={tenantConfig.name}
-                        onChange={(e) => setTenantConfig(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Nombre de la empresa"
-                      />
+                  <div className="space-y-4 max-w-2xl">
+                    <Input
+                      label="Nombre"
+                      value={tenantConfig.name}
+                      onChange={(e) => setTenantConfig(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Nombre del proyecto"
+                    />
 
-                      <Input
-                        label="NIT"
-                        value={tenantConfig.nit}
-                        onChange={(e) => setTenantConfig(prev => ({ ...prev, nit: e.target.value }))}
-                        placeholder="123456789-0"
-                      />
-
-                      <div>
-                        <label className="block text-sm font-medium text-text-primary mb-2">
-                          Dirección
-                        </label>
-                        <textarea
-                          value={tenantConfig.address}
-                          onChange={(e) => setTenantConfig(prev => ({ ...prev, address: e.target.value }))}
-                          rows={3}
-                          className="glass-input w-full px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
-                          placeholder="Dirección completa de la empresa"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <Input
-                        label="Teléfono"
-                        value={tenantConfig.phone}
-                        onChange={(e) => setTenantConfig(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="+57 1 234 5678"
-                        icon={Phone}
-                      />
-
-                      <Input
-                        label="Email"
-                        type="email"
-                        value={tenantConfig.email}
-                        onChange={(e) => setTenantConfig(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="info@empresa.com"
-                        icon={Mail}
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Dirección
+                      </label>
+                      <textarea
+                        value={tenantConfig.address}
+                        onChange={(e) => setTenantConfig(prev => ({ ...prev, address: e.target.value }))}
+                        rows={3}
+                        className="glass-input w-full px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
+                        placeholder="Dirección del proyecto"
                       />
                     </div>
                   </div>

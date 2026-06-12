@@ -451,12 +451,39 @@ export default function SelectCompanyPage() {
               onChange={(e) => setForm({ ...form, tenantName: e.target.value })}
               required
             />
-            <Input
-              label="NIT de la Empresa (Opcional)"
-              placeholder="Ej: 900.123.456-1"
-              value={form.nit}
-              onChange={(e) => setForm({ ...form, nit: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                NIT de la Empresa (Opcional)
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    value={form.nit.includes('-') ? form.nit.substring(0, form.nit.lastIndexOf('-')) : form.nit}
+                    onChange={(e) => {
+                      const body = e.target.value
+                      const parts = form.nit.split('-')
+                      const dv = parts.length > 1 ? parts[parts.length - 1] : ''
+                      setForm({ ...form, nit: dv ? `${body}-${dv}` : body })
+                    }}
+                    placeholder="Ej: 901.855.684"
+                  />
+                </div>
+                <span className="text-text-secondary font-bold">-</span>
+                <div className="w-20">
+                  <Input
+                    value={form.nit.includes('-') ? form.nit.split('-').pop() || '' : ''}
+                    onChange={(e) => {
+                      const parts = form.nit.split('-')
+                      const body = parts.length > 1 ? parts.slice(0, -1).join('-') : form.nit
+                      const dv = e.target.value.substring(0, 1)
+                      setForm({ ...form, nit: `${body}-${dv}` })
+                    }}
+                    placeholder="DV"
+                    maxLength={1}
+                  />
+                </div>
+              </div>
+            </div>
             <Input
               label="Dirección Comercial (Opcional)"
               placeholder="Dirección fiscal/comercial"
@@ -538,12 +565,39 @@ export default function SelectCompanyPage() {
               onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
               required
             />
-            <Input
-              label="NIT del Proyecto (Opcional)"
-              placeholder="Ej: 900.123.456-1"
-              value={companyForm.nit}
-              onChange={(e) => setCompanyForm({ ...companyForm, nit: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                NIT del Proyecto (Opcional)
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    value={companyForm.nit.includes('-') ? companyForm.nit.substring(0, companyForm.nit.lastIndexOf('-')) : companyForm.nit}
+                    onChange={(e) => {
+                      const body = e.target.value
+                      const parts = companyForm.nit.split('-')
+                      const dv = parts.length > 1 ? parts[parts.length - 1] : ''
+                      setCompanyForm({ ...companyForm, nit: dv ? `${body}-${dv}` : body })
+                    }}
+                    placeholder="Ej: 901.855.684"
+                  />
+                </div>
+                <span className="text-text-secondary font-bold">-</span>
+                <div className="w-20">
+                  <Input
+                    value={companyForm.nit.includes('-') ? companyForm.nit.split('-').pop() || '' : ''}
+                    onChange={(e) => {
+                      const parts = companyForm.nit.split('-')
+                      const body = parts.length > 1 ? parts.slice(0, -1).join('-') : companyForm.nit
+                      const dv = e.target.value.substring(0, 1)
+                      setCompanyForm({ ...companyForm, nit: `${body}-${dv}` })
+                    }}
+                    placeholder="DV"
+                    maxLength={1}
+                  />
+                </div>
+              </div>
+            </div>
             <Input
               label="RFC / Identificador (Opcional)"
               placeholder="RFC del proyecto"
@@ -597,12 +651,39 @@ export default function SelectCompanyPage() {
               onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
               required
             />
-            <Input
-              label="NIT"
-              value={editForm.nit}
-              onChange={(e) => setEditForm({ ...editForm, nit: e.target.value })}
-              placeholder="NIT"
-            />
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                NIT
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    value={editForm.nit.includes('-') ? editForm.nit.substring(0, editForm.nit.lastIndexOf('-')) : editForm.nit}
+                    onChange={(e) => {
+                      const body = e.target.value
+                      const parts = editForm.nit.split('-')
+                      const dv = parts.length > 1 ? parts[parts.length - 1] : ''
+                      setEditForm({ ...editForm, nit: dv ? `${body}-${dv}` : body })
+                    }}
+                    placeholder="Ej: 901.855.684"
+                  />
+                </div>
+                <span className="text-text-secondary font-bold">-</span>
+                <div className="w-20">
+                  <Input
+                    value={editForm.nit.includes('-') ? editForm.nit.split('-').pop() || '' : ''}
+                    onChange={(e) => {
+                      const parts = editForm.nit.split('-')
+                      const body = parts.length > 1 ? parts.slice(0, -1).join('-') : editForm.nit
+                      const dv = e.target.value.substring(0, 1)
+                      setEditForm({ ...editForm, nit: `${body}-${dv}` })
+                    }}
+                    placeholder="DV"
+                    maxLength={1}
+                  />
+                </div>
+              </div>
+            </div>
             <Input
               label="Dirección"
               value={editForm.address}

@@ -649,6 +649,7 @@ export default function ClientsPage() {
                             size="sm"
                             onClick={() => handleViewClient(client)}
                             className="glass-button min-h-[44px] min-w-[44px]"
+                            title="Ver detalles del cliente"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -657,6 +658,7 @@ export default function ClientsPage() {
                             size="sm"
                             onClick={() => handleOpenEdit(client)}
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
+                            title="Editar información del cliente"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -665,6 +667,7 @@ export default function ClientsPage() {
                             size="sm"
                             onClick={() => handleOpenWhatsApp(client)}
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
+                            title="Enviar WhatsApp"
                           >
                             <MessageSquare className="w-4 h-4" />
                           </Button>
@@ -672,6 +675,7 @@ export default function ClientsPage() {
                             variant="outline"
                             size="sm"
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
+                            title="Llamar al cliente"
                           >
                             <Phone className="w-4 h-4" />
                           </Button>

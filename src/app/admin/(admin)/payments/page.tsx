@@ -209,7 +209,7 @@ export default function PaymentsPage() {
 
   const pagination = useServerPagination({
     fetchData: fetchPayments,
-    initialLimit: 20,
+    initialLimit: 12,
     dependencies: [statusFilter]
   })
 

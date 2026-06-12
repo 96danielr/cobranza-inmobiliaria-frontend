@@ -484,7 +484,7 @@ export default function PortfolioPage() {
       const dueStr = q.dueDate ? dayjs(q.dueDate).format('DD/MM/YYYY') : 'N/A';
       
       let payDateStr = '-';
-      if (q.status === 'pagado') {
+      if (q.status === 'pagado' || q.amountPaid > 0) {
         const pDate = q.paymentDate || q.updatedAt;
         payDateStr = pDate ? dayjs(pDate).format('DD/MM/YYYY') : 'N/A';
       }
@@ -495,6 +495,8 @@ export default function PortfolioPage() {
       let statusText = 'PENDIENTE';
       if (q.status === 'pagado') {
         statusText = 'PAGADA';
+      } else if (q.amountPaid && q.amountPaid > 0 && q.amountPaid < q.value) {
+        statusText = 'ABONADA';
       } else if (q.status === 'mora' || (q.status === 'pendiente' && q.dueDate && new Date(q.dueDate) < new Date())) {
         statusText = 'EN MORA';
       }

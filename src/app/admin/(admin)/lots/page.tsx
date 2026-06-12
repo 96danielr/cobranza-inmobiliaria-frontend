@@ -1161,6 +1161,7 @@ export default function LotsPage() {
                             <Button
                               variant="glass"
                               size="sm"
+                              title="Administrar Imágenes"
                               onClick={() => openImageModal(lot)}
                               className="p-1 min-h-[32px] min-w-[32px]"
                             >
@@ -1221,6 +1222,7 @@ export default function LotsPage() {
                                 size="sm"
                                 onClick={() => handleEdit(lot)}
                                 className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
+                                title="Editar Lote"
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -1229,6 +1231,7 @@ export default function LotsPage() {
                                 size="sm"
                                 onClick={() => handleDeleteLot(lot._id)}
                                 className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
+                                title="Eliminar Lote"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -1271,25 +1274,25 @@ export default function LotsPage() {
                         </Button>
                       ) : (
                         <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green">
+                          <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green" title="Vender Lote">
                             <ShoppingCart className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleReserveClick(lot)} className="glass-button text-accent-blue">
+                          <Button size="sm" variant="outline" onClick={() => handleReserveClick(lot)} className="glass-button text-accent-blue" title="Apartar/Separar Lote">
                             <Users className="w-4 h-4" />
                           </Button>
                         </div>
                       )}
                       {(lot.status === 'apartado' || lot.status === 'separado') && (
-                        <Button size="sm" variant="outline" onClick={() => handleViewReserveDetail(lot)} className="glass-button text-accent-blue">
+                        <Button size="sm" variant="outline" onClick={() => handleViewReserveDetail(lot)} className="glass-button text-accent-blue" title="Ver Detalles de Reserva">
                           <Info className="w-4 h-4" />
                         </Button>
                       )}
                       {admin?.role !== 'vendedor' && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button">
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button" title="Editar Lote">
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => openImageModal(lot)} className="glass-button text-accent-blue">
+                          <Button size="sm" variant="outline" onClick={() => openImageModal(lot)} className="glass-button text-accent-blue" title="Administrar Imágenes">
                             <ImagePlus className="w-4 h-4" />
                           </Button>
                         </>

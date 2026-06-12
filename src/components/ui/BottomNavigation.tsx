@@ -285,12 +285,23 @@ export function QuickActionFAB() {
   const pathname = usePathname()
   const isPortal = pathname.startsWith('/portal')
 
+  const handleReportPaymentAction = () => {
+    if (typeof window !== 'undefined') {
+      const cachedSlug = localStorage.getItem('portal-company-slug')
+      if (cachedSlug) {
+        window.open(`/p/${cachedSlug}/payments`, '_blank')
+      } else {
+        window.open('/login', '_blank')
+      }
+    }
+  }
+
   const getQuickAction = () => {
     if (pathname.startsWith('/portal/payments')) {
       return {
         icon: Upload,
         label: 'Reportar Pago',
-        action: () => window.open('https://tu-link-de-pago.com', '_blank'),
+        action: handleReportPaymentAction,
         color: 'bg-accent-green hover:bg-accent-green/80',
       }
     }
@@ -321,7 +332,7 @@ export function QuickActionFAB() {
     return {
       icon: isPortal ? Upload : Settings,
       label: isPortal ? 'Reportar Pago' : 'Configuración',
-      action: () => isPortal ? window.open('https://tu-link-de-pago.com', '_blank') : {},
+      action: isPortal ? handleReportPaymentAction : () => {},
       color: isPortal ? 'bg-accent-blue shadow-glow' : 'bg-glass-primary hover:bg-glass-secondary',
     }
   }

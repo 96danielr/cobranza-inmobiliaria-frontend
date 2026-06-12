@@ -8,7 +8,8 @@ import {
   CreditCard, 
   Upload, 
   User, 
-  LogOut 
+  LogOut,
+  ChevronLeft
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
@@ -18,6 +19,8 @@ import { Button } from '@/components/ui/Button'
 interface SidebarProps {
   isOpen?: boolean
   onClose?: () => void
+  isCollapsed?: boolean
+  onToggleCollapse?: () => void
 }
 
 const navigation = [
@@ -53,7 +56,7 @@ const navigation = [
   }
 ]
 
-export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
+export function Sidebar({ isOpen = true, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { logout, client } = useAuthStore()
@@ -91,24 +94,43 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
       <div
         className={cn(
           'nav-desktop',
-          'md:flex',
-          isOpen ? 'flex' : 'hidden md:flex'
+          'md:flex transition-all duration-300',
+          isOpen ? 'flex' : 'hidden md:flex',
+          isCollapsed ? 'md:w-20' : 'md:w-64'
         )}
       >
-        <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-glass-border flex justify-center">
-            <div className="flex flex-col items-center">
-              <div className="w-48 h-16 rounded-xl overflow-hidden glass-card shadow-glow border border-glass-border p-1 flex items-center justify-center">
+        <div className="flex flex-col h-full w-full overflow-hidden">
+          <div className="p-4 border-b border-glass-border flex justify-between items-center min-h-[73px]">
+            {!isCollapsed && (
+              <div className="w-36 h-12 rounded-xl overflow-hidden glass-card shadow-glow border border-glass-border p-1 flex items-center justify-center animate-fade-in">
                 <img 
                   src={logoSrc} 
                   alt="Logo" 
                   className="w-full h-full object-contain" 
                 />
               </div>
-            </div>
+            )}
+            {isCollapsed && (
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-glass-border p-0.5 bg-white flex items-center justify-center mx-auto animate-fade-in">
+                <img 
+                  src="/PERFIL FONDO BLANCO.jpeg" 
+                  alt="M" 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+            )}
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="hidden md:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-colors ml-auto"
+                title={isCollapsed ? 'Expandir' : 'Colapsar'}
+              >
+                <ChevronLeft className={cn("w-4 h-4 transition-transform duration-300", isCollapsed && "rotate-180")} />
+              </button>
+            )}
           </div>
 
-          <div className="p-4 border-b border-glass-border md:hidden">
+          <div className={cn("p-4 border-b border-glass-border md:hidden", isCollapsed && "md:hidden")}>
             <div className="flex items-center">
               <div className="flex items-center justify-center w-12 h-12 bg-gradient-primary rounded-full mr-3 shadow-glow">
                 <span className="text-lg font-medium text-white">
@@ -126,7 +148,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             </div>
           </div>
 
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-4 overflow-y-auto">
             <nav className="space-y-2">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
@@ -143,31 +165,36 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                       }
                     }}
                     className={cn(
-                      'w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group min-h-[56px]',
+                      'w-full flex items-center rounded-xl transition-all duration-300 group min-h-[48px]',
                       isActive
                         ? 'bg-gradient-primary text-white shadow-glow'
                         : 'glass-button hover:shadow-glow',
-                      item.href === 'logout' && 'hover:text-accent-red hover:bg-accent-red/10'
+                      item.href === 'logout' && 'hover:text-accent-red hover:bg-accent-red/10',
+                      isCollapsed ? 'md:justify-center md:px-0' : 'px-4 py-3'
                     )}
+                    title={isCollapsed ? item.name : undefined}
                   >
                     <Icon 
                       className={cn(
-                        'w-5 h-5 mr-3 transition-colors',
+                        'w-5 h-5 transition-colors shrink-0',
                         isActive ? 'text-white' : 'text-text-secondary group-hover:text-accent-blue',
-                        item.href === 'logout' && 'group-hover:text-accent-red'
+                        item.href === 'logout' && 'group-hover:text-accent-red',
+                        isCollapsed ? 'md:mr-0' : 'mr-3'
                       )} 
                     />
-                    <div>
+                    <div className={cn("text-left transition-all duration-300 w-full overflow-hidden", isCollapsed ? "md:hidden" : "block")}>
                       <p className={cn(
-                        'font-medium',
+                        'font-medium text-sm leading-tight truncate',
                         isActive ? 'text-white' : 'text-text-primary'
                       )}>{item.name}</p>
-                      <p className={cn(
-                        'text-xs',
-                        isActive ? 'text-white/80' : 'text-text-muted'
-                      )}>
-                        {item.description}
-                      </p>
+                      {item.description && !isCollapsed && (
+                        <p className={cn(
+                          'text-[10px] truncate mt-0.5',
+                          isActive ? 'text-white/80' : 'text-text-muted'
+                        )}>
+                          {item.description}
+                        </p>
+                      )}
                     </div>
                   </button>
                 )
@@ -178,11 +205,12 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
           <div className="p-4 border-t border-glass-border">
             <Button
               variant="glass"
-              className="w-full justify-start hover:text-accent-red hover:border-accent-red/30"
+              className={cn("w-full hover:text-accent-red hover:border-accent-red/30", isCollapsed ? "md:justify-center md:px-0" : "justify-start")}
               onClick={handleLogout}
+              title={isCollapsed ? 'Cerrar Sesión' : undefined}
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Cerrar Sesión
+              <LogOut className={cn("w-4 h-4", isCollapsed ? "md:mr-0" : "mr-2")} />
+              <span className={cn(isCollapsed && "md:hidden")}>Cerrar Sesión</span>
             </Button>
           </div>
         </div>

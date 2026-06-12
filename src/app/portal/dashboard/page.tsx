@@ -20,6 +20,7 @@ import { StatsCardSkeleton } from '@/components/ui/LoadingSpinner'
 import { portalApi } from '@/lib/portalApi'
 import Link from 'next/link'
 import { formatCurrency, cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 export default function PortalDashboard() {
   const [loading, setLoading] = useState(true)
@@ -31,6 +32,9 @@ export default function PortalDashboard() {
         const response = await portalApi.getSummary()
         if (response.data.success) {
           setData(response.data.data)
+          if (response.data.data.companySlug) {
+            localStorage.setItem('portal-company-slug', response.data.data.companySlug)
+          }
         }
       } catch (error) {
         console.error('Error fetching portal summary:', error)
@@ -104,7 +108,7 @@ export default function PortalDashboard() {
                 <Map className="w-8 h-8" />
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Mis Terrenos</p>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Mis Lotes</p>
                 <p className="text-3xl font-black text-text-primary mt-1">{data?.lotsCount || 0}</p>
               </div>
             </div>
@@ -235,8 +239,8 @@ export default function PortalDashboard() {
               <p className="text-white/80 text-base mb-8 font-medium leading-relaxed">
                 Reporta tu comprobante para que podamos validar tu pago y emitir tu recibo oficial.
               </p>
-              <Link href="/reportar-pago" target="_blank">
-                <Button className="bg-white text-accent-blue hover:bg-dark-primary hover:text-white font-black px-8 py-6 rounded-2xl text-base shadow-xl transition-all duration-300">
+              <Link href={data?.companySlug ? `/p/${data.companySlug}/payments` : '#'} target="_blank">
+                <Button className="bg-white text-accent-blue hover:bg-dark-primary hover:text-white font-black px-8 py-6 rounded-2xl text-base shadow-xl transition-all duration-300" disabled={!data?.companySlug}>
                   Reportar Pago <ExternalLink className="w-5 h-5 ml-3" />
                 </Button>
               </Link>
@@ -253,9 +257,20 @@ export default function PortalDashboard() {
                   <h4 className="font-black text-text-primary uppercase tracking-tighter">WhatsApp Soporte</h4>
                 </div>
                 <p className="text-sm text-text-secondary mb-6 leading-relaxed">¿Dudas con tu pago? Escríbenos.</p>
-                <Button variant="outline" className="w-full border-accent-green/30 text-accent-green hover:bg-accent-green/10 font-bold py-5 rounded-xl">
-                   Chatear ahora
-                </Button>
+                 <Button 
+                   variant="outline" 
+                   onClick={() => {
+                     if (data?.companyPhone) {
+                       const cleanPhone = data.companyPhone.replace(/\D/g, '');
+                       window.open(`https://wa.me/${cleanPhone}`, '_blank');
+                     } else {
+                       toast.error('Número de soporte no configurado');
+                     }
+                   }}
+                   className="w-full border-accent-green/30 text-accent-green hover:bg-accent-green/10 font-bold py-5 rounded-xl"
+                 >
+                    Chatear ahora
+                 </Button>
               </CardContent>
             </Card>
 
@@ -268,9 +283,19 @@ export default function PortalDashboard() {
                   <h4 className="font-black text-text-primary uppercase tracking-tighter">Atención al Cliente</h4>
                 </div>
                 <p className="text-sm text-text-secondary mb-6 leading-relaxed">Llámanos para resolver tus inquietudes.</p>
-                <Button variant="outline" className="w-full border-accent-blue/30 text-accent-blue hover:bg-accent-blue/10 font-bold py-5 rounded-xl">
-                   Llamar ahora
-                </Button>
+                 <Button 
+                   variant="outline" 
+                   onClick={() => {
+                     if (data?.companyPhone) {
+                       window.open(`tel:${data.companyPhone}`);
+                     } else {
+                       toast.error('Teléfono de soporte no configurado');
+                     }
+                   }}
+                   className="w-full border-accent-blue/30 text-accent-blue hover:bg-accent-blue/10 font-bold py-5 rounded-xl"
+                 >
+                    Llamar ahora
+                 </Button>
               </CardContent>
             </Card>
           </div>
