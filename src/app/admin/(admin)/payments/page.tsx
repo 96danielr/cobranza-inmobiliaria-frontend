@@ -400,6 +400,7 @@ export default function PaymentsPage() {
       case 'PAGADO':
         return 'text-accent-green bg-accent-green/20 border-accent-green/30'
       case 'MORA':
+      case 'RECHAZADO':
         return 'text-accent-red bg-accent-red/20 border-accent-red/30'
       default:
         return 'text-text-muted bg-glass-primary/20 border-glass-border'

@@ -12,7 +12,8 @@ import {
   Building2,
   User,
   CreditCard,
-  Calendar
+  Calendar,
+  XCircle
 } from 'lucide-react'
 import { Button } from './Button'
 import { Card, CardContent } from './Card'
@@ -85,9 +86,10 @@ export function PaymentCard({
           bgColor: 'bg-accent-green/5'
         }
       case 'MORA':
+      case 'RECHAZADO':
         return {
           color: 'text-accent-red bg-accent-red/20 border-accent-red/30',
-          icon: <AlertCircle className="w-3 h-3" />,
+          icon: <XCircle className="w-3 h-3" />,
           bgColor: 'bg-accent-red/5'
         }
       default:
