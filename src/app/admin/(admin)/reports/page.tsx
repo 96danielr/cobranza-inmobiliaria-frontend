@@ -112,6 +112,17 @@ interface BestClient {
 
 interface AdvancedReportData {
   aging: AgingData
+  carteraAlDia: {
+    amount: number
+    count: number
+  }
+  recaudos: {
+    totalCollected: number
+    collectedToday: number
+    collectedInterval: number
+    startInterval: string
+    endInterval: string
+  }
   comparison: ComparisonData[]
   delinquentClients: DelinquentClient[]
   bestClients: BestClient[]
@@ -129,6 +140,13 @@ export default function ReportsPage() {
   // New Reports State
   const [advancedData, setAdvancedData] = useState<AdvancedReportData | null>(null)
   const [loadingAdvanced, setLoadingAdvanced] = useState(false)
+
+  const [filterStartDate, setFilterStartDate] = useState(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+  )
+  const [filterEndDate, setFilterEndDate] = useState(
+    new Date().toISOString().split('T')[0]
+  )
 
   const fetchReport = async () => {
     try {
@@ -159,10 +177,10 @@ export default function ReportsPage() {
     }
   }
 
-  const fetchAdvancedReport = async () => {
+  const fetchAdvancedReport = async (startDate?: string, endDate?: string) => {
     try {
       setLoadingAdvanced(true)
-      const response = await adminApi.getAdvancedReports()
+      const response = await adminApi.getAdvancedReports(startDate, endDate)
       if (response.data.success) {
         setAdvancedData(response.data.data)
       }
@@ -177,7 +195,7 @@ export default function ReportsPage() {
   useEffect(() => {
     fetchReport()
     fetchProjection(projectionMonths)
-    fetchAdvancedReport()
+    fetchAdvancedReport(filterStartDate, filterEndDate)
   }, [])
 
   useEffect(() => {
@@ -517,6 +535,129 @@ export default function ReportsPage() {
             </div>
           ) : (
             <>
+              {/* Resumen General de Cartera y Recaudos */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-6 h-6 text-accent-blue" />
+                  <h2 className="text-xl font-bold text-text-primary">Resumen de Cartera y Recaudos</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Cartera al Día */}
+                  <Card variant="interactive" className="stats-card stats-blue">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Cartera al Día (Vigente)</p>
+                          <h3 className="text-2xl font-extrabold text-text-primary mt-1">
+                            {formatCurrency(advancedData?.carteraAlDia?.amount || 0)}
+                          </h3>
+                          <p className="text-[10px] text-accent-blue mt-1 font-semibold">
+                            {advancedData?.carteraAlDia?.count || 0} cuotas al día
+                          </p>
+                        </div>
+                        <div className="glass-card p-3 border-accent-blue/20">
+                          <CheckCircle className="w-6 h-6 text-accent-blue" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Recaudado a la fecha */}
+                  <Card variant="interactive" className="stats-card stats-green">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Recaudado a la Fecha</p>
+                          <h3 className="text-2xl font-extrabold text-text-primary mt-1">
+                            {formatCurrency(advancedData?.recaudos?.totalCollected || 0)}
+                          </h3>
+                          <p className="text-[10px] text-accent-green mt-1 font-semibold">
+                            Histórico total de recaudos
+                          </p>
+                        </div>
+                        <div className="glass-card p-3 border-accent-green/20">
+                          <DollarSign className="w-6 h-6 text-accent-green" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Recaudado hoy */}
+                  <Card variant="interactive" className="stats-card stats-yellow">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Recaudado Hoy</p>
+                          <h3 className="text-2xl font-extrabold text-text-primary mt-1">
+                            {formatCurrency(advancedData?.recaudos?.collectedToday || 0)}
+                          </h3>
+                          <p className="text-[10px] text-accent-yellow mt-1 font-semibold">
+                            Corte del día actual
+                          </p>
+                        </div>
+                        <div className="glass-card p-3 border-accent-yellow/20">
+                          <TrendingUp className="w-6 h-6 text-accent-yellow" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Consulta por Rango de Fechas */}
+              <Card variant="elevated" className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div>
+                    <h3 className="font-bold text-text-primary text-base">Consulta de Recaudo en Rango de Fechas</h3>
+                    <p className="text-xs text-text-secondary mt-1">Selecciona un intervalo de fechas para calcular el recaudo obtenido.</p>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-end gap-4">
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-secondary font-semibold mb-2">Fecha Inicio</label>
+                      <input 
+                        type="date" 
+                        value={filterStartDate}
+                        onChange={(e) => setFilterStartDate(e.target.value)}
+                        className="glass-input px-3 py-2 text-sm text-text-primary w-44"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-secondary font-semibold mb-2">Fecha Fin</label>
+                      <input 
+                        type="date" 
+                        value={filterEndDate}
+                        onChange={(e) => setFilterEndDate(e.target.value)}
+                        className="glass-input px-3 py-2 text-sm text-text-primary w-44"
+                      />
+                    </div>
+                    <Button 
+                      variant="primary" 
+                      onClick={() => fetchAdvancedReport(filterStartDate, filterEndDate)}
+                      className="min-h-[38px] px-5"
+                      loading={loadingAdvanced}
+                    >
+                      Consultar
+                    </Button>
+                  </div>
+
+                  {advancedData?.recaudos && (
+                    <div className="mt-4 pt-4 border-t border-glass-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <span className="text-xs text-text-secondary font-medium">Recaudado en el intervalo consultado:</span>
+                        <div className="text-2xl font-extrabold text-accent-green mt-1">
+                          {formatCurrency(advancedData.recaudos.collectedInterval)}
+                        </div>
+                      </div>
+                      <div className="text-xs text-text-muted italic bg-glass-primary/10 px-3 py-1.5 rounded-lg border border-glass-border">
+                        Intervalo: {new Date(advancedData.recaudos.startInterval).toLocaleDateString()} - {new Date(advancedData.recaudos.endInterval).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+
               {/* Cartera por Edades (Aging Portfolio) */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">

@@ -383,8 +383,14 @@ export const adminApi = {
   getCashFlowProjection: (months: number = 6) =>
     apiAdmin.get(`/reports/projection?companyId=${getCompanyId()}&months=${months}`),
 
-  getAdvancedReports: () =>
-    apiAdmin.get(`/reports/advanced?companyId=${getCompanyId()}`),
+  getAdvancedReports: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams({
+      companyId: getCompanyId(),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate })
+    })
+    return apiAdmin.get(`/reports/advanced?${params.toString()}`)
+  },
 
   // Audit
   getAuditLogs: (params: any) =>

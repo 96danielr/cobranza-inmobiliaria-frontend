@@ -1011,7 +1011,7 @@ export default function PaymentsPage() {
                     >
                       {clientDetails.contracts.map((c: any) => (
                         <option key={c._id} value={c._id}>
-                          {c.negotiation || 'Contrato'} - Mz {c.lot?.manzana || '-'} Lote {c.lot?.lotNumber || c.lot?.nomenclature || c.lot?.nomenclatura || '-'}
+                          Contrato de Compraventa: Mz {c.lot?.manzana || '-'} Lote {c.lot?.lotNumber || c.lot?.nomenclature || c.lot?.nomenclatura || '-'}
                         </option>
                       ))}
                     </select>
@@ -1019,7 +1019,7 @@ export default function PaymentsPage() {
                 ) : (
                   <div className="bg-glass-primary/30 p-4 rounded-xl border border-glass-border flex items-center">
                     <p className="text-sm text-text-muted">
-                      Contrato único: {clientDetails.contracts?.[0]?.negotiation || 'Contrato'} - Mz {clientDetails.contracts?.[0]?.lot?.manzana || '-'} Lote {clientDetails.contracts?.[0]?.lot?.lotNumber || clientDetails.contracts?.[0]?.lot?.nomenclature || clientDetails.contracts?.[0]?.lot?.nomenclatura || '-'}
+                      Contrato de Compraventa: Mz {clientDetails.contracts?.[0]?.lot?.manzana || '-'} Lote {clientDetails.contracts?.[0]?.lot?.lotNumber || clientDetails.contracts?.[0]?.lot?.nomenclature || clientDetails.contracts?.[0]?.lot?.nomenclatura || '-'}
                     </p>
                   </div>
                 )}
@@ -1228,7 +1228,7 @@ export default function PaymentsPage() {
                       accept="image/*,.pdf"
                     />
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-text-muted italic">
-                      {manualCapture ? manualCapture.name : 'Subir archivo (opcional)'}
+                      {manualCapture ? manualCapture.name : 'Subir archivo'}
                     </div>
                   </div>
                 </div>
@@ -1264,7 +1264,7 @@ export default function PaymentsPage() {
                   {/* Read-only pending quotas list for reference */}
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      Resumen de Cuotas Pendientes (Referencia)
+                      Resumen de Cuotas Pendientes
                     </p>
                     <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                       {pendingQuotas.map((quota: any) => (

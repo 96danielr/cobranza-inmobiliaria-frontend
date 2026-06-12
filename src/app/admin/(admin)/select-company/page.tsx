@@ -565,63 +565,11 @@ export default function SelectCompanyPage() {
               onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
               required
             />
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">
-                NIT del Proyecto (Opcional)
-              </label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <Input
-                    value={companyForm.nit.includes('-') ? companyForm.nit.substring(0, companyForm.nit.lastIndexOf('-')) : companyForm.nit}
-                    onChange={(e) => {
-                      const body = e.target.value
-                      const parts = companyForm.nit.split('-')
-                      const dv = parts.length > 1 ? parts[parts.length - 1] : ''
-                      setCompanyForm({ ...companyForm, nit: dv ? `${body}-${dv}` : body })
-                    }}
-                    placeholder="Ej: 901.855.684"
-                  />
-                </div>
-                <span className="text-text-secondary font-bold">-</span>
-                <div className="w-20">
-                  <Input
-                    value={companyForm.nit.includes('-') ? companyForm.nit.split('-').pop() || '' : ''}
-                    onChange={(e) => {
-                      const parts = companyForm.nit.split('-')
-                      const body = parts.length > 1 ? parts.slice(0, -1).join('-') : companyForm.nit
-                      const dv = e.target.value.substring(0, 1)
-                      setCompanyForm({ ...companyForm, nit: `${body}-${dv}` })
-                    }}
-                    placeholder="DV"
-                    maxLength={1}
-                  />
-                </div>
-              </div>
-            </div>
-            <Input
-              label="RFC / Identificador (Opcional)"
-              placeholder="RFC del proyecto"
-              value={companyForm.rfc}
-              onChange={(e) => setCompanyForm({ ...companyForm, rfc: e.target.value })}
-            />
             <Input
               label="Dirección del Proyecto (Opcional)"
               placeholder="Ej: Calle 10 # 5-20, Bogotá"
               value={companyForm.address}
               onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
-            />
-            <Input
-              label="Teléfono de Contacto (Opcional)"
-              placeholder="Ej: 3101234567"
-              value={companyForm.phone}
-              onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
-            />
-            <Input
-              label="Correo Electrónico (Opcional)"
-              type="email"
-              placeholder="contacto@proyecto.com"
-              value={companyForm.email}
-              onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
             />
           </div>
 
