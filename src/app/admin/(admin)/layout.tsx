@@ -18,10 +18,17 @@ const roleLabels: Record<AdminNavRole, string> = {
   superadmin: 'Super Admin',
   tenant_admin: 'Admin Tenant',
   company_admin: 'Admin Empresa',
-  agent: 'Agente',
-  vendedor: 'Vendedor',
+  agent: 'Agente (Legacy)',
+  vendedor: 'Vendedor (Legacy)',
   cliente: 'Cliente',
   cobrador: 'Cobrador',
+  administrador: 'Administrador',
+  gerente: 'Gerente',
+  jefe_cartera: 'Jefe de Cartera',
+  auxiliar_cartera: 'Auxiliar de Cartera',
+  contador: 'Contador',
+  auxiliar_contable: 'Auxiliar Contable',
+  ejecutivo_comercial: 'Ejecutivo Comercial',
 }
 
 export default function AdminLayout({

@@ -862,9 +862,8 @@ export default function SettingsPage() {
                         <div>
                           <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                             <Building2 className="w-5 h-5 text-accent-purple" />
-                            Información Corporativa (Matriz / Enterprise)
+                            Información Corporativa
                           </h3>
-                          <p className="text-xs text-text-secondary mt-1">Estos son los datos globales de la constructora/empresa dueña del SaaS.</p>
                         </div>
                         <Button
                           onClick={handleSaveTenantInfo}
@@ -971,7 +970,7 @@ export default function SettingsPage() {
                     </Button>
                   </div>
 
-                  <div className="space-y-4 max-w-2xl">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl">
                     <Input
                       label="Nombre"
                       value={tenantConfig.name}
@@ -979,14 +978,14 @@ export default function SettingsPage() {
                       placeholder="Nombre del proyecto"
                     />
 
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-text-primary mb-2">
                         Dirección
                       </label>
                       <textarea
                         value={tenantConfig.address}
                         onChange={(e) => setTenantConfig(prev => ({ ...prev, address: e.target.value }))}
-                        rows={3}
+                        rows={2}
                         className="glass-input w-full px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
                         placeholder="Dirección del proyecto"
                       />

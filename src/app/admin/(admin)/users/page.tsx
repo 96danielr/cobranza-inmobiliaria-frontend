@@ -26,18 +26,32 @@ import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
 import { StatsCardSkeleton } from '@/components/ui/LoadingSpinner'
 
-type Role = 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor'
+type Role = 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor' | 'administrador' | 'gerente' | 'jefe_cartera' | 'auxiliar_cartera' | 'contador' | 'auxiliar_contable' | 'ejecutivo_comercial'
 
 const roleLabels: Record<Role, string> = {
   tenant_admin: 'Admin Tenant',
   company_admin: 'Admin Empresa',
-  agent: 'Agente',
-  vendedor: 'Vendedor',
+  administrador: 'Administrador',
+  gerente: 'Gerente',
+  jefe_cartera: 'Jefe de Cartera',
+  auxiliar_cartera: 'Auxiliar de Cartera',
+  contador: 'Contador',
+  auxiliar_contable: 'Auxiliar Contable',
+  ejecutivo_comercial: 'Ejecutivo Comercial',
+  agent: 'Agente (Legacy)',
+  vendedor: 'Vendedor (Legacy)',
 }
 
 const roleBadgeVariant: Record<Role, 'purple' | 'info' | 'default'> = {
   tenant_admin: 'purple',
   company_admin: 'info',
+  administrador: 'purple',
+  gerente: 'purple',
+  jefe_cartera: 'info',
+  auxiliar_cartera: 'info',
+  contador: 'info',
+  auxiliar_contable: 'default',
+  ejecutivo_comercial: 'default',
   agent: 'default',
   vendedor: 'default',
 }
@@ -241,13 +255,13 @@ export default function UsersPage() {
           {filteredUsers.map((user) => (
             <Card
               key={user.id}
-              className={`hover:shadow-glow transition-all duration-300 border-l-4 ${user.role === 'tenant_admin' ? 'border-l-accent-purple' : 'border-l-accent-blue'
+              className={`hover:shadow-glow transition-all duration-300 border-l-4 ${['superadmin', 'tenant_admin', 'administrador', 'gerente'].includes(user.role) ? 'border-l-accent-purple' : 'border-l-accent-blue'
                 }`}
             >
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${user.role === 'tenant_admin' ? 'bg-gradient-purple' : 'bg-gradient-primary'
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${['superadmin', 'tenant_admin', 'administrador', 'gerente'].includes(user.role) ? 'bg-gradient-purple' : 'bg-gradient-primary'
                       }`}>
                       <Users className="w-6 h-6" />
                     </div>
@@ -363,10 +377,15 @@ export default function UsersPage() {
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
             >
-              <option value="agent">Agente</option>
-              <option value="vendedor">Vendedor</option>
-              <option value="company_admin">Admin Empresa</option>
-              <option value="tenant_admin">Admin Tenant</option>
+              <option value="administrador">Administrador</option>
+              <option value="gerente">Gerente</option>
+              <option value="jefe_cartera">Jefe de Cartera</option>
+              <option value="auxiliar_cartera">Auxiliar de Cartera</option>
+              <option value="contador">Contador</option>
+              <option value="auxiliar_contable">Auxiliar Contable</option>
+              <option value="ejecutivo_comercial">Ejecutivo Comercial</option>
+              <option value="company_admin">Admin Empresa (Legacy)</option>
+              <option value="tenant_admin">Admin Tenant (Legacy)</option>
             </select>
           </div>
           <div className="pt-4 flex justify-end gap-3">
@@ -411,10 +430,15 @@ export default function UsersPage() {
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
             >
-              <option value="agent">Agente</option>
-              <option value="vendedor">Vendedor</option>
-              <option value="company_admin">Admin Empresa</option>
-              <option value="tenant_admin">Admin Tenant</option>
+              <option value="administrador">Administrador</option>
+              <option value="gerente">Gerente</option>
+              <option value="jefe_cartera">Jefe de Cartera</option>
+              <option value="auxiliar_cartera">Auxiliar de Cartera</option>
+              <option value="contador">Contador</option>
+              <option value="auxiliar_contable">Auxiliar Contable</option>
+              <option value="ejecutivo_comercial">Ejecutivo Comercial</option>
+              <option value="company_admin">Admin Empresa (Legacy)</option>
+              <option value="tenant_admin">Admin Tenant (Legacy)</option>
             </select>
           </div>
           <div className="flex items-center gap-3 p-3 bg-glass-primary rounded-lg border border-glass-border">

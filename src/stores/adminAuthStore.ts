@@ -18,7 +18,7 @@ export interface AdminUser {
   id: string
   email: string
   fullName: string
-  role: 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor' | 'cliente'
+  role: 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor' | 'cliente' | 'administrador' | 'gerente' | 'jefe_cartera' | 'auxiliar_cartera' | 'contador' | 'auxiliar_contable' | 'ejecutivo_comercial'
   tenantId: string
   tenantName: string
   plan: 'basic' | 'premium' | 'enterprise'

@@ -1,0 +1,585 @@
+{
+  "modules": [
+    {
+      "module": "Lotes",
+      "actions": [
+        {
+          "action": "Listar y buscar lotes",
+          "notes": "Filtros por estado, zona, precio",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "all",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Crear nuevo lote",
+          "notes": "Incluye datos, precio, coordenadas",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Editar información del lote",
+          "notes": "Precio, área, descripción, estado",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Eliminar lote",
+          "notes": "Solo lotes sin contrato activo",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Registrar venta (Asignar cliente)",
+          "notes": "Genera contrato y cuotas automáticas",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "none",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Cargar / Gestionar fotos",
+          "notes": "Galería del lote",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Generar link de catálogo",
+          "notes": "Link público para compartir a clientes",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "actions": [
+        {
+          "action": "Listar clientes",
+          "notes": "Buscar por nombre, cédula, estado",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "all",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Crear nuevo cliente",
+          "notes": "Registro con datos personales y contacto",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "all",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Ver detalle e historial",
+          "notes": "Contratos, pagos, documentos",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "all",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Editar información del cliente",
+          "notes": "Datos personales, contacto, referidos",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Contacto WhatsApp / Llamada",
+          "notes": "Abre app con número precargado",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Exportar base de datos",
+          "notes": "Excel/CSV con todos los clientes",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Pagos",
+      "actions": [
+        {
+          "action": "Listar cuotas y estados",
+          "notes": "Ver todas las cuotas del tenant",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Aprobar pagos (validar comprobante)",
+          "notes": "Cambia estado a 'Pagado'",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Rechazar pagos (con observación)",
+          "notes": "Envía notificación al cliente",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Registrar pago manual",
+          "notes": "Admin registra pago en efectivo/transferencia",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Generar / copiar link de recibo",
+          "notes": "Recibo digital para el cliente",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Copiar link portal público pagos",
+          "notes": "Link para que el cliente reporte su pago",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Cartera",
+      "actions": [
+        {
+          "action": "Dashboard estadísticas globales",
+          "notes": "KPIs: recaudado, mora, disponible",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Seguimiento clientes en mora",
+          "notes": "Lista y alertas de cuotas vencidas",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Resumen financiero por cliente",
+          "notes": "Saldo, pagado, pendiente",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Exportar reportes de cartera",
+          "notes": "Excel con detalle financiero",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Bancos",
+      "actions": [
+        {
+          "action": "Listar cuentas bancarias",
+          "notes": "Cuentas donde los clientes pagan",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "all",
+            "AuxiliarContable": "all",
+            "EjecutivoComercial": "all",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Crear / Editar bancos",
+          "notes": "Nombre, número de cuenta, tipo",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Eliminar banco",
+          "notes": "Solo si no tiene pagos asociados",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "none",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Equipo",
+      "actions": [
+        {
+          "action": "Listar personal",
+          "notes": "Vendedores, agentes, admins del tenant",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Crear / Editar usuarios",
+          "notes": "Nombre, correo, teléfono",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Asignar roles y permisos",
+          "notes": "Roles disponibles por tenant",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "none",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Desactivar usuarios",
+          "notes": "No elimina, inhabilita acceso",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "none",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Importación",
+      "actions": [
+        {
+          "action": "Carga masiva de lotes (Excel)",
+          "notes": "Plantilla definida",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Carga masiva de clientes (Excel)",
+          "notes": "Plantilla definida",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "all",
+            "AuxiliarDeCartera": "all",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Config & IA",
+      "actions": [
+        {
+          "action": "Chat IA – Consultas al asistente",
+          "notes": "Consultas sobre el negocio",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "all",
+            "JefeDeCartera": "own",
+            "AuxiliarDeCartera": "own",
+            "Contador": "own",
+            "AuxiliarContable": "own",
+            "EjecutivoComercial": "own",
+            "Cliente": "own"
+          }
+        },
+        {
+          "action": "Configuración del tenant",
+          "notes": "Nombre empresa, logo, parámetros",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "none",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        },
+        {
+          "action": "Gestión de tenants",
+          "notes": "Solo SuperAdmin: crear/eliminar empresas",
+          "permissions": {
+            "SuperAdmin": "all",
+            "Administrador": "all",
+            "Gerente": "none",
+            "JefeDeCartera": "none",
+            "AuxiliarDeCartera": "none",
+            "Contador": "none",
+            "AuxiliarContable": "none",
+            "EjecutivoComercial": "none",
+            "Cliente": "none"
+          }
+        }
+      ]
+    }
+  ],
+  "permissionLegend": {
+    "all": "Acceso a todos los registros del tenant",
+    "own": "Solo sus propios registros",
+    "none": "Sin acceso"
+  },
+  "roles": [
+    "SuperAdmin",
+    "Administrador",
+    "Gerente",
+    "JefeDeCartera",
+    "AuxiliarDeCartera",
+    "Contador",
+    "AuxiliarContable",
+    "EjecutivoComercial",
+    "Cliente"
+  ]
+}
