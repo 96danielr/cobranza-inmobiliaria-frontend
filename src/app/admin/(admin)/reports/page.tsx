@@ -499,7 +499,12 @@ export default function ReportsPage() {
                             <span className="text-xs text-text-secondary">{stat.apartados} Apartados</span>
                           </div>
                           <div className="ml-auto">
-                            <Button variant="glass" size="sm" className="group-hover:translate-x-1 transition-transform">
+                            <Button 
+                              variant="glass" 
+                              size="sm" 
+                              onClick={() => router.push(`/admin/lots?stage=${encodeURIComponent(stat.stage)}`)}
+                              className="group-hover:translate-x-1 transition-transform"
+                            >
                               Ver detalles <ChevronRight className="w-4 h-4 ml-1" />
                             </Button>
                           </div>

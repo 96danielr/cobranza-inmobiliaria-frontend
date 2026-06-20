@@ -49,8 +49,10 @@ interface PendingPayment {
   fechaPago: string
   comprobante?: string | null
   createdAt: string
-  status: 'PENDIENTE' | 'PAGADO' | 'MORA'
+  status: 'PENDIENTE' | 'PAGADO' | 'MORA' | 'RECHAZADO'
   observacion?: string
+  observations?: string
+  rejectedReason?: string
   contract: {
     client: {
       fullName: string
@@ -227,7 +229,7 @@ export default function PaymentsPage() {
 
   const handleViewPayment = (payment: PendingPayment) => {
     setSelectedPayment(payment)
-    setObservacion(payment.observacion || '')
+    setObservacion(payment.status === 'RECHAZADO' ? (payment.rejectedReason || '') : '')
     setRotationAngle(0)
     setIsModalOpen(true)
   }
@@ -235,7 +237,7 @@ export default function PaymentsPage() {
   const handleApprovePayment = async (paymentId: string) => {
     setIsProcessing(true)
     try {
-      await adminApi.approvePayment(paymentId)
+      await adminApi.approvePayment(paymentId, observacion)
 
       // Refresh the current page
       refresh()
@@ -876,6 +878,18 @@ export default function PaymentsPage() {
               </div>
             )}
 
+            {/* Client Observations */}
+            {selectedPayment.observations && (
+              <div className="bg-glass-primary/20 backdrop-blur-glass border border-glass-border rounded-lg p-4">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                  Observaciones Reportadas por el Cliente
+                </p>
+                <p className="text-sm text-text-primary whitespace-pre-wrap">
+                  {selectedPayment.observations}
+                </p>
+              </div>
+            )}
+
             {/* Observaciones */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
@@ -1221,15 +1235,25 @@ export default function PaymentsPage() {
                     <Upload className="w-4 h-4" /> Comprobante / Captura
                   </label>
                   <div className="relative group">
-                    <Input
+                    <input
                       type="file"
+                      id="manual-capture-upload"
                       onChange={(e) => setManualCapture(e.target.files?.[0] || null)}
-                      className="glass-input h-14 pt-3 flex-1 file:hidden cursor-pointer"
+                      className="hidden"
                       accept="image/*,.pdf"
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-text-muted italic">
-                      {manualCapture ? manualCapture.name : 'Subir archivo'}
-                    </div>
+                    <label
+                      htmlFor="manual-capture-upload"
+                      className="glass-input h-14 flex items-center justify-between px-4 rounded-xl border border-glass-border bg-glass-primary/50 text-text-primary cursor-pointer hover:border-accent-blue/50 transition-all select-none w-full"
+                    >
+                      <span className="text-sm font-medium flex items-center gap-2">
+                        <Upload className="w-4 h-4 text-accent-blue" />
+                        {manualCapture ? 'Archivo seleccionado' : 'Seleccionar comprobante'}
+                      </span>
+                      <span className="text-xs text-text-muted italic truncate max-w-[180px] sm:max-w-[240px]">
+                        {manualCapture ? manualCapture.name : 'Subir archivo'}
+                      </span>
+                    </label>
                   </div>
                 </div>
 

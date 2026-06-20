@@ -30,8 +30,10 @@ interface PaymentCardProps {
     fechaPago: string
     comprobante?: string | null
     createdAt: string
-    status: 'PENDIENTE' | 'PAGADO' | 'MORA'
+    status: 'PENDIENTE' | 'PAGADO' | 'MORA' | 'RECHAZADO'
     observacion?: string
+    observations?: string
+    rejectedReason?: string
     contract: {
       client: {
         fullName: string

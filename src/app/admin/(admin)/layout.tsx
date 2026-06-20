@@ -62,26 +62,36 @@ export default function AdminLayout({
 
   useClickAway(selectorRef, () => setIsSelectorOpen(false))
 
+  const loadCompanies = async () => {
+    if (!isAuthenticated || admin?.role === 'cliente') return
+    try {
+      const response = admin?.role === 'superadmin'
+        ? await adminApi.getAllTenants()
+        : await adminApi.getCompanies()
+      if (response.data.success) {
+        const data = admin?.role === 'superadmin' 
+          ? response.data.data.tenants 
+          : response.data.data.companies
+        setCompanies(data.filter((c: any) => c.status === 'active'))
+      }
+    } catch (error) {
+      console.error('Error loading companies for selector:', error)
+    }
+  }
+
   useEffect(() => {
-    if (isAuthenticated && admin?.role !== 'cliente') {
-      const loadCompanies = async () => {
-        try {
-          const response = admin?.role === 'superadmin'
-            ? await adminApi.getAllTenants()
-            : await adminApi.getCompanies()
-          if (response.data.success) {
-            const data = admin?.role === 'superadmin' 
-              ? response.data.data.tenants 
-               : response.data.data.companies
-             setCompanies(data.filter((c: any) => c.status === 'active'))
-           }
-         } catch (error) {
-           console.error('Error loading companies for selector:', error)
-         }
-       }
-       loadCompanies()
-     }
-   }, [isAuthenticated, admin?.role])
+    loadCompanies()
+  }, [isAuthenticated, admin?.role])
+
+  useEffect(() => {
+    const handleProjectsUpdated = () => {
+      loadCompanies()
+    }
+    window.addEventListener('projects-updated', handleProjectsUpdated)
+    return () => {
+      window.removeEventListener('projects-updated', handleProjectsUpdated)
+    }
+  }, [isAuthenticated, admin?.role])
 
    const handleSelectCompanyInHeader = (companyId: string, companyName: string) => {
      setSelectedCompany(companyId, companyName)

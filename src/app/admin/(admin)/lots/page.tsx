@@ -72,12 +72,13 @@ export default function LotsPage() {
   const { selectedCompanyId, admin } = useAdminAuthStore()
   const searchParams = useSearchParams()
   const initialStatus = searchParams.get('status') || ''
+  const initialStage = searchParams.get('stage') || ''
   const [statusFilter, setStatusFilter] = useState(initialStatus)
   
   // Advanced Filter states
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(!!initialStage)
   const [manzanaFilter, setManzanaFilter] = useState('')
-  const [stageFilter, setStageFilter] = useState('')
+  const [stageFilter, setStageFilter] = useState(initialStage)
   const [sellerFilter, setSellerFilter] = useState('')
   const [minAreaFilter, setMinAreaFilter] = useState('')
   const [maxAreaFilter, setMaxAreaFilter] = useState('')
@@ -464,11 +465,32 @@ export default function LotsPage() {
     }
   }
 
-  const handleSellClick = (lot: Lot) => {
+  const handleSellClick = async (lot: Lot) => {
     setSelectedLot(lot)
     setIsCreatingNewClient(false)
+    
+    let defaultClientId = ''
+    let defaultSellerId = ''
+
+    if (lot.status === 'apartado' || lot.status === 'separado') {
+      try {
+        const res = await adminApi.getLot(lot._id)
+        if (res.data.success) {
+          const detail = res.data.data
+          if (detail.reservationBy) {
+            defaultClientId = typeof detail.reservationBy === 'object' ? detail.reservationBy._id : detail.reservationBy
+          }
+          if (detail.sellerId) {
+            defaultSellerId = typeof detail.sellerId === 'object' ? detail.sellerId._id : detail.sellerId
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching lot details for reservation auto-fill:', err)
+      }
+    }
+
     setSellFormData({
-      clientId: '',
+      clientId: defaultClientId,
       totalValue: lot.price?.toString() || '',
       installmentsCount: '24',
       initialQuotaPercentage: '30',
@@ -479,7 +501,7 @@ export default function LotsPage() {
       clientIdNumber: '',
       clientPhone: '',
       clientEmail: '',
-      sellerId: '',
+      sellerId: defaultSellerId,
       bonus: '',
       bonusValue: '0',
       separationAmount: lot.status === 'separado' ? '500000' : '0',
@@ -489,7 +511,7 @@ export default function LotsPage() {
     setSelectedBonusId('')
     setAppliesBonus(false)
     setIsSellModalOpen(true)
-    fetchClientsIfNeeded()
+    fetchClientsIfNeeded(true)
     fetchSellers()
     
     // Fetch active company bonuses

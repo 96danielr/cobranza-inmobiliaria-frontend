@@ -135,6 +135,7 @@ export default function SelectCompanyPage() {
           tenantEmail: ''
         })
         fetchCompanies()
+        window.dispatchEvent(new Event('projects-updated'))
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al crear empresa')
@@ -153,6 +154,7 @@ export default function SelectCompanyPage() {
         setIsCompanyModalOpen(false)
         setCompanyForm({ name: '', rfc: '', nit: '', address: '', phone: '', email: '' })
         fetchCompanies()
+        window.dispatchEvent(new Event('projects-updated'))
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al crear proyecto')
@@ -241,6 +243,7 @@ export default function SelectCompanyPage() {
       toast.success('Configuración y límites actualizados correctamente')
       setIsEditModalOpen(false)
       fetchCompanies()
+      window.dispatchEvent(new Event('projects-updated'))
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al actualizar configuración')
     } finally {

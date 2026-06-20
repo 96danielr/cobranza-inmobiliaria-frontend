@@ -23,7 +23,16 @@ import {
   X,
   Search,
   Smartphone,
-  Upload
+  Upload,
+  ScrollText,
+  Filter,
+  Activity,
+  Info,
+  Clock,
+  Box,
+  ChevronLeft,
+  ChevronRight,
+  Calendar
 } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -34,7 +43,27 @@ import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
+import { usePermissions } from '@/hooks/usePermissions'
+import { PERMISSIONS } from '@/lib/permissions'
 import toast from 'react-hot-toast'
+import dayjs from 'dayjs'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
+
+interface AuditLog {
+  _id: string
+  userId: string
+  userFullName: string
+  userEmail: string
+  role: string
+  action: string
+  module: string
+  targetId: string
+  details: any
+  ip: string
+  userAgent: string
+  createdAt: string
+}
 
 interface AdminUser {
   id: string
@@ -114,7 +143,8 @@ const mockTenantConfig: TenantConfig = {
 
 export default function SettingsPage() {
   const { isAuthenticated, admin } = useAdminAuthStore()
-  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas' | 'bonuses'>('company')
+  const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
+  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas' | 'bonuses' | 'audit'>('company')
   const [limits, setLimits] = useState<any[]>([])
   const [usage, setUsage] = useState<any[]>([])
   const [limitsLoading, setLimitsLoading] = useState(false)
@@ -125,6 +155,79 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [configLoading, setConfigLoading] = useState(true)
   const [usersLoading, setUsersLoading] = useState(false)
+
+  // Audit Logs State
+  const { can } = usePermissions()
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [auditLoading, setAuditLoading] = useState(true)
+  const [auditPage, setAuditPage] = useState(1)
+  const [auditTotalPages, setAuditTotalPages] = useState(1)
+  const [auditTotalLogs, setAuditTotalLogs] = useState(0)
+  const [auditFilters, setAuditFilters] = useState({
+    module: '',
+    action: '',
+    startDate: '',
+    endDate: ''
+  })
+  const [auditMetadata, setAuditMetadata] = useState<{modules: string[], actions: string[]}>({
+    modules: [],
+    actions: []
+  })
+
+  const fetchAuditLogs = async () => {
+    if (!selectedCompanyId) return
+    setAuditLoading(true)
+    try {
+      const response = await adminApi.getAuditLogs({
+        page: auditPage,
+        limit: 15,
+        ...auditFilters
+      })
+      if (response.data.success) {
+        setAuditLogs(response.data.data)
+        setAuditTotalPages(response.data.pagination.pages)
+        setAuditTotalLogs(response.data.pagination.total)
+      }
+    } catch (error: any) {
+      console.error('Error fetching audit logs:', error)
+      toast.error('Error al cargar el registro de auditoría')
+    } finally {
+      setAuditLoading(false)
+    }
+  }
+
+  const fetchAuditMetadata = async () => {
+    try {
+      const response = await adminApi.getAuditMetadata()
+      if (response.data.success) {
+        setAuditMetadata(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching audit metadata:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'audit') {
+      fetchAuditMetadata()
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab === 'audit') {
+      fetchAuditLogs()
+    }
+  }, [activeTab, auditPage, auditFilters.module, auditFilters.action, auditFilters.startDate, auditFilters.endDate])
+
+  const getModuleColor = (module: string) => {
+    switch (module) {
+      case 'LOTS': return 'bg-accent-blue/10 border-accent-blue/20 text-accent-blue'
+      case 'PAYMENTS': return 'bg-accent-green/10 border-accent-green/20 text-accent-green'
+      case 'CLIENTS': return 'bg-accent-purple/10 border-accent-purple/20 text-accent-purple'
+      case 'CONTRACTS': return 'bg-accent-yellow/10 border-accent-yellow/20 text-accent-yellow'
+      default: return 'bg-white/5 border-white/10 text-text-secondary'
+    }
+  }
 
   // Bonuses Management State
   const [bonuses, setBonuses] = useState<any[]>([])
@@ -247,7 +350,7 @@ export default function SettingsPage() {
     isActive: true
   })
 
-  const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
+
 
   // Fetch Tenant Config
   const fetchTenantInfo = async () => {
@@ -520,6 +623,8 @@ export default function SettingsPage() {
         projectLogo: tenantConfig.projectLogo
       })
       toast.success('Información de la empresa guardada exitosamente')
+      useAdminAuthStore.getState().setSelectedCompany(selectedCompanyId, tenantConfig.name)
+      window.dispatchEvent(new Event('projects-updated'))
       fetchCompanyConfig() // Refresh data
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al guardar la información')
@@ -651,7 +756,8 @@ export default function SettingsPage() {
     { key: 'users', label: 'Usuarios Administradores', icon: Users },
     { key: 'integrations', label: 'Integraciones', icon: Settings },
     { key: 'quotas', label: 'Límites y Cuotas', icon: Shield },
-    { key: 'bonuses', label: 'Bonos de Descuento', icon: CreditCard }
+    { key: 'bonuses', label: 'Bonos de Descuento', icon: CreditCard },
+    ...(can(PERMISSIONS.SYSTEM_AUDIT) ? [{ key: 'audit', label: 'Auditoría', icon: Shield }] : [])
   ]
 
   return (
@@ -688,6 +794,233 @@ export default function SettingsPage() {
           })}
         </nav>
       </div>
+
+      {/* Auditoría Tab */}
+      {activeTab === 'audit' && (
+        <div className="space-y-6 md:space-y-8 animate-fade-in">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary mb-1">
+                Registro de Auditoría
+              </h3>
+              <p className="text-text-secondary text-sm">
+                Historial detallado de todas las acciones críticas realizadas en el sistema.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="glass-card px-4 py-2 flex items-center gap-2 border-accent-blue/20">
+                <Activity className="w-4 h-4 text-accent-blue" />
+                <span className="text-sm font-bold text-text-primary">{auditTotalLogs} Eventos</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <Card variant="interactive" className="overflow-visible">
+            <CardContent className="p-4 md:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
+                    <Box className="w-3 h-3" /> Módulo
+                  </label>
+                  <select
+                    value={auditFilters.module}
+                    onChange={(e) => { setAuditFilters({...auditFilters, module: e.target.value}); setAuditPage(1); }}
+                    className="glass-input w-full min-h-[44px] px-3 cursor-pointer"
+                  >
+                    <option value="">Todos los módulos</option>
+                    {auditMetadata.modules.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
+                    <Activity className="w-3 h-3" /> Acción
+                  </label>
+                  <select
+                    value={auditFilters.action}
+                    onChange={(e) => { setAuditFilters({...auditFilters, action: e.target.value}); setAuditPage(1); }}
+                    className="glass-input w-full min-h-[44px] px-3 cursor-pointer"
+                  >
+                    <option value="">Todas las acciones</option>
+                    {auditMetadata.actions.map(a => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
+                    <Calendar className="w-3 h-3" /> Fecha Inicio
+                  </label>
+                  <Input
+                    type="date"
+                    value={auditFilters.startDate}
+                    onChange={(e) => { setAuditFilters({...auditFilters, startDate: e.target.value}); setAuditPage(1); }}
+                    className="glass-input"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
+                    <Calendar className="w-3 h-3" /> Fecha Fin
+                  </label>
+                  <Input
+                    type="date"
+                    value={auditFilters.endDate}
+                    onChange={(e) => { setAuditFilters({...auditFilters, endDate: e.target.value}); setAuditPage(1); }}
+                    className="glass-input"
+                  />
+                </div>
+              </div>
+              {(auditFilters.module || auditFilters.action || auditFilters.startDate || auditFilters.endDate) && (
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    variant="glass" 
+                    size="sm" 
+                    onClick={() => { setAuditFilters({module:'', action:'', startDate:'', endDate:''}); setAuditPage(1); }}
+                    className="text-accent-red hover:bg-accent-red/10"
+                  >
+                    Limpiar filtros
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Logs List */}
+          <div className="space-y-4">
+            {auditLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-24 w-full bg-white/5 rounded-2xl animate-pulse border border-white/10" />
+              ))
+            ) : auditLogs.length === 0 ? (
+              <div className="text-center py-20 glass-card">
+                <ScrollText className="w-12 h-12 text-text-secondary mx-auto mb-4 opacity-20" />
+                <p className="text-text-secondary">No hay registros que coincidan con los criterios.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                <AnimatePresence mode='popLayout'>
+                  {auditLogs.map((log) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      key={log._id}
+                    >
+                      <Card className="glass-card border-glass-border hover:bg-white/5 transition-all overflow-hidden">
+                        <div className="p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+                          {/* Left: Time and User */}
+                          <div className="md:w-1/4 flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-text-primary">
+                              <Clock className="w-4 h-4 text-accent-blue" />
+                              <span className="text-sm font-bold">
+                                {dayjs(log.createdAt).format('DD/MM/YYYY HH:mm:ss')}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-6 h-6 rounded-full bg-accent-purple/20 flex items-center justify-center text-[10px] font-bold text-accent-purple">
+                                {log.userFullName?.slice(0, 1) || 'U'}
+                              </div>
+                              <span className="text-xs font-medium text-text-secondary truncate max-w-[150px]">
+                                {log.userFullName}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Middle: Action and Module */}
+                          <div className="md:w-1/4 flex flex-col gap-2">
+                            <span className={cn(
+                              "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border self-start",
+                              getModuleColor(log.module)
+                            )}>
+                              {log.module}
+                            </span>
+                            <span className="text-sm font-bold text-text-primary">
+                              {log.action}
+                            </span>
+                          </div>
+
+                          {/* Right: Details */}
+                          <div className="flex-1 bg-black/20 p-3 rounded-xl border border-white/5">
+                            <div className="flex items-start gap-2">
+                              <Info className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                              <div className="text-xs text-text-secondary font-mono break-all">
+                                {typeof log.details === 'object' 
+                                  ? Object.entries(log.details).map(([k, v]) => (
+                                      <div key={k} className="inline-block mr-3">
+                                        <span className="text-text-muted">{k}:</span> <span className="text-text-primary">{String(v)}</span>
+                                      </div>
+                                    ))
+                                  : String(log.details)
+                                }
+                                {log.targetId && (
+                                  <div className="mt-1 text-[10px] opacity-50">
+                                    Target ID: {log.targetId}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* IP / Agent Info */}
+                          <div className="hidden lg:flex flex-col items-end gap-1 opacity-40">
+                             <div className="flex items-center gap-1 text-[10px]">
+                               <Shield className="w-3 h-3" />
+                               {log.ip}
+                             </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!auditLoading && auditTotalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 py-8">
+                <Button
+                  variant="glass"
+                  size="sm"
+                  onClick={() => setAuditPage(p => Math.max(1, p - 1))}
+                  disabled={auditPage === 1}
+                  className="glass-button"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-bold text-text-primary">
+                  {auditPage} / {auditTotalPages}
+                </span>
+                <Button
+                  variant="glass"
+                  size="sm"
+                  onClick={() => setAuditPage(p => Math.min(auditTotalPages, p + 1))}
+                  disabled={auditPage === auditTotalPages}
+                  className="glass-button"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Security Disclaimer */}
+          <div className="bg-accent-blue/5 border border-accent-blue/10 p-4 rounded-2xl flex items-start gap-3">
+            <Shield className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Este registro de auditoría es inmutable para garantizar la integridad de los datos. 
+              Todas las acciones administrativas, cambios de precios, eliminaciones y aprobaciones de pagos quedan registradas permanentemente con la identidad del usuario responsable.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Bonuses Tab */}
       {activeTab === 'bonuses' && (

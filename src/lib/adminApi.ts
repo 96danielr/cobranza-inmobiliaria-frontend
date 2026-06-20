@@ -76,8 +76,8 @@ export const adminApi = {
     return apiAdmin.get(`/payments/pending?${params.toString()}`)
   },
 
-  approvePayment: (id: string) =>
-    apiAdmin.put(`/payments/${id}/approve?companyId=${getCompanyId()}`),
+  approvePayment: (id: string, observacion?: string) =>
+    apiAdmin.put(`/payments/${id}/approve?companyId=${getCompanyId()}`, { observacion }),
 
   rejectPayment: (id: string, observacion: string) =>
     apiAdmin.put(`/payments/${id}/reject?companyId=${getCompanyId()}`, { observacion }),

@@ -266,45 +266,43 @@ export default function PortfolioPage() {
 
     // Client Info Card
     doc.setFillColor(245, 247, 250)
-    doc.rect(14, 32, 182, 38, 'F')
+    doc.rect(14, 32, 182, 30, 'F')
     doc.setDrawColor(220, 224, 230)
-    doc.rect(14, 32, 182, 38, 'S')
+    doc.rect(14, 32, 182, 30, 'S')
 
     doc.setFontSize(10)
     doc.setTextColor(100, 110, 120)
     doc.text('Nombre del Cliente:', 18, 40)
     doc.text('Identificación (Cédula):', 18, 48)
     doc.text('Teléfono de Contacto:', 18, 56)
-    doc.text('Comportamiento de Pago:', 18, 64)
 
     doc.setTextColor(44, 62, 80)
     doc.setFont('helvetica', 'bold')
     doc.text(client.clientName || 'N/A', 65, 40)
     doc.text(client.cedula || 'N/A', 65, 48)
     doc.text(client.phone || 'N/A', 65, 56)
-    doc.text(client.behaviorTag || 'N/A', 65, 64)
 
     // Summary Card
     doc.setFillColor(240, 248, 255)
-    doc.rect(14, 76, 182, 28, 'F')
-    doc.rect(14, 76, 182, 28, 'S')
+    doc.rect(14, 68, 182, 28, 'F')
+    doc.rect(14, 68, 182, 28, 'S')
 
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(100, 110, 120)
-    doc.text('Valor Total Cartera', 22, 84)
-    doc.text('Total Recaudado', 72, 84)
-    doc.text('Monto Pendiente', 122, 84)
-    doc.text('% Recaudo', 172, 84, { align: 'center' })
+    doc.text('Valor Total Cartera', 22, 76)
+    doc.text('Total Recaudado', 72, 76)
+    doc.text('Monto Pendiente', 122, 76)
+    doc.text('% Recaudo', 172, 76, { align: 'center' })
 
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(44, 62, 80)
-    doc.text(formatCurrency(client.totalValue), 22, 94)
+    doc.text(formatCurrency(client.totalValue), 22, 86)
     doc.setTextColor(40, 167, 69) // Green
-    doc.text(formatCurrency(client.totalPaid), 72, 94)
+    doc.text(formatCurrency(client.totalPaid), 72, 86)
     doc.setTextColor(220, 53, 69) // Red
-    doc.text(formatCurrency(client.totalPending), 122, 94)
+    doc.text(formatCurrency(client.totalPending), 122, 86)
     doc.setTextColor(111, 66, 193) // Purple
-    doc.text(`${client.averageRecaudo}%`, 172, 94, { align: 'center' })
+    doc.text(`${client.averageRecaudo}%`, 172, 86, { align: 'center' })
 
     // Reset font
     doc.setFont('helvetica', 'normal')
@@ -313,8 +311,8 @@ export default function PortfolioPage() {
     // Table of Contracts
     doc.setFontSize(12)
     doc.setTextColor(44, 62, 80)
-    doc.text('Resumen de Contratos / Lotes', 14, 114)
-    doc.line(14, 116, 196, 116)
+    doc.text('Resumen de Contratos / Lotes', 14, 106)
+    doc.line(14, 108, 196, 108)
 
     const tableRows = client.contracts.map((contract) => [
       contract.project || 'Contrato',
@@ -327,7 +325,7 @@ export default function PortfolioPage() {
     ])
 
     autoTable(doc, {
-      startY: 120,
+      startY: 112,
       head: [['Proyecto', 'Nomenclatura', 'Valor Total', 'Pagado', 'Pendiente', 'Cuotas', 'Mora']],
       body: tableRows,
       theme: 'grid',
@@ -376,7 +374,54 @@ export default function PortfolioPage() {
       doc.text(`Monto recaudado: ${formatCurrency((contract as any).valorPagadoCuotas || 0)}`, 110, currentY + 12)
       doc.text(`Monto total ordinarias: ${formatCurrency((contract as any).valorTotalCuotas || 0)}`, 110, currentY + 18)
 
-      currentY += 28
+      // Detailed quota breakdown table for this contract
+      const quotas = contract.quotas || []
+      const quotaRows = quotas.map((q: any) => {
+        const isSeparation = q.number === 0 || q.number === '0';
+        const numText = isSeparation ? 'SEPAR.' : `${q.number}`;
+        const typeText = q.type === 'inicial' ? (isSeparation ? 'Separación' : 'Cuota Inicial') : 'Ordinaria';
+        const dueStr = q.dueDate ? dayjs(q.dueDate).format('DD/MM/YYYY') : 'N/A';
+        
+        let payDateStr = '-';
+        if (q.status === 'pagado' || q.amountPaid > 0) {
+          const pDate = q.paymentDate || q.updatedAt;
+          payDateStr = pDate ? dayjs(pDate).format('DD/MM/YYYY') : 'N/A';
+        }
+
+        const valueStr = formatCurrency(q.value);
+        const amountPaidStr = formatCurrency(q.amountPaid || 0);
+
+        let statusText = 'PENDIENTE';
+        if (q.status === 'pagado') {
+          statusText = 'PAGADA';
+        } else if (q.amountPaid && q.amountPaid > 0 && q.amountPaid < q.value) {
+          statusText = 'ABONADA';
+        } else if (q.status === 'mora' || (q.status === 'pendiente' && q.dueDate && new Date(q.dueDate) < new Date())) {
+          statusText = 'EN MORA';
+        }
+
+        return [numText, typeText, dueStr, valueStr, amountPaidStr, payDateStr, statusText]
+      })
+
+      autoTable(doc, {
+        startY: currentY + 26,
+        head: [['Cuota', 'Tipo', 'Vencimiento', 'Valor Cuota', 'Valor Pagado', 'Fecha Pago', 'Estado']],
+        body: quotaRows.length > 0 ? quotaRows : [['-', 'No hay cuotas registradas', '-', '-', '-', '-', '-']],
+        theme: 'grid',
+        headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        styles: { fontSize: 8 },
+        columnStyles: {
+          0: { halign: 'center' },
+          2: { halign: 'center' },
+          3: { halign: 'right' },
+          4: { halign: 'right' },
+          5: { halign: 'center' },
+          6: { halign: 'center' }
+        }
+      })
+
+      currentY = (doc as any).lastAutoTable.finalY + 15
     })
 
     doc.save(`Estado_Cuenta_${client.clientName.replace(/\s+/g, '_')}.pdf`)
@@ -874,7 +919,7 @@ export default function PortfolioPage() {
                             size="sm"
                             onClick={() => handleDownloadStatement(client)}
                             className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
-                            title="Descargar Estado de Cuenta"
+                            title="Descargar Estado de Cuenta General"
                           >
                             <Download className="w-4 h-4" />
                           </Button>
@@ -979,7 +1024,7 @@ export default function PortfolioPage() {
                   className="glass-button text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20 min-h-[40px]"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Descargar Estado de Cuenta
+                  Descargar Estado de Cuenta General
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
