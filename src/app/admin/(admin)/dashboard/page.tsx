@@ -310,7 +310,7 @@ export default function AdminDashboard() {
         <p className="text-text-secondary text-responsive-base">
           {data.isSeller
             ? `Has realizado ${data.totalSales} ventas y gestionas ${clientStats.total} clientes`
-            : `Resumen general del sistema de cobranza inmobiliaria (${clientStats.total} clientes registrados)`
+            : `Resumen general del sistema de gestión y automatización inmobiliaria (${clientStats.total} clientes registrados)`
           }
         </p>
       </div>

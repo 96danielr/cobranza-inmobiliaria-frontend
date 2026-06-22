@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check, ChevronLeft } from 'lucide-react'
+import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check, ChevronLeft, Menu } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 import { adminNavItems, filterAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
@@ -189,31 +189,32 @@ export default function AdminLayout({
           <div className="flex flex-col h-full">
             {/* Sidebar Header - System Name */}
             <div className="flex items-center justify-between border-b border-glass-border min-h-[70px] px-6">
-              {!isCollapsed && (
-                <div className="w-36 h-12 rounded-xl overflow-hidden p-1 flex items-center justify-center animate-fade-in">
-                  <img 
-                    src={logoSrc} 
-                    alt="Logo" 
-                    className="w-full h-full object-contain" 
-                  />
-                </div>
+              {!isCollapsed ? (
+                <>
+                  <div className="w-36 h-12 rounded-xl overflow-hidden p-1 flex items-center justify-center animate-fade-in">
+                    <img 
+                      src={logoSrc} 
+                      alt="Logo" 
+                      className="w-full h-full object-contain" 
+                    />
+                  </div>
+                  <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="hidden lg:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-all animate-fade-in"
+                    title="Colapsar"
+                  >
+                    <Menu className="w-5 h-5 text-text-primary" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="hidden lg:flex p-2 rounded-xl glass-button hover:shadow-glow transition-all duration-300 min-h-[40px] min-w-[40px] items-center justify-center mx-auto animate-fade-in"
+                  title="Expandir"
+                >
+                  <Menu className="w-5 h-5 text-text-primary" />
+                </button>
               )}
-              {isCollapsed && (
-                <div className="w-8 h-8 rounded-lg overflow-hidden border border-glass-border p-0.5 bg-white flex items-center justify-center mx-auto animate-fade-in">
-                  <img 
-                    src="/PERFIL FONDO BLANCO.jpeg" 
-                    alt="M" 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-              )}
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="hidden lg:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-all"
-                title={isCollapsed ? "Expandir" : "Colapsar"}
-              >
-                <ChevronLeft className={cn("w-4 h-4 transition-transform duration-300", isCollapsed && "rotate-180")} />
-              </button>
             </div>
  
             <nav className="flex-1 px-4 py-6 overflow-y-auto">

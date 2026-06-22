@@ -29,7 +29,7 @@ export function PlanPagosTable({
   }
 
   const handlePayNow = (cuotaNumber: number) => {
-    window.location.href = `/report-payment?contractId=${contractId}&cuota=${cuotaNumber}`
+    window.location.href = `/portal/report-payment?contractId=${contractId}&cuota=${cuotaNumber}`
   }
 
   const getActionButton = (cuota: Cuota) => {
@@ -63,12 +63,10 @@ export function PlanPagosTable({
   }
 
   const getStatusBadge = (cuota: Cuota) => {
-    const baseClass = getStatusColor(cuota.status)
-    
     switch (cuota.status) {
       case 'PAGADA':
         return (
-          <Badge className={baseClass}>
+          <Badge variant="success">
             Pagada ✓
           </Badge>
         )
@@ -78,19 +76,19 @@ export function PlanPagosTable({
           / (1000 * 3600 * 24)
         )
         return (
-          <Badge className={baseClass}>
+          <Badge variant="danger">
             Vencida ({diasVencida} días)
           </Badge>
         )
       case 'PENDIENTE':
         return (
-          <Badge className={baseClass}>
+          <Badge variant="info">
             Pendiente
           </Badge>
         )
       default:
         return (
-          <Badge className={baseClass}>
+          <Badge variant="default">
             {cuota.status}
           </Badge>
         )
@@ -122,12 +120,12 @@ export function PlanPagosTable({
                       <tr 
                         key={cuota.numero}
                         className={`border-b border-glass-border/50 hover:bg-glass-secondary ${
-                          isProximaCuota ? 'bg-blue-50 border-blue-200' : ''
+                          isProximaCuota ? 'bg-accent-blue/10 border-accent-blue/30' : ''
                         }`}
                       >
                         <td className="py-3 px-4">
                           <span className={`font-medium ${
-                            isProximaCuota ? 'text-blue-600' : 'text-text-primary'
+                            isProximaCuota ? 'text-accent-blue font-bold' : 'text-text-primary'
                           }`}>
                             {cuota.numero}
                           </span>
@@ -167,12 +165,12 @@ export function PlanPagosTable({
           return (
             <Card 
               key={cuota.numero}
-              className={isProximaCuota ? 'border-blue-200 bg-blue-50' : ''}
+              className={isProximaCuota ? 'border-accent-blue/30 bg-accent-blue/10' : ''}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className={`font-semibold ${
-                    isProximaCuota ? 'text-blue-600' : 'text-text-primary'
+                    isProximaCuota ? 'text-accent-blue font-bold' : 'text-text-primary'
                   }`}>
                     Cuota #{cuota.numero}
                   </h4>

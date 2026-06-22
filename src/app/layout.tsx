@@ -6,8 +6,8 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Portal Cliente - Cobranza Inmobiliaria',
-  description: 'Portal del cliente para gestión de pagos y contratos inmobiliarios',
+  title: 'Portal Cliente - Sistema de gestión y automatización inmobiliaria',
+  description: 'Portal del cliente para gestión de pagos, contratos e inmobiliarias',
 }
 
 export const viewport = {

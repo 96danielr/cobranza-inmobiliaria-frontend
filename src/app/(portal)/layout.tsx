@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Menu, LogOut } from 'lucide-react'
-import { useAuthStore } from '@/stores/authStore'
+import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { Navbar } from '@/components/layout/Navbar'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
@@ -19,9 +19,11 @@ export default function PortalLayout({
   const [isLoading, setIsLoading] = useState(true)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const router = useRouter()
-  const { isAuthenticated, client } = useAuthStore()
+  const { isAuthenticated, _hasHydrated, admin: client, logout } = useAdminAuthStore()
 
   useEffect(() => {
+    if (!_hasHydrated) return
+
     // Small delay to prevent flash
     const timer = setTimeout(() => {
       if (!isAuthenticated) {
@@ -32,7 +34,7 @@ export default function PortalLayout({
     }, 100)
 
     return () => clearTimeout(timer)
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, _hasHydrated, router])
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -43,12 +45,11 @@ export default function PortalLayout({
   }
 
   const handleLogout = () => {
-    const { logout } = useAuthStore.getState()
     logout()
     router.push('/login')
   }
 
-  if (isLoading) {
+  if (!_hasHydrated || isLoading) {
     return <FullPageLoading message="Verificando autenticación..." />
   }
 

@@ -283,17 +283,11 @@ export function BottomNavigation() {
 
 export function QuickActionFAB() {
   const pathname = usePathname()
+  const router = useRouter()
   const isPortal = pathname.startsWith('/portal')
 
   const handleReportPaymentAction = () => {
-    if (typeof window !== 'undefined') {
-      const cachedSlug = localStorage.getItem('portal-company-slug')
-      if (cachedSlug) {
-        window.open(`/p/${cachedSlug}/payments`, '_blank')
-      } else {
-        window.open('/login', '_blank')
-      }
-    }
+    router.push('/report-payment')
   }
 
   const getQuickAction = () => {

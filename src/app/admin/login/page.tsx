@@ -160,7 +160,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="mt-8 text-center text-sm text-text-muted">
-            © 2026 Sistema de Cobranza Inmobiliaria
+            © 2026 Sistema de gestión y automatización inmobiliaria
           </div>
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function AdminLoginPage() {
             <span className="gradient-text">Panel Administrativo</span>
           </h1>
           <p className="text-text-secondary text-responsive-base">
-            Operix - Sistema de Cobranza Inmobiliaria
+            Operix - Sistema de gestión y automatización inmobiliaria
           </p>
         </div>
 

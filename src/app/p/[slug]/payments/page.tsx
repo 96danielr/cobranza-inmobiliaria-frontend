@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import {
   Search,
   User,
@@ -26,6 +26,7 @@ import { Select } from '@/components/ui/Select'
 import { apiPublic } from '@/lib/api'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
+import { useAuthStore } from '@/stores/authStore'
 
 const rotateImageFile = (file: File, rotationDegrees: number): Promise<File> => {
   return new Promise((resolve) => {
@@ -78,6 +79,15 @@ const rotateImageFile = (file: File, rotationDegrees: number): Promise<File> => 
 
 export default function PublicPaymentPage() {
   const { slug } = useParams()
+  const router = useRouter()
+  const { isAuthenticated } = useAuthStore()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/report-payment')
+    }
+  }, [isAuthenticated, router])
+
   // steps: 1 (ID), 1.5 (Select OTP channel), 1.7 (Input OTP code), 2 (Quotas), 3 (Form), 4 (Success)
   const [step, setStep] = useState<number>(1) 
   const [idNumber, setIdNumber] = useState('')

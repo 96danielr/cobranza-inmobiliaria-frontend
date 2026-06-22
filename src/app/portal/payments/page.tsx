@@ -21,12 +21,39 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { TableRowSkeleton } from '@/components/ui/LoadingSpinner'
 import { portalApi } from '@/lib/portalApi'
+import { apiClient } from '@/lib/api'
 import { formatCurrency, cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 export default function MyPaymentsPage() {
   const [loading, setLoading] = useState(true)
   const [payments, setPayments] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null)
+
+  const handleDownloadReceipt = async (paymentId: string) => {
+    try {
+      setDownloadingReceipt(paymentId)
+      const response = await apiClient.downloadReceipt(paymentId)
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `recibo-${paymentId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Recibo descargado exitosamente')
+    } catch (error: any) {
+      toast.error('Error descargando el recibo')
+      console.error('Error downloading receipt:', error)
+    } finally {
+      setDownloadingReceipt(null)
+    }
+  }
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -177,7 +204,13 @@ export default function MyPaymentsPage() {
                     </td>
                     <td className="px-8 py-6 text-right">
                       {payment.status === 'approved' ? (
-                        <Button variant="glass" size="sm" className="h-10 px-5 text-[10px] font-black uppercase tracking-widest border-accent-blue/30 text-accent-blue hover:bg-accent-blue hover:text-white transition-all rounded-xl">
+                        <Button 
+                          variant="glass" 
+                          size="sm" 
+                          onClick={() => handleDownloadReceipt(payment._id)}
+                          loading={downloadingReceipt === payment._id}
+                          className="h-10 px-5 text-[10px] font-black uppercase tracking-widest border-accent-blue/30 text-accent-blue hover:bg-accent-blue hover:text-white transition-all rounded-xl"
+                        >
                           <Download className="w-3.5 h-3.5 mr-2" /> Descargar
                         </Button>
                       ) : (
@@ -195,8 +228,8 @@ export default function MyPaymentsPage() {
       </Card>
 
       {/* Financial Security Banner */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <Card variant="elevated" className="md:col-span-2 bg-gradient-to-r from-dark-secondary to-dark-primary border-glass-border p-8 relative overflow-hidden">
+      <section className="w-full">
+         <Card variant="elevated" className="bg-gradient-to-r from-dark-secondary to-dark-primary border-glass-border p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5">
                <FileCheck2 className="w-32 h-32" />
             </div>
@@ -207,17 +240,10 @@ export default function MyPaymentsPage() {
                <div>
                   <h4 className="text-xl font-black text-text-primary uppercase tracking-tighter mb-2">Sobre la emisión de recibos</h4>
                   <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-                    Cada vez que realizas un pago, nuestro departamento financiero realiza un cruce bancario. Una vez confirmado, se emite un recibo oficial numerado que podrás descargar desde aquí.
+                     Cada vez que realizas un pago, nuestro departamento financiero realiza un cruce bancario. Una vez confirmado, se emite un recibo oficial numerado que podrás descargar desde aquí.
                   </p>
                </div>
             </div>
-         </Card>
-         <Card variant="elevated" className="bg-accent-blue/5 border-accent-blue/20 p-8 flex flex-col justify-center items-center text-center">
-            <div className="w-12 h-12 bg-accent-blue/20 rounded-full flex items-center justify-center mb-4">
-               <Building2 className="w-6 h-6 text-accent-blue" />
-            </div>
-            <h5 className="font-black text-text-primary uppercase text-sm mb-2 tracking-tighter">Seguridad Inmobiliaria</h5>
-            <p className="text-[11px] text-text-secondary">Tus transacciones están protegidas por protocolos de encriptación bancaria.</p>
          </Card>
       </section>
     </div>

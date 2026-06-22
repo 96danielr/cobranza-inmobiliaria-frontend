@@ -24,6 +24,7 @@ export interface AdminUser {
   plan: 'basic' | 'premium' | 'enterprise'
   activeModules: string[]
   clientId?: string
+  cedula?: string
   profileImage?: string
   subscriptionStart?: string
   subscriptionEnd?: string

@@ -12,8 +12,10 @@ import {
   BadgeDollarSign,
   MessageCircle,
   Phone,
-  Building2
+  Building2,
+  Download
 } from 'lucide-react'
+import { apiClient } from '@/lib/api'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { StatsCardSkeleton } from '@/components/ui/LoadingSpinner'
@@ -25,6 +27,31 @@ import toast from 'react-hot-toast'
 export default function PortalDashboard() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any>(null)
+  const [downloadingStatement, setDownloadingStatement] = useState<string | null>(null)
+
+  const handleDownloadStatement = async (contractId: string, lotInfo: string) => {
+    try {
+      setDownloadingStatement(contractId)
+      const response = await apiClient.downloadStatement(contractId)
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `estado_cuenta-${lotInfo.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Estado de cuenta descargado exitosamente')
+    } catch (error: any) {
+      toast.error('Error descargando el estado de cuenta')
+      console.error('Error downloading statement:', error)
+    } finally {
+      setDownloadingStatement(null)
+    }
+  }
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -142,7 +169,23 @@ export default function PortalDashboard() {
                <div className="h-1.5 w-full bg-glass-secondary rounded-full overflow-hidden">
                 <div className="h-full bg-accent-green w-[75%] shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
               </div>
-              <p className="text-center text-[10px] text-text-muted italic">Suma de abonos realizados</p>
+              <p className="text-center text-[10px] text-text-muted italic mb-2">Suma de abonos realizados</p>
+              {data?.contracts && data.contracts.length > 0 && (
+                <div className="pt-2 space-y-2 border-t border-glass-border/30">
+                  {data.contracts.map((contract: any) => (
+                    <Button
+                      key={contract.id}
+                      variant="outline"
+                      onClick={() => handleDownloadStatement(contract.id, contract.lotInfo)}
+                      loading={downloadingStatement === contract.id}
+                      className="w-full h-10 text-[10px] font-black uppercase tracking-widest border-accent-green/30 text-accent-green hover:bg-accent-green hover:text-white transition-all rounded-xl flex items-center justify-center"
+                    >
+                      <Download className="w-3.5 h-3.5 mr-2" />
+                      {data.contracts.length > 1 ? `Descargar: ${contract.lotInfo.split(' - ')[2] || contract.lotInfo}` : 'Descargar Estado de Cuenta'}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -239,9 +282,9 @@ export default function PortalDashboard() {
               <p className="text-white/80 text-base mb-8 font-medium leading-relaxed">
                 Reporta tu comprobante para que podamos validar tu pago y emitir tu recibo oficial.
               </p>
-              <Link href={data?.companySlug ? `/p/${data.companySlug}/payments` : '#'} target="_blank">
-                <Button className="bg-white text-accent-blue hover:bg-dark-primary hover:text-white font-black px-8 py-6 rounded-2xl text-base shadow-xl transition-all duration-300" disabled={!data?.companySlug}>
-                  Reportar Pago <ExternalLink className="w-5 h-5 ml-3" />
+              <Link href="/portal/report-payment">
+                <Button className="bg-white text-accent-blue hover:bg-dark-primary hover:text-white font-black px-8 py-6 rounded-2xl text-base shadow-xl transition-all duration-300">
+                  Reportar Pago <ArrowRight className="w-5 h-5 ml-3" />
                 </Button>
               </Link>
             </CardContent>

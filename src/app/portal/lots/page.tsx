@@ -167,14 +167,14 @@ export default function MyLotsPage() {
                     </td>
                     <td className="py-5 px-8 text-right">
                       {lot.contractId ? (
-                        <Link href={`/contract/${lot.contractId}`}>
+                        <Link href={`/portal/contract/${lot.contractId}`}>
                           <Button
                             variant="glass"
                             size="sm"
                             title="Ver detalle del lote"
-                            className="h-10 w-10 rounded-xl border-accent-blue/20 text-accent-blue hover:bg-accent-blue/10 flex items-center justify-center"
+                            className="h-10 w-10 !p-0 rounded-xl border-accent-blue/20 text-accent-blue hover:bg-accent-blue/10 flex items-center justify-center"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-5 h-5" />
                           </Button>
                         </Link>
                       ) : (
@@ -182,10 +182,10 @@ export default function MyLotsPage() {
                           variant="glass"
                           size="sm"
                           disabled
-                          className="h-10 w-10 rounded-xl border-glass-border text-text-disabled opacity-40 flex items-center justify-center cursor-not-allowed"
+                          className="h-10 w-10 !p-0 rounded-xl border-glass-border text-text-disabled opacity-40 flex items-center justify-center cursor-not-allowed"
                           title="Sin contrato activo"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-5 h-5" />
                         </Button>
                       )}
                     </td>

@@ -144,11 +144,11 @@ export default function ReportPaymentPage() {
         setHomeData(response.data.data)
       } else {
         toast.error('Error cargando contratos')
-        router.push('/home')
+        router.push('/portal/dashboard')
       }
     } catch (error) {
       toast.error('Error de conexión')
-      router.push('/home')
+      router.push('/portal/dashboard')
     } finally {
       setIsLoading(false)
     }
@@ -243,7 +243,7 @@ export default function ReportPaymentPage() {
         
         // Redirect after 2 seconds
         setTimeout(() => {
-          router.push('/home')
+          router.push('/portal/dashboard')
         }, 2000)
       } else {
         toast.error(response.data.message || 'Error enviando el comprobante')
@@ -256,7 +256,7 @@ export default function ReportPaymentPage() {
   }
 
   const handleGoBack = () => {
-    router.push('/home')
+    router.push('/portal/dashboard')
   }
 
   if (isLoading) {

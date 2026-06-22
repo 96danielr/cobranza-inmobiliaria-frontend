@@ -24,7 +24,21 @@ export const apiAdmin = axios.create({
 // Client API interceptors
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token
+    let token = useAuthStore.getState().token
+    
+    // Fallback to admin auth store if client token is not set
+    if (!token && typeof window !== 'undefined') {
+      const adminAuthData = localStorage.getItem('admin-auth-storage')
+      if (adminAuthData) {
+        try {
+          const parsed = JSON.parse(adminAuthData)
+          token = parsed.state?.token || parsed.token
+        } catch (e) {
+          console.error('Error parsing admin auth data in client api fallback:', e)
+        }
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -39,6 +53,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const { logout } = useAuthStore.getState()
       logout()
+      
+      // Also clear admin storage if it was active
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin-auth-storage')
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
@@ -118,6 +138,11 @@ export const apiClient = {
     
   downloadReceipt: (paymentId: string) => 
     api.get(`/portal/receipt/${paymentId}`, {
+      responseType: 'blob'
+    }),
+    
+  downloadStatement: (contractId: string) => 
+    api.get(`/portal/statement/${contractId}`, {
       responseType: 'blob'
     }),
 }

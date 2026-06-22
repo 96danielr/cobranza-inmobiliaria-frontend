@@ -274,7 +274,7 @@ export default function LoginPage() {
         </Card>
 
         <div className="mt-8 text-center text-sm text-text-muted">
-          © 2026 Operix - Sistema de Cobranza Inmobiliaria
+          © 2026 Operix - Sistema de gestión y automatización inmobiliaria
         </div>
       </div>
     </div>

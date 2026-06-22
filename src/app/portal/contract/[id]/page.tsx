@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, MapPin, Calendar, TrendingUp, CreditCard } from 'lucide-react'
+import { ArrowLeft, MapPin, Calendar, TrendingUp, CreditCard, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { apiClient } from '@/lib/api'
@@ -38,22 +38,50 @@ export default function ContractDetailPage() {
         setContractDetail(response.data.data)
       } else {
         toast.error('Error cargando el detalle del contrato')
-        router.push('/home')
+        router.push('/portal/lots')
       }
     } catch (error: any) {
       toast.error('Error de conexión')
-      router.push('/home')
+      router.push('/portal/lots')
     } finally {
       setIsLoading(false)
     }
   }
 
+  const [downloadingStatement, setDownloadingStatement] = useState(false)
+
+  const handleDownloadStatement = async () => {
+    try {
+      setDownloadingStatement(true)
+      const response = await apiClient.downloadStatement(contractId)
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      const lotInfo = `Mz${contractDetail?.lote?.manzana || ''}-${contractDetail?.lote?.nomenclatura || ''}`
+      link.download = `estado_cuenta-${lotInfo.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Estado de cuenta descargado exitosamente')
+    } catch (error: any) {
+      toast.error('Error al descargar el estado de cuenta')
+      console.error('Error downloading statement:', error)
+    } finally {
+      setDownloadingStatement(false)
+    }
+  }
+
   const handleGoBack = () => {
-    router.push('/home')
+    router.push('/portal/lots')
   }
 
   const handleReportPayment = () => {
-    router.push(`/report-payment?contractId=${contractId}`)
+    router.push(`/portal/report-payment?contractId=${contractId}`)
   }
 
   if (isLoading) {
@@ -87,14 +115,25 @@ export default function ContractDetailPage() {
     <div className="max-w-6xl mx-auto p-4 md:p-6">
       {/* Header */}
       <div className="mb-6 animate-fade-in-up">
-        <Button
-          variant="outline"
-          onClick={handleGoBack}
-          className="mb-4 glass-button min-h-[44px] touch-target"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver
-        </Button>
+        <div className="flex justify-between items-center mb-4">
+          <Button
+            variant="outline"
+            onClick={handleGoBack}
+            className="glass-button min-h-[44px] touch-target"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+
+          <Button
+            onClick={handleDownloadStatement}
+            loading={downloadingStatement}
+            className="glass-button text-xs font-bold uppercase tracking-wider min-h-[44px] touch-target"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Descargar Estado
+          </Button>
+        </div>
         
         <div>
           <h1 className="text-responsive-lg font-bold text-text-primary">
