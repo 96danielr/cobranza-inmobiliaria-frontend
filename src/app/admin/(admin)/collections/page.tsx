@@ -27,9 +27,11 @@ import { CollectionCard, CollectionCardSkeleton } from '@/components/ui/Collecti
 import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
+import { cn } from '@/lib/utils'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
+import { ActionTooltip } from '@/components/ui/ActionTooltip'
 
 interface CollectionActivity {
   id: string
@@ -266,7 +268,14 @@ export default function CollectionsPage() {
           </>
         ) : (
           <>
-            <Card variant="elevated" className="stats-card stats-blue">
+            <Card 
+              variant="interactive" 
+              onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); }}
+              className={cn(
+                "stats-card stats-blue transition-all duration-200",
+                typeFilter === 'ALL' && statusFilter === 'ALL' ? "ring-2 ring-accent-blue" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -280,7 +289,14 @@ export default function CollectionsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-green">
+            <Card 
+              variant="interactive" 
+              onClick={() => { setTypeFilter(typeFilter === 'WHATSAPP' ? 'ALL' : 'WHATSAPP'); setStatusFilter('ALL'); }}
+              className={cn(
+                "stats-card stats-green transition-all duration-200",
+                typeFilter === 'WHATSAPP' ? "ring-2 ring-accent-green" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -294,7 +310,14 @@ export default function CollectionsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-blue">
+            <Card 
+              variant="interactive" 
+              onClick={() => { setTypeFilter(typeFilter === 'AI_CALL' ? 'ALL' : 'AI_CALL'); setStatusFilter('ALL'); }}
+              className={cn(
+                "stats-card stats-blue transition-all duration-200",
+                typeFilter === 'AI_CALL' ? "ring-2 ring-accent-blue" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -308,7 +331,14 @@ export default function CollectionsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-green">
+            <Card 
+              variant="interactive" 
+              onClick={() => { setTypeFilter('ALL'); setStatusFilter(statusFilter === 'RESPONDIDO' ? 'ALL' : 'RESPONDIDO'); }}
+              className={cn(
+                "stats-card stats-green transition-all duration-200",
+                statusFilter === 'RESPONDIDO' ? "ring-2 ring-accent-green" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -385,7 +415,7 @@ export default function CollectionsPage() {
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">
@@ -511,24 +541,29 @@ export default function CollectionsPage() {
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            onClick={() => handleViewActivity(activity)}
-                            className="glass-button min-h-[44px] min-w-[44px]"
-                            title="Ver detalles de la gestión"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          {activity.type === 'AI_CALL' && activity.status === 'FALLIDO' && (
+                          <ActionTooltip content="Detalles">
                             <Button
                               variant="glass"
                               size="sm"
-                              className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
-                              title="Reintentar llamada AI"
+                              onClick={() => handleViewActivity(activity)}
+                              className="glass-button min-h-[44px] min-w-[44px]"
+                              title="Ver detalles de la gestión"
                             >
-                              <PlayCircle className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                             </Button>
+                          </ActionTooltip>
+                          
+                          {activity.type === 'AI_CALL' && activity.status === 'FALLIDO' && (
+                            <ActionTooltip content="Reintentar">
+                              <Button
+                                variant="glass"
+                                size="sm"
+                                className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
+                                title="Reintentar llamada AI"
+                              >
+                                <PlayCircle className="w-4 h-4" />
+                              </Button>
+                            </ActionTooltip>
                           )}
                         </div>
                       </td>

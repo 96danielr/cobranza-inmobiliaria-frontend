@@ -30,6 +30,7 @@ import { PortfolioCard, PortfolioCardSkeleton } from '@/components/ui/PortfolioC
 import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
+import { cn } from '@/lib/utils'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
@@ -178,15 +179,19 @@ export default function PortfolioPage() {
   }
 
   const getMoraColor = (days: number) => {
-    if (days === 0) return 'text-accent-green bg-accent-green/20 border-accent-green/30'
-    if (days <= 15) return 'text-accent-yellow bg-accent-yellow/20 border-accent-yellow/30'
-    if (days <= 30) return 'text-accent-purple bg-accent-purple/20 border-accent-purple/30'
-    return 'text-accent-red bg-accent-red/20 border-accent-red/30'
+    if (days === 0) return 'text-emerald-500 bg-emerald-500/15 border-emerald-500/30'
+    if (days <= 15) return 'text-yellow-500 bg-yellow-500/15 border-yellow-500/30'
+    if (days <= 30) return 'text-orange-500 bg-orange-500/15 border-orange-500/30'
+    if (days <= 60) return 'text-purple-500 bg-purple-500/15 border-purple-500/30'
+    return 'text-red-500 bg-red-500/15 border-red-500/30'
   }
 
   const getMoraText = (days: number) => {
     if (days === 0) return 'Al día'
-    return `${days} días`
+    if (days <= 15) return `Mora 1-15d (${days}d)`
+    if (days <= 30) return `Mora 16-30d (${days}d)`
+    if (days <= 60) return `Mora 31-60d (${days}d)`
+    return `Mora +60d (${days}d)`
   }
 
   const handleViewClient = async (client: ClientPortfolio) => {
@@ -693,7 +698,14 @@ export default function PortfolioPage() {
           </CardContent>
         </Card>
 
-        <Card variant="elevated" className="stats-card stats-green">
+        <Card 
+          variant="interactive" 
+          onClick={() => setMoraFilter(moraFilter === 'AL_DIA' ? 'ALL' : 'AL_DIA')}
+          className={cn(
+            "stats-card stats-green transition-all duration-200",
+            moraFilter === 'AL_DIA' ? "ring-2 ring-accent-green bg-accent-green/20" : ""
+          )}
+        >
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
               <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -710,7 +722,14 @@ export default function PortfolioPage() {
           </CardContent>
         </Card>
 
-        <Card variant="elevated" className="stats-card stats-red">
+        <Card 
+          variant="interactive" 
+          onClick={() => setMoraFilter(moraFilter === 'IN_MORA' ? 'ALL' : 'IN_MORA')}
+          className={cn(
+            "stats-card stats-red transition-all duration-200",
+            moraFilter === 'IN_MORA' ? "ring-2 ring-accent-red bg-accent-red/20" : ""
+          )}
+        >
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center">
               <div className="p-3 bg-accent-red/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -761,6 +780,7 @@ export default function PortfolioPage() {
               >
                 <option value="ALL">Todos los estados</option>
                 <option value="AL_DIA">Al día</option>
+                <option value="IN_MORA">En Mora (General)</option>
                 <option value="MORA_1_15">Mora 1-15 días</option>
                 <option value="MORA_16_30">Mora 16-30 días</option>
                 <option value="MORA_31_60">Mora 31-60 días</option>

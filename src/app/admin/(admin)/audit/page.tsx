@@ -106,6 +106,88 @@ export default function AuditLogsPage() {
     }
   }
 
+  const translateModule = (module: string): string => {
+    const map: Record<string, string> = {
+      'LOTS': 'Lotes',
+      'PAYMENTS': 'Pagos',
+      'CLIENTS': 'Clientes',
+      'CONTRACTS': 'Contratos',
+      'COMPANIES': 'Empresas',
+      'USERS': 'Usuarios',
+      'SETTINGS': 'Configuración',
+      'AUTH': 'Autenticación',
+      'COLLECTIONS': 'Cobranzas',
+      'REPORTS': 'Reportes',
+      'TEMPLATES': 'Plantillas',
+      'AUDIT': 'Auditoría',
+    }
+    return map[module] || module
+  }
+
+  const translateAction = (action: string): string => {
+    const map: Record<string, string> = {
+      'CREATE': 'Crear',
+      'UPDATE': 'Actualizar',
+      'DELETE': 'Eliminar',
+      'APPROVE': 'Aprobar',
+      'REJECT': 'Rechazar',
+      'LOGIN': 'Iniciar Sesión',
+      'LOGOUT': 'Cerrar Sesión',
+      'UPLOAD': 'Subir Archivo',
+      'DOWNLOAD': 'Descargar',
+      'EXPORT': 'Exportar',
+      'IMPORT': 'Importar',
+      'SEND': 'Enviar',
+      'ASSIGN': 'Asignar',
+      'UNASSIGN': 'Desasignar',
+      'ACTIVATE': 'Activar',
+      'DEACTIVATE': 'Desactivar',
+      'SELL': 'Vender',
+      'RESERVE': 'Reservar',
+      'CANCEL': 'Cancelar',
+      'PAYMENT_APPROVED': 'Pago Aprobado',
+      'PAYMENT_REJECTED': 'Pago Rechazado',
+      'PRICE_CHANGE': 'Cambio de Precio',
+      'STATUS_CHANGE': 'Cambio de Estado',
+      'BULK_UPDATE': 'Actualización Masiva',
+      'BULK_DELETE': 'Eliminación Masiva',
+      'PASSWORD_RESET': 'Restablecer Contraseña',
+      'ROLE_CHANGE': 'Cambio de Rol',
+    }
+    return map[action] || action
+  }
+
+  const translateDetailKey = (key: string): string => {
+    const map: Record<string, string> = {
+      'lotNumber': 'Nº Lote',
+      'stage': 'Etapa',
+      'manzana': 'Manzana',
+      'area': 'Área',
+      'price': 'Precio',
+      'oldPrice': 'Precio Anterior',
+      'newPrice': 'Precio Nuevo',
+      'status': 'Estado',
+      'oldStatus': 'Estado Anterior',
+      'newStatus': 'Estado Nuevo',
+      'clientName': 'Cliente',
+      'clientId': 'ID Cliente',
+      'amount': 'Monto',
+      'paymentMethod': 'Método de Pago',
+      'reason': 'Motivo',
+      'notes': 'Notas',
+      'email': 'Correo',
+      'role': 'Rol',
+      'name': 'Nombre',
+      'phone': 'Teléfono',
+      'behavior': 'Comportamiento',
+      'nomenclature': 'Nomenclatura',
+      'description': 'Descripción',
+      'type': 'Tipo',
+      'count': 'Cantidad',
+    }
+    return map[key] || key
+  }
+
   return (
     <div className="space-y-6 md:space-y-8 px-1 py-2 md:p-6 animate-fade-in">
       {/* Header */}
@@ -141,7 +223,7 @@ export default function AuditLogsPage() {
               >
                 <option value="">Todos los módulos</option>
                 {metadata.modules.map(m => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>{translateModule(m)}</option>
                 ))}
               </select>
             </div>
@@ -157,7 +239,7 @@ export default function AuditLogsPage() {
               >
                 <option value="">Todas las acciones</option>
                 {metadata.actions.map(a => (
-                  <option key={a} value={a}>{a}</option>
+                  <option key={a} value={a}>{translateAction(a)}</option>
                 ))}
               </select>
             </div>
@@ -249,10 +331,10 @@ export default function AuditLogsPage() {
                           "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border self-start",
                           getModuleColor(log.module)
                         )}>
-                          {log.module}
+                          {translateModule(log.module)}
                         </span>
                         <span className="text-sm font-bold text-text-primary">
-                          {log.action}
+                          {translateAction(log.action)}
                         </span>
                       </div>
 
@@ -264,14 +346,14 @@ export default function AuditLogsPage() {
                             {typeof log.details === 'object' 
                               ? Object.entries(log.details).map(([k, v]) => (
                                   <div key={k} className="inline-block mr-3">
-                                    <span className="text-text-muted">{k}:</span> <span className="text-text-primary">{String(v)}</span>
+                                    <span className="text-text-muted">{translateDetailKey(k)}:</span> <span className="text-text-primary">{String(v)}</span>
                                   </div>
                                 ))
                               : String(log.details)
                             }
                             {log.targetId && (
                               <div className="mt-1 text-[10px] opacity-50">
-                                Target ID: {log.targetId}
+                                ID Objetivo: {log.targetId}
                               </div>
                             )}
                           </div>

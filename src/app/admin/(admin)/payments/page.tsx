@@ -39,6 +39,7 @@ import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
+import { cn } from '@/lib/utils'
 
 interface PendingPayment {
   id: string
@@ -71,6 +72,8 @@ interface PendingPayment {
   receiptUrl?: string
 }
 
+
+import { ActionTooltip } from '@/components/ui/ActionTooltip'
 
 export default function PaymentsPage() {
   const { isAuthenticated, admin } = useAdminAuthStore()
@@ -216,6 +219,14 @@ export default function PaymentsPage() {
   })
 
   const refresh = () => pagination.refresh()
+
+  const toggleFilter = (status: 'PENDIENTE' | 'PAGADO' | 'MORA') => {
+    if (statusFilter === status) {
+      setStatusFilter('ALL')
+    } else {
+      setStatusFilter(status)
+    }
+  }
 
 
   const formatCurrency = (value: string | number) => {
@@ -471,7 +482,14 @@ export default function PaymentsPage() {
           </>
         ) : (
           <>
-            <Card variant="elevated" className="stats-card stats-yellow">
+             <Card 
+              variant="elevated" 
+              className={cn(
+                "stats-card stats-yellow cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-glow",
+                statusFilter === 'PENDIENTE' && "ring-2 ring-accent-yellow border-accent-yellow/50 bg-accent-yellow/10"
+              )}
+              onClick={() => toggleFilter('PENDIENTE')}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-yellow/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -485,7 +503,14 @@ export default function PaymentsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-green">
+            <Card 
+              variant="elevated" 
+              className={cn(
+                "stats-card stats-green cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-glow",
+                statusFilter === 'PAGADO' && "ring-2 ring-accent-green border-accent-green/50 bg-accent-green/10"
+              )}
+              onClick={() => toggleFilter('PAGADO')}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -499,7 +524,14 @@ export default function PaymentsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-red">
+            <Card 
+              variant="elevated" 
+              className={cn(
+                "stats-card stats-red cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-glow",
+                statusFilter === 'MORA' && "ring-2 ring-accent-red border-accent-red/50 bg-accent-red/10"
+              )}
+              onClick={() => toggleFilter('MORA')}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-red/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -555,7 +587,7 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] xl:max-w-[900px] 2xl:max-w-[1560px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
           <table className="hidden lg:table w-full border-separate border-spacing-0">
             <thead>
               <tr className="sticky top-0 z-20">
@@ -642,68 +674,80 @@ export default function PaymentsPage() {
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-2">
-                      <Button
-                        variant="glass"
-                        size="sm"
-                        onClick={() => handleViewPayment(payment)}
-                        className="glass-button"
-                        title="Ver Detalles"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      <ActionTooltip content="Detalles">
+                        <Button
+                          variant="glass"
+                          size="sm"
+                          onClick={() => handleViewPayment(payment)}
+                          className="glass-button"
+                          title="Ver Detalles"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </ActionTooltip>
                       {payment.receiptUrl && (
                         <div className="flex gap-1">
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            className="glass-button text-accent-green hover:bg-accent-green/20"
-                            onClick={() => window.open(payment.receiptUrl, '_blank')}
-                            title="Ver Recibo"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            className="glass-button text-accent-blue hover:bg-accent-blue/20"
-                            onClick={() => payment.receiptUrl && handleCopyReceiptLink(payment.receiptUrl)}
-                            title="Copiar Link de Recibo"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            className="glass-button text-accent-purple hover:bg-accent-purple/20"
-                            onClick={() => handleResendReceipt(payment.id)}
-                            title="Reenviar por Correo/SMS"
-                            disabled={isProcessing}
-                          >
-                            <Mail className="w-4 h-4" />
-                          </Button>
+                          <ActionTooltip content="Ver recibo">
+                            <Button
+                              variant="glass"
+                              size="sm"
+                              className="glass-button text-accent-green hover:bg-accent-green/20"
+                              onClick={() => window.open(payment.receiptUrl, '_blank')}
+                              title="Ver Recibo"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
+                          <ActionTooltip content="Copiar link">
+                            <Button
+                              variant="glass"
+                              size="sm"
+                              className="glass-button text-accent-blue hover:bg-accent-blue/20"
+                              onClick={() => payment.receiptUrl && handleCopyReceiptLink(payment.receiptUrl)}
+                              title="Copiar Link de Recibo"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
+                          <ActionTooltip content="Reenviar recibo">
+                            <Button
+                              variant="glass"
+                              size="sm"
+                              className="glass-button text-accent-purple hover:bg-accent-purple/20"
+                              onClick={() => handleResendReceipt(payment.id)}
+                              title="Reenviar por Correo/SMS"
+                              disabled={isProcessing}
+                            >
+                              <Mail className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
                         </div>
                       )}
                       {payment.status === 'PENDIENTE' && (
                         <>
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            className="glass-button text-accent-green hover:bg-accent-green/20"
-                            onClick={() => handleApprovePayment(payment.id)}
-                            disabled={isProcessing}
-                            title="Aprobar Pago"
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            className="glass-button text-accent-red hover:bg-accent-red/20"
-                            onClick={() => handleViewPayment(payment)}
-                            title="Rechazar Pago"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
+                          <ActionTooltip content="Aprobar pago">
+                            <Button
+                              variant="glass"
+                              size="sm"
+                              className="glass-button text-accent-green hover:bg-accent-green/20"
+                              onClick={() => handleApprovePayment(payment.id)}
+                              disabled={isProcessing}
+                              title="Aprobar Pago"
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
+                          <ActionTooltip content="Rechazar pago">
+                            <Button
+                              variant="glass"
+                              size="sm"
+                              className="glass-button text-accent-red hover:bg-accent-red/20"
+                              onClick={() => handleViewPayment(payment)}
+                              title="Rechazar Pago"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
                         </>
                       )}
                     </div>

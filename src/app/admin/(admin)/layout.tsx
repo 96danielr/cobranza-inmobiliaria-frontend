@@ -183,38 +183,19 @@ export default function AdminLayout({
       {/* Mobile Breadcrumbs */}
       <MobileBreadcrumbs breadcrumbs={getBreadcrumbs()} />
  
-      <div className="flex">
+      <div className="flex w-full">
         {/* Enhanced Sidebar */}
-        <div className={cn("sidebar-admin transition-all duration-300", isCollapsed ? "lg:w-20" : "lg:w-64")}>
+        <div className={cn("sidebar-admin transition-all duration-300", isCollapsed ? "lg:w-0 lg:border-r-0 lg:opacity-0 lg:pointer-events-none lg:overflow-hidden" : "lg:w-64")}>
           <div className="flex flex-col h-full">
             {/* Sidebar Header - System Name */}
             <div className="flex items-center justify-between border-b border-glass-border min-h-[70px] px-6">
-              {!isCollapsed ? (
-                <>
-                  <div className="w-36 h-12 rounded-xl overflow-hidden p-1 flex items-center justify-center animate-fade-in">
-                    <img 
-                      src={logoSrc} 
-                      alt="Logo" 
-                      className="w-full h-full object-contain" 
-                    />
-                  </div>
-                  <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="hidden lg:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-all animate-fade-in"
-                    title="Colapsar"
-                  >
-                    <Menu className="w-5 h-5 text-text-primary" />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="hidden lg:flex p-2 rounded-xl glass-button hover:shadow-glow transition-all duration-300 min-h-[40px] min-w-[40px] items-center justify-center mx-auto animate-fade-in"
-                  title="Expandir"
-                >
-                  <Menu className="w-5 h-5 text-text-primary" />
-                </button>
-              )}
+              <div className="w-36 h-12 rounded-xl overflow-hidden p-1 flex items-center justify-center animate-fade-in">
+                <img 
+                  src={logoSrc} 
+                  alt="Logo" 
+                  className="w-full h-full object-contain" 
+                />
+              </div>
             </div>
  
             <nav className="flex-1 px-4 py-6 overflow-y-auto">
@@ -292,12 +273,21 @@ export default function AdminLayout({
         </div>
  
         {/* Main Content Area */}
-        <div className={cn("flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300", isCollapsed ? "lg:ml-20" : "lg:ml-64")}>
+        <div className={cn("flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300", isCollapsed ? "lg:ml-0 lg:w-full" : "lg:ml-64 lg:w-[calc(100%-16rem)]")}>
           <header className="admin-header flex-shrink-0 hidden lg:block sticky top-0 z-50">
             <div className="flex items-center justify-between px-6 py-4 relative">
-              {/* Left Side: Breadcrumbs */}
-              <nav className="overflow-hidden min-w-0">
-                <div className="flex items-center space-x-1 sm:space-x-2 text-sm">
+              {/* Left Side: Breadcrumbs & Toggle */}
+              <div className="flex items-center space-x-4 min-w-0">
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="p-2 rounded-xl glass-button hover:shadow-glow transition-all duration-300 min-h-[40px] min-w-[40px] flex items-center justify-center text-text-primary mr-2"
+                  title={isCollapsed ? "Mostrar Menú" : "Ocultar Menú"}
+                >
+                  <Menu className="w-5 h-5 text-text-primary" />
+                </button>
+                
+                <nav className="overflow-hidden min-w-0">
+                  <div className="flex items-center space-x-1 sm:space-x-2 text-sm">
                   {getBreadcrumbs().map((crumb, index) => (
                     <div key={crumb.href} className="flex items-center flex-shrink-0">
                       {index > 0 && (
@@ -318,6 +308,7 @@ export default function AdminLayout({
                   ))}
                 </div>
               </nav>
+            </div>
 
               {/* Center: Company Name Selector */}
               {selectedCompanyName && (

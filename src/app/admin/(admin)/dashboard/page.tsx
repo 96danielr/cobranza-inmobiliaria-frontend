@@ -325,95 +325,103 @@ export default function AdminDashboard() {
           </>
         ) : (
           <>
-            <Card variant="interactive" className="stats-card stats-blue">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">
-                      {data.isSeller ? 'Valor de mis Ventas' : 'Ventas Totales'}
-                    </p>
-                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
-                      {formatCurrency(data.cartera.valorTotalCartera)}
-                    </p>
+            <Link href="/admin/reports" className="block cursor-pointer">
+              <Card variant="interactive" className="stats-card stats-blue h-full">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm text-text-secondary font-medium mb-1">
+                        {data.isSeller ? 'Valor de mis Ventas' : 'Ventas Totales'}
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                        {formatCurrency(data.cartera.valorTotalCartera)}
+                      </p>
+                    </div>
+                    <div className="glass-card p-3 border-accent-blue/20">
+                      <DollarSign className="w-6 h-6 text-accent-blue" />
+                    </div>
                   </div>
-                  <div className="glass-card p-3 border-accent-blue/20">
-                    <DollarSign className="w-6 h-6 text-accent-blue" />
+                  <div className="flex items-center">
+                    <TrendingUp className="w-4 h-4 text-accent-green mr-1" />
+                    <span className="text-sm text-accent-green font-medium">
+                      {formatPercentage(data.cartera.porcentajeRecaudo)} de mi cartera recaudada
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center">
-                  <TrendingUp className="w-4 h-4 text-accent-green mr-1" />
-                  <span className="text-sm text-accent-green font-medium">
-                    {formatPercentage(data.cartera.porcentajeRecaudo)} de mi cartera recaudada
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card variant="interactive" className="stats-card stats-green">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">Recaudo Mensual</p>
-                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
-                      {formatCurrency(data.recaudoMensual.mesActual)}
-                    </p>
+            <Link href="/admin/payments" className="block cursor-pointer">
+              <Card variant="interactive" className="stats-card stats-green h-full">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm text-text-secondary font-medium mb-1">Recaudo Mensual</p>
+                      <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                        {formatCurrency(data.recaudoMensual.mesActual)}
+                      </p>
+                    </div>
+                    <div className="glass-card p-3 border-accent-green/20">
+                      <ArrowUpRight className="w-6 h-6 text-accent-green" />
+                    </div>
                   </div>
-                  <div className="glass-card p-3 border-accent-green/20">
-                    <ArrowUpRight className="w-6 h-6 text-accent-green" />
+                  <div className="flex items-center">
+                    <ArrowUpRight className="w-4 h-4 text-accent-green mr-1" />
+                    <span className="text-sm text-accent-green font-medium">
+                      +{formatPercentage(data.recaudoMensual.variacion)} vs mes anterior
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center">
-                  <ArrowUpRight className="w-4 h-4 text-accent-green mr-1" />
-                  <span className="text-sm text-accent-green font-medium">
-                    +{formatPercentage(data.recaudoMensual.variacion)} vs mes anterior
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card variant="interactive" className="stats-card stats-red">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">Dinero en Mora</p>
-                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
-                      {formatCurrency(data.mora.dineroEnMora)}
-                    </p>
+            <Link href="/admin/portfolio" className="block cursor-pointer">
+              <Card variant="interactive" className="stats-card stats-red h-full">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm text-text-secondary font-medium mb-1">Dinero en Mora</p>
+                      <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                        {formatCurrency(data.mora.dineroEnMora)}
+                      </p>
+                    </div>
+                    <div className="glass-card p-3 border-accent-red/20">
+                      <AlertTriangle className="w-6 h-6 text-accent-red" />
+                    </div>
                   </div>
-                  <div className="glass-card p-3 border-accent-red/20">
-                    <AlertTriangle className="w-6 h-6 text-accent-red" />
+                  <div className="flex items-center">
+                    <span className="text-sm text-accent-red font-medium">
+                      {formatPercentage(data.mora.porcentajeMora)} de contratos en mora
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-sm text-accent-red font-medium">
-                    {formatPercentage(data.mora.porcentajeMora)} de contratos en mora
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card variant="interactive" className="stats-card stats-purple">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">
-                      {data.isSeller ? 'Mis Contratos' : 'Contratos Activos'}
-                    </p>
-                    <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
-                      {formatNumber(data.totalSales)}
-                    </p>
+            <Link href="/admin/clients" className="block cursor-pointer">
+              <Card variant="interactive" className="stats-card stats-purple h-full">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm text-text-secondary font-medium mb-1">
+                        {data.isSeller ? 'Mis Contratos' : 'Contratos Activos'}
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-text-primary leading-tight">
+                        {formatNumber(data.totalSales)}
+                      </p>
+                    </div>
+                    <div className="glass-card p-3 border-accent-purple/20">
+                      <FileText className="w-6 h-6 text-accent-purple" />
+                    </div>
                   </div>
-                  <div className="glass-card p-3 border-accent-purple/20">
-                    <FileText className="w-6 h-6 text-accent-purple" />
+                  <div className="flex items-center">
+                    <span className="text-sm text-accent-green font-medium">
+                      {formatNumber(clientStats.total)} clientes individuales
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-sm text-accent-green font-medium">
-                    {formatNumber(clientStats.total)} clientes individuales
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           </>
         )}
       </div>
@@ -520,24 +528,48 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-in-up-delay-3">
         <Card variant="elevated">
           <CardContent className="p-4 md:p-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Comportamiento Clientes</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Comportamiento Clientes</h3>
+            
+            {/* Summary statistics grid for easy mobile reading */}
+            <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+              {realComportamientoData.map((item, idx) => (
+                <div key={idx} className="p-2 rounded-xl bg-white/5 border border-glass-border/30 text-center">
+                  <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider truncate">{item.name}</p>
+                  <p className="text-sm font-bold mt-0.5" style={{ color: item.color }}>
+                    {item.count} <span className="text-xs font-medium text-text-primary/70">({item.value}%)</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={realComportamientoData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="count"
-                    label={({ name, value, count }: any) => `${name} ${count} (${value}%)`}
-                  >
+                <BarChart data={realComportamientoData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    content={({ active, payload }: any) => {
+                      if (active && payload && payload.length) {
+                        const item = payload[0].payload;
+                        return (
+                          <div className="glass-card p-3 shadow-glass-hover">
+                            <p className="font-medium text-text-primary">{item.name}</p>
+                            <p className="text-sm" style={{ color: item.color }}>Clientes: {item.count}</p>
+                            <p className="text-sm text-text-secondary">Porcentaje: {item.value}%</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     {realComportamientoData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
-                  </Pie>
-                  <Tooltip formatter={(value: any, name?: string) => [`${value} clientes`, name ?? '']} />
-                </PieChart>
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

@@ -37,11 +37,13 @@ import { PaginationControls } from '@/components/ui/Pagination'
 import { Combobox } from '@/components/ui/Combobox'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
+import { cn } from '@/lib/utils'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 import { WhatsAppChatModal } from '@/components/WhatsAppChatModal'
+import { ActionTooltip } from '@/components/ui/ActionTooltip'
 
 interface Client {
   _id: string
@@ -463,7 +465,14 @@ export default function ClientsPage() {
           </>
         ) : (
           <>
-            <Card variant="elevated" className="stats-card stats-blue">
+            <Card 
+              variant="interactive" 
+              onClick={() => setBehaviorFilter('ALL')}
+              className={cn(
+                "stats-card stats-blue transition-all duration-200",
+                behaviorFilter === 'ALL' ? "ring-2 ring-accent-blue" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-blue/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -477,7 +486,14 @@ export default function ClientsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-green">
+            <Card 
+              variant="interactive" 
+              onClick={() => setBehaviorFilter(behaviorFilter === 'DISPUESTO' ? 'ALL' : 'DISPUESTO')}
+              className={cn(
+                "stats-card stats-green transition-all duration-200",
+                behaviorFilter === 'DISPUESTO' ? "ring-2 ring-accent-green" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-green/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -494,7 +510,14 @@ export default function ClientsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-red">
+            <Card 
+              variant="interactive" 
+              onClick={() => setBehaviorFilter(behaviorFilter === 'EVASIVO' ? 'ALL' : 'EVASIVO')}
+              className={cn(
+                "stats-card stats-red transition-all duration-200",
+                behaviorFilter === 'EVASIVO' ? "ring-2 ring-accent-red" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-red/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -511,7 +534,14 @@ export default function ClientsPage() {
               </CardContent>
             </Card>
 
-            <Card variant="elevated" className="stats-card stats-yellow">
+            <Card 
+              variant="interactive" 
+              onClick={() => setBehaviorFilter(behaviorFilter === 'INDECISO' ? 'ALL' : 'INDECISO')}
+              className={cn(
+                "stats-card stats-yellow transition-all duration-200",
+                behaviorFilter === 'INDECISO' ? "ring-2 ring-accent-yellow" : ""
+              )}
+            >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="p-3 bg-accent-yellow/20 backdrop-blur-sm rounded-full border border-glass-border">
@@ -565,7 +595,7 @@ export default function ClientsPage() {
       {/* Clients List - Hybrid View with Independent Scroll */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
           {/* Desktop Table Body */}
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">
@@ -644,41 +674,52 @@ export default function ClientsPage() {
                       </td>
                       <td className="py-2 px-4 md:px-6 w-56">
                         <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewClient(client)}
-                            className="glass-button min-h-[44px] min-w-[44px]"
-                            title="Ver detalles del cliente"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenEdit(client)}
-                            className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
-                            title="Editar información del cliente"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenWhatsApp(client)}
-                            className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
-                            title="Enviar WhatsApp"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
-                            title="Llamar al cliente"
-                          >
-                            <Phone className="w-4 h-4" />
-                          </Button>
+                          <ActionTooltip content="Detalles">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewClient(client)}
+                              className="glass-button min-h-[44px] min-w-[44px]"
+                              title="Ver detalles del cliente"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
+                          
+                          <ActionTooltip content="Editar">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenEdit(client)}
+                              className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
+                              title="Editar información del cliente"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
+                          
+                          <ActionTooltip content="Chat">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenWhatsApp(client)}
+                              className="glass-button min-h-[44px] min-w-[44px] text-accent-green hover:text-accent-green hover:bg-accent-green/20"
+                              title="Enviar WhatsApp"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
+                          
+                          <ActionTooltip content="Llamar">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
+                              title="Llamar al cliente"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
                         </div>
                       </td>
                     </tr>

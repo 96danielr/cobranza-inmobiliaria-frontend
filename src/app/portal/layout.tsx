@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
-import { LogOut, User, Building2, ChevronRight, ChevronLeft } from 'lucide-react'
+import { LogOut, User, Building2, ChevronRight, ChevronLeft, Menu } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 import { portalNavItems } from '@/lib/portalNavItems'
@@ -64,7 +64,7 @@ export default function PortalLayout({
 
       <div className="flex">
         {/* SIDEBAR - USING EXACT SAME CLASSES AS ADMIN */}
-        <div className={cn("sidebar-admin transition-all duration-300", isCollapsed ? "lg:w-20" : "lg:w-64")}>
+        <div className={cn("sidebar-admin transition-all duration-300", isCollapsed ? "lg:w-0 lg:border-r-0 lg:opacity-0 lg:pointer-events-none lg:overflow-hidden" : "lg:w-64")}>
           <div className="flex flex-col h-full">
             {/* Sidebar Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-glass-border min-h-[73px]">
@@ -72,21 +72,12 @@ export default function PortalLayout({
                 <div className="p-2 bg-gradient-primary rounded-lg shadow-glow flex-shrink-0">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
-                {!isCollapsed && (
-                  <div className="ml-3 min-w-0 animate-fade-in">
-                    <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter">
-                      Portal Cliente
-                    </h2>
-                  </div>
-                )}
+                <div className="ml-3 min-w-0 animate-fade-in">
+                  <h2 className="text-sm font-black text-text-primary truncate uppercase tracking-tighter">
+                    Portal Cliente
+                  </h2>
+                </div>
               </div>
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="hidden lg:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-all"
-                title={isCollapsed ? "Expandir" : "Colapsar"}
-              >
-                <ChevronLeft className={cn("w-4 h-4 transition-transform duration-300", isCollapsed && "rotate-180")} />
-              </button>
             </div>
 
             <nav className="flex-1 px-4 py-6 overflow-y-auto">
@@ -159,18 +150,27 @@ export default function PortalLayout({
         </div>
 
         {/* Main Content Area - SAME STRUCTURE AS ADMIN */}
-        <div className={cn("flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300", isCollapsed ? "lg:ml-20" : "lg:ml-64")}>
+        <div className={cn("flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300", isCollapsed ? "lg:ml-0" : "lg:ml-64")}>
           {/* Header Desktop - SAME AS ADMIN */}
           <header className="admin-header flex-shrink-0 hidden lg:block sticky top-0 z-50">
             <div className="flex items-center justify-between px-6 py-4">
-              {/* Breadcrumbs Style */}
-              <nav className="flex items-center space-x-2 text-sm">
-                <span className="text-text-secondary hover:text-accent-blue transition-colors cursor-pointer">Portal</span>
-                <ChevronRight className="w-4 h-4 text-text-muted opacity-50" />
-                <span className="text-text-primary font-bold">
-                  {currentNavItem?.label || 'Inicio'}
-                </span>
-              </nav>
+              <div className="flex items-center space-x-4 min-w-0">
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="p-2 rounded-xl glass-button hover:shadow-glow transition-all duration-300 min-h-[40px] min-w-[40px] flex items-center justify-center text-text-primary mr-2"
+                  title={isCollapsed ? "Mostrar Menú" : "Ocultar Menú"}
+                >
+                  <Menu className="w-5 h-5 text-text-primary" />
+                </button>
+                {/* Breadcrumbs Style */}
+                <nav className="flex items-center space-x-2 text-sm">
+                  <span className="text-text-secondary hover:text-accent-blue transition-colors cursor-pointer">Portal</span>
+                  <ChevronRight className="w-4 h-4 text-text-muted opacity-50" />
+                  <span className="text-text-primary font-bold">
+                    {currentNavItem?.label || 'Inicio'}
+                  </span>
+                </nav>
+              </div>
 
               {/* Right Side Profile */}
               <div ref={profileRef} className="relative flex items-center border-l border-glass-border pl-6 ml-4">

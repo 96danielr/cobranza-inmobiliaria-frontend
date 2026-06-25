@@ -97,41 +97,18 @@ export function Sidebar({ isOpen = true, onClose, isCollapsed = false, onToggleC
           'nav-desktop',
           'md:flex transition-all duration-300',
           isOpen ? 'flex' : 'hidden md:flex',
-          isCollapsed ? 'md:w-20' : 'md:w-64'
+          isCollapsed ? 'md:w-0 md:border-r-0 md:opacity-0 md:pointer-events-none md:overflow-hidden' : 'md:w-64'
         )}
       >
         <div className="flex flex-col h-full w-full overflow-hidden">
           <div className="p-4 border-b border-glass-border flex justify-between items-center min-h-[73px]">
-            {!isCollapsed ? (
-              <>
-                <div className="w-36 h-12 rounded-xl overflow-hidden glass-card shadow-glow border border-glass-border p-1 flex items-center justify-center animate-fade-in">
-                  <img 
-                    src={logoSrc} 
-                    alt="Logo" 
-                    className="w-full h-full object-contain" 
-                  />
-                </div>
-                {onToggleCollapse && (
-                  <button
-                    onClick={onToggleCollapse}
-                    className="hidden md:flex p-1.5 rounded-lg hover:bg-glass-secondary text-text-secondary hover:text-accent-blue transition-colors ml-auto animate-fade-in"
-                    title="Colapsar menú"
-                  >
-                    <Menu className="w-5 h-5 text-text-primary" />
-                  </button>
-                )}
-              </>
-            ) : (
-              onToggleCollapse && (
-                <button
-                  onClick={onToggleCollapse}
-                  className="hidden md:flex p-2 rounded-xl glass-button hover:shadow-glow transition-all duration-300 min-h-[40px] min-w-[40px] items-center justify-center mx-auto animate-fade-in"
-                  title="Expandir menú"
-                >
-                  <Menu className="w-5 h-5 text-text-primary" />
-                </button>
-              )
-            )}
+            <div className="w-36 h-12 rounded-xl overflow-hidden glass-card shadow-glow border border-glass-border p-1 flex items-center justify-center animate-fade-in">
+              <img 
+                src={logoSrc} 
+                alt="Logo" 
+                className="w-full h-full object-contain" 
+              />
+            </div>
           </div>
 
           <div className={cn("p-4 border-b border-glass-border md:hidden", isCollapsed && "md:hidden")}>

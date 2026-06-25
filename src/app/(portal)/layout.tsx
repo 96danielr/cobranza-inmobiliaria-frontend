@@ -70,8 +70,38 @@ export default function PortalLayout({
       {/* Main Content */}
       <div className={cn(
         "flex-1 flex flex-col transition-all duration-300",
-        isCollapsed ? "md:ml-20" : "md:ml-64"
+        isCollapsed ? "md:ml-0" : "md:ml-64"
       )}>
+        {/* Desktop Header with Sidebar Toggle */}
+        <div className="hidden md:flex backdrop-blur-glass border-b border-glass-border p-4 items-center justify-between sticky top-0 z-30" style={{backgroundColor: 'rgba(255, 255, 255, 0.08)'}}>
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 rounded-xl glass-button hover:shadow-glow transition-all duration-300 min-h-[40px] min-w-[40px] flex items-center justify-center"
+            title={isCollapsed ? "Mostrar Menú" : "Ocultar Menú"}
+          >
+            <Menu className="w-5 h-5 text-text-primary" />
+          </button>
+          
+          <div className="flex items-center">
+            <div className="text-right mr-3">
+              <p className="text-sm font-medium text-text-primary">{client?.fullName}</p>
+              <p className="text-xs text-text-secondary">C.C. {client?.cedula}</p>
+            </div>
+            <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-glow mr-3">
+              <span className="text-sm font-medium text-white">
+                {client?.fullName?.charAt(0)?.toUpperCase() || 'C'}
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-xl glass-button hover:text-accent-red hover:bg-accent-red/20 transition-all duration-300 min-h-[40px] min-w-[40px] flex items-center justify-center"
+              title="Cerrar Sesión"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
         {/* Mobile Header with Menu Toggle */}
         <div className="md:hidden backdrop-blur-glass border-b border-glass-border p-4 flex items-center justify-between" style={{backgroundColor: 'rgba(255, 255, 255, 0.08)'}}>
           <button

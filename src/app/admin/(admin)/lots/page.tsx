@@ -43,6 +43,7 @@ import { TableRowSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingS
 import { PaginationControls } from '@/components/ui/Pagination'
 import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
+import { ActionTooltip } from '@/components/ui/ActionTooltip'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
 import { Combobox } from '@/components/ui/Combobox'
@@ -1075,7 +1076,7 @@ export default function LotsPage() {
 
       {/* Lots Table */}
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0 animate-fade-in-up animate-fade-in-up-delay">
-        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
           <div className="hidden lg:block">
             <table className="w-full border-separate border-spacing-0">
               <thead>
@@ -1180,83 +1181,99 @@ export default function LotsPage() {
                             <span className="text-xs text-text-disabled">Sin imágenes</span>
                           )}
                           {admin?.role !== 'vendedor' && (
-                            <Button
-                              variant="glass"
-                              size="sm"
-                              title="Administrar Imágenes"
-                              onClick={() => openImageModal(lot)}
-                              className="p-1 min-h-[32px] min-w-[32px]"
-                            >
-                              <ImagePlus className="w-4 h-4 text-accent-blue" />
-                            </Button>
+                            <ActionTooltip content="Imágenes">
+                              <Button
+                                variant="glass"
+                                size="sm"
+                                title="Administrar Imágenes"
+                                onClick={() => openImageModal(lot)}
+                                className="p-1 min-h-[32px] min-w-[32px]"
+                              >
+                                <ImagePlus className="w-4 h-4 text-accent-blue" />
+                              </Button>
+                            </ActionTooltip>
                           )}
                         </div>
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
                           {lot.status === 'vendido' ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewSaleDetail(lot)}
-                              className="glass-button min-h-[40px] min-w-[40px] text-accent-purple hover:bg-accent-purple/10"
-                              title="Plan de Pagos"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
+                            <ActionTooltip content="Pagos">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewSaleDetail(lot)}
+                                className="glass-button min-h-[40px] min-w-[40px] text-accent-purple hover:bg-accent-purple/10"
+                                title="Plan de Pagos"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </ActionTooltip>
                           ) : (
                             <div className="flex space-x-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSellClick(lot)}
-                                className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
-                                title="Vender Lote"
-                              >
-                                <ShoppingCart className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleReserveClick(lot)}
-                                className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
-                                title="Apartar/Separar Lote"
-                              >
-                                <Users className="w-4 h-4" />
-                              </Button>
+                              <ActionTooltip content="Vender">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSellClick(lot)}
+                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
+                                  title="Vender Lote"
+                                >
+                                  <ShoppingCart className="w-4 h-4" />
+                                </Button>
+                              </ActionTooltip>
+                              
+                              <ActionTooltip content="Apartar">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleReserveClick(lot)}
+                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
+                                  title="Apartar/Separar Lote"
+                                >
+                                  <Users className="w-4 h-4" />
+                                </Button>
+                              </ActionTooltip>
                             </div>
                           )}
                           {(lot.status === 'apartado' || lot.status === 'separado') && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewReserveDetail(lot)}
-                              className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
-                              title="Ver Detalles de Reserva"
-                            >
-                              <Info className="w-4 h-4" />
-                            </Button>
+                            <ActionTooltip content="Reserva">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewReserveDetail(lot)}
+                                className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
+                                title="Ver Detalles de Reserva"
+                              >
+                                <Info className="w-4 h-4" />
+                              </Button>
+                            </ActionTooltip>
                           )}
                           {admin?.role !== 'vendedor' && (
                             <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(lot)}
-                                className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
-                                title="Editar Lote"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteLot(lot._id)}
-                                className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
-                                title="Eliminar Lote"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <ActionTooltip content="Editar">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(lot)}
+                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
+                                  title="Editar Lote"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </ActionTooltip>
+                              
+                              <ActionTooltip content="Eliminar">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteLot(lot._id)}
+                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
+                                  title="Eliminar Lote"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </ActionTooltip>
                             </>
                           )}
                         </div>

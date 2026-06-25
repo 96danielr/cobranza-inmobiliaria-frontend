@@ -26,6 +26,7 @@ import { useServerPagination } from '@/hooks/usePagination'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import toast from 'react-hot-toast'
+import { ActionTooltip } from '@/components/ui/ActionTooltip'
 
 export default function BanksPage() {
   const { admin } = useAdminAuthStore()
@@ -181,7 +182,7 @@ export default function BanksPage() {
       </Card>
 
       <Card variant="elevated" className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-100 xl:max-w-[900px] 2xl:max-w-[1560px] relative">
+        <div className="flex-1 overflow-auto min-h-[400px] lg:min-h-[500px] lg:max-h-[600px] xl:max-h-[calc(100vh-350px)] w-full relative">
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="sticky top-0 z-20">
@@ -263,15 +264,17 @@ export default function BanksPage() {
                     <td className="py-4 px-6 text-center">
                       <div className="flex items-center justify-center space-x-2">
                         {bank.tenantId ? (
-                          <Button
-                            variant="glass"
-                            size="sm"
-                            onClick={() => handleDeleteBank(bank._id)}
-                            className="text-accent-red hover:bg-accent-red/20"
-                            title="Eliminar Banco Personalizado"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <ActionTooltip content="Eliminar">
+                            <Button
+                              variant="glass"
+                              size="sm"
+                              onClick={() => handleDeleteBank(bank._id)}
+                              className="text-accent-red hover:bg-accent-red/20"
+                              title="Eliminar Banco Personalizado"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
                         ) : (
                           <span className="text-xs text-text-muted italic">Global</span>
                         )}
