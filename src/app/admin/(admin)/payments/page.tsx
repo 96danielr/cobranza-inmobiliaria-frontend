@@ -123,8 +123,20 @@ export default function PaymentsPage() {
   const [manualPaymentMethod, setManualPaymentMethod] = useState<string>('Transferencia bancaria')
   const [manualPaymentDate, setManualPaymentDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [companySlug, setCompanySlug] = useState('')
+  const [companyDetails, setCompanyDetails] = useState<any>(null)
   const [banks, setBanks] = useState<any[]>([])
   const [loadingBanks, setLoadingBanks] = useState(false)
+
+  // Siigo Export State
+  const [isSiigoModalOpen, setIsSiigoModalOpen] = useState(false)
+  const [siigoStartDate, setSiigoStartDate] = useState(dayjs().startOf('month').format('YYYY-MM-DD'))
+  const [siigoEndDate, setSiigoEndDate] = useState(dayjs().format('YYYY-MM-DD'))
+  const [siigoComprobante, setSiigoComprobante] = useState('14')
+  const [siigoCuentaCartera, setSiigoCuentaCartera] = useState('13050502')
+  const [siigoCentroCostos, setSiigoCentroCostos] = useState('001')
+  const [siigoDefaultBanco, setSiigoDefaultBanco] = useState('11200501')
+  const [siigoIsExporting, setSiigoIsExporting] = useState(false)
+  const [siigoBankAccounts, setSiigoBankAccounts] = useState<any[]>([])
 
   const { selectedCompanyId } = useAdminAuthStore()
 
@@ -135,6 +147,8 @@ export default function PaymentsPage() {
           const res = await adminApi.getCompany(selectedCompanyId)
           if (res.data.success) {
             setCompanySlug(res.data.data.company.slug)
+            setCompanyDetails(res.data.data.company)
+            setSiigoBankAccounts(res.data.data.company.bankAccounts || [])
           }
         } catch (err) {
 
@@ -461,6 +475,14 @@ export default function PaymentsPage() {
           >
             <LinkIcon className="w-4 h-4 mr-2" />
             Copiar Link Público
+          </Button>
+          <Button
+            variant="outline"
+            className="glass-button border-glass-border text-text-secondary min-h-[44px]"
+            onClick={() => setIsSiigoModalOpen(true)}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Siigo
           </Button>
           <Button
             className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
@@ -1389,6 +1411,208 @@ export default function PaymentsPage() {
               className="glass-button"
             >
               Cerrar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Siigo Export Modal */}
+      <Modal
+        isOpen={isSiigoModalOpen}
+        onClose={() => setIsSiigoModalOpen(false)}
+        title="Exportar Pagos a Siigo"
+        size="lg"
+      >
+        <div className="space-y-6 max-h-[75vh] overflow-y-auto pr-1">
+          <p className="text-sm text-text-secondary">
+            Este reporte genera un archivo Excel con la estructura de Comprobantes Contables (Recibos de Caja) de Siigo para los pagos que se encuentran en estado <strong>APROBADO</strong>.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                Fecha Inicio
+              </label>
+              <Input
+                type="date"
+                value={siigoStartDate}
+                onChange={(e) => setSiigoStartDate(e.target.value)}
+                className="glass-input"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                Fecha Fin
+              </label>
+              <Input
+                type="date"
+                value={siigoEndDate}
+                onChange={(e) => setSiigoEndDate(e.target.value)}
+                className="glass-input"
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-glass-border pt-4">
+            <h3 className="text-sm font-bold text-text-primary mb-3">Configuración de Cuentas Contables</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                  Tipo de Comprobante
+                </label>
+                <Input
+                  type="text"
+                  value={siigoComprobante}
+                  onChange={(e) => setSiigoComprobante(e.target.value)}
+                  className="glass-input"
+                  placeholder="Ej: 14"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                  Centro de Costos
+                </label>
+                <Input
+                  type="text"
+                  value={siigoCentroCostos}
+                  onChange={(e) => setSiigoCentroCostos(e.target.value)}
+                  className="glass-input"
+                  placeholder="Ej: 001"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                  Cuenta de Cartera (Clientes)
+                </label>
+                <Input
+                  type="text"
+                  value={siigoCuentaCartera}
+                  onChange={(e) => setSiigoCuentaCartera(e.target.value)}
+                  className="glass-input"
+                  placeholder="Ej: 13050502"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                  Cuenta de Banco por Defecto
+                </label>
+                <Input
+                  type="text"
+                  value={siigoDefaultBanco}
+                  onChange={(e) => setSiigoDefaultBanco(e.target.value)}
+                  className="glass-input"
+                  placeholder="Ej: 11200501"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Configuración de bancos de la empresa */}
+          {siigoBankAccounts.length > 0 && (
+            <div className="border-t border-glass-border pt-4">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-bold text-text-primary">
+                  Cuentas de Siigo por Banco
+                </h3>
+                <span className="text-[10px] text-text-muted italic">
+                  * Se guardarán en el perfil del proyecto
+                </span>
+              </div>
+              <div className="space-y-3 bg-glass-primary/10 rounded-xl p-3 border border-glass-border/30">
+                {siigoBankAccounts.map((acc, index) => (
+                  <div key={acc._id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-glass-border/10 pb-2 last:border-b-0 last:pb-0">
+                    <div>
+                      <p className="text-xs font-bold text-text-primary">{acc.banco}</p>
+                      <p className="text-[10px] text-text-muted">{acc.tipoCuenta} - {acc.numeroCuenta}</p>
+                    </div>
+                    <div className="w-full sm:w-44">
+                      <Input
+                        type="text"
+                        placeholder="Cuenta Siigo (Ej: 11100501)"
+                        value={acc.accountingAccount || ''}
+                        onChange={(e) => {
+                          const updated = [...siigoBankAccounts]
+                          updated[index] = { ...updated[index], accountingAccount: e.target.value }
+                          setSiigoBankAccounts(updated)
+                        }}
+                        className="glass-input text-xs py-1 px-2 h-8"
+                      />
+                    </div>
+                  </div>
+                ))}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!selectedCompanyId) {
+                      toast.error('No se ha seleccionado ninguna compañía');
+                      return;
+                    }
+                    try {
+                      setIsProcessing(true);
+                      const response = await adminApi.updateCompany(selectedCompanyId, {
+                        bankAccounts: siigoBankAccounts
+                      });
+                      if (response.data.success) {
+                        toast.success('Cuentas contables de los bancos guardadas exitosamente');
+                        setCompanyDetails(response.data.data.company);
+                      }
+                    } catch (error) {
+                      toast.error('Error al guardar cuentas bancarias');
+                    } finally {
+                      setIsProcessing(false);
+                    }
+                  }}
+                  className="w-full py-1 text-xs glass-button"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Guardando...' : 'Guardar Cuentas Bancarias'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-glass-border">
+            <Button
+              variant="outline"
+              onClick={() => setIsSiigoModalOpen(false)}
+              className="glass-button"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  setSiigoIsExporting(true);
+                  const response = await adminApi.exportSiigoPayments(siigoStartDate, siigoEndDate, {
+                    comprobanteTipo: siigoComprobante,
+                    cuentaCartera: siigoCuentaCartera,
+                    centroCostos: siigoCentroCostos,
+                    defaultCuentaBanco: siigoDefaultBanco
+                  });
+                  
+                  const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `siigo-pagos-${siigoStartDate}-a-${siigoEndDate}.xlsx`;
+                  document.body.appendChild(a);
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                  document.body.removeChild(a);
+                  toast.success('Reporte exportado exitosamente');
+                  setIsSiigoModalOpen(false);
+                } catch (error) {
+                  toast.error('Error al exportar pagos');
+                } finally {
+                  setSiigoIsExporting(false);
+                }
+              }}
+              disabled={siigoIsExporting}
+              className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 font-bold"
+            >
+              {siigoIsExporting ? 'Exportando...' : 'Descargar Excel'}
             </Button>
           </div>
         </div>

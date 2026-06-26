@@ -67,6 +67,21 @@ export const adminApi = {
     return apiAdmin.get(`/payments/all?${params.toString()}`)
   },
 
+  exportSiigoPayments: (startDate?: string, endDate?: string, config: { comprobanteTipo?: string, cuentaCartera?: string, centroCostos?: string, defaultCuentaBanco?: string } = {}) => {
+    const params = new URLSearchParams({
+      companyId: getCompanyId(),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+      ...(config.comprobanteTipo && { comprobanteTipo: config.comprobanteTipo }),
+      ...(config.cuentaCartera && { cuentaCartera: config.cuentaCartera }),
+      ...(config.centroCostos && { centroCostos: config.centroCostos }),
+      ...(config.defaultCuentaBanco && { defaultCuentaBanco: config.defaultCuentaBanco }),
+    })
+    return apiAdmin.get(`/payments/siigo-export?${params.toString()}`, {
+      responseType: 'blob'
+    })
+  },
+
   getPendingPayments: (page: number = 1, limit: number = 10) => {
     const params = new URLSearchParams({
       page: page.toString(),
