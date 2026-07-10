@@ -279,6 +279,16 @@ export default function ClientsPage() {
       toast.success('Pago registrado y aprobado exitosamente')
       setIsManualPaymentModalOpen(false)
       
+      // Reset form
+      setManualAmount('')
+      setManualBank('')
+      setManualObservations('')
+      setManualCapture(null)
+      setSelectedContractForPayment(null)
+      setManualPaymentMethod('Transferencia bancaria')
+      setManualPaymentOption('minimo')
+      setManualPaymentDate(dayjs().format('YYYY-MM-DD'))
+      
       // Reload client detail info to show updated numbers/reception list
       if (selectedClient) {
         setIsDetailsLoading(true)
