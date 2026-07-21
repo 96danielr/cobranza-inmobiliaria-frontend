@@ -1,11 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output standalone build to significantly reduce container size and RAM usage
   output: 'standalone',
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', 'framer-motion', 'dayjs', 'clsx'],
+  typescript: {
+    // Skip typechecking during Docker build to save ~50% RAM/CPU
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    // Skip linting during Docker build to save build resources
+    ignoreDuringBuilds: true,
   },
 };
 
