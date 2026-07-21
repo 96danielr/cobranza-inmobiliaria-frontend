@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // appDir is now stable in Next.js 14+, no need for experimental flag
-}
+  // Output standalone build to significantly reduce container size and RAM usage
+  output: 'standalone',
+  productionBrowserSourceMaps: false,
+  reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts', 'framer-motion', 'dayjs', 'clsx'],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
