@@ -29,6 +29,7 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true)
+    setLoading(false)
     const htmlElement = document.documentElement
     const bodyElement = document.body
     const hadDark = htmlElement.classList.contains('dark')
@@ -40,13 +41,8 @@ export default function HomePage() {
     // Force body background color to light to prevent any black margin bleed-through
     bodyElement.style.backgroundColor = '#f8fafc'
     bodyElement.style.color = '#0f172a'
-
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 1000)
     
     return () => {
-      clearTimeout(timer)
       bodyElement.style.backgroundColor = ''
       bodyElement.style.color = ''
       htmlElement.classList.remove('light')
@@ -157,30 +153,19 @@ export default function HomePage() {
 
           {/* Action Button */}
           <div className="flex items-center space-x-2 sm:space-x-3 animate-fade-in-down-delay-4">
-            {isAuthenticated ? (
-              <Link 
-                href={admin?.role === 'cliente' ? '/portal/dashboard' : '/admin/dashboard'}
-                className="px-6 py-2.5 rounded-full text-sm font-bold bg-[#d4fc34] hover:bg-[#c0e82c] text-slate-950 transition-all duration-300 shadow-lg shadow-lime-500/20 hover:scale-[1.03] active:scale-[0.97]"
-              >
-                Ir a mi Portal
-              </Link>
-            ) : (
-              <>
-                <Link 
-                  href="/login"
-                  className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold border border-white/20 hover:border-white/40 hover:bg-white/10 text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Ingreso Cliente
-                </Link>
-                <Link 
-                  href="/admin/login"
-                  className="group px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-[#d4fc34] hover:bg-[#c0e82c] text-slate-950 transition-all duration-200 shadow-lg shadow-lime-500/20 hover:scale-[1.02] active:scale-[0.98] flex items-center"
-                >
-                  Ingreso Empresa
-                  <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
-                </Link>
-              </>
-            )}
+            <Link 
+              href="/login"
+              className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold border border-white/20 hover:border-white/40 hover:bg-white/10 text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Ingreso Cliente
+            </Link>
+            <Link 
+              href="/admin/login"
+              className="group px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-[#d4fc34] hover:bg-[#c0e82c] text-slate-950 transition-all duration-200 shadow-lg shadow-lime-500/20 hover:scale-[1.02] active:scale-[0.98] flex items-center"
+            >
+              Ingreso Empresa
+              <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
           </div>
         </div>
       </header>
