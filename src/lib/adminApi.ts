@@ -431,4 +431,11 @@ export const adminApi = {
   
   resendWelcomeDetails: (clientId: string) =>
     apiAdmin.post(`/clients/resend-welcome/${clientId}?companyId=${getCompanyId()}`),
+
+  // Payment Schedule Restructuring
+  simulatePaymentSchedule: (data: { contractId: string; changes: any[]; strategy: string }) =>
+    apiAdmin.post(`/payment-schedule/simulate?companyId=${getCompanyId()}`, data),
+
+  applyPaymentSchedule: (data: { contractId: string; updatedQuotas: any[]; reason?: string }) =>
+    apiAdmin.post(`/payment-schedule/apply?companyId=${getCompanyId()}`, data),
 }

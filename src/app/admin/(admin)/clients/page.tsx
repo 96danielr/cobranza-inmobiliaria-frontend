@@ -44,6 +44,7 @@ import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 import { WhatsAppChatModal } from '@/components/WhatsAppChatModal'
 import { ActionTooltip } from '@/components/ui/ActionTooltip'
+import { EditPlanPagosModal } from '@/components/contract/EditPlanPagosModal'
 
 interface Client {
   _id: string
@@ -87,6 +88,10 @@ export default function ClientsPage() {
   // Manual Payment State inside Client Detail
   const [isManualPaymentModalOpen, setIsManualPaymentModalOpen] = useState(false)
   const [selectedContractForPayment, setSelectedContractForPayment] = useState<any>(null)
+  
+  // Plan de Pagos Edit Wizard State
+  const [isEditPlanModalOpen, setIsEditPlanModalOpen] = useState(false)
+  const [selectedContractForPlanEdit, setSelectedContractForPlanEdit] = useState<any>(null)
   const [manualAmount, setManualAmount] = useState('')
   const [manualBank, setManualBank] = useState('')
   const [manualObservations, setManualObservations] = useState('')
@@ -1089,7 +1094,23 @@ export default function ClientsPage() {
 
                         {!isDetailsLoading && activeSection === 'plan' && (
                           <div className="mt-4 pt-4 border-t border-glass-border/40 space-y-2 animate-fade-in-up">
-                            <h5 className="font-semibold text-text-primary text-xs uppercase tracking-wider mb-2">Plan de Pagos Completo</h5>
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="font-semibold text-text-primary text-xs uppercase tracking-wider">Plan de Pagos Completo</h5>
+                              {contract.quotas && contract.quotas.length > 0 && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedContractForPlanEdit(contract)
+                                    setIsEditPlanModalOpen(true)
+                                  }}
+                                  className="text-xs h-7 py-0 px-2.5"
+                                >
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  Reestructurar Plan
+                                </Button>
+                              )}
+                            </div>
                             {(!contract.quotas || contract.quotas.length === 0) ? (
                               <p className="text-xs text-text-muted italic">Plan de pagos no disponible.</p>
                             ) : (
@@ -1694,6 +1715,37 @@ export default function ClientsPage() {
           </div>
         </form>
       </Modal>
+
+      {/* EDIT PLAN PAGOS MODAL */}
+      {selectedContractForPlanEdit && (
+        <EditPlanPagosModal
+          isOpen={isEditPlanModalOpen}
+          onClose={() => {
+            setIsEditPlanModalOpen(false)
+            setSelectedContractForPlanEdit(null)
+          }}
+          contractId={selectedContractForPlanEdit._id}
+          clientName={selectedClient?.name}
+          totalValue={selectedContractForPlanEdit.totalValue}
+          quotas={selectedContractForPlanEdit.quotas || []}
+          onSuccess={async () => {
+            if (selectedClient) {
+              try {
+                setIsDetailsLoading(true)
+                const response = await adminApi.getClient(selectedClient._id)
+                if (response.data.success) {
+                  setSelectedClient(response.data.data)
+                }
+              } catch (e) {
+                console.error('Error reloading client details:', e)
+              } finally {
+                setIsDetailsLoading(false)
+              }
+            }
+            pagination.refresh()
+          }}
+        />
+      )}
     </div>
   )
 }
