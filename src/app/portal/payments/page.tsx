@@ -10,20 +10,17 @@ import {
   XCircle,
   FileText,
   Search,
-  ArrowDownCircle,
-  ArrowUpCircle,
   Filter,
-  Building2,
   FileCheck2
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { TableRowSkeleton } from '@/components/ui/LoadingSpinner'
 import { portalApi } from '@/lib/portalApi'
 import { apiClient } from '@/lib/api'
-import { formatCurrency, cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { cn } from '@/lib/utils'
 
 export default function MyPaymentsPage() {
   const [loading, setLoading] = useState(true)
@@ -73,7 +70,8 @@ export default function MyPaymentsPage() {
 
   const filteredPayments = payments.filter((p: any) => 
     p.referencia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.amount.toString().includes(searchTerm)
+    p.amount?.toString().includes(searchTerm) ||
+    (p.receiptNumber && p.receiptNumber.toString().includes(searchTerm))
   )
 
   const getStatusIcon = (status: string) => {
@@ -96,7 +94,7 @@ export default function MyPaymentsPage() {
 
   return (
     <div className="space-y-10 animate-fade-in pb-10">
-      {/* Page Header Premium matching Admin Style */}
+      {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-glass-border pb-8 animate-fade-in-up">
         <div>
           <div className="flex items-center space-x-2 text-accent-purple mb-2">
@@ -115,7 +113,7 @@ export default function MyPaymentsPage() {
              </div>
              <input 
                 type="text"
-                placeholder="Buscar por referencia o monto..." 
+                placeholder="Buscar por recibo, referencia o monto..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-dark-secondary/50 border border-glass-border rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-accent-blue/50 focus:ring-4 focus:ring-accent-blue/10 transition-all outline-none"
@@ -127,7 +125,7 @@ export default function MyPaymentsPage() {
         </div>
       </div>
 
-      {/* Payments Table/Grid matching Admin Style */}
+      {/* Payments Table */}
       <Card variant="elevated" className="overflow-hidden rounded-[2rem] border-glass-border shadow-2xl animate-fade-in-up animate-fade-in-up-delay">
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-0">
@@ -135,7 +133,7 @@ export default function MyPaymentsPage() {
               <tr className="bg-dark-secondary/30">
                 <th className="px-8 py-6 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-glass-border">Fecha Contable</th>
                 <th className="px-8 py-6 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-glass-border">Concepto y Detalle</th>
-                <th className="px-8 py-6 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-glass-border">Monto Abanado</th>
+                <th className="px-8 py-6 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-glass-border">Monto Abonado</th>
                 <th className="px-8 py-6 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-glass-border">Estado Actual</th>
                 <th className="px-8 py-6 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-glass-border text-right">Comprobante</th>
               </tr>
@@ -171,9 +169,16 @@ export default function MyPaymentsPage() {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <span className="text-sm font-black text-text-primary group-hover:text-accent-blue transition-colors">
-                          {payment.referencia || 'Pago de Cuota Lote'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-text-primary group-hover:text-accent-blue transition-colors">
+                            {payment.referencia || 'Pago de Cuota Lote'}
+                          </span>
+                          {payment.receiptNumber && (
+                            <span className="px-2 py-0.5 rounded text-xs bg-accent-green/10 text-accent-green font-bold border border-accent-green/20">
+                              Recibo #{payment.receiptNumber}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">
                           Canal: {payment.metodoPago || 'Consignación'}
                         </span>
@@ -181,11 +186,6 @@ export default function MyPaymentsPage() {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center space-x-2">
-                        {payment.status === 'approved' ? (
-                           <ArrowUpCircle className="w-4 h-4 text-accent-green opacity-50" />
-                        ) : (
-                           <Clock className="w-4 h-4 text-accent-yellow opacity-50" />
-                        )}
                         <span className="text-base font-black text-text-primary tracking-tight">
                           {formatCurrency(payment.amount)}
                         </span>
@@ -238,9 +238,9 @@ export default function MyPaymentsPage() {
                   <FileText className="w-8 h-8 text-accent-blue" />
                </div>
                <div>
-                  <h4 className="text-xl font-black text-text-primary uppercase tracking-tighter mb-2">Sobre la emisión de recibos</h4>
-                  <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-                     Cada vez que realizas un pago, nuestro departamento financiero realiza un cruce bancario. Una vez confirmado, se emite un recibo oficial numerado que podrás descargar desde aquí.
+                  <h4 className="text-base font-bold text-text-primary">Recibos Oficiales Firma Digital</h4>
+                  <p className="text-text-secondary text-sm mt-1 max-w-2xl">
+                     Todos los recibos expedidos mediante la plataforma cuentan con numeración única consecutiva legal y son respaldados por el soporte de tesorería del proyecto.
                   </p>
                </div>
             </div>

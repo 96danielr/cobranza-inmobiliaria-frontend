@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@elevenlabs/react": "^1.11.0",
     "@hookform/resolvers": "^5.2.2",
     "@types/node": "^25.3.0",
     "@types/react": "^19.2.14",

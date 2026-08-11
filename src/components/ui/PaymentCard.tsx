@@ -25,6 +25,7 @@ interface PaymentCardProps {
     id: string
     contractId: string
     cuotaNumber: number
+    receiptNumber?: number
     amount: string | number
     banco: string
     fechaPago: string
@@ -125,7 +126,13 @@ export function PaymentCard({
             
             {/* Line 2: Critical Info consolidated */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-text-muted">
-              <span className="font-bold text-accent-blue">#{payment.cuotaNumber}</span>
+              <span className="font-bold text-accent-blue">Cuota #{payment.cuotaNumber}</span>
+              {payment.receiptNumber && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-glass-border/40" />
+                  <span className="font-bold text-accent-green">Recibo #{payment.receiptNumber}</span>
+                </>
+              )}
               <span className="w-1 h-1 rounded-full bg-glass-border/40" />
               <span className="truncate">{payment.contract.lot.project.name}</span>
               <span className="w-1 h-1 rounded-full bg-glass-border/40" />

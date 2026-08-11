@@ -45,6 +45,7 @@ interface PendingPayment {
   id: string
   contractId: string
   cuotaNumber: number
+  receiptNumber?: number
   amount: string | number
   banco: string
   fechaPago: string
@@ -685,7 +686,12 @@ export default function PaymentsPage() {
                     <p className="text-text-primary font-medium">{payment.contract?.lot?.project?.name || '---'}</p>
                     <p className="text-xs text-text-muted">E: {payment.contract?.lot?.project?.name || '-'} - Mz: {payment.contract?.lot?.manzana || '-'} - L: {payment.contract?.lot?.lotNumber || '-'}{payment.contract?.lot?.nomenclatura ? ` (${payment.contract?.lot?.nomenclatura})` : ''}</p>
                   </td>
-                  <td className="py-4 px-6 text-text-primary font-medium">#{payment.cuotaNumber}</td>
+                  <td className="py-4 px-6 text-text-primary font-medium">
+                    <div>Cuota #{payment.cuotaNumber}</div>
+                    {payment.receiptNumber && (
+                      <div className="text-xs text-accent-green font-normal">Recibo #{payment.receiptNumber}</div>
+                    )}
+                  </td>
                   <td className="py-4 px-6 text-text-primary font-medium">{formatCurrency(payment.amount)}</td>
                   <td className="py-4 px-6 text-text-secondary text-sm">{payment.banco}</td>
                   <td className="py-4 px-6 text-text-secondary text-sm">{dayjs(payment.fechaPago).format('DD/MM/YYYY')}</td>
@@ -869,8 +875,13 @@ export default function PaymentsPage() {
               <h3 className="font-medium text-text-primary mb-3">Información del Pago</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-text-secondary">Cuota Número</p>
-                  <p className="font-medium text-text-primary">#{selectedPayment.cuotaNumber}</p>
+                  <p className="text-sm text-text-secondary">Cuota / Recibo</p>
+                  <p className="font-medium text-text-primary">
+                    Cuota #{selectedPayment.cuotaNumber}
+                    {selectedPayment.receiptNumber && (
+                      <span className="ml-2 text-accent-green text-sm font-semibold">(Recibo #{selectedPayment.receiptNumber})</span>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">Monto</p>

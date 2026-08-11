@@ -43,8 +43,10 @@ import { useClientStore } from '@/stores/clientStore'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 import { WhatsAppChatModal } from '@/components/WhatsAppChatModal'
+import { AICallModal } from '@/components/AICallModal'
 import { ActionTooltip } from '@/components/ui/ActionTooltip'
 import { EditPlanPagosModal } from '@/components/contract/EditPlanPagosModal'
+import { Bot } from 'lucide-react'
 
 interface Client {
   _id: string
@@ -84,6 +86,32 @@ export default function ClientsPage() {
   const [expandedSection, setExpandedSection] = useState<{ [contractId: string]: 'payments' | 'plan' | 'details' | null }>({})
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false)
   const [activeChatClient, setActiveChatClient] = useState<any>(null)
+  
+  // AI Call Modal State
+  const [isAICallModalOpen, setIsAICallModalOpen] = useState(false)
+  const [aiCallContext, setAICallContext] = useState<any>(null)
+
+  const handleOpenAICall = async (client: any) => {
+    let companyName = 'Inmobiliaria'
+    try {
+      const tenantRes = await adminApi.getMyTenant()
+      if (tenantRes.data?.data?.tenant?.name) {
+        companyName = tenantRes.data.data.tenant.name
+      }
+    } catch (e) {
+      console.error('Error al obtener la Razón Social del Tenant:', e)
+    }
+
+    const context = {
+      nombre_cliente: client.name || 'Cliente',
+      documento_identidad: client.idNumber || '',
+      nombre_inmobiliaria: companyName,
+      resumen_cuotas: `Tiene cuotas pendientes/próximas registradas en su cuenta (C.C. ${client.idNumber}).`,
+      tipo_notificacion: 'cobro' as const
+    }
+    setAICallContext(context)
+    setIsAICallModalOpen(true)
+  }
   
   // Manual Payment State inside Client Detail
   const [isManualPaymentModalOpen, setIsManualPaymentModalOpen] = useState(false)
@@ -725,14 +753,15 @@ export default function ClientsPage() {
                             </Button>
                           </ActionTooltip>
                           
-                          <ActionTooltip content="Llamar">
+                          <ActionTooltip content="Llamar con IA">
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => handleOpenAICall(client)}
                               className="glass-button min-h-[44px] min-w-[44px] text-accent-purple hover:text-accent-purple hover:bg-accent-purple/20"
-                              title="Llamar al cliente"
+                              title="Llamada IA de prueba"
                             >
-                              <Phone className="w-4 h-4" />
+                              <Bot className="w-4 h-4" />
                             </Button>
                           </ActionTooltip>
                         </div>
@@ -1619,6 +1648,16 @@ export default function ClientsPage() {
           setActiveChatClient(null)
         }}
         client={activeChatClient}
+      />
+
+      {/* AI Call Modal */}
+      <AICallModal
+        isOpen={isAICallModalOpen}
+        onClose={() => {
+          setIsAICallModalOpen(false)
+          setAICallContext(null)
+        }}
+        context={aiCallContext}
       />
 
       {/* Edit Client Modal */}
