@@ -12,7 +12,9 @@ import {
   ScrollText,
   BarChart3,
   MessageSquare,
-  MailCheck
+  MailCheck,
+  BookOpen,
+  PhoneForwarded
 } from 'lucide-react'
 
 import { PERMISSIONS, hasPermission, type Permission } from './permissions'
@@ -42,6 +44,8 @@ export const adminNavItems: AdminNavItem[] = [
   { icon: Upload, label: 'Importar', href: '/admin/import', permission: PERMISSIONS.IMPORT_MANAGE },
   { icon: Shield, label: 'Equipo', href: '/admin/users', permission: PERMISSIONS.EQUIPO_VIEW },
   { icon: PhoneCall, label: 'Chat IA', href: '/admin/ai-chat', permission: PERMISSIONS.IA_CHAT },
+  { icon: BookOpen, label: 'FAQ Agente', href: '/admin/faq', permission: PERMISSIONS.IA_CHAT },
+  { icon: PhoneForwarded, label: 'Llamadas Asesor', href: '/admin/escalations', permission: PERMISSIONS.CARTERA_FOLLOWUP },
   { icon: Building2, label: 'Bancos', href: '/admin/banks', permission: PERMISSIONS.BANCOS_VIEW },
   { icon: Settings, label: 'Configuración', href: '/admin/settings', permission: PERMISSIONS.CONFIG_TENANT },
   { icon: LogOut, label: 'Cerrar Sesión', href: 'logout' },

@@ -234,6 +234,7 @@ export default function ReportPaymentPage() {
       formData.append('banco', data.banco === 'Otro' ? data.bancoOtro! : data.banco)
       formData.append('paymentMethod', data.paymentMethod)
       formData.append('fechaPago', data.fechaPago)
+      formData.append('paymentType', paymentOption === 'minimo' ? 'MINIMO' : paymentOption === 'total' ? 'TOTAL' : 'OTRO')
       formData.append('comprobante', selectedFile)
 
       const response = await apiClient.reportPayment(formData)
@@ -450,7 +451,7 @@ export default function ReportPaymentPage() {
                       ? 'bg-accent-blue/10 text-accent-blue' 
                       : 'bg-accent-green/10 text-accent-green'
                   }`}>
-                    {paymentOption === 'minimo' ? 'Pago Mínimo' : 'Pago Total'}
+                    {paymentOption === 'minimo' ? 'Pago Mínimo' : paymentOption === 'total' ? 'Pago Total' : 'Abono personalizado'}
                   </span>
                 </div>
               )

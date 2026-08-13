@@ -12,7 +12,8 @@ import {
   CreditCard,
   TrendingUp,
   Eye,
-  MessageSquare
+  MessageSquare,
+  History
 } from 'lucide-react'
 import { Button } from './Button'
 import { Card, CardContent } from './Card'
@@ -35,9 +36,10 @@ interface ClientCardProps {
     }
   }
   onView: (client: any) => void
+  onHistory?: (client: any) => void
 }
 
-export function ClientCard({ client, onView }: ClientCardProps) {
+export function ClientCard({ client, onView, onHistory }: ClientCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   const getBehaviorConfig = (behavior: string) => {
@@ -223,6 +225,18 @@ export function ClientCard({ client, onView }: ClientCardProps) {
 
           {/* Main Actions */}
           <div className="flex items-center gap-2">
+            {onHistory && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onHistory(client)}
+                className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
+                title="Historial de llamadas IA"
+              >
+                <History className="w-4 h-4" />
+              </Button>
+            )}
+
             <Button
               variant="outline"
               size="sm"

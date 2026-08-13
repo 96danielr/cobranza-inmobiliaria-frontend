@@ -18,11 +18,15 @@ import {
   Loader2,
   AlertCircle,
   Volume2,
+  CheckCircle2,
 } from 'lucide-react'
+import { apiAdmin } from '@/lib/api'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface AICallContext {
+  /** ID del cliente (requerido para guardar el registro de la llamada) */
+  clientId?: string
   /** Nombre del cliente */
   nombre_cliente: string
   /** Nombre de la inmobiliaria/constructora */
@@ -57,10 +61,45 @@ function AICallInner({ context, onClose }: { context: AICallContext; onClose: ()
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([])
   const [error, setError] = useState<string | null>(null)
   const [hasStarted, setHasStarted] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [intencion, setIntencion] = useState<NonNullable<AICallContext['intencion']>>(
     context.intencion || 'cobro'
   )
   const scrollRef = useRef<HTMLDivElement>(null)
+  const conversationIdRef = useRef<string | null>(null)
+  const startTimeRef = useRef<number | null>(null)
+  const pendingStatusRef = useRef<'completed' | 'cancelled'>('completed')
+  const saveInFlight = useRef(false)
+
+  const saveCallLog = (status: 'completed' | 'cancelled' | 'failed') => {
+    if (saveInFlight.current) return
+    if (!conversationIdRef.current) return
+
+    saveInFlight.current = true
+    setSaveStatus('saving')
+
+    const durationSeconds = startTimeRef.current
+      ? Math.max(0, Math.round((Date.now() - startTimeRef.current) / 1000))
+      : 0
+
+    const payload = {
+      clientId: context.clientId,
+      conversationId: conversationIdRef.current,
+      intent: intencion,
+      durationSeconds,
+      status,
+      transcript: transcript.map((entry) => ({
+        role: entry.role,
+        message: entry.message,
+        timestamp: entry.timestamp.toISOString(),
+      })),
+    }
+
+    apiAdmin
+      .post('/ai/call-logs', payload)
+      .then(() => setSaveStatus('saved'))
+      .catch(() => setSaveStatus('error'))
+  }
 
   const conversation = useConversation({
     onMessage: (payload) => {
@@ -76,8 +115,18 @@ function AICallInner({ context, onClose }: { context: AICallContext; onClose: ()
     onError: (msg) => {
       setError(typeof msg === 'string' ? msg : 'Error de conexión con el agente')
     },
-    onDisconnect: () => {
-      // Session ended
+    onConnect: ({ conversationId }) => {
+      conversationIdRef.current = conversationId
+      startTimeRef.current = Date.now()
+      setHasStarted(true)
+      setSaveStatus('idle')
+    },
+    onDisconnect: ({ reason }) => {
+      if (reason === 'error') {
+        saveCallLog('failed')
+      } else {
+        saveCallLog(pendingStatusRef.current)
+      }
     },
   })
 
@@ -97,6 +146,11 @@ function AICallInner({ context, onClose }: { context: AICallContext; onClose: ()
 
     setError(null)
     setTranscript([])
+    setSaveStatus('idle')
+    conversationIdRef.current = null
+    startTimeRef.current = null
+    saveInFlight.current = false
+    pendingStatusRef.current = 'completed'
 
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -124,11 +178,13 @@ function AICallInner({ context, onClose }: { context: AICallContext; onClose: ()
   }
 
   const handleEnd = () => {
+    pendingStatusRef.current = 'completed'
     conversation.endSession()
   }
 
   const handleClose = () => {
     if (conversation.status === 'connected') {
+      pendingStatusRef.current = 'cancelled'
       conversation.endSession()
     }
     onClose()
@@ -177,6 +233,26 @@ function AICallInner({ context, onClose }: { context: AICallContext; onClose: ()
                 </span>
               )}
             </div>
+          )}
+
+          {/* Save status */}
+          {saveStatus === 'saving' && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-accent-yellow/20 text-accent-yellow border border-accent-yellow/30">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Guardando registro...
+            </span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-accent-green/20 text-accent-green border border-accent-green/30">
+              <CheckCircle2 className="w-3 h-3" />
+              Registro guardado
+            </span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-accent-red/20 text-accent-red border border-accent-red/30">
+              <AlertCircle className="w-3 h-3" />
+              No se pudo guardar
+            </span>
           )}
         </div>
 

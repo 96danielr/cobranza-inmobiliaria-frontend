@@ -44,9 +44,10 @@ import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 import { WhatsAppChatModal } from '@/components/WhatsAppChatModal'
 import { AICallModal } from '@/components/AICallModal'
+import { CallHistoryModal } from '@/components/CallHistoryModal'
 import { ActionTooltip } from '@/components/ui/ActionTooltip'
 import { EditPlanPagosModal } from '@/components/contract/EditPlanPagosModal'
-import { Bot } from 'lucide-react'
+import { Bot, History } from 'lucide-react'
 
 interface Client {
   _id: string
@@ -79,7 +80,7 @@ interface ApiResponse {
 
 export default function ClientsPage() {
   const { clients: storeClients, setClients } = useClientStore()
-  const { isAuthenticated, admin } = useAdminAuthStore()
+  const { isAuthenticated, admin, selectedCompanyId } = useAdminAuthStore()
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDetailsLoading, setIsDetailsLoading] = useState(false)
@@ -90,6 +91,15 @@ export default function ClientsPage() {
   // AI Call Modal State
   const [isAICallModalOpen, setIsAICallModalOpen] = useState(false)
   const [aiCallContext, setAICallContext] = useState<any>(null)
+
+  // Call History Modal State
+  const [isCallHistoryOpen, setIsCallHistoryOpen] = useState(false)
+  const [historyClient, setHistoryClient] = useState<any>(null)
+
+  const handleOpenCallHistory = (client: any) => {
+    setHistoryClient(client)
+    setIsCallHistoryOpen(true)
+  }
 
   const handleOpenAICall = async (client: any) => {
     let companyName = 'Inmobiliaria'
@@ -103,10 +113,13 @@ export default function ClientsPage() {
     }
 
     const context = {
+      clientId: client._id,
+      company_id: selectedCompanyId || '',
       nombre_cliente: client.name || 'Cliente',
       documento_identidad: client.idNumber || '',
       nombre_inmobiliaria: companyName,
       resumen_cuotas: `Tiene cuotas pendientes/próximas registradas en su cuenta (C.C. ${client.idNumber}).`,
+      comportamiento: client.behavior || 'N/A',
       tipo_notificacion: 'cobro' as const
     }
     setAICallContext(context)
@@ -306,6 +319,7 @@ export default function ClientsPage() {
         formData.append('capture', manualCapture)
       }
       formData.append('paymentDate', manualPaymentDate)
+      formData.append('paymentOption', manualPaymentOption)
 
       await adminApi.registerManualPayment(formData)
 
@@ -764,6 +778,18 @@ export default function ClientsPage() {
                               <Bot className="w-4 h-4" />
                             </Button>
                           </ActionTooltip>
+
+                          <ActionTooltip content="Historial de llamadas">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenCallHistory(client)}
+                              className="glass-button min-h-[44px] min-w-[44px] text-accent-blue hover:text-accent-blue hover:bg-accent-blue/20"
+                              title="Ver historial de llamadas IA"
+                            >
+                              <History className="w-4 h-4" />
+                            </Button>
+                          </ActionTooltip>
                         </div>
                       </td>
                     </tr>
@@ -806,6 +832,7 @@ export default function ClientsPage() {
                   key={client._id}
                   client={client}
                   onView={handleViewClient}
+                  onHistory={handleOpenCallHistory}
                 />
               ))
             )}
@@ -1658,6 +1685,17 @@ export default function ClientsPage() {
           setAICallContext(null)
         }}
         context={aiCallContext}
+      />
+
+      {/* Call History Modal */}
+      <CallHistoryModal
+        isOpen={isCallHistoryOpen}
+        onClose={() => {
+          setIsCallHistoryOpen(false)
+          setHistoryClient(null)
+        }}
+        clientId={historyClient?._id ?? null}
+        clientName={historyClient?.name}
       />
 
       {/* Edit Client Modal */}

@@ -47,6 +47,8 @@ interface PendingPayment {
   cuotaNumber: number
   receiptNumber?: number
   amount: string | number
+  paymentType?: 'TOTAL' | 'MINIMO' | 'OTRO' | 'PARCIAL'
+  quotaValue?: number | null
   banco: string
   fechaPago: string
   comprobante?: string | null
@@ -692,7 +694,24 @@ export default function PaymentsPage() {
                       <div className="text-xs text-accent-green font-normal">Recibo #{payment.receiptNumber}</div>
                     )}
                   </td>
-                  <td className="py-4 px-6 text-text-primary font-medium">{formatCurrency(payment.amount)}</td>
+                  <td className="py-4 px-6 text-text-primary font-medium">
+                    {formatCurrency(payment.amount)}
+                    {payment.paymentType && (
+                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                        payment.paymentType === 'TOTAL'
+                          ? 'bg-accent-green/15 text-accent-green border-accent-green/30'
+                          : payment.paymentType === 'MINIMO'
+                            ? 'bg-accent-blue/15 text-accent-blue border-accent-blue/30'
+                            : 'bg-accent-yellow/15 text-accent-yellow border-accent-yellow/30'
+                      }`} title={
+                        payment.quotaValue
+                          ? `Valor de la cuota al reportar: ${formatCurrency(payment.quotaValue)}`
+                          : undefined
+                      }>
+                        {payment.paymentType === 'TOTAL' ? 'Total' : payment.paymentType === 'MINIMO' ? 'Mínimo' : 'Parcial/Abono'}
+                      </span>
+                    )}
+                  </td>
                   <td className="py-4 px-6 text-text-secondary text-sm">{payment.banco}</td>
                   <td className="py-4 px-6 text-text-secondary text-sm">{dayjs(payment.fechaPago).format('DD/MM/YYYY')}</td>
                   <td className="py-4 px-6">
@@ -887,7 +906,23 @@ export default function PaymentsPage() {
                   <p className="text-sm text-text-secondary">Monto</p>
                   <p className="font-medium text-text-primary text-lg">
                     {formatCurrency(selectedPayment.amount)}
+                    {selectedPayment.paymentType && (
+                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border align-middle ${
+                        selectedPayment.paymentType === 'TOTAL'
+                          ? 'bg-accent-green/15 text-accent-green border-accent-green/30'
+                          : selectedPayment.paymentType === 'MINIMO'
+                            ? 'bg-accent-blue/15 text-accent-blue border-accent-blue/30'
+                            : 'bg-accent-yellow/15 text-accent-yellow border-accent-yellow/30'
+                      }`}>
+                        {selectedPayment.paymentType === 'TOTAL' ? 'Seleccionó: Total' : selectedPayment.paymentType === 'MINIMO' ? 'Seleccionó: Mínimo' : 'Seleccionó: Parcial/Abono'}
+                      </span>
+                    )}
                   </p>
+                  {selectedPayment.quotaValue && (
+                    <p className="text-xs text-text-muted">
+                      Valor de la cuota al reportar: {formatCurrency(selectedPayment.quotaValue)}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">Banco</p>

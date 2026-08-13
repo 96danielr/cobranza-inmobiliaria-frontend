@@ -438,4 +438,44 @@ export const adminApi = {
 
   applyPaymentSchedule: (data: { contractId: string; updatedQuotas: any[]; reason?: string }) =>
     apiAdmin.post(`/payment-schedule/apply?companyId=${getCompanyId()}`, data),
+
+  // AI Call Logs
+  getCallLogs: (clientId: string, page: number = 1, limit: number = 10) =>
+    apiAdmin.get(`/ai/call-logs/client/${clientId}?page=${page}&limit=${limit}`),
+
+  // Knowledge Base (FAQ)
+  getKnowledge: (page: number = 1, limit: number = 20, search?: string, categoria?: string, activo?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      companyId: getCompanyId(),
+      ...(search && { search }),
+      ...(categoria && categoria !== 'ALL' && { categoria }),
+      ...(activo && activo !== 'ALL' && { activo }),
+    })
+    return apiAdmin.get(`/knowledge?${params.toString()}`)
+  },
+
+  createKnowledge: (data: any) =>
+    apiAdmin.post(`/knowledge?companyId=${getCompanyId()}`, data),
+
+  updateKnowledge: (id: string, data: any) =>
+    apiAdmin.put(`/knowledge/${id}?companyId=${getCompanyId()}`, data),
+
+  deleteKnowledge: (id: string) =>
+    apiAdmin.delete(`/knowledge/${id}?companyId=${getCompanyId()}`),
+
+  // Escalations (asesor call queue)
+  getEscalations: (page: number = 1, limit: number = 20, estado?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      companyId: getCompanyId(),
+      ...(estado && estado !== 'ALL' && { estado }),
+    })
+    return apiAdmin.get(`/escalations?${params.toString()}`)
+  },
+
+  updateEscalationStatus: (id: string, estado: string) =>
+    apiAdmin.patch(`/escalations/${id}/estado?companyId=${getCompanyId()}`, { estado }),
 }
