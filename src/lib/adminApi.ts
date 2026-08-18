@@ -407,6 +407,15 @@ export const adminApi = {
     return apiAdmin.get(`/reports/advanced?${params.toString()}`)
   },
 
+  getAdvisorReport: (from?: string, to?: string) => {
+    const params = new URLSearchParams({
+      companyId: getCompanyId(),
+      ...(from && { from }),
+      ...(to && { to })
+    })
+    return apiAdmin.get(`/reports/advisors?${params.toString()}`)
+  },
+
   // Audit
   getAuditLogs: (params: any) =>
     apiAdmin.get('/audit', { params: { ...params, companyId: getCompanyId() } }),
@@ -425,6 +434,40 @@ export const adminApi = {
 
   deleteBonus: (id: string) =>
     apiAdmin.delete(`/bonuses/${id}?companyId=${getCompanyId()}`),
+
+  // Commission Plans (CRUD)
+  getCommissionPlans: (activeOnly: boolean = false) =>
+    apiAdmin.get(`/commission-plans?companyId=${getCompanyId()}${activeOnly ? '&activeOnly=true' : ''}`),
+
+  createCommissionPlan: (data: any) =>
+    apiAdmin.post(`/commission-plans?companyId=${getCompanyId()}`, data),
+
+  updateCommissionPlan: (id: string, data: any) =>
+    apiAdmin.put(`/commission-plans/${id}?companyId=${getCompanyId()}`, data),
+
+  deleteCommissionPlan: (id: string) =>
+    apiAdmin.delete(`/commission-plans/${id}?companyId=${getCompanyId()}`),
+
+  getCommissions: (status?: string, contractId?: string) => {
+    const params = new URLSearchParams({
+      companyId: getCompanyId(),
+      ...(status && { status }),
+      ...(contractId && { contractId })
+    })
+    return apiAdmin.get(`/commissions?${params.toString()}`)
+  },
+
+  radicarComision: (id: string, installmentIndex: number) =>
+    apiAdmin.post(`/commissions/${id}/radicar?companyId=${getCompanyId()}`, { installmentIndex }),
+
+  aprobarComision: (id: string, installmentIndex: number, observacion?: string) =>
+    apiAdmin.post(`/commissions/${id}/aprobar?companyId=${getCompanyId()}`, { installmentIndex, observacion }),
+
+  rechazarComision: (id: string, installmentIndex: number, rejectedReason: string) =>
+    apiAdmin.post(`/commissions/${id}/rechazar?companyId=${getCompanyId()}`, { installmentIndex, rejectedReason }),
+
+  pagarComision: (id: string, installmentIndex: number) =>
+    apiAdmin.post(`/commissions/${id}/pagar?companyId=${getCompanyId()}`, { installmentIndex }),
 
   resendPaymentPlan: (contractId: string) =>
     apiAdmin.post(`/clients/resend-plan/${contractId}?companyId=${getCompanyId()}`),

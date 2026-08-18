@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   DollarSign,
-  Wallet
+  Wallet,
+  UserCheck
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -128,9 +129,43 @@ interface AdvancedReportData {
   bestClients: BestClient[]
 }
 
+interface AdvisorRow {
+  advisorId: string | null
+  name: string
+  email: string
+  ventas: number
+  valorVendido: number
+  recaudo: number
+  recaudoInicial: number
+  valorInicialTotal: number
+  comisionGenerada: number
+  comisionDisponible: number
+  comisionRadicada: number
+  comisionAprobada: number
+  comisionPagada: number
+}
+
+interface AdvisorReportData {
+  advisors: AdvisorRow[]
+  totals: {
+    ventas: number
+    valorVendido: number
+    recaudo: number
+    recaudoInicial: number
+    valorInicialTotal: number
+    comisionGenerada: number
+    comisionDisponible: number
+    comisionRadicada: number
+    comisionAprobada: number
+    comisionPagada: number
+  }
+  from: string
+  to: string
+}
+
 export default function ReportsPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'sales' | 'finance'>('sales')
+  const [activeTab, setActiveTab] = useState<'sales' | 'finance' | 'advisors'>('sales')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<SalesReportData | null>(null)
   const [projection, setProjection] = useState<ProjectionData[]>([])
@@ -140,6 +175,10 @@ export default function ReportsPage() {
   // New Reports State
   const [advancedData, setAdvancedData] = useState<AdvancedReportData | null>(null)
   const [loadingAdvanced, setLoadingAdvanced] = useState(false)
+
+  // Advisor Report State
+  const [advisorData, setAdvisorData] = useState<AdvisorReportData | null>(null)
+  const [loadingAdvisors, setLoadingAdvisors] = useState(false)
 
   const [filterStartDate, setFilterStartDate] = useState(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
@@ -192,11 +231,32 @@ export default function ReportsPage() {
     }
   }
 
+  const fetchAdvisorReport = async (from?: string, to?: string) => {
+    try {
+      setLoadingAdvisors(true)
+      const response = await adminApi.getAdvisorReport(from, to)
+      if (response.data.success) {
+        setAdvisorData(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching advisor report:', error)
+      toast.error('Error al cargar el informe por asesor')
+    } finally {
+      setLoadingAdvisors(false)
+    }
+  }
+
   useEffect(() => {
     fetchReport()
     fetchProjection(projectionMonths)
     fetchAdvancedReport(filterStartDate, filterEndDate)
   }, [])
+
+  useEffect(() => {
+    if (activeTab === 'advisors') {
+      fetchAdvisorReport(filterStartDate, filterEndDate)
+    }
+  }, [activeTab])
 
   useEffect(() => {
     fetchProjection(projectionMonths)
@@ -247,7 +307,7 @@ export default function ReportsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="glass" size="sm" onClick={() => { fetchReport(); fetchAdvancedReport(); }} className="flex items-center gap-2">
+          <Button variant="glass" size="sm" onClick={() => { fetchReport(); fetchAdvancedReport(); fetchAdvisorReport(filterStartDate, filterEndDate); }} className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Actualizar Datos
           </Button>
@@ -255,7 +315,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex bg-glass-primary/40 backdrop-blur-sm p-1 rounded-2xl border border-glass-border self-start w-full max-w-md">
+      <div className="flex bg-glass-primary/40 backdrop-blur-sm p-1 rounded-2xl border border-glass-border self-start w-full max-w-lg">
         <button
           onClick={() => setActiveTab('sales')}
           className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
@@ -277,6 +337,17 @@ export default function ReportsPage() {
         >
           <Wallet className="w-4 h-4" />
           Cartera y Recaudos
+        </button>
+        <button
+          onClick={() => setActiveTab('advisors')}
+          className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'advisors' 
+              ? 'bg-blue-600 text-white shadow-md' 
+              : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
+          }`}
+        >
+          <UserCheck className="w-4 h-4" />
+          Por Asesor
         </button>
       </div>
 
@@ -930,6 +1001,218 @@ export default function ReportsPage() {
                   </CardContent>
                 </Card>
               </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: SALES PER ADVISOR */}
+      {activeTab === 'advisors' && (
+        <div className="space-y-8 animate-fade-in">
+          {loadingAdvisors ? (
+            <div className="space-y-6">
+              <div className="h-28 bg-white/5 rounded-2xl animate-pulse" />
+              <div className="h-80 bg-white/5 rounded-2xl animate-pulse" />
+            </div>
+          ) : (
+            <>
+              {/* Range Query */}
+              <Card variant="elevated" className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div>
+                    <h3 className="font-bold text-text-primary text-base">Informe de Ventas por Asesor</h3>
+                    <p className="text-xs text-text-secondary mt-1">
+                      Ventas del período, valor vendido y recaudo (cuota inicial incluida) de cada ejecutivo.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-end gap-4">
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-secondary font-semibold mb-2">Fecha Inicio</label>
+                      <input
+                        type="date"
+                        value={filterStartDate}
+                        onChange={(e) => setFilterStartDate(e.target.value)}
+                        className="glass-input px-3 py-2 text-sm text-text-primary w-44"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-secondary font-semibold mb-2">Fecha Fin</label>
+                      <input
+                        type="date"
+                        value={filterEndDate}
+                        onChange={(e) => setFilterEndDate(e.target.value)}
+                        className="glass-input px-3 py-2 text-sm text-text-primary w-44"
+                      />
+                    </div>
+                    <Button
+                      variant="primary"
+                      onClick={() => fetchAdvisorReport(filterStartDate, filterEndDate)}
+                      className="min-h-[38px] px-5"
+                      loading={loadingAdvisors}
+                    >
+                      Consultar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Totals Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card variant="interactive" className="stats-card stats-blue">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Ventas en el Período</p>
+                        <h3 className="text-2xl font-extrabold text-text-primary mt-1">{advisorData?.totals.ventas || 0}</h3>
+                      </div>
+                      <div className="glass-card p-3 border-accent-blue/20">
+                        <TrendingUp className="w-6 h-6 text-accent-blue" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card variant="interactive" className="stats-card stats-purple">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Valor Vendido</p>
+                        <h3 className="text-xl font-extrabold text-text-primary mt-1 truncate">{formatCurrency(advisorData?.totals.valorVendido || 0)}</h3>
+                      </div>
+                      <div className="glass-card p-3 border-accent-purple/20">
+                        <DollarSign className="w-6 h-6 text-accent-purple" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card variant="interactive" className="stats-card stats-green">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Recaudado</p>
+                        <h3 className="text-xl font-extrabold text-text-primary mt-1 truncate">{formatCurrency(advisorData?.totals.recaudo || 0)}</h3>
+                      </div>
+                      <div className="glass-card p-3 border-accent-green/20">
+                        <CheckCircle2 className="w-6 h-6 text-accent-green" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card variant="interactive" className="stats-card stats-yellow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Cuota Inicial Recaudada</p>
+                        <h3 className="text-xl font-extrabold text-text-primary mt-1 truncate">{formatCurrency(advisorData?.totals.recaudoInicial || 0)}</h3>
+                      </div>
+                      <div className="glass-card p-3 border-accent-yellow/20">
+                        <Award className="w-6 h-6 text-accent-yellow" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Advisors Table */}
+              <Card className="glass-card overflow-hidden">
+                <div className="p-5 border-b border-glass-border flex items-center justify-between bg-accent-blue/5">
+                  <div className="flex items-center gap-2.5">
+                    <UserCheck className="w-5 h-5 text-accent-blue" />
+                    <h3 className="font-extrabold text-text-primary text-base">Ventas por Asesor</h3>
+                  </div>
+                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-accent-blue/20 text-accent-blue">
+                    {advisorData?.advisors.length || 0} asesores
+                  </span>
+                </div>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-glass-border/30 text-text-secondary text-xs uppercase bg-white/2">
+                          <th className="px-5 py-3.5 font-semibold">Asesor</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Ventas</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Valor Vendido</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Recaudado</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">% Recaudo</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Comisión Generada</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Disponible</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Pagada</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-glass-border/10">
+                        {advisorData?.advisors.map((advisor) => {
+                          const porcentaje = advisor.valorVendido > 0
+                            ? Math.round((advisor.recaudo / advisor.valorVendido) * 100)
+                            : 0
+                          return (
+                            <tr key={advisor.advisorId || 'sin-asesor'} className="hover:bg-white/2 transition-colors">
+                              <td className="px-5 py-4">
+                                <div className="font-bold text-text-primary">{advisor.name}</div>
+                                <div className="text-xs text-text-muted">{advisor.email || 'Sin email registrado'}</div>
+                              </td>
+                              <td className="px-5 py-4 text-right">
+                                <span className="px-2.5 py-1 rounded-full text-xs font-black bg-accent-blue/15 text-accent-blue">
+                                  {advisor.ventas}
+                                </span>
+                              </td>
+                              <td className="px-5 py-4 text-right font-black text-text-primary">
+                                {formatCurrency(advisor.valorVendido)}
+                              </td>
+                              <td className="px-5 py-4 text-right font-black text-accent-green">
+                                {formatCurrency(advisor.recaudo)}
+                              </td>
+                              <td className="px-5 py-4 text-right">
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-black ${
+                                  porcentaje >= 70
+                                    ? 'bg-accent-green/15 text-accent-green'
+                                    : porcentaje >= 40
+                                    ? 'bg-accent-yellow/15 text-accent-yellow'
+                                    : 'bg-accent-red/15 text-accent-red'
+                                }`}>
+                                  {formatPercentage(porcentaje)}
+                                </span>
+                              </td>
+                              <td className="px-5 py-4 text-right font-black text-text-primary">
+                                {advisor.comisionGenerada > 0 ? formatCurrency(advisor.comisionGenerada) : '-'}
+                              </td>
+                              <td className="px-5 py-4 text-right font-black text-accent-yellow">
+                                {advisor.comisionDisponible > 0 ? formatCurrency(advisor.comisionDisponible) : '-'}
+                              </td>
+                              <td className="px-5 py-4 text-right font-black text-accent-green">
+                                {advisor.comisionPagada > 0 ? formatCurrency(advisor.comisionPagada) : '-'}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                        {advisorData && advisorData.advisors.length === 0 && (
+                          <tr>
+                            <td colSpan={8} className="px-5 py-10 text-center text-text-muted">
+                              No hay ventas en el período seleccionado.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                      {advisorData && advisorData.advisors.length > 0 && (
+                        <tfoot>
+                          <tr className="border-t border-glass-border/30 bg-white/2 text-text-primary">
+                            <td className="px-5 py-4 font-black">Total General</td>
+                            <td className="px-5 py-4 text-right font-black">{advisorData.totals.ventas}</td>
+                            <td className="px-5 py-4 text-right font-black">{formatCurrency(advisorData.totals.valorVendido)}</td>
+                            <td className="px-5 py-4 text-right font-black text-accent-green">{formatCurrency(advisorData.totals.recaudo)}</td>
+                            <td className="px-5 py-4 text-right font-black">
+                              {advisorData.totals.valorVendido > 0
+                                ? formatPercentage(Math.round((advisorData.totals.recaudo / advisorData.totals.valorVendido) * 100))
+                                : formatPercentage(0)}
+                            </td>
+                            <td className="px-5 py-4 text-right font-black">{formatCurrency(advisorData.totals.comisionGenerada)}</td>
+                            <td className="px-5 py-4 text-right font-black text-accent-yellow">{formatCurrency(advisorData.totals.comisionDisponible)}</td>
+                            <td className="px-5 py-4 text-right font-black text-accent-green">{formatCurrency(advisorData.totals.comisionPagada)}</td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>

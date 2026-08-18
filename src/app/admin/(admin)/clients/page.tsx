@@ -237,6 +237,15 @@ export default function ClientsPage() {
     }).format(numValue)
   }
 
+  const getClientSellers = (client: Client): string => {
+    const names = Array.from(new Set(
+      (client.contracts || [])
+        .map((c: any) => c.sellerId?.accountId?.fullName)
+        .filter(Boolean)
+    ))
+    return names.length > 0 ? names.join(', ') : 'No asignado'
+  }
+
   const pendingQuotas = useMemo(() => {
     if (!selectedContractForPayment || !selectedContractForPayment.quotas) return []
     return selectedContractForPayment.quotas
@@ -932,6 +941,10 @@ export default function ClientsPage() {
                 <div>
                   <p className="text-sm text-text-secondary">Contratos</p>
                   <p className="font-medium text-text-primary">{selectedClient.contracts?.length || selectedClient._count?.contracts || 0}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary">Asesor de Venta</p>
+                  <p className="font-medium text-text-primary">{getClientSellers(selectedClient)}</p>
                 </div>
               </div>
             </div>

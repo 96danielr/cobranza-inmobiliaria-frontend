@@ -14,7 +14,8 @@ import {
   MessageSquare,
   MailCheck,
   BookOpen,
-  PhoneForwarded
+  PhoneForwarded,
+  BadgeDollarSign
 } from 'lucide-react'
 
 import { PERMISSIONS, hasPermission, type Permission } from './permissions'
@@ -42,6 +43,7 @@ export const adminNavItems: AdminNavItem[] = [
   { icon: MessageSquare, label: 'Mensajes', href: '/admin/messages', permission: PERMISSIONS.CARTERA_FOLLOWUP },
   { icon: MailCheck, label: 'Plantillas WA', href: '/admin/whatsapp-templates', permission: PERMISSIONS.CARTERA_FOLLOWUP },
   { icon: Upload, label: 'Importar', href: '/admin/import', permission: PERMISSIONS.IMPORT_MANAGE },
+  { icon: BadgeDollarSign, label: 'Comisiones', href: '/admin/commissions', permission: PERMISSIONS.COMISIONES_VIEW },
   { icon: Shield, label: 'Equipo', href: '/admin/users', permission: PERMISSIONS.EQUIPO_VIEW },
   { icon: PhoneCall, label: 'Chat IA', href: '/admin/ai-chat', permission: PERMISSIONS.IA_CHAT },
   { icon: BookOpen, label: 'FAQ Agente', href: '/admin/faq', permission: PERMISSIONS.IA_CHAT },

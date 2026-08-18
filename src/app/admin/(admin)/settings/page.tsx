@@ -32,7 +32,8 @@ import {
   Box,
   ChevronLeft,
   ChevronRight,
-  Calendar
+  Calendar,
+  BadgeDollarSign
 } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -144,7 +145,7 @@ const mockTenantConfig: TenantConfig = {
 export default function SettingsPage() {
   const { isAuthenticated, admin } = useAdminAuthStore()
   const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
-  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas' | 'bonuses' | 'audit'>('company')
+  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas' | 'bonuses' | 'commissions' | 'audit'>('company')
   const [limits, setLimits] = useState<any[]>([])
   const [usage, setUsage] = useState<any[]>([])
   const [limitsLoading, setLimitsLoading] = useState(false)
@@ -324,6 +325,224 @@ export default function SettingsPage() {
       })
     }
     setIsBonusModalOpen(true)
+  }
+
+  // Commission Plans Management State
+  interface PlanMilestoneForm {
+    key: 'INITIAL_QUOTA' | 'QUOTA_NUMBER'
+    quotaNumber: string
+    amount: string
+    portion: string
+  }
+
+  interface PlanTierForm {
+    initialQuotaPercentage: string
+    milestones: PlanMilestoneForm[]
+  }
+
+  const [commissionPlans, setCommissionPlans] = useState<any[]>([])
+  const [commissionPlansLoading, setCommissionPlansLoading] = useState(false)
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<any>(null)
+  const [planMode, setPlanMode] = useState<'tiers' | 'milestones'>('milestones')
+  const [planForm, setPlanForm] = useState({
+    name: '',
+    baseType: 'fixed',
+    baseValue: '',
+    isActive: true,
+    tiers: [] as PlanTierForm[],
+    milestones: [] as PlanMilestoneForm[]
+  })
+
+  const fetchCommissionPlans = async () => {
+    setCommissionPlansLoading(true)
+    try {
+      const response = await adminApi.getCommissionPlans()
+      if (response.data.success) {
+        setCommissionPlans(response.data.data.plans || [])
+      }
+    } catch (error) {
+      console.error('Error fetching commission plans:', error)
+    } finally {
+      setCommissionPlansLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'commissions') {
+      fetchCommissionPlans()
+    }
+  }, [activeTab])
+
+  const updateTier = (tierIdx: number, patch: Partial<PlanTierForm>) => {
+    setPlanForm(prev => ({
+      ...prev,
+      tiers: prev.tiers.map((t, i) => i === tierIdx ? { ...t, ...patch } : t)
+    }))
+  }
+
+  const updateTierMilestone = (tierIdx: number, mIdx: number, patch: Partial<PlanMilestoneForm>) => {
+    setPlanForm(prev => ({
+      ...prev,
+      tiers: prev.tiers.map((t, i) => i === tierIdx
+        ? { ...t, milestones: t.milestones.map((m, j) => j === mIdx ? { ...m, ...patch } : m) }
+        : t)
+    }))
+  }
+
+  const updateMilestone = (mIdx: number, patch: Partial<PlanMilestoneForm>) => {
+    setPlanForm(prev => ({
+      ...prev,
+      milestones: prev.milestones.map((m, j) => j === mIdx ? { ...m, ...patch } : m)
+    }))
+  }
+
+  const addTier = () => {
+    setPlanForm(prev => ({ ...prev, tiers: [...prev.tiers, { initialQuotaPercentage: '', milestones: [] }] }))
+  }
+
+  const removeTier = (tierIdx: number) => {
+    setPlanForm(prev => ({ ...prev, tiers: prev.tiers.filter((_, i) => i !== tierIdx) }))
+  }
+
+  const addTierMilestone = (tierIdx: number) => {
+    setPlanForm(prev => ({
+      ...prev,
+      tiers: prev.tiers.map((t, i) => i === tierIdx
+        ? { ...t, milestones: [...t.milestones, { key: 'INITIAL_QUOTA' as const, quotaNumber: '', amount: '', portion: '' }] }
+        : t)
+    }))
+  }
+
+  const removeTierMilestone = (tierIdx: number, mIdx: number) => {
+    setPlanForm(prev => ({
+      ...prev,
+      tiers: prev.tiers.map((t, i) => i === tierIdx
+        ? { ...t, milestones: t.milestones.filter((_, j) => j !== mIdx) }
+        : t)
+    }))
+  }
+
+  const addMilestone = () => {
+    setPlanForm(prev => ({
+      ...prev,
+      milestones: [...prev.milestones, { key: 'INITIAL_QUOTA' as const, quotaNumber: '', amount: '', portion: '' }]
+    }))
+  }
+
+  const removeMilestone = (mIdx: number) => {
+    setPlanForm(prev => ({ ...prev, milestones: prev.milestones.filter((_, j) => j !== mIdx) }))
+  }
+
+  const handleSavePlan = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!planForm.name || !planForm.baseValue) {
+      toast.error('Nombre y valor base son obligatorios')
+      return
+    }
+    const payload: any = {
+      name: planForm.name,
+      baseType: planForm.baseType,
+      baseValue: parseFloat(planForm.baseValue),
+      isActive: planForm.isActive,
+      tiers: planMode === 'tiers'
+        ? planForm.tiers.filter(t => t.initialQuotaPercentage !== '').map(t => ({
+            initialQuotaPercentage: parseFloat(t.initialQuotaPercentage),
+            milestones: t.milestones.filter(m => m.key && m.amount !== '').map(m => ({
+              key: m.key,
+              quotaNumber: m.key === 'QUOTA_NUMBER' ? parseInt(m.quotaNumber) : undefined,
+              amount: parseFloat(m.amount)
+            }))
+          }))
+        : [],
+      milestones: planMode === 'milestones'
+        ? planForm.milestones.filter(m => m.key && m.portion !== '').map(m => ({
+            key: m.key,
+            quotaNumber: m.key === 'QUOTA_NUMBER' ? parseInt(m.quotaNumber) : undefined,
+            portion: parseFloat(m.portion)
+          }))
+        : []
+    }
+    setIsSaving(true)
+    try {
+      if (selectedPlan) {
+        await adminApi.updateCommissionPlan(selectedPlan._id, payload)
+        toast.success('Plan de comisión actualizado exitosamente')
+      } else {
+        await adminApi.createCommissionPlan(payload)
+        toast.success('Plan de comisión creado exitosamente')
+      }
+      setIsPlanModalOpen(false)
+      fetchCommissionPlans()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al guardar el plan de comisión')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeletePlan = async (id: string) => {
+    if (!confirm('¿Estás seguro de que deseas desactivar este plan de comisión?')) return
+    try {
+      await adminApi.deleteCommissionPlan(id)
+      toast.success('Plan de comisión desactivado')
+      fetchCommissionPlans()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al desactivar el plan')
+    }
+  }
+
+  const openPlanModal = (plan: any = null) => {
+    setSelectedPlan(plan)
+    if (plan) {
+      const hasTiers = Array.isArray(plan.tiers) && plan.tiers.length > 0
+      setPlanMode(hasTiers ? 'tiers' : 'milestones')
+      setPlanForm({
+        name: plan.name,
+        baseType: plan.baseType,
+        baseValue: plan.baseValue.toString(),
+        isActive: plan.isActive,
+        tiers: hasTiers
+          ? plan.tiers.map((t: any) => ({
+              initialQuotaPercentage: t.initialQuotaPercentage.toString(),
+              milestones: (t.milestones || []).map((m: any) => ({
+                key: m.key,
+                quotaNumber: m.quotaNumber ? m.quotaNumber.toString() : '',
+                amount: m.amount !== undefined ? m.amount.toString() : '',
+                portion: m.portion !== undefined ? m.portion.toString() : ''
+              }))
+            }))
+          : [],
+        milestones: !hasTiers
+          ? (plan.milestones || []).map((m: any) => ({
+              key: m.key,
+              quotaNumber: m.quotaNumber ? m.quotaNumber.toString() : '',
+              amount: m.amount !== undefined ? m.amount.toString() : '',
+              portion: m.portion !== undefined ? m.portion.toString() : ''
+            }))
+          : []
+      })
+    } else {
+      setPlanMode('milestones')
+      setPlanForm({
+        name: '',
+        baseType: 'fixed',
+        baseValue: '',
+        isActive: true,
+        tiers: [],
+        milestones: [{ key: 'INITIAL_QUOTA', quotaNumber: '', amount: '', portion: '' }]
+      })
+    }
+    setIsPlanModalOpen(true)
+  }
+
+  const planSummary = (plan: any): string => {
+    if (Array.isArray(plan.tiers) && plan.tiers.length > 0) {
+      const pcts = plan.tiers.map((t: any) => `${t.initialQuotaPercentage}%`).join(', ')
+      return `${plan.tiers.length} tramos (${pcts})`
+    }
+    const count = (plan.milestones || []).length
+    return `${count} hito${count === 1 ? '' : 's'} de desembolso`
   }
 
   // Tenant-level state (MATRIZ)
@@ -757,6 +976,7 @@ export default function SettingsPage() {
     { key: 'integrations', label: 'Integraciones', icon: Settings },
     { key: 'quotas', label: 'Límites y Cuotas', icon: Shield },
     { key: 'bonuses', label: 'Bonos de Descuento', icon: CreditCard },
+    ...(can(PERMISSIONS.COMISIONES_VIEW) ? [{ key: 'commissions', label: 'Comisiones', icon: BadgeDollarSign }] : []),
     ...(can(PERMISSIONS.SYSTEM_AUDIT) ? [{ key: 'audit', label: 'Auditoría', icon: Shield }] : [])
   ]
 
@@ -1167,6 +1387,346 @@ export default function SettingsPage() {
                   className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30"
                 >
                   {isSaving ? 'Guardando...' : selectedBonus ? 'Guardar Cambios' : 'Crear Bono'}
+                </Button>
+              </div>
+            </form>
+          </Modal>
+        </div>
+      )}
+
+      {/* Commissions Tab */}
+      {activeTab === 'commissions' && (
+        <div className="space-y-4 md:space-y-6">
+          <Card variant="elevated" className="animate-fade-in-up">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-text-primary">Planes de Comisión</h3>
+                  <p className="text-sm text-text-secondary mt-1">Define cuánto recibe el asesor por venta y CUÁNDO se le paga según el % de cuota inicial elegido por el cliente. Cada tramo (% de CI) tiene sus propios desembolsos: ej. Marbella con CI 10% paga $2.5M al saldar la cuota inicial y $2.5M al pagar la cuota #6; con CI 30% paga todo ($5M) al saldar la cuota inicial.</p>
+                </div>
+                {can(PERMISSIONS.COMISIONES_MANAGE) && (
+                  <Button
+                    onClick={() => openPlanModal()}
+                    className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Crear Plan de Comisión
+                  </Button>
+                )}
+              </div>
+
+              {commissionPlansLoading ? (
+                <TableRowSkeleton columns={5} />
+              ) : commissionPlans.length === 0 ? (
+                <div className="text-center py-10 border border-dashed border-glass-border rounded-xl">
+                  <BadgeDollarSign className="mx-auto h-12 w-12 text-text-muted mb-3 opacity-60" />
+                  <p className="text-text-secondary font-semibold">No hay planes de comisión configurados</p>
+                  <p className="text-xs text-text-muted mt-1">Crea un plan para que las ventas generen comisiones automáticamente.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-glass-border">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-glass-primary/10 border-b border-glass-border text-text-secondary">
+                        <th className="p-3 md:p-4 font-semibold">Nombre del Plan</th>
+                        <th className="p-3 md:p-4 font-semibold text-right">Valor Base</th>
+                        <th className="p-3 md:p-4 font-semibold">Configuración</th>
+                        <th className="p-3 md:p-4 font-semibold">Estado</th>
+                        <th className="p-3 md:p-4 font-semibold text-center">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-glass-border/30 text-text-primary">
+                      {commissionPlans.map((plan) => (
+                        <tr key={plan._id} className="hover:bg-glass-primary/5 transition-colors">
+                          <td className="p-3 md:p-4 font-bold">{plan.name}</td>
+                          <td className="p-3 md:p-4 text-right font-semibold text-accent-green">
+                            {plan.baseType === 'fixed'
+                              ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(plan.baseValue)
+                              : `${plan.baseValue}%`}
+                          </td>
+                          <td className="p-3 md:p-4 text-text-secondary">{planSummary(plan)}</td>
+                          <td className="p-3 md:p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              plan.isActive ? 'bg-accent-green/20 text-accent-green' : 'bg-accent-red/20 text-accent-red'
+                            }`}>
+                              {plan.isActive ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="p-3 md:p-4">
+                            <div className="flex items-center justify-center gap-2">
+                              {can(PERMISSIONS.COMISIONES_MANAGE) && (
+                                <>
+                                  <Button
+                                    variant="glass"
+                                    size="sm"
+                                    onClick={() => openPlanModal(plan)}
+                                    className="p-2 text-accent-blue"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="glass"
+                                    size="sm"
+                                    onClick={() => handleDeletePlan(plan._id)}
+                                    className="p-2 text-accent-red"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Commission Plan Modal */}
+          <Modal
+            isOpen={isPlanModalOpen}
+            onClose={() => setIsPlanModalOpen(false)}
+            title={selectedPlan ? 'Editar Plan de Comisión' : 'Crear Plan de Comisión'}
+            size="lg"
+          >
+            <form onSubmit={handleSavePlan} className="space-y-4 p-4 md:p-6">
+              <Input
+                label="Nombre del Plan *"
+                placeholder="Ej: Comisión venta de lote"
+                value={planForm.name}
+                onChange={(e) => setPlanForm(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Tipo de Base *</label>
+                  <select
+                    className="glass-input w-full px-3 py-2"
+                    value={planForm.baseType}
+                    onChange={(e) => setPlanForm(prev => ({ ...prev, baseType: e.target.value }))}
+                  >
+                    <option value="fixed">Valor fijo en COP</option>
+                    <option value="percentage">Porcentaje (%) del valor de venta</option>
+                  </select>
+                </div>
+                <Input
+                  label={planForm.baseType === 'fixed' ? 'Valor Base en COP *' : 'Porcentaje (%) *'}
+                  type="number"
+                  placeholder={planForm.baseType === 'fixed' ? 'Ej: 5000000' : 'Ej: 5'}
+                  value={planForm.baseValue}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, baseValue: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">Modo de Configuración</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPlanMode('milestones')}
+                    className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+                      planMode === 'milestones'
+                        ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/30'
+                        : 'text-text-secondary hover:text-text-primary border-glass-border'
+                    }`}
+                  >
+                    Hitos globales (porción %)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPlanMode('tiers')}
+                    disabled={planForm.baseType === 'percentage'}
+                    title={planForm.baseType === 'percentage' ? 'Los tramos solo se soportan con base fija' : ''}
+                    className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+                      planMode === 'tiers'
+                        ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/30'
+                        : planForm.baseType === 'percentage'
+                        ? 'text-text-muted border-glass-border opacity-50 cursor-not-allowed'
+                        : 'text-text-secondary hover:text-text-primary border-glass-border'
+                    }`}
+                  >
+                    Tramo por % cuota inicial
+                  </button>
+                </div>
+                <p className="text-xs text-text-muted mt-2">
+                  {planMode === 'tiers'
+                    ? 'Cada tramo (% de cuota inicial del contrato) define SUS propios desembolsos. Ej. Marbella: tramo 10% → $2.5M al pagar la inicial + $2.5M en la cuota #6; tramo 30% → $5M completos al pagar la inicial (un solo desembolso). La suma de cada tramo debe igualar el valor base.'
+                    : 'El mismo reparto de desembolso aplica para todo % de cuota inicial; la suma de porciones debe ser 1 (100%).'}
+                </p>
+              </div>
+
+              {planMode === 'milestones' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-text-primary">Hitos de Desembolso</label>
+                    <Button type="button" variant="glass" size="sm" onClick={addMilestone} className="text-accent-blue">
+                      <Plus className="w-4 h-4 mr-1" /> Agregar Hito
+                    </Button>
+                  </div>
+                  {planForm.milestones.map((m, mIdx) => (
+                    <div key={mIdx} className="flex flex-wrap items-end gap-3 p-3 rounded-xl border border-glass-border bg-glass-primary/10">
+                      <div className="flex flex-col flex-1 min-w-[140px]">
+                        <label className="text-xs text-text-secondary font-semibold mb-2">Hito</label>
+                        <select
+                          className="glass-input px-3 py-2 text-sm"
+                          value={m.key}
+                          onChange={(e) => updateMilestone(mIdx, { key: e.target.value as any })}
+                        >
+                          <option value="INITIAL_QUOTA">Pago de cuota inicial</option>
+                          <option value="QUOTA_NUMBER">Pago de cuota #N</option>
+                        </select>
+                      </div>
+                      {m.key === 'QUOTA_NUMBER' && (
+                        <div className="flex flex-col w-28">
+                          <label className="text-xs text-text-secondary font-semibold mb-2">N° Cuota</label>
+                          <input
+                            type="number"
+                            min="1"
+                            className="glass-input px-3 py-2 text-sm"
+                            placeholder="Ej: 6"
+                            value={m.quotaNumber}
+                            onChange={(e) => updateMilestone(mIdx, { quotaNumber: e.target.value })}
+                          />
+                        </div>
+                      )}
+                      <div className="flex flex-col w-32">
+                        <label className="text-xs text-text-secondary font-semibold mb-2">Porción (0-1)</label>
+                        <input
+                          type="number"
+                          step="0.05"
+                          min="0"
+                          max="1"
+                          className="glass-input px-3 py-2 text-sm"
+                          placeholder="Ej: 0.5"
+                          value={m.portion}
+                          onChange={(e) => updateMilestone(mIdx, { portion: e.target.value })}
+                        />
+                      </div>
+                      <Button type="button" variant="glass" size="sm" onClick={() => removeMilestone(mIdx)} className="p-2 text-accent-red">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <p className="text-xs text-text-muted">
+                    Suma de porciones: <strong>{planForm.milestones.reduce((s, m) => s + (parseFloat(m.portion) || 0), 0).toFixed(2)}</strong> (debe ser 1.00)
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-text-primary">Tramos por % de Cuota Inicial</label>
+                    <Button type="button" variant="glass" size="sm" onClick={addTier} className="text-accent-blue">
+                      <Plus className="w-4 h-4 mr-1" /> Agregar Tramo
+                    </Button>
+                  </div>
+                  {planForm.tiers.map((tier, tierIdx) => {
+                    const sum = tier.milestones.reduce((s, m) => s + (parseFloat(m.amount) || 0), 0)
+                    return (
+                      <div key={tierIdx} className="p-4 rounded-xl border border-glass-border bg-glass-primary/10 space-y-3">
+                        <div className="flex flex-wrap items-end gap-3">
+                          <div className="flex flex-col w-44">
+                            <label className="text-xs text-text-secondary font-semibold mb-2">% Cuota Inicial</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              className="glass-input px-3 py-2 text-sm"
+                              placeholder="Ej: 10"
+                              value={tier.initialQuotaPercentage}
+                              onChange={(e) => updateTier(tierIdx, { initialQuotaPercentage: e.target.value })}
+                            />
+                          </div>
+                          <Button type="button" variant="glass" size="sm" onClick={() => addTierMilestone(tierIdx)} className="text-accent-blue">
+                            <Plus className="w-4 h-4 mr-1" /> Agregar Hito
+                          </Button>
+                          <Button type="button" variant="glass" size="sm" onClick={() => removeTier(tierIdx)} className="p-2 text-accent-red">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {tier.milestones.map((m, mIdx) => (
+                          <div key={mIdx} className="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-glass-border/50 bg-glass-primary/5">
+                            <div className="flex flex-col flex-1 min-w-[140px]">
+                              <label className="text-xs text-text-secondary font-semibold mb-2">Hito</label>
+                              <select
+                                className="glass-input px-3 py-2 text-sm"
+                                value={m.key}
+                                onChange={(e) => updateTierMilestone(tierIdx, mIdx, { key: e.target.value as any })}
+                              >
+                                <option value="INITIAL_QUOTA">Pago de cuota inicial</option>
+                                <option value="QUOTA_NUMBER">Pago de cuota #N</option>
+                              </select>
+                            </div>
+                            {m.key === 'QUOTA_NUMBER' && (
+                              <div className="flex flex-col w-28">
+                                <label className="text-xs text-text-secondary font-semibold mb-2">N° Cuota</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  className="glass-input px-3 py-2 text-sm"
+                                  placeholder="Ej: 6"
+                                  value={m.quotaNumber}
+                                  onChange={(e) => updateTierMilestone(tierIdx, mIdx, { quotaNumber: e.target.value })}
+                                />
+                              </div>
+                            )}
+                            <div className="flex flex-col w-36">
+                              <label className="text-xs text-text-secondary font-semibold mb-2">Monto en COP</label>
+                              <input
+                                type="number"
+                                min="0"
+                                className="glass-input px-3 py-2 text-sm"
+                                placeholder="Ej: 2500000"
+                                value={m.amount}
+                                onChange={(e) => updateTierMilestone(tierIdx, mIdx, { amount: e.target.value })}
+                              />
+                            </div>
+                            <Button type="button" variant="glass" size="sm" onClick={() => removeTierMilestone(tierIdx, mIdx)} className="p-2 text-accent-red">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <p className={`text-xs ${Math.abs(sum - (parseFloat(planForm.baseValue) || 0)) > 0.01 ? 'text-accent-red' : 'text-accent-green'}`}>
+                          Suma del tramo: <strong>{sum.toLocaleString()}</strong> — valor base: {(parseFloat(planForm.baseValue) || 0).toLocaleString()}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <div className="flex items-center space-x-2 my-2">
+                <input
+                  id="planIsActive"
+                  type="checkbox"
+                  checked={planForm.isActive}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="w-4 h-4 text-accent-blue bg-glass-primary border-glass-border rounded focus:ring-accent-blue/50 focus:ring-2 cursor-pointer"
+                />
+                <label htmlFor="planIsActive" className="text-xs text-text-primary font-medium cursor-pointer select-none">
+                  Plan Activo (se aplica a las nuevas ventas)
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-glass-border">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsPlanModalOpen(false)}
+                  className="glass-button"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30"
+                >
+                  {isSaving ? 'Guardando...' : selectedPlan ? 'Guardar Cambios' : 'Crear Plan'}
                 </Button>
               </div>
             </form>

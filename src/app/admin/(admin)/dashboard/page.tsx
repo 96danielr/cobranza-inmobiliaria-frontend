@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import {
   BarChart,
@@ -31,10 +31,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
-  CheckSquare
+  CheckSquare,
+  BadgeDollarSign
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { StatsCardSkeleton, ChartPlaceholder, QuickActionSkeleton } from '@/components/ui/LoadingSpinner'
+import { ConfirmModal } from '@/components/ui/Modal'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
@@ -54,6 +56,7 @@ export default function AdminDashboard() {
     operacion: { comprobantesPendientes: 0, clientesEscalados: 0, whatsappEnviadosMes: 0, llamadasAIMes: 0 },
     totalSales: 0,
     isSeller: false,
+    salesThisMonth: { count: 0, valorVendido: 0 },
     topAdvisor: null as { name: string, count: number } | null,
     lotStats: {
       separated: 0,
@@ -76,6 +79,9 @@ export default function AdminDashboard() {
   const [recaudoMensualData, setRecaudoMensualData] = useState([])
   const [moraData, setMoraData] = useState([])
   const [adminUsersCount, setAdminUsersCount] = useState(0)
+  const [commissions, setCommissions] = useState<any[]>([])
+  const [radicarTarget, setRadicarTarget] = useState<{ commission: any, installmentIndex: number } | null>(null)
+  const [radicarLoading, setRadicarLoading] = useState(false)
   const isFetching = useRef(false)
 
   const { clients, fetchClientsIfNeeded, totalClients: storeTotal } = useClientStore()
@@ -92,9 +98,10 @@ export default function AdminDashboard() {
       setActionsLoading(true)
 
       // Load dashboard summary, ensuring client store is hydrated
-      const [dashboardResponse, recaudoResponse] = await Promise.all([
+      const [dashboardResponse, recaudoResponse, commissionsResponse] = await Promise.all([
         adminApi.getDashboardSummary(),
         adminApi.getRecaudoMensual(),
+        adminApi.getCommissions(),
         fetchClientsIfNeeded() // Use store to fetch/cache clients
       ])
 
@@ -107,6 +114,7 @@ export default function AdminDashboard() {
           operacion: dashboardData.operacion,
           totalSales: dashboardData.totalSales || 0,
           isSeller: dashboardData.isSeller || false,
+          salesThisMonth: dashboardData.salesThisMonth || { count: 0, valorVendido: 0 },
           topAdvisor: dashboardData.topAdvisor || null,
           lotStats: dashboardData.lotStats || { separated: 0, sold: 0, available: 0, byStage: [] }
         })
@@ -135,6 +143,10 @@ export default function AdminDashboard() {
           meta: item.meta
         }))
         setRecaudoMensualData(chartData)
+      }
+
+      if (commissionsResponse.data.success) {
+        setCommissions(commissionsResponse.data.data.commissions || [])
       }
 
       // Update behavior stats using cached store data
@@ -225,6 +237,61 @@ export default function AdminDashboard() {
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`
+  }
+
+  const commissionSummary = useMemo(() => {
+    let generada = 0
+    let disponible = 0
+    let radicada = 0
+    let aprobada = 0
+    let pagada = 0
+    let rechazada = 0
+    commissions.forEach((c: any) => {
+      (c.installments || []).forEach((i: any) => {
+        generada += i.amount || 0
+        if (i.status === 'AVAILABLE') disponible += i.amount || 0
+        if (i.status === 'FILED') radicada += i.amount || 0
+        if (i.status === 'APPROVED') aprobada += i.amount || 0
+        if (i.status === 'PAID') pagada += i.amount || 0
+        if (i.status === 'REJECTED') rechazada += i.amount || 0
+      })
+    })
+    return { generada, disponible, radicada, aprobada, pagada, rechazada }
+  }, [commissions])
+
+  const commissionStatusLabel: Record<string, string> = {
+    PENDING: 'Pendiente',
+    AVAILABLE: 'Disponible',
+    FILED: 'Radicada',
+    APPROVED: 'Aprobada',
+    PAID: 'Pagada',
+    REJECTED: 'Rechazada'
+  }
+
+  const fetchCommissions = async () => {
+    try {
+      const res = await adminApi.getCommissions()
+      if (res.data.success) {
+        setCommissions(res.data.data.commissions || [])
+      }
+    } catch (error) {
+      console.error('Error fetching commissions:', error)
+    }
+  }
+
+  const handleRadicar = async () => {
+    if (!radicarTarget) return
+    setRadicarLoading(true)
+    try {
+      await adminApi.radicarComision(radicarTarget.commission._id, radicarTarget.installmentIndex)
+      toast.success('Cuenta de cobro radicada exitosamente')
+      setRadicarTarget(null)
+      fetchCommissions()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al radicar la cuenta de cobro')
+    } finally {
+      setRadicarLoading(false)
+    }
   }
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -425,6 +492,164 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
+
+      {/* Sales This Month (Only for Sellers) */}
+      {data.isSeller && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="animate-fade-in-up-delay-2"
+        >
+          <Card variant="interactive" className="bg-gradient-to-r from-accent-green/10 to-accent-blue/10 border-accent-green/20 overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <TrendingUp className="w-32 h-32 text-accent-green" />
+            </div>
+            <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-full bg-accent-green/20 border-2 border-accent-green/30 flex items-center justify-center text-accent-green text-3xl font-black shadow-lg shadow-accent-green/20">
+                  <TrendingUp className="w-8 h-8" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-accent-green mb-1">Mis Ventas Este Mes</p>
+                  <h2 className="text-3xl font-black text-text-primary tracking-tighter">
+                    {formatNumber(data.salesThisMonth.count)} {data.salesThisMonth.count === 1 ? 'venta' : 'ventas'}
+                  </h2>
+                  <p className="text-text-secondary flex items-center gap-2 mt-1">
+                    <DollarSign className="w-4 h-4 text-accent-green" />
+                    <span className="font-bold text-accent-green">{formatCurrency(data.salesThisMonth.valorVendido)}</span>
+                    en valor vendido este mes
+                  </p>
+                </div>
+              </div>
+              <Link href="/admin/lots">
+                <Button variant="primary" className="h-full px-8 rounded-2xl font-black uppercase tracking-widest text-xs">
+                  Registrar Nueva Venta
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Mis Comisiones (Only for Sellers) */}
+      {data.isSeller && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="animate-fade-in-up-delay-2"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <BadgeDollarSign className="w-6 h-6 text-accent-yellow" />
+              <h2 className="text-xl font-bold text-text-primary">Mis Comisiones</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <Card variant="interactive" className="stats-card stats-blue">
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Comisión Generada</p>
+                  <h3 className="text-lg md:text-xl font-extrabold text-text-primary mt-1">{formatCurrency(commissionSummary.generada)}</h3>
+                </CardContent>
+              </Card>
+              <Card variant="interactive" className="stats-card stats-yellow">
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Disponible para Cobrar</p>
+                  <h3 className="text-lg md:text-xl font-extrabold text-text-primary mt-1">{formatCurrency(commissionSummary.disponible)}</h3>
+                </CardContent>
+              </Card>
+              <Card variant="interactive" className="stats-card stats-purple">
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Radicada / Aprobada</p>
+                  <h3 className="text-lg md:text-xl font-extrabold text-text-primary mt-1">{formatCurrency(commissionSummary.radicada + commissionSummary.aprobada)}</h3>
+                </CardContent>
+              </Card>
+              <Card variant="interactive" className="stats-card stats-green">
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Pagada</p>
+                  <h3 className="text-lg md:text-xl font-extrabold text-text-primary mt-1">{formatCurrency(commissionSummary.pagada)}</h3>
+                </CardContent>
+              </Card>
+            </div>
+
+            {commissions.length > 0 ? (
+              <Card className="glass-card overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-glass-border/30 text-text-secondary text-xs uppercase bg-white/2">
+                          <th className="px-5 py-3.5 font-semibold">Cliente / Lote</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Total Comisión</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Desembolsos</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-glass-border/10">
+                        {commissions.slice(0, 8).map((c: any) => {
+                          const clientName = c.contractId?.client?.name || 'Cliente'
+                          const lotRef = c.contractId?.lot?.nomenclature
+                            || (c.contractId?.lot?.lotNumber ? `Lote ${c.contractId.lot.lotNumber}` : '')
+                          return (
+                            <tr key={c._id} className="hover:bg-white/2 transition-colors">
+                              <td className="px-5 py-4">
+                                <div className="font-bold text-text-primary">{clientName}</div>
+                                <div className="text-xs text-text-muted">{lotRef || 'Sin lote'}</div>
+                              </td>
+                              <td className="px-5 py-4 text-right font-black text-text-primary">
+                                {formatCurrency(c.totalAmount)}
+                              </td>
+                              <td className="px-5 py-4">
+                                <div className="flex flex-wrap justify-end gap-1.5">
+                                  {(c.installments || []).map((i: any, idx: number) => (
+                                    <span
+                                      key={idx}
+                                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                                        i.status === 'PAID' ? 'bg-accent-green/15 text-accent-green'
+                                        : i.status === 'AVAILABLE' ? 'bg-accent-yellow/15 text-accent-yellow'
+                                        : i.status === 'FILED' || i.status === 'APPROVED' ? 'bg-accent-purple/15 text-accent-purple'
+                                        : i.status === 'REJECTED' ? 'bg-accent-red/15 text-accent-red'
+                                        : 'bg-glass-primary/20 text-text-muted'
+                                      }`}
+                                      title={i.milestoneKey === 'QUOTA_NUMBER' ? `Cuota #${i.quotaNumber}` : 'Cuota inicial'}
+                                    >
+                                      {formatCurrency(i.amount)} · {commissionStatusLabel[i.status] || i.status}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-5 py-4 text-right whitespace-nowrap">
+                                {(c.installments || []).map((i: any, idx: number) => (
+                                  (i.status === 'AVAILABLE' || i.status === 'REJECTED') && (
+                                    <Button
+                                      key={idx}
+                                      size="sm"
+                                      variant={i.status === 'REJECTED' ? 'outline' : 'primary'}
+                                      onClick={() => setRadicarTarget({ commission: c, installmentIndex: idx })}
+                                      className="ml-2"
+                                    >
+                                      {i.status === 'REJECTED' ? 'Re-radicar' : 'Radicar cuenta'}
+                                    </Button>
+                                  )
+                                ))}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-center py-10 glass-card rounded-2xl">
+                <BadgeDollarSign className="w-10 h-10 text-text-secondary mx-auto mb-3 opacity-30" />
+                <p className="text-text-secondary font-medium">Aún no tienes comisiones registradas</p>
+                <p className="text-xs text-text-muted mt-1">Cuando vendas un lote con un plan de comisión activo, aparecerán aquí.</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* Top Advisor Highlight (Only for Admins) */}
       {!data.isSeller && data.topAdvisor && (
@@ -761,6 +986,22 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Radicar Cuenta de Cobro Modal */}
+      <ConfirmModal
+        isOpen={!!radicarTarget}
+        onClose={() => setRadicarTarget(null)}
+        onConfirm={handleRadicar}
+        title="Radicar cuenta de cobro"
+        message={
+          radicarTarget
+            ? `Vas a radicar tu cuenta de cobro por ${formatCurrency(radicarTarget.commission.installments[radicarTarget.installmentIndex]?.amount || 0)}. La contadora recibirá una notificación para aprobarla o rechazarla.`
+            : ''
+        }
+        confirmText="Radicar cuenta"
+        variant="info"
+        isLoading={radicarLoading}
+      />
     </div>
   )
 }
