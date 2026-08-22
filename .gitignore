@@ -55,4 +55,7 @@ next-env.d.ts
 
 # Scratch & temporary files
 scratch/
-implementation_plan_id_global.md
+implementation_plan_id_global.md
+
+#docs
+/docs

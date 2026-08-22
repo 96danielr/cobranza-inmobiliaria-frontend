@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { StatsCardSkeleton } from '@/components/ui/LoadingSpinner'
 import { adminApi } from '@/lib/adminApi'
+import { usePermissions } from '@/hooks/usePermissions'
 import toast from 'react-hot-toast'
 import { 
   AreaChart, 
@@ -58,14 +59,67 @@ interface LotStat {
   projectName: string
 }
 
+interface LotReportSummary {
+  total: number
+  vendido: number
+  disponible: number
+  separado: number
+  apartado: number
+  pagadoTotalidad: number
+  enEscrituracion: number
+  conPazYSalvo: number
+  enRequerimiento: number
+  enNegociacion: number
+}
+
+interface ClassifiedLot {
+  _id: string
+  nomenclature?: string
+  stage?: string
+  manzana?: string
+  lotNumber?: string
+  area?: number
+  price?: number
+  status: string
+  stateCategory: string
+  client: string
+  seller: string
+}
+
+interface LotsReportData {
+  summary: LotReportSummary
+  lots: ClassifiedLot[]
+}
+
+interface TopAdvisorItem {
+  id: string | null
+  name: string
+  salesCount: number
+  totalSold: number
+  topStage: string
+  separatedCount: number
+  apartadosCount: number
+}
+
 interface SalesReportData {
-  salesThisMonth: number
+  period: string
+  from: string
+  to: string
+  salesInPeriod: number
+  totalValueInPeriod: number
+  topAdvisors: TopAdvisorItem[]
   topAdvisor: {
     id: string
     name: string
     count: number
   } | null
   separatedLots: number
+  lotCounts: {
+    disponibles: number
+    separados: number
+    apartados: number
+    vendidos: number
+  }
   lotStats: LotStat[]
 }
 
@@ -79,6 +133,12 @@ interface AgingData {
   bucket60: AgingBucket
   bucket90: AgingBucket
   bucketOver90: AgingBucket
+}
+
+interface BankBreakdownItem {
+  bank: string
+  amount: number
+  count: number
 }
 
 interface ComparisonData {
@@ -124,6 +184,9 @@ interface AdvancedReportData {
     startInterval: string
     endInterval: string
   }
+  expectedInPeriod?: number
+  nonPaymentRate?: number
+  bankBreakdown?: BankBreakdownItem[]
   comparison: ComparisonData[]
   delinquentClients: DelinquentClient[]
   bestClients: BestClient[]
@@ -163,18 +226,39 @@ interface AdvisorReportData {
   to: string
 }
 
+type ReportTab = 'sales' | 'finance' | 'lots' | 'advisors'
+
+const FULL_REPORT_ROLES = ['superadmin', 'tenant_admin', 'company_admin', 'administrador', 'gerente', 'contador', 'auxiliar_contable']
+const SELLER_ROLES = ['ejecutivo_comercial', 'vendedor', 'agent']
+
+const getAllowedTabs = (role?: string): ReportTab[] => {
+  if (role === 'jefe_cartera') return ['finance']
+  if (role && SELLER_ROLES.includes(role)) return ['sales']
+  return ['sales', 'finance', 'lots', 'advisors']
+}
+
 export default function ReportsPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'sales' | 'finance' | 'advisors'>('sales')
+  const { role } = usePermissions()
+  const allowedTabs = getAllowedTabs(role)
+  const isFullReportsRole = !!role && FULL_REPORT_ROLES.includes(role)
+
+  const [activeTab, setActiveTab] = useState<ReportTab>(allowedTabs[0])
+  const [selectedPeriod, setSelectedPeriod] = useState<'current_month' | 'previous_month' | 'last_quarter' | 'custom'>('current_month')
+  
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<SalesReportData | null>(null)
   const [projection, setProjection] = useState<ProjectionData[]>([])
   const [projectionMonths, setProjectionMonths] = useState(6)
   const [loadingProjection, setLoadingProjection] = useState(false)
 
-  // New Reports State
+  // Finance Report State
   const [advancedData, setAdvancedData] = useState<AdvancedReportData | null>(null)
   const [loadingAdvanced, setLoadingAdvanced] = useState(false)
+
+  // Lots Report State
+  const [lotsData, setLotsData] = useState<LotsReportData | null>(null)
+  const [loadingLots, setLoadingLots] = useState(false)
 
   // Advisor Report State
   const [advisorData, setAdvisorData] = useState<AdvisorReportData | null>(null)
@@ -187,10 +271,10 @@ export default function ReportsPage() {
     new Date().toISOString().split('T')[0]
   )
 
-  const fetchReport = async () => {
+  const fetchSalesReport = async (period = selectedPeriod, start?: string, end?: string) => {
     try {
       setLoading(true)
-      const response = await adminApi.getSalesReport()
+      const response = await adminApi.getSalesReport(period, start, end)
       if (response.data.success) {
         setData(response.data.data)
       }
@@ -231,6 +315,21 @@ export default function ReportsPage() {
     }
   }
 
+  const fetchLotsReport = async () => {
+    try {
+      setLoadingLots(true)
+      const response = await adminApi.getLotsReport()
+      if (response.data.success) {
+        setLotsData(response.data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching lots report:', error)
+      toast.error('Error al cargar el informe de lotes')
+    } finally {
+      setLoadingLots(false)
+    }
+  }
+
   const fetchAdvisorReport = async (from?: string, to?: string) => {
     try {
       setLoadingAdvisors(true)
@@ -247,20 +346,37 @@ export default function ReportsPage() {
   }
 
   useEffect(() => {
-    fetchReport()
-    fetchProjection(projectionMonths)
-    fetchAdvancedReport(filterStartDate, filterEndDate)
+    if (allowedTabs.includes('sales')) {
+      fetchSalesReport('current_month')
+      if (isFullReportsRole) fetchProjection(projectionMonths)
+    }
+    if (allowedTabs.includes('finance')) {
+      fetchAdvancedReport(filterStartDate, filterEndDate)
+    }
   }, [])
 
   useEffect(() => {
-    if (activeTab === 'advisors') {
+    if (activeTab === 'lots' && !lotsData) {
+      fetchLotsReport()
+    } else if (activeTab === 'advisors') {
       fetchAdvisorReport(filterStartDate, filterEndDate)
     }
   }, [activeTab])
 
   useEffect(() => {
-    fetchProjection(projectionMonths)
+    if (isFullReportsRole) {
+      fetchProjection(projectionMonths)
+    }
   }, [projectionMonths])
+
+  const handlePeriodChange = (period: 'current_month' | 'previous_month' | 'last_quarter' | 'custom') => {
+    setSelectedPeriod(period)
+    if (period !== 'custom') {
+      fetchSalesReport(period)
+    } else {
+      fetchSalesReport('custom', filterStartDate, filterEndDate)
+    }
+  }
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -271,153 +387,258 @@ export default function ReportsPage() {
   }
 
   const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-8 p-6">
-        <div className="animate-pulse">
-          <div className="h-10 w-64 bg-white/10 rounded-lg mb-4"></div>
-          <div className="h-6 w-96 bg-white/5 rounded-lg"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatsCardSkeleton />
-          <StatsCardSkeleton />
-          <StatsCardSkeleton />
-        </div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 w-full bg-white/5 rounded-2xl animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    )
+    return `${(value || 0).toFixed(1)}%`
   }
 
   return (
     <div className="space-y-6 md:space-y-8 px-1 py-2 md:p-6 animate-fade-in">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-responsive-xl font-bold text-text-primary mb-2">
-            Módulo de <span className="gradient-text">Reportes</span>
+            Módulo de <span className="gradient-text">Informes y Reportes</span>
           </h1>
           <p className="text-text-secondary text-responsive-base">
-            Análisis comercial, proyección de recaudos, cartera morosa y comportamiento de pago.
+            Informes consolidados de Ventas, Cartera, Lotes y Rendimiento por Asesor.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="glass" size="sm" onClick={() => { fetchReport(); fetchAdvancedReport(); fetchAdvisorReport(filterStartDate, filterEndDate); }} className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Actualizar Datos
-          </Button>
-        </div>
       </div>
 
-      {/* Tabs Switcher */}
-      <div className="flex bg-glass-primary/40 backdrop-blur-sm p-1 rounded-2xl border border-glass-border self-start w-full max-w-lg">
-        <button
-          onClick={() => setActiveTab('sales')}
-          className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'sales' 
-              ? 'bg-blue-600 text-white shadow-md' 
-              : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
-          }`}
-        >
-          <BarChart3 className="w-4 h-4" />
-          Ventas y Etapas
-        </button>
-        <button
-          onClick={() => setActiveTab('finance')}
-          className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'finance' 
-              ? 'bg-blue-600 text-white shadow-md' 
-              : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
-          }`}
-        >
-          <Wallet className="w-4 h-4" />
-          Cartera y Recaudos
-        </button>
-        <button
-          onClick={() => setActiveTab('advisors')}
-          className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'advisors' 
-              ? 'bg-blue-600 text-white shadow-md' 
-              : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
-          }`}
-        >
-          <UserCheck className="w-4 h-4" />
-          Por Asesor
-        </button>
+      {/* Tabs */}
+      <div className="flex flex-wrap bg-glass-primary/30 p-1.5 rounded-2xl border border-glass-border">
+        {allowedTabs.includes('sales') && (
+          <button
+            onClick={() => setActiveTab('sales')}
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'sales' 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            Ventas Consolidado
+          </button>
+        )}
+        {allowedTabs.includes('finance') && (
+          <button
+            onClick={() => setActiveTab('finance')}
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'finance' 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
+            }`}
+          >
+            <Wallet className="w-4 h-4" />
+            Cartera y Recaudos
+          </button>
+        )}
+        {allowedTabs.includes('lots') && (
+          <button
+            onClick={() => setActiveTab('lots')}
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'lots' 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
+            }`}
+          >
+            <Home className="w-4 h-4" />
+            Informe de Lotes
+          </button>
+        )}
+        {allowedTabs.includes('advisors') && (
+          <button
+            onClick={() => setActiveTab('advisors')}
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'advisors' 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'text-text-secondary hover:text-text-primary hover:bg-glass-primary/10'
+            }`}
+          >
+            <UserCheck className="w-4 h-4" />
+            Por Asesor
+          </button>
+        )}
       </div>
 
-      {/* TAB 1: SALES & STAGE INVENTORY */}
+      {/* TAB 1: SALES CONSOLIDATED */}
       {activeTab === 'sales' && (
         <div className="space-y-8 animate-fade-in">
-          {/* Main Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Quick Period Selector */}
+          <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white/5 border border-glass-border rounded-2xl">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-accent-blue" />
+              <span className="text-sm font-bold text-text-primary">Período de Análisis:</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => handlePeriodChange('current_month')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedPeriod === 'current_month' ? 'bg-accent-blue text-white shadow-glow-sm' : 'bg-white/5 text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Mes Actual
+              </button>
+              <button
+                onClick={() => handlePeriodChange('previous_month')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedPeriod === 'previous_month' ? 'bg-accent-blue text-white shadow-glow-sm' : 'bg-white/5 text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Mes Anterior
+              </button>
+              <button
+                onClick={() => handlePeriodChange('last_quarter')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedPeriod === 'last_quarter' ? 'bg-accent-blue text-white shadow-glow-sm' : 'bg-white/5 text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Último Trimestre
+              </button>
+              <button
+                onClick={() => handlePeriodChange('custom')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedPeriod === 'custom' ? 'bg-accent-blue text-white shadow-glow-sm' : 'bg-white/5 text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Rango Libre
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Date Inputs (when custom is active) */}
+          {selectedPeriod === 'custom' && (
+            <div className="p-4 bg-white/5 border border-glass-border rounded-2xl flex flex-wrap items-end gap-4">
+              <div>
+                <label className="text-xs text-text-secondary font-semibold block mb-1">Fecha Desde</label>
+                <input
+                  type="date"
+                  value={filterStartDate}
+                  onChange={(e) => setFilterStartDate(e.target.value)}
+                  className="glass-input text-xs px-3 py-1.5 text-text-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-text-secondary font-semibold block mb-1">Fecha Hasta</label>
+                <input
+                  type="date"
+                  value={filterEndDate}
+                  onChange={(e) => setFilterEndDate(e.target.value)}
+                  className="glass-input text-xs px-3 py-1.5 text-text-primary"
+                />
+              </div>
+              <Button size="sm" variant="primary" onClick={() => fetchSalesReport('custom', filterStartDate, filterEndDate)}>
+                Aplicar Rango
+              </Button>
+            </div>
+          )}
+
+          {/* Main Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card variant="interactive" className="stats-card stats-blue">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm text-text-secondary font-medium mb-1">Ventas del Mes</p>
-                    <p className="text-3xl font-bold text-text-primary">{data?.salesThisMonth || 0}</p>
+                    <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Ventas en el Período</p>
+                    <p className="text-3xl font-black text-text-primary">{data?.salesInPeriod || 0}</p>
                   </div>
                   <div className="glass-card p-3 border-accent-blue/20">
                     <TrendingUp className="w-6 h-6 text-accent-blue" />
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <span className="text-sm text-accent-blue font-medium">Contratos formalizados este mes</span>
+                <span className="text-xs text-accent-blue font-medium">Contratos formalizados</span>
+              </CardContent>
+            </Card>
+
+            <Card variant="interactive" className="stats-card stats-green">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Valor Total Vendido</p>
+                    <p className="text-2xl font-black text-text-primary truncate">{formatCurrency(data?.totalValueInPeriod || 0)}</p>
+                  </div>
+                  <div className="glass-card p-3 border-accent-green/20">
+                    <DollarSign className="w-6 h-6 text-accent-green" />
+                  </div>
                 </div>
+                <span className="text-xs text-accent-green font-medium">Suma de contratos</span>
+              </CardContent>
+            </Card>
+
+            <Card variant="interactive" className="stats-card stats-yellow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Lotes Separados</p>
+                    <p className="text-3xl font-black text-text-primary">{data?.lotCounts?.separados ?? data?.separatedLots ?? 0}</p>
+                  </div>
+                  <div className="glass-card p-3 border-accent-yellow/20">
+                    <Users className="w-6 h-6 text-accent-yellow" />
+                  </div>
+                </div>
+                <span className="text-xs text-accent-yellow font-medium">En proceso de cierre</span>
               </CardContent>
             </Card>
 
             <Card variant="interactive" className="stats-card stats-purple">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex-1">
-                    <p className="text-sm text-text-secondary font-medium mb-1">Top Asesor</p>
-                    <p className="text-xl font-bold text-text-primary truncate">
-                      {data?.topAdvisor?.name || 'N/A'}
-                    </p>
+                  <div>
+                    <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Lotes Disponibles</p>
+                    <p className="text-3xl font-black text-text-primary">{data?.lotCounts?.disponibles || 0}</p>
                   </div>
                   <div className="glass-card p-3 border-accent-purple/20">
-                    <Award className="w-6 h-6 text-accent-purple" />
+                    <Home className="w-6 h-6 text-accent-purple" />
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-4 h-4 text-accent-purple mr-1" />
-                  <span className="text-sm text-accent-purple font-medium">
-                    {data?.topAdvisor?.count || 0} ventas realizadas
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card 
-              variant="interactive" 
-              className="stats-card stats-yellow cursor-pointer"
-              onClick={() => router.push('/admin/lots?status=separado')}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-sm text-text-secondary font-medium mb-1">Lotes Separados</p>
-                    <p className="text-3xl font-bold text-text-primary">{data?.separatedLots || 0}</p>
-                  </div>
-                  <div className="glass-card p-3 border-accent-yellow/20">
-                    <Users className="w-6 h-6 text-accent-yellow" />
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-sm text-accent-yellow font-medium">En proceso de cierre</span>
-                </div>
+                <span className="text-xs text-accent-purple font-medium">Listos para venta</span>
               </CardContent>
             </Card>
           </div>
+
+          {/* Top 3 Asesores con Más Ventas */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Award className="w-6 h-6 text-accent-yellow" />
+              <h2 className="text-xl font-bold text-text-primary">Top 3 Asesores del Período</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {(data?.topAdvisors || []).map((adv, idx) => (
+                <Card key={idx} className="glass-card p-5 relative overflow-hidden border-accent-yellow/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-black bg-accent-yellow/20 text-accent-yellow border border-accent-yellow/30">
+                      Puesto #{idx + 1}
+                    </span>
+                    <span className="text-xs text-text-secondary font-medium">Etapa más vendida: <strong className="text-text-primary">{adv.topStage}</strong></span>
+                  </div>
+                  <h3 className="font-extrabold text-text-primary text-base truncate mb-1">{adv.name}</h3>
+                  <p className="text-2xl font-black text-accent-green mb-3">{formatCurrency(adv.totalSold)}</p>
+                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-glass-border/40 text-center text-xs">
+                    <div>
+                      <p className="text-text-secondary">Ventas</p>
+                      <p className="font-bold text-text-primary text-sm">{adv.salesCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-text-secondary">Separados</p>
+                      <p className="font-bold text-accent-yellow text-sm">{adv.separatedCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-text-secondary">Apartados</p>
+                      <p className="font-bold text-accent-blue text-sm">{adv.apartadosCount}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              {(!data?.topAdvisors || data.topAdvisors.length === 0) && (
+                <div className="col-span-3 text-center py-10 glass-card text-xs text-text-muted">
+                  No hay ventas registradas en el período seleccionado.
+                </div>
+              )}
+            </div>
+          </div>
           
-          {/* Projection Chart */}
+          {/* Projection Chart (solo roles con acceso completo a informes) */}
+          {isFullReportsRole && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2">
@@ -503,6 +724,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
           </div>
+          )}
 
           {/* Detailed Status */}
           <div className="space-y-6">
@@ -516,7 +738,6 @@ export default function ReportsPage() {
                 <Card key={`${stat.projectName}-${stat.stage}`} variant="elevated" className="overflow-hidden group">
                   <CardContent className="p-0">
                     <div className="grid grid-cols-1 lg:grid-cols-12">
-                      {/* Left info */}
                       <div className="lg:col-span-4 p-6 bg-white/5 border-b lg:border-b-0 lg:border-r border-white/10">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="p-2 bg-accent-blue/20 rounded-lg">
@@ -527,7 +748,6 @@ export default function ReportsPage() {
                             <p className="text-sm text-text-secondary">Etapa: {stat.stage}</p>
                           </div>
                         </div>
-                        
                         <div className="space-y-2 mt-4">
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-text-secondary">Progreso de Ventas</span>
@@ -535,15 +755,14 @@ export default function ReportsPage() {
                           </div>
                           <ProgressBar 
                             value={stat.porcentajeVendido} 
-                            glow={true}
+                            glow={true} 
                             size="md" 
-                            showLabel={false}
-                            className="shadow-glow-sm"
+                            showLabel={false} 
+                            className="shadow-glow-sm" 
                           />
                         </div>
                       </div>
 
-                      {/* Right stats */}
                       <div className="lg:col-span-8 p-6">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                           <div className="text-center">
@@ -563,7 +782,6 @@ export default function ReportsPage() {
                             <p className="text-2xl font-bold text-accent-yellow">{stat.separados}</p>
                           </div>
                         </div>
-
                         <div className="mt-8 flex flex-wrap gap-4">
                           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                             <div className="w-2 h-2 rounded-full bg-accent-blue"></div>
@@ -611,73 +829,109 @@ export default function ReportsPage() {
             </div>
           ) : (
             <>
-              {/* Resumen General de Cartera y Recaudos */}
+              {/* Main Financial KPI Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Esperado por Recaudar */}
+                <Card variant="interactive" className="stats-card stats-blue">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Esperado por Recaudar</p>
+                        <h3 className="text-2xl font-black text-text-primary mt-1">
+                          {formatCurrency(advancedData?.expectedInPeriod || advancedData?.carteraAlDia?.amount || 0)}
+                        </h3>
+                        <p className="text-[10px] text-accent-blue mt-1 font-semibold">
+                          Programado en el período
+                        </p>
+                      </div>
+                      <div className="glass-card p-3 border-accent-blue/20">
+                        <Wallet className="w-6 h-6 text-accent-blue" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recaudado en Tiempo Real */}
+                <Card variant="interactive" className="stats-card stats-green">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Recaudado Tiempo Real</p>
+                        <h3 className="text-2xl font-black text-text-primary mt-1">
+                          {formatCurrency(advancedData?.recaudos?.collectedInterval || advancedData?.recaudos?.totalCollected || 0)}
+                        </h3>
+                        <p className="text-[10px] text-accent-green mt-1 font-semibold">
+                          Recaudo efectivo validado
+                        </p>
+                      </div>
+                      <div className="glass-card p-3 border-accent-green/20">
+                        <DollarSign className="w-6 h-6 text-accent-green" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Porcentaje de No Pago (Mora) */}
+                <Card variant="interactive" className="stats-card stats-red">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Porcentaje de No Pago</p>
+                        <h3 className="text-2xl font-black text-accent-red mt-1">
+                          {formatPercentage(advancedData?.nonPaymentRate || 0)}
+                        </h3>
+                        <p className="text-[10px] text-accent-red mt-1 font-semibold">
+                          Tasa de mora / cartera vencida
+                        </p>
+                      </div>
+                      <div className="glass-card p-3 border-accent-red/20">
+                        <AlertTriangle className="w-6 h-6 text-accent-red" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recaudado Hoy */}
+                <Card variant="interactive" className="stats-card stats-yellow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Recaudado Hoy</p>
+                        <h3 className="text-2xl font-black text-text-primary mt-1">
+                          {formatCurrency(advancedData?.recaudos?.collectedToday || 0)}
+                        </h3>
+                        <p className="text-[10px] text-accent-yellow mt-1 font-semibold">
+                          Corte del día actual
+                        </p>
+                      </div>
+                      <div className="glass-card p-3 border-accent-yellow/20">
+                        <TrendingUp className="w-6 h-6 text-accent-yellow" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recaudos por Medio de Pago (Bancos & Efectivo) */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Wallet className="w-6 h-6 text-accent-blue" />
-                  <h2 className="text-xl font-bold text-text-primary">Resumen de Cartera y Recaudos</h2>
+                  <DollarSign className="w-6 h-6 text-accent-green" />
+                  <h2 className="text-xl font-bold text-text-primary">Recaudos por Medio de Pago / Banco</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Cartera al Día */}
-                  <Card variant="interactive" className="stats-card stats-blue">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Cartera al Día (Vigente)</p>
-                          <h3 className="text-2xl font-extrabold text-text-primary mt-1">
-                            {formatCurrency(advancedData?.carteraAlDia?.amount || 0)}
-                          </h3>
-                          <p className="text-[10px] text-accent-blue mt-1 font-semibold">
-                            {advancedData?.carteraAlDia?.count || 0} cuotas al día
-                          </p>
-                        </div>
-                        <div className="glass-card p-3 border-accent-blue/20">
-                          <CheckCircle className="w-6 h-6 text-accent-blue" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Recaudado a la fecha */}
-                  <Card variant="interactive" className="stats-card stats-green">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Recaudado a la Fecha</p>
-                          <h3 className="text-2xl font-extrabold text-text-primary mt-1">
-                            {formatCurrency(advancedData?.recaudos?.totalCollected || 0)}
-                          </h3>
-                          <p className="text-[10px] text-accent-green mt-1 font-semibold">
-                            Histórico total de recaudos
-                          </p>
-                        </div>
-                        <div className="glass-card p-3 border-accent-green/20">
-                          <DollarSign className="w-6 h-6 text-accent-green" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Recaudado hoy */}
-                  <Card variant="interactive" className="stats-card stats-yellow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Recaudado Hoy</p>
-                          <h3 className="text-2xl font-extrabold text-text-primary mt-1">
-                            {formatCurrency(advancedData?.recaudos?.collectedToday || 0)}
-                          </h3>
-                          <p className="text-[10px] text-accent-yellow mt-1 font-semibold">
-                            Corte del día actual
-                          </p>
-                        </div>
-                        <div className="glass-card p-3 border-accent-yellow/20">
-                          <TrendingUp className="w-6 h-6 text-accent-yellow" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {(advancedData?.bankBreakdown || []).map((b, idx) => (
+                    <Card key={idx} className="glass-card p-5 border-glass-border">
+                      <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1 truncate">{b.bank}</p>
+                      <h4 className="text-xl font-black text-accent-green">{formatCurrency(b.amount)}</h4>
+                      <p className="text-[11px] text-text-muted mt-1">{b.count} transacciones</p>
+                    </Card>
+                  ))}
+                  {(!advancedData?.bankBreakdown || advancedData.bankBreakdown.length === 0) && (
+                    <div className="col-span-4 text-center py-6 glass-card text-xs text-text-muted">
+                      No hay registros bancarios en el rango seleccionado.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -686,7 +940,7 @@ export default function ReportsPage() {
                 <div className="flex flex-col space-y-4">
                   <div>
                     <h3 className="font-bold text-text-primary text-base">Consulta de Recaudo en Rango de Fechas</h3>
-                    <p className="text-xs text-text-secondary mt-1">Selecciona un intervalo de fechas para calcular el recaudo obtenido.</p>
+                    <p className="text-xs text-text-secondary mt-1">Selecciona un intervalo de fechas para calcular el recaudo y la distribución.</p>
                   </div>
                   
                   <div className="flex flex-wrap items-end gap-4">
@@ -717,20 +971,6 @@ export default function ReportsPage() {
                       Consultar
                     </Button>
                   </div>
-
-                  {advancedData?.recaudos && (
-                    <div className="mt-4 pt-4 border-t border-glass-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <span className="text-xs text-text-secondary font-medium">Recaudado en el intervalo consultado:</span>
-                        <div className="text-2xl font-extrabold text-accent-green mt-1">
-                          {formatCurrency(advancedData.recaudos.collectedInterval)}
-                        </div>
-                      </div>
-                      <div className="text-xs text-text-muted italic bg-glass-primary/10 px-3 py-1.5 rounded-lg border border-glass-border">
-                        Intervalo: {new Date(advancedData.recaudos.startInterval).toLocaleDateString()} - {new Date(advancedData.recaudos.endInterval).toLocaleDateString()}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </Card>
 
@@ -742,7 +982,6 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* 30 days */}
                   <Card variant="interactive" className="stats-card stats-green">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -761,7 +1000,6 @@ export default function ReportsPage() {
                     </CardContent>
                   </Card>
 
-                  {/* 60 days */}
                   <Card variant="interactive" className="stats-card stats-yellow">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -780,7 +1018,6 @@ export default function ReportsPage() {
                     </CardContent>
                   </Card>
 
-                  {/* 90 days */}
                   <Card variant="interactive" className="stats-card stats-purple">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -799,7 +1036,6 @@ export default function ReportsPage() {
                     </CardContent>
                   </Card>
 
-                  {/* > 90 days */}
                   <Card variant="interactive" className="stats-card stats-red">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -869,16 +1105,6 @@ export default function ReportsPage() {
                         <Bar dataKey="realAmount" fill="#10b981" name="realAmount" radius={[6, 6, 0, 0]} maxBarSize={45} />
                       </BarChart>
                     </ResponsiveContainer>
-                  </div>
-                  <div className="mt-4 flex items-center gap-4 text-xs text-text-secondary">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-accent-blue"></div>
-                      <span><strong>Esperado:</strong> Valor planificado de cuotas vigentes para el mes correspondiente.</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-accent-green"></div>
-                      <span><strong>Recaudado Real:</strong> Pagos efectivamente aprobados/recaudados durante dicho mes.</span>
-                    </div>
                   </div>
                 </Card>
               </div>
@@ -988,19 +1214,130 @@ export default function ReportsPage() {
                               </td>
                             </tr>
                           ))}
-                          {(!advancedData || advancedData.bestClients.length === 0) && (
-                            <tr>
-                              <td colSpan={4} className="px-5 py-10 text-center text-text-muted">
-                                No hay suficientes datos para establecer el ranking.
-                              </td>
-                            </tr>
-                          )}
                         </tbody>
                       </table>
                     </div>
                   </CardContent>
                 </Card>
               </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: LOTS REPORT (9 STATUS CATEGORIES) */}
+      {activeTab === 'lots' && (
+        <div className="space-y-8 animate-fade-in">
+          {loadingLots ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+              <div className="h-96 bg-white/5 rounded-2xl animate-pulse" />
+            </div>
+          ) : (
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <Card className="glass-card p-4 border-accent-blue/30 bg-accent-blue/5">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">Total Lotes</p>
+                  <p className="text-2xl font-black text-text-primary mt-1">{lotsData?.summary.total || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-accent-green/30 bg-accent-green/5">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">Vendidos</p>
+                  <p className="text-2xl font-black text-accent-green mt-1">{lotsData?.summary.vendido || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-accent-blue/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">Disponibles</p>
+                  <p className="text-2xl font-black text-accent-blue mt-1">{lotsData?.summary.disponible || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-accent-yellow/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">Separados</p>
+                  <p className="text-2xl font-black text-accent-yellow mt-1">{lotsData?.summary.separado || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-purple-500/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">Apartados</p>
+                  <p className="text-2xl font-black text-purple-400 mt-1">{lotsData?.summary.apartado || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-emerald-500/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">Pagados en Totalidad</p>
+                  <p className="text-2xl font-black text-emerald-400 mt-1">{lotsData?.summary.pagadoTotalidad || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-indigo-500/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">En Escrituración</p>
+                  <p className="text-2xl font-black text-indigo-400 mt-1">{lotsData?.summary.enEscrituracion || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-teal-500/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">Con Paz y Salvo</p>
+                  <p className="text-2xl font-black text-teal-400 mt-1">{lotsData?.summary.conPazYSalvo || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-amber-500/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">En Requerimiento</p>
+                  <p className="text-2xl font-black text-amber-400 mt-1">{lotsData?.summary.enRequerimiento || 0}</p>
+                </Card>
+                <Card className="glass-card p-4 border-pink-500/30">
+                  <p className="text-xs text-text-secondary font-semibold uppercase">En Negociación</p>
+                  <p className="text-2xl font-black text-pink-400 mt-1">{lotsData?.summary.enNegociacion || 0}</p>
+                </Card>
+              </div>
+
+              {/* Table of Lots */}
+              <Card className="glass-card overflow-hidden">
+                <div className="p-5 border-b border-glass-border flex items-center justify-between bg-accent-blue/5">
+                  <div className="flex items-center gap-2.5">
+                    <Home className="w-5 h-5 text-accent-blue" />
+                    <h3 className="font-extrabold text-text-primary text-base">Inventario y Estado de Lotes</h3>
+                  </div>
+                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-accent-blue/20 text-accent-blue">
+                    {lotsData?.lots.length || 0} lotes registrados
+                  </span>
+                </div>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto max-h-[550px]">
+                    <table className="w-full text-left text-sm">
+                      <thead className="sticky top-0 bg-slate-900 z-10">
+                        <tr className="border-b border-glass-border/30 text-text-secondary text-xs uppercase bg-white/2">
+                          <th className="px-5 py-3.5 font-semibold">Nomenclatura / Lote</th>
+                          <th className="px-5 py-3.5 font-semibold">Etapa / Mz</th>
+                          <th className="px-5 py-3.5 font-semibold">Área (m²)</th>
+                          <th className="px-5 py-3.5 font-semibold text-right">Precio</th>
+                          <th className="px-5 py-3.5 font-semibold text-center">Estado Oficial</th>
+                          <th className="px-5 py-3.5 font-semibold">Cliente / Asesor</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-glass-border/10">
+                        {(lotsData?.lots || []).map((lot) => (
+                          <tr key={lot._id} className="hover:bg-white/2 transition-colors">
+                            <td className="px-5 py-3.5 font-bold text-text-primary">
+                              {lot.nomenclature || `Lote ${lot.lotNumber}`}
+                            </td>
+                            <td className="px-5 py-3.5 text-xs text-text-secondary">
+                              Etapa: {lot.stage || '-'} · Mz: {lot.manzana || '-'}
+                            </td>
+                            <td className="px-5 py-3.5 text-xs text-text-secondary">
+                              {lot.area ? `${lot.area} m²` : '-'}
+                            </td>
+                            <td className="px-5 py-3.5 text-right font-black text-text-primary text-xs">
+                              {lot.price ? formatCurrency(lot.price) : '-'}
+                            </td>
+                            <td className="px-5 py-3.5 text-center">
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-white/5 border border-glass-border text-text-primary">
+                                {lot.stateCategory.replace(/_/g, ' ')}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3.5 text-xs">
+                              <p className="font-semibold text-text-primary">{lot.client}</p>
+                              <p className="text-[10px] text-text-muted">Asesor: {lot.seller}</p>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>

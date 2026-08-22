@@ -111,6 +111,10 @@ export default function LotsPage() {
   const [saleDetail, setSaleDetail] = useState<any>(null)
   const [loadingSaleDetail, setLoadingSaleDetail] = useState(false)
 
+  // Carga histórica de asesores: vincular asesor a contratos ya vendidos
+  const [sellerAssignId, setSellerAssignId] = useState('')
+  const [assigningSeller, setAssigningSeller] = useState(false)
+
   const [isReserveDetailModalOpen, setIsReserveDetailModalOpen] = useState(false)
   const [reserveDetail, setReserveDetail] = useState<any>(null)
   const [loadingReserveDetail, setLoadingReserveDetail] = useState(false)
@@ -463,6 +467,24 @@ export default function LotsPage() {
       toast.error('Error al cargar detalles de la venta')
     } finally {
       setLoadingSaleDetail(false)
+    }
+  }
+
+  const handleAssignSeller = async () => {
+    if (!selectedLot || !sellerAssignId) return
+    setAssigningSeller(true)
+    try {
+      const response = await adminApi.assignLotSeller(selectedLot._id, sellerAssignId)
+      toast.success(response.data.message || 'Asesor vinculado correctamente')
+      setSellerAssignId('')
+      if (selectedLot) {
+        await handleViewSaleDetail(selectedLot)
+      }
+      pagination.refresh()
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al asignar el asesor')
+    } finally {
+      setAssigningSeller(false)
     }
   }
 
@@ -2214,6 +2236,37 @@ export default function LotsPage() {
                     Sin ejecutivo comercial asignado
                   </div>
                 )}
+
+                {/* Carga histórica de asesores */}
+                <div className="mt-2 p-3 rounded-xl border border-glass-border bg-white/5">
+                  <p className="text-xs text-text-muted mb-2">
+                    Carga histórica: vincula o cambia el asesor del contrato. Si no existe, se genera la comisión y se evalúan los hitos ya pagados.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={sellerAssignId}
+                      onChange={(e) => setSellerAssignId(e.target.value)}
+                      className="glass-input text-xs px-3 py-2 flex-1 text-text-primary"
+                    >
+                      <option value="">Selecciona un asesor...</option>
+                      {sellers.map((s: any) => (
+                        <option key={s._id} value={s._id}>
+                          {s.accountId?.fullName || s.name || s.email || s._id}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={handleAssignSeller}
+                      disabled={!sellerAssignId || assigningSeller}
+                      loading={assigningSeller}
+                      className="text-xs"
+                    >
+                      {saleDetail.contract.sellerId ? 'Cambiar asesor' : 'Asignar asesor'}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
 

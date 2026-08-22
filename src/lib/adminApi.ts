@@ -173,6 +173,9 @@ export const adminApi = {
   getLotSaleDetail: (id: string) =>
     apiAdmin.get(`/lots/${id}/sale-detail?companyId=${getCompanyId()}`),
 
+  assignLotSeller: (id: string, sellerId: string) =>
+    apiAdmin.post(`/lots/${id}/assign-seller?companyId=${getCompanyId()}`, { sellerId }),
+
   getLot: (id: string) =>
     apiAdmin.get(`/lots/${id}`),
 
@@ -392,8 +395,15 @@ export const adminApi = {
     apiAdmin.post('/whatsapp/send', data),
 
   // Reports
-  getSalesReport: () =>
-    apiAdmin.get(`/reports/sales?companyId=${getCompanyId()}`),
+  getSalesReport: (period?: string, startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams({
+      companyId: getCompanyId(),
+      ...(period && { period }),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+    })
+    return apiAdmin.get(`/reports/sales?${params.toString()}`)
+  },
 
   getCashFlowProjection: (months: number = 6) =>
     apiAdmin.get(`/reports/projection?companyId=${getCompanyId()}&months=${months}`),
@@ -415,6 +425,9 @@ export const adminApi = {
     })
     return apiAdmin.get(`/reports/advisors?${params.toString()}`)
   },
+
+  getLotsReport: () =>
+    apiAdmin.get(`/reports/lots?companyId=${getCompanyId()}`),
 
   // Audit
   getAuditLogs: (params: any) =>
@@ -457,8 +470,17 @@ export const adminApi = {
     return apiAdmin.get(`/commissions?${params.toString()}`)
   },
 
-  radicarComision: (id: string, installmentIndex: number) =>
-    apiAdmin.post(`/commissions/${id}/radicar?companyId=${getCompanyId()}`, { installmentIndex }),
+  radicarComision: (id: string, installmentIndex: number, documents?: { invoiceUrl?: string; socialSecurityUrl?: string; rutUrl?: string; bankCertUrl?: string }) =>
+    apiAdmin.post(`/commissions/${id}/radicar?companyId=${getCompanyId()}`, { installmentIndex, ...(documents || {}) }),
+
+  uploadCommissionSupport: (file: File, type: 'invoice' | 'social_security' | 'rut' | 'bank_cert') => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', type)
+    return apiAdmin.post(`/commissions/upload-support?companyId=${getCompanyId()}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 
   aprobarComision: (id: string, installmentIndex: number, observacion?: string) =>
     apiAdmin.post(`/commissions/${id}/aprobar?companyId=${getCompanyId()}`, { installmentIndex, observacion }),

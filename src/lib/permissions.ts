@@ -125,6 +125,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
     PERMISSIONS.COMISIONES_APPROVE,
     PERMISSIONS.COMISIONES_REJECT,
     PERMISSIONS.COMISIONES_PAY,
+    PERMISSIONS.REPORTES_VIEW,
   ],
 
   jefe_cartera: [
@@ -152,6 +153,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
     PERMISSIONS.EQUIPO_MANAGE,
     PERMISSIONS.IMPORT_MANAGE,
     PERMISSIONS.IA_CHAT,
+    PERMISSIONS.REPORTES_VIEW,
   ],
 
   auxiliar_cartera: [
@@ -203,6 +205,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
     PERMISSIONS.COMISIONES_APPROVE,
     PERMISSIONS.COMISIONES_REJECT,
     PERMISSIONS.COMISIONES_PAY,
+    PERMISSIONS.REPORTES_VIEW,
   ],
 
   auxiliar_contable: [
@@ -225,6 +228,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
     PERMISSIONS.COMISIONES_APPROVE,
     PERMISSIONS.COMISIONES_REJECT,
     PERMISSIONS.COMISIONES_PAY,
+    PERMISSIONS.REPORTES_VIEW,
   ],
 
   ejecutivo_comercial: [
@@ -244,6 +248,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
     PERMISSIONS.IA_CHAT,
     PERMISSIONS.COMISIONES_VIEW,
     PERMISSIONS.COMISIONES_RADICAR,
+    PERMISSIONS.REPORTES_VIEW,
   ],
 
   cliente: [
@@ -277,6 +282,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
     PERMISSIONS.IA_CHAT,
     PERMISSIONS.COMISIONES_VIEW,
     PERMISSIONS.COMISIONES_RADICAR,
+    PERMISSIONS.REPORTES_VIEW,
   ],
 
   agent: [
@@ -294,6 +300,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[] | string[]> = {
     PERMISSIONS.IA_CHAT,
     PERMISSIONS.COMISIONES_VIEW,
     PERMISSIONS.COMISIONES_RADICAR,
+    PERMISSIONS.REPORTES_VIEW,
   ],
 };
 

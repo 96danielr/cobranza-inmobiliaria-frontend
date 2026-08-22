@@ -36,7 +36,6 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { StatsCardSkeleton, ChartPlaceholder, QuickActionSkeleton } from '@/components/ui/LoadingSpinner'
-import { ConfirmModal } from '@/components/ui/Modal'
 import { adminApi } from '@/lib/adminApi'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useClientStore } from '@/stores/clientStore'
@@ -80,8 +79,6 @@ export default function AdminDashboard() {
   const [moraData, setMoraData] = useState([])
   const [adminUsersCount, setAdminUsersCount] = useState(0)
   const [commissions, setCommissions] = useState<any[]>([])
-  const [radicarTarget, setRadicarTarget] = useState<{ commission: any, installmentIndex: number } | null>(null)
-  const [radicarLoading, setRadicarLoading] = useState(false)
   const isFetching = useRef(false)
 
   const { clients, fetchClientsIfNeeded, totalClients: storeTotal } = useClientStore()
@@ -266,32 +263,6 @@ export default function AdminDashboard() {
     APPROVED: 'Aprobada',
     PAID: 'Pagada',
     REJECTED: 'Rechazada'
-  }
-
-  const fetchCommissions = async () => {
-    try {
-      const res = await adminApi.getCommissions()
-      if (res.data.success) {
-        setCommissions(res.data.data.commissions || [])
-      }
-    } catch (error) {
-      console.error('Error fetching commissions:', error)
-    }
-  }
-
-  const handleRadicar = async () => {
-    if (!radicarTarget) return
-    setRadicarLoading(true)
-    try {
-      await adminApi.radicarComision(radicarTarget.commission._id, radicarTarget.installmentIndex)
-      toast.success('Cuenta de cobro radicada exitosamente')
-      setRadicarTarget(null)
-      fetchCommissions()
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al radicar la cuenta de cobro')
-    } finally {
-      setRadicarLoading(false)
-    }
   }
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -620,11 +591,11 @@ export default function AdminDashboard() {
                               <td className="px-5 py-4 text-right whitespace-nowrap">
                                 {(c.installments || []).map((i: any, idx: number) => (
                                   (i.status === 'AVAILABLE' || i.status === 'REJECTED') && (
-                                    <Button
+                                        <Button
                                       key={idx}
                                       size="sm"
                                       variant={i.status === 'REJECTED' ? 'outline' : 'primary'}
-                                      onClick={() => setRadicarTarget({ commission: c, installmentIndex: idx })}
+                                      onClick={() => (window.location.href = '/admin/commissions')}
                                       className="ml-2"
                                     >
                                       {i.status === 'REJECTED' ? 'Re-radicar' : 'Radicar cuenta'}
@@ -986,22 +957,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Radicar Cuenta de Cobro Modal */}
-      <ConfirmModal
-        isOpen={!!radicarTarget}
-        onClose={() => setRadicarTarget(null)}
-        onConfirm={handleRadicar}
-        title="Radicar cuenta de cobro"
-        message={
-          radicarTarget
-            ? `Vas a radicar tu cuenta de cobro por ${formatCurrency(radicarTarget.commission.installments[radicarTarget.installmentIndex]?.amount || 0)}. La contadora recibirá una notificación para aprobarla o rechazarla.`
-            : ''
-        }
-        confirmText="Radicar cuenta"
-        variant="info"
-        isLoading={radicarLoading}
-      />
     </div>
   )
 }
