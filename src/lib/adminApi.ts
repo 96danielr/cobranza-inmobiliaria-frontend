@@ -132,7 +132,8 @@ export const adminApi = {
     stage?: string,
     sellerId?: string,
     minArea?: string,
-    maxArea?: string
+    maxArea?: string,
+    showDeleted?: boolean | string
   ) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -147,6 +148,7 @@ export const adminApi = {
       ...(sellerId && { sellerId }),
       ...(minArea && { minArea }),
       ...(maxArea && { maxArea }),
+      ...(showDeleted !== undefined && { showDeleted: showDeleted.toString() }),
     })
     return apiAdmin.get(`/lots?${params.toString()}`)
   },
@@ -157,8 +159,11 @@ export const adminApi = {
   updateLot: (id: string, data: any) =>
     apiAdmin.put(`/lots/${id}`, data),
 
-  deleteLot: (id: string) =>
-    apiAdmin.delete(`/lots/${id}`),
+  deleteLot: (id: string, reason?: string) =>
+    apiAdmin.delete(`/lots/${id}`, { data: { reason } }),
+
+  restoreLot: (id: string) =>
+    apiAdmin.post(`/lots/${id}/restore`),
 
   uploadLotImages: (id: string, formData: FormData) =>
     apiAdmin.post(`/lots/${id}/images`, formData, {

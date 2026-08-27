@@ -1147,7 +1147,10 @@ export default function ClientsPage() {
                                             variant="outline"
                                             size="sm"
                                             className="text-[10px] py-0.5 px-2 glass-button border-accent-green/30 text-accent-green hover:bg-accent-green/10"
-                                            onClick={() => window.open(`${apiBaseUrl}/public/receipt/${q._id}`, '_blank')}
+                                            onClick={() => {
+                                              const receiptParam = q.receiptNumber ? `?receiptNumber=${q.receiptNumber}` : ''
+                                              window.open(`${apiBaseUrl}/public/receipt/${q._id}${receiptParam}`, '_blank')
+                                            }}
                                           >
                                             Reimprimir
                                           </Button>

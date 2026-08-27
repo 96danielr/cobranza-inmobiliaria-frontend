@@ -30,7 +30,10 @@ import {
   X,
   Upload,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  RotateCcw,
+  AlertTriangle,
+  Archive
 } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -61,6 +64,9 @@ interface Lot {
   images?: string[]
   status: 'disponible' | 'apartado' | 'separado' | 'vendido'
   maxInstallments?: number
+  isDeleted?: boolean
+  deletedAt?: string
+  deletedReason?: string
   createdAt: string
   sellerId?: {
     accountId: {
@@ -83,6 +89,14 @@ export default function LotsPage() {
   const [sellerFilter, setSellerFilter] = useState('')
   const [minAreaFilter, setMinAreaFilter] = useState('')
   const [maxAreaFilter, setMaxAreaFilter] = useState('')
+  const [showDeletedFilter, setShowDeletedFilter] = useState(false)
+
+  // Safe Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [lotToDelete, setLotToDelete] = useState<Lot | null>(null)
+  const [deleteReason, setDeleteReason] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isRestoring, setIsRestoring] = useState(false)
 
   // Lot-only Import states
   const [isImportLotsModalOpen, setIsImportLotsModalOpen] = useState(false)
@@ -243,7 +257,8 @@ export default function LotsPage() {
         stageFilter || undefined,
         sellerFilter || undefined,
         minAreaFilter || undefined,
-        maxAreaFilter || undefined
+        maxAreaFilter || undefined,
+        showDeletedFilter ? 'true' : undefined
       )
       if (!response.data.success) {
         throw new Error('Error loading lots')
@@ -257,7 +272,6 @@ export default function LotsPage() {
         pages: response.data.data.pagination.pages
       }
     } catch (error) {
-
       throw error
     }
   }
@@ -265,7 +279,7 @@ export default function LotsPage() {
   const pagination = useServerPagination({
     fetchData: fetchLots,
     initialLimit: 20,
-    dependencies: [statusFilter, manzanaFilter, stageFilter, sellerFilter, minAreaFilter, maxAreaFilter]
+    dependencies: [statusFilter, manzanaFilter, stageFilter, sellerFilter, minAreaFilter, maxAreaFilter, showDeletedFilter]
   })
 
   const handleLotsFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -415,19 +429,46 @@ export default function LotsPage() {
     setIsCreateModalOpen(true)
   }
 
-  const handleDeleteLot = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este lote?')) return
+  const openDeleteModal = (lot: Lot) => {
+    setLotToDelete(lot)
+    setDeleteReason('')
+    setIsDeleteModalOpen(true)
+  }
 
+  const handleConfirmDelete = async () => {
+    if (!lotToDelete) return
+    setIsDeleting(true)
     try {
-      const response = await adminApi.deleteLot(id)
+      const response = await adminApi.deleteLot(lotToDelete._id, deleteReason)
       if (response.data.success) {
-        toast.success('Lote eliminado')
+        toast.success(response.data.message || 'Lote eliminado y archivado correctamente')
+        setIsDeleteModalOpen(false)
+        setLotToDelete(null)
         pagination.refresh()
       } else {
         toast.error(response.data.message || 'Error al eliminar')
       }
-    } catch (error) {
-      toast.error('Error al eliminar el lote')
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al eliminar el lote')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleRestoreLot = async (lot: Lot) => {
+    try {
+      setIsRestoring(true)
+      const response = await adminApi.restoreLot(lot._id)
+      if (response.data.success) {
+        toast.success(response.data.message || 'Lote restaurado exitosamente')
+        pagination.refresh()
+      } else {
+        toast.error(response.data.message || 'Error al restaurar lote')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al restaurar lote')
+    } finally {
+      setIsRestoring(false)
     }
   }
 
@@ -1068,10 +1109,26 @@ export default function LotsPage() {
                     />
                   </div>
                 </div>
+
+                {/* Filtro Lotes Archivados/Eliminados */}
+                {admin?.role !== 'vendedor' && (
+                  <div className="flex items-center gap-2 pt-2 sm:col-span-2 md:col-span-3 lg:col-span-5">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-text-secondary hover:text-text-primary select-none bg-glass-primary/30 px-3 py-2 rounded-xl border border-glass-border">
+                      <input
+                        type="checkbox"
+                        checked={showDeletedFilter}
+                        onChange={(e) => setShowDeletedFilter(e.target.checked)}
+                        className="w-4 h-4 rounded border-glass-border bg-glass-primary text-accent-red focus:ring-accent-red"
+                      />
+                      <Archive className="w-3.5 h-3.5 text-accent-red" />
+                      <span>Ver únicamente lotes archivados / eliminados</span>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Clear Filters Toolbar */}
-              {(statusFilter || manzanaFilter || stageFilter || sellerFilter || minAreaFilter || maxAreaFilter) && (
+              {(statusFilter || manzanaFilter || stageFilter || sellerFilter || minAreaFilter || maxAreaFilter || showDeletedFilter) && (
                 <div className="flex justify-end mt-4 animate-fade-in">
                   <Button
                     onClick={() => {
@@ -1081,6 +1138,7 @@ export default function LotsPage() {
                       setSellerFilter('')
                       setMinAreaFilter('')
                       setMaxAreaFilter('')
+                      setShowDeletedFilter(false)
                     }}
                     variant="outline"
                     size="sm"
@@ -1170,16 +1228,23 @@ export default function LotsPage() {
                         {lot.price ? formatCurrency(lot.price) : '-'}
                       </td>
                       <td className="py-4 px-4 md:px-6">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                          lot.status === 'vendido' ? 'bg-red-100 text-red-700 border border-red-200 shadow-sm' :
-                          lot.status === 'separado' ? 'bg-purple-100 text-purple-700 border border-purple-200 shadow-sm' :
-                          lot.status === 'apartado' ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-sm' :
-                          'bg-green-100 text-green-700 border border-green-200 shadow-sm'
-                        }`}>
-                          {lot.status === 'vendido' ? 'Vendido' : 
-                           lot.status === 'separado' ? 'Separado' :
-                           lot.status === 'apartado' ? 'Apartado' : 'Disponible'}
-                        </span>
+                        {lot.isDeleted ? (
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-900/30 text-red-400 border border-red-800/50 shadow-sm flex items-center gap-1 w-fit">
+                            <Archive className="w-3 h-3" />
+                            Archivado
+                          </span>
+                        ) : (
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                            lot.status === 'vendido' ? 'bg-red-100 text-red-700 border border-red-200 shadow-sm' :
+                            lot.status === 'separado' ? 'bg-purple-100 text-purple-700 border border-purple-200 shadow-sm' :
+                            lot.status === 'apartado' ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-sm' :
+                            'bg-green-100 text-green-700 border border-green-200 shadow-sm'
+                          }`}>
+                            {lot.status === 'vendido' ? 'Vendido' : 
+                             lot.status === 'separado' ? 'Separado' :
+                             lot.status === 'apartado' ? 'Apartado' : 'Disponible'}
+                          </span>
+                        )}
                       </td>
                       <td className="py-4 px-4 md:px-6 text-sm text-text-secondary whitespace-nowrap">
                         {lot.sellerId?.accountId?.fullName || '-'}
@@ -1202,7 +1267,7 @@ export default function LotsPage() {
                           ) : (
                             <span className="text-xs text-text-disabled">Sin imágenes</span>
                           )}
-                          {admin?.role !== 'vendedor' && (
+                          {!lot.isDeleted && admin?.role !== 'vendedor' && (
                             <ActionTooltip content="Imágenes">
                               <Button
                                 variant="glass"
@@ -1219,83 +1284,103 @@ export default function LotsPage() {
                       </td>
                       <td className="py-4 px-4 md:px-6">
                         <div className="flex items-center space-x-2">
-                          {lot.status === 'vendido' ? (
-                            <ActionTooltip content="Pagos">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewSaleDetail(lot)}
-                                className="glass-button min-h-[40px] min-w-[40px] text-accent-purple hover:bg-accent-purple/10"
-                                title="Plan de Pagos"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </ActionTooltip>
+                          {lot.isDeleted ? (
+                            admin?.role !== 'vendedor' && (
+                              <ActionTooltip content="Restaurar Lote">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isRestoring}
+                                  onClick={() => handleRestoreLot(lot)}
+                                  className="glass-button min-h-[40px] px-3 text-accent-green hover:bg-accent-green/10"
+                                  title="Restaurar Lote"
+                                >
+                                  <RotateCcw className="w-4 h-4 mr-1.5" />
+                                  <span className="text-xs font-medium">Restaurar</span>
+                                </Button>
+                              </ActionTooltip>
+                            )
                           ) : (
-                            <div className="flex space-x-1">
-                              <ActionTooltip content="Vender">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleSellClick(lot)}
-                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
-                                  title="Vender Lote"
-                                >
-                                  <ShoppingCart className="w-4 h-4" />
-                                </Button>
-                              </ActionTooltip>
-                              
-                              <ActionTooltip content="Apartar">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleReserveClick(lot)}
-                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
-                                  title="Apartar/Separar Lote"
-                                >
-                                  <Users className="w-4 h-4" />
-                                </Button>
-                              </ActionTooltip>
-                            </div>
-                          )}
-                          {(lot.status === 'apartado' || lot.status === 'separado') && (
-                            <ActionTooltip content="Reserva">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewReserveDetail(lot)}
-                                className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
-                                title="Ver Detalles de Reserva"
-                              >
-                                <Info className="w-4 h-4" />
-                              </Button>
-                            </ActionTooltip>
-                          )}
-                          {admin?.role !== 'vendedor' && (
                             <>
-                              <ActionTooltip content="Editar">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(lot)}
-                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
-                                  title="Editar Lote"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              </ActionTooltip>
-                              
-                              <ActionTooltip content="Eliminar">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDeleteLot(lot._id)}
-                                  className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
-                                  title="Eliminar Lote"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </ActionTooltip>
+                              {lot.status === 'vendido' ? (
+                                <ActionTooltip content="Pagos">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewSaleDetail(lot)}
+                                    className="glass-button min-h-[40px] min-w-[40px] text-accent-purple hover:bg-accent-purple/10"
+                                    title="Plan de Pagos"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                </ActionTooltip>
+                              ) : (
+                                <div className="flex space-x-1">
+                                  <ActionTooltip content="Vender">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleSellClick(lot)}
+                                      className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
+                                      title="Vender Lote"
+                                    >
+                                      <ShoppingCart className="w-4 h-4" />
+                                    </Button>
+                                  </ActionTooltip>
+                                  
+                                  <ActionTooltip content="Apartar">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleReserveClick(lot)}
+                                      className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
+                                      title="Apartar/Separar Lote"
+                                    >
+                                      <Users className="w-4 h-4" />
+                                    </Button>
+                                  </ActionTooltip>
+                                </div>
+                              )}
+                              {(lot.status === 'apartado' || lot.status === 'separado') && (
+                                <ActionTooltip content="Reserva">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewReserveDetail(lot)}
+                                    className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
+                                    title="Ver Detalles de Reserva"
+                                  >
+                                    <Info className="w-4 h-4" />
+                                  </Button>
+                                </ActionTooltip>
+                              )}
+                              {admin?.role !== 'vendedor' && (
+                                <>
+                                  <ActionTooltip content="Editar">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleEdit(lot)}
+                                      className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
+                                      title="Editar Lote"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                  </ActionTooltip>
+                                  
+                                  <ActionTooltip content="Eliminar">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openDeleteModal(lot)}
+                                      className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
+                                      title="Eliminar Lote"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </ActionTooltip>
+                                </>
+                              )}
                             </>
                           )}
                         </div>
@@ -1317,45 +1402,73 @@ export default function LotsPage() {
                       <h3 className="font-bold text-text-primary">E: {lot.stage} - M: {lot.manzana} - L: {lot.lotNumber}</h3>
                       <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
                       <p className="text-xs text-text-muted mt-1">Ejecutivo: {lot.sellerId?.accountId?.fullName || 'N/A'}</p>
-                      <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        lot.status === 'vendido' ? 'bg-red-100 text-red-700 border border-red-200' :
-                        lot.status === 'separado' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
-                        lot.status === 'apartado' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                        'bg-green-100 text-green-700 border border-green-200'
-                      }`}>
-                        {lot.status === 'vendido' ? 'Vendido' : 
-                         lot.status === 'separado' ? 'Separado' :
-                         lot.status === 'apartado' ? 'Apartado' : 'Disponible'}
-                      </span>
+                      {lot.isDeleted ? (
+                        <span className="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-900/30 text-red-400 border border-red-800/50">
+                          <Archive className="w-2.5 h-2.5" />
+                          Archivado
+                        </span>
+                      ) : (
+                        <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          lot.status === 'vendido' ? 'bg-red-100 text-red-700 border border-red-200' :
+                          lot.status === 'separado' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                          lot.status === 'apartado' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                          'bg-green-100 text-green-700 border border-green-200'
+                        }`}>
+                          {lot.status === 'vendido' ? 'Vendido' : 
+                           lot.status === 'separado' ? 'Separado' :
+                           lot.status === 'apartado' ? 'Apartado' : 'Disponible'}
+                        </span>
+                      )}
                     </div>
                     <div className="flex space-x-2">
-                      {lot.status === 'vendido' ? (
-                        <Button size="sm" variant="outline" onClick={() => handleViewSaleDetail(lot)} className="glass-button text-accent-purple" title="Plan de Pagos">
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                      {lot.isDeleted ? (
+                        admin?.role !== 'vendedor' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isRestoring}
+                            onClick={() => handleRestoreLot(lot)}
+                            className="glass-button text-accent-green"
+                            title="Restaurar Lote"
+                          >
+                            <RotateCcw className="w-4 h-4 mr-1" />
+                            <span className="text-xs">Restaurar</span>
+                          </Button>
+                        )
                       ) : (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green" title="Vender Lote">
-                            <ShoppingCart className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleReserveClick(lot)} className="glass-button text-accent-blue" title="Apartar/Separar Lote">
-                            <Users className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
-                      {(lot.status === 'apartado' || lot.status === 'separado') && (
-                        <Button size="sm" variant="outline" onClick={() => handleViewReserveDetail(lot)} className="glass-button text-accent-blue" title="Ver Detalles de Reserva">
-                          <Info className="w-4 h-4" />
-                        </Button>
-                      )}
-                      {admin?.role !== 'vendedor' && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button" title="Editar Lote">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openImageModal(lot)} className="glass-button text-accent-blue" title="Administrar Imágenes">
-                            <ImagePlus className="w-4 h-4" />
-                          </Button>
+                          {lot.status === 'vendido' ? (
+                            <Button size="sm" variant="outline" onClick={() => handleViewSaleDetail(lot)} className="glass-button text-accent-purple" title="Plan de Pagos">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          ) : (
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green" title="Vender Lote">
+                                <ShoppingCart className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleReserveClick(lot)} className="glass-button text-accent-blue" title="Apartar/Separar Lote">
+                                <Users className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
+                          {(lot.status === 'apartado' || lot.status === 'separado') && (
+                            <Button size="sm" variant="outline" onClick={() => handleViewReserveDetail(lot)} className="glass-button text-accent-blue" title="Ver Detalles de Reserva">
+                              <Info className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {admin?.role !== 'vendedor' && (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button" title="Editar Lote">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => openImageModal(lot)} className="glass-button text-accent-blue" title="Administrar Imágenes">
+                                <ImagePlus className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => openDeleteModal(lot)} className="glass-button text-accent-red" title="Eliminar Lote">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </>
                       )}
                     </div>
@@ -2726,6 +2839,102 @@ export default function LotsPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete Lot Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setIsDeleteModalOpen(false)
+            setLotToDelete(null)
+          }
+        }}
+        title="Eliminar Lote"
+        size="md"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="p-4 bg-accent-red/10 border border-accent-red/30 rounded-xl flex items-start gap-3 text-sm text-text-primary">
+            <AlertTriangle className="w-6 h-6 text-accent-red flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-accent-red">¿Estás seguro de que deseas eliminar este lote?</p>
+              <p className="text-xs text-text-secondary mt-1">
+                El lote será ocultado y archivado del inventario y del catálogo de ventas. Su información histórica se preservará de forma segura y podrás restaurarlo cuando lo requieras.
+              </p>
+            </div>
+          </div>
+
+          {lotToDelete && (
+            <div className="bg-glass-primary/20 border border-glass-border p-4 rounded-xl space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Ubicación:</span>
+                <span className="font-bold text-text-primary">
+                  Etapa: {lotToDelete.stage || '-'} - Mz: {lotToDelete.manzana || '-'} - Lote: {lotToDelete.lotNumber}
+                </span>
+              </div>
+              {lotToDelete.nomenclature && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Nomenclatura:</span>
+                  <span className="text-text-primary font-medium">{lotToDelete.nomenclature}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Estado actual:</span>
+                <span className="capitalize font-semibold text-text-primary">{lotToDelete.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Precio:</span>
+                <span className="font-bold text-accent-green">{lotToDelete.price ? formatCurrency(lotToDelete.price) : 'N/A'}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              Motivo de eliminación (Opcional)
+            </label>
+            <Input
+              placeholder="Ej: Lote unificado, error de digitación, replanteo de manzana..."
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              className="glass-input text-sm"
+              disabled={isDeleting}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-glass-border">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => {
+                setIsDeleteModalOpen(false)
+                setLotToDelete(null)
+              }}
+              className="glass-button"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={isDeleting}
+              onClick={handleConfirmDelete}
+              className="glass-button bg-accent-red text-white hover:bg-accent-red/80"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Confirmar Eliminación
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   )
