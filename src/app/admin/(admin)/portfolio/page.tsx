@@ -87,7 +87,7 @@ export default function PortfolioPage() {
   const [selectedClient, setSelectedClient] = useState<ClientPortfolio | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [behaviorFilter, setBehaviorFilter] = useState<'ALL' | 'DISPUESTO' | 'INDECISO' | 'EVASIVO'>('ALL')
-  const [moraFilter, setMoraFilter] = useState<'ALL' | 'AL_DIA' | 'IN_MORA' | 'MORA_1_15' | 'MORA_16_30' | 'MORA_31_60' | 'MORA_60_PLUS'>('ALL')
+  const [moraFilter, setMoraFilter] = useState<'ALL' | 'AL_DIA' | 'IN_MORA' | 'MORA_1_15' | 'MORA_16_30' | 'MORA_31_60' | 'MORA_61_90' | 'MORA_90_PLUS'>('ALL')
   const [dashboardData, setDashboardData] = useState<any>(null)
   const [modalLoading, setModalLoading] = useState(false)
 
@@ -123,7 +123,7 @@ export default function PortfolioPage() {
     }
 
     // Convert to portfolio format
-    const portfolioData = clients.map((client: any) => ({
+    let portfolioData = clients.map((client: any) => ({
       clientId: client._id || client.id,
       clientName: client.name || client.fullName,
       cedula: client.idNumber || client.cedula,
@@ -138,6 +138,19 @@ export default function PortfolioPage() {
       lastContact: client.lastContact || undefined,
       contracts: []
     }))
+
+    // Apply specific mora day-range filter
+    if (moraFilter === 'MORA_1_15') {
+      portfolioData = portfolioData.filter((c: any) => c.daysInArrears >= 1 && c.daysInArrears <= 15)
+    } else if (moraFilter === 'MORA_16_30') {
+      portfolioData = portfolioData.filter((c: any) => c.daysInArrears >= 16 && c.daysInArrears <= 30)
+    } else if (moraFilter === 'MORA_31_60') {
+      portfolioData = portfolioData.filter((c: any) => c.daysInArrears >= 31 && c.daysInArrears <= 60)
+    } else if (moraFilter === 'MORA_61_90') {
+      portfolioData = portfolioData.filter((c: any) => c.daysInArrears >= 61 && c.daysInArrears <= 90)
+    } else if (moraFilter === 'MORA_90_PLUS') {
+      portfolioData = portfolioData.filter((c: any) => c.daysInArrears > 90)
+    }
 
     return {
       data: portfolioData,
@@ -181,8 +194,9 @@ export default function PortfolioPage() {
   const getMoraColor = (days: number) => {
     if (days === 0) return 'text-emerald-500 bg-emerald-500/15 border-emerald-500/30'
     if (days <= 15) return 'text-yellow-500 bg-yellow-500/15 border-yellow-500/30'
-    if (days <= 30) return 'text-orange-500 bg-orange-500/15 border-orange-500/30'
-    if (days <= 60) return 'text-purple-500 bg-purple-500/15 border-purple-500/30'
+    if (days <= 30) return 'text-amber-500 bg-amber-500/15 border-amber-500/30'
+    if (days <= 60) return 'text-orange-500 bg-orange-500/15 border-orange-500/30'
+    if (days <= 90) return 'text-purple-500 bg-purple-500/15 border-purple-500/30'
     return 'text-red-500 bg-red-500/15 border-red-500/30'
   }
 
@@ -191,7 +205,8 @@ export default function PortfolioPage() {
     if (days <= 15) return `Mora 1-15d (${days}d)`
     if (days <= 30) return `Mora 16-30d (${days}d)`
     if (days <= 60) return `Mora 31-60d (${days}d)`
-    return `Mora +60d (${days}d)`
+    if (days <= 90) return `Mora 61-90d (${days}d)`
+    return `Mora +90d (${days}d)`
   }
 
   const handleViewClient = async (client: ClientPortfolio) => {
@@ -784,7 +799,8 @@ export default function PortfolioPage() {
                 <option value="MORA_1_15">Mora 1-15 días</option>
                 <option value="MORA_16_30">Mora 16-30 días</option>
                 <option value="MORA_31_60">Mora 31-60 días</option>
-                <option value="MORA_60_PLUS">Mora +60 días</option>
+                <option value="MORA_61_90">Mora 61-90 días</option>
+                <option value="MORA_90_PLUS">Mora +90 días</option>
               </select>
             </div>
           </div>

@@ -47,7 +47,8 @@ import { AICallModal } from '@/components/AICallModal'
 import { CallHistoryModal } from '@/components/CallHistoryModal'
 import { ActionTooltip } from '@/components/ui/ActionTooltip'
 import { EditPlanPagosModal } from '@/components/contract/EditPlanPagosModal'
-import { Bot, History } from 'lucide-react'
+import { GeneratePlanPagosModal } from '@/components/contract/GeneratePlanPagosModal'
+import { Bot, History, Sparkles } from 'lucide-react'
 
 interface Client {
   _id: string
@@ -133,6 +134,10 @@ export default function ClientsPage() {
   // Plan de Pagos Edit Wizard State
   const [isEditPlanModalOpen, setIsEditPlanModalOpen] = useState(false)
   const [selectedContractForPlanEdit, setSelectedContractForPlanEdit] = useState<any>(null)
+  
+  // Plan de Pagos Generate Wizard State
+  const [isGeneratePlanModalOpen, setIsGeneratePlanModalOpen] = useState(false)
+  const [selectedContractForPlanGenerate, setSelectedContractForPlanGenerate] = useState<any>(null)
   const [manualAmount, setManualAmount] = useState('')
   const [manualBank, setManualBank] = useState('')
   const [manualObservations, setManualObservations] = useState('')
@@ -1068,6 +1073,19 @@ export default function ClientsPage() {
                             <Button
                               variant="outline"
                               size="sm"
+                              className="text-[10px] py-1 px-2.5 glass-button border-accent-blue/40 bg-accent-blue/15 text-accent-blue hover:bg-accent-blue/25 font-semibold"
+                              onClick={() => {
+                                setSelectedContractForPlanGenerate(contract)
+                                setIsGeneratePlanModalOpen(true)
+                              }}
+                            >
+                              <Sparkles className="w-3 h-3 mr-1 text-accent-yellow" />
+                              Estructurar Plan
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className={`text-[10px] py-1 px-2.5 glass-button ${activeSection === 'details' ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/40' : 'border-glass-border text-text-secondary'}`}
                               onClick={() => toggleLocalSection('details')}
                             >
@@ -1168,20 +1186,34 @@ export default function ClientsPage() {
                           <div className="mt-4 pt-4 border-t border-glass-border/40 space-y-2 animate-fade-in-up">
                             <div className="flex items-center justify-between mb-2">
                               <h5 className="font-semibold text-text-primary text-xs uppercase tracking-wider">Plan de Pagos Completo</h5>
-                              {contract.quotas && contract.quotas.length > 0 && (
+                              <div className="flex items-center space-x-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
-                                    setSelectedContractForPlanEdit(contract)
-                                    setIsEditPlanModalOpen(true)
+                                    setSelectedContractForPlanGenerate(contract)
+                                    setIsGeneratePlanModalOpen(true)
                                   }}
-                                  className="text-xs h-7 py-0 px-2.5"
+                                  className="text-xs h-7 py-0 px-2.5 bg-accent-blue/10 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/20"
                                 >
-                                  <Edit className="w-3 h-3 mr-1" />
-                                  Reestructurar Plan
+                                  <Sparkles className="w-3 h-3 mr-1" />
+                                  {(!contract.quotas || contract.quotas.length === 0) ? 'Generar Plan' : 'Estructurar / Regenerar'}
                                 </Button>
-                              )}
+                                {contract.quotas && contract.quotas.length > 0 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedContractForPlanEdit(contract)
+                                      setIsEditPlanModalOpen(true)
+                                    }}
+                                    className="text-xs h-7 py-0 px-2.5"
+                                  >
+                                    <Edit className="w-3 h-3 mr-1" />
+                                    Reestructurar
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                             {(!contract.quotas || contract.quotas.length === 0) ? (
                               <p className="text-xs text-text-muted italic">Plan de pagos no disponible.</p>
@@ -1821,6 +1853,39 @@ export default function ClientsPage() {
           clientName={selectedClient?.name}
           totalValue={selectedContractForPlanEdit.totalValue}
           quotas={selectedContractForPlanEdit.quotas || []}
+          onSuccess={async () => {
+            if (selectedClient) {
+              try {
+                setIsDetailsLoading(true)
+                const response = await adminApi.getClient(selectedClient._id)
+                if (response.data.success) {
+                  setSelectedClient(response.data.data)
+                }
+              } catch (e) {
+                console.error('Error reloading client details:', e)
+              } finally {
+                setIsDetailsLoading(false)
+              }
+            }
+            pagination.refresh()
+          }}
+        />
+      )}
+
+      {/* GENERATE PLAN PAGOS MODAL */}
+      {selectedContractForPlanGenerate && (
+        <GeneratePlanPagosModal
+          isOpen={isGeneratePlanModalOpen}
+          onClose={() => {
+            setIsGeneratePlanModalOpen(false)
+            setSelectedContractForPlanGenerate(null)
+          }}
+          contractId={selectedContractForPlanGenerate._id}
+          clientName={selectedClient?.name}
+          lotInfo={selectedContractForPlanGenerate.lot ? `Mz ${selectedContractForPlanGenerate.lot.manzana || '-'} Lote ${selectedContractForPlanGenerate.lot.lotNumber || selectedContractForPlanGenerate.lot.nomenclature || '-'}` : undefined}
+          currentTotalValue={selectedContractForPlanGenerate.totalValue}
+          currentInstallmentsCount={selectedContractForPlanGenerate.installmentsCount || selectedContractForPlanGenerate.quotas?.length || 36}
+          currentInstallmentValue={selectedContractForPlanGenerate.installmentValue || selectedContractForPlanGenerate.quotas?.[0]?.value || 0}
           onSuccess={async () => {
             if (selectedClient) {
               try {

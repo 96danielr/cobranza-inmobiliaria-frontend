@@ -33,8 +33,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Landmark
 } from 'lucide-react'
+import { BanksManagement } from '@/components/admin/BanksManagement'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -145,7 +147,7 @@ const mockTenantConfig: TenantConfig = {
 export default function SettingsPage() {
   const { isAuthenticated, admin } = useAdminAuthStore()
   const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
-  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'integrations' | 'quotas' | 'bonuses' | 'commissions' | 'audit'>('company')
+  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'banks' | 'integrations' | 'quotas' | 'bonuses' | 'commissions' | 'audit'>('company')
   const [limits, setLimits] = useState<any[]>([])
   const [usage, setUsage] = useState<any[]>([])
   const [limitsLoading, setLimitsLoading] = useState(false)
@@ -539,10 +541,10 @@ export default function SettingsPage() {
   const planSummary = (plan: any): string => {
     if (Array.isArray(plan.tiers) && plan.tiers.length > 0) {
       const pcts = plan.tiers.map((t: any) => `${t.initialQuotaPercentage}%`).join(', ')
-      return `${plan.tiers.length} tramos (${pcts})`
+      return `${plan.tiers.length} rangos (${pcts})`
     }
     const count = (plan.milestones || []).length
-    return `${count} hito${count === 1 ? '' : 's'} de desembolso`
+    return `${count} logro${count === 1 ? '' : 's'} de desembolso`
   }
 
   // Tenant-level state (MATRIZ)
@@ -973,6 +975,7 @@ export default function SettingsPage() {
   const tabs = [
     { key: 'company', label: 'Información de la Empresa', icon: Building2 },
     { key: 'users', label: 'Usuarios Administradores', icon: Users },
+    ...(can(PERMISSIONS.BANCOS_VIEW) ? [{ key: 'banks', label: 'Bancos', icon: Landmark }] : []),
     { key: 'integrations', label: 'Integraciones', icon: Settings },
     { key: 'quotas', label: 'Límites y Cuotas', icon: Shield },
     { key: 'bonuses', label: 'Bonos de Descuento', icon: CreditCard },
@@ -1242,6 +1245,13 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {/* Bancos Tab */}
+      {activeTab === 'banks' && (
+        <div className="space-y-6 animate-fade-in">
+          <BanksManagement />
+        </div>
+      )}
+
       {/* Bonuses Tab */}
       {activeTab === 'bonuses' && (
         <div className="space-y-4 md:space-y-6">
@@ -1402,7 +1412,7 @@ export default function SettingsPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-text-primary">Planes de Comisión</h3>
-                  <p className="text-sm text-text-secondary mt-1">Define cuánto recibe el asesor por venta y CUÁNDO se le paga según el % de cuota inicial elegido por el cliente. Cada tramo (% de CI) tiene sus propios desembolsos: ej. Marbella con CI 10% paga $2.5M al saldar la cuota inicial y $2.5M al pagar la cuota #6; con CI 30% paga todo ($5M) al saldar la cuota inicial.</p>
+                  <p className="text-sm text-text-secondary mt-1">Define cuánto recibe el asesor por venta y CUÁNDO se le paga según el % de cuota inicial elegido por el cliente. Cada rango (% de CI) tiene sus propios desembolsos: ej. Marbella con CI 10% paga $2.5M al saldar la cuota inicial y $2.5M al pagar la cuota #6; con CI 30% paga todo ($5M) al saldar la cuota inicial.</p>
                 </div>
                 {can(PERMISSIONS.COMISIONES_MANAGE) && (
                   <Button
@@ -1535,13 +1545,13 @@ export default function SettingsPage() {
                         : 'text-text-secondary hover:text-text-primary border-glass-border'
                     }`}
                   >
-                    Hitos globales (porción %)
+                    Logros globales (porción %)
                   </button>
                   <button
                     type="button"
                     onClick={() => setPlanMode('tiers')}
                     disabled={planForm.baseType === 'percentage'}
-                    title={planForm.baseType === 'percentage' ? 'Los tramos solo se soportan con base fija' : ''}
+                    title={planForm.baseType === 'percentage' ? 'Los rangos solo se soportan con base fija' : ''}
                     className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${
                       planMode === 'tiers'
                         ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/30'
@@ -1550,12 +1560,12 @@ export default function SettingsPage() {
                         : 'text-text-secondary hover:text-text-primary border-glass-border'
                     }`}
                   >
-                    Tramo por % cuota inicial
+                    Rango por % cuota inicial
                   </button>
                 </div>
                 <p className="text-xs text-text-muted mt-2">
                   {planMode === 'tiers'
-                    ? 'Cada tramo (% de cuota inicial del contrato) define SUS propios desembolsos. Ej. Marbella: tramo 10% → $2.5M al pagar la inicial + $2.5M en la cuota #6; tramo 30% → $5M completos al pagar la inicial (un solo desembolso). La suma de cada tramo debe igualar el valor base.'
+                    ? 'Cada rango (% de cuota inicial del contrato) define SUS propios desembolsos. Ej. Marbella: rango 10% → $2.5M al pagar la inicial + $2.5M en la cuota #6; rango 30% → $5M completos al pagar la inicial (un solo desembolso). La suma de cada rango debe igualar el valor base.'
                     : 'El mismo reparto de desembolso aplica para todo % de cuota inicial; la suma de porciones debe ser 1 (100%).'}
                 </p>
               </div>
@@ -1563,15 +1573,15 @@ export default function SettingsPage() {
               {planMode === 'milestones' ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-text-primary">Hitos de Desembolso</label>
+                    <label className="block text-sm font-medium text-text-primary">Logros de Desembolso</label>
                     <Button type="button" variant="glass" size="sm" onClick={addMilestone} className="text-accent-blue">
-                      <Plus className="w-4 h-4 mr-1" /> Agregar Hito
+                      <Plus className="w-4 h-4 mr-1" /> Agregar Logro
                     </Button>
                   </div>
                   {planForm.milestones.map((m, mIdx) => (
                     <div key={mIdx} className="flex flex-wrap items-end gap-3 p-3 rounded-xl border border-glass-border bg-glass-primary/10">
                       <div className="flex flex-col flex-1 min-w-[140px]">
-                        <label className="text-xs text-text-secondary font-semibold mb-2">Hito</label>
+                        <label className="text-xs text-text-secondary font-semibold mb-2">Logro</label>
                         <select
                           className="glass-input px-3 py-2 text-sm"
                           value={m.key}
@@ -1619,9 +1629,9 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-text-primary">Tramos por % de Cuota Inicial</label>
+                    <label className="block text-sm font-medium text-text-primary">Rangos por % de Cuota Inicial</label>
                     <Button type="button" variant="glass" size="sm" onClick={addTier} className="text-accent-blue">
-                      <Plus className="w-4 h-4 mr-1" /> Agregar Tramo
+                      <Plus className="w-4 h-4 mr-1" /> Agregar Rango
                     </Button>
                   </div>
                   {planForm.tiers.map((tier, tierIdx) => {
@@ -1642,7 +1652,7 @@ export default function SettingsPage() {
                             />
                           </div>
                           <Button type="button" variant="glass" size="sm" onClick={() => addTierMilestone(tierIdx)} className="text-accent-blue">
-                            <Plus className="w-4 h-4 mr-1" /> Agregar Hito
+                            <Plus className="w-4 h-4 mr-1" /> Agregar Logro
                           </Button>
                           <Button type="button" variant="glass" size="sm" onClick={() => removeTier(tierIdx)} className="p-2 text-accent-red">
                             <Trash2 className="w-4 h-4" />
@@ -1651,7 +1661,7 @@ export default function SettingsPage() {
                         {tier.milestones.map((m, mIdx) => (
                           <div key={mIdx} className="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-glass-border/50 bg-glass-primary/5">
                             <div className="flex flex-col flex-1 min-w-[140px]">
-                              <label className="text-xs text-text-secondary font-semibold mb-2">Hito</label>
+                              <label className="text-xs text-text-secondary font-semibold mb-2">Logro</label>
                               <select
                                 className="glass-input px-3 py-2 text-sm"
                                 value={m.key}
@@ -1691,7 +1701,7 @@ export default function SettingsPage() {
                           </div>
                         ))}
                         <p className={`text-xs ${Math.abs(sum - (parseFloat(planForm.baseValue) || 0)) > 0.01 ? 'text-accent-red' : 'text-accent-green'}`}>
-                          Suma del tramo: <strong>{sum.toLocaleString()}</strong> — valor base: {(parseFloat(planForm.baseValue) || 0).toLocaleString()}
+                          Suma del rango: <strong>{sum.toLocaleString()}</strong> — valor base: {(parseFloat(planForm.baseValue) || 0).toLocaleString()}
                         </p>
                       </div>
                     )

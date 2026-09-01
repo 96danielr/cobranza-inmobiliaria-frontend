@@ -22,7 +22,8 @@ import {
   Link as LinkIcon,
   Copy,
   ExternalLink,
-  Mail
+  Mail,
+  Edit
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -96,6 +97,17 @@ export default function PaymentsPage() {
   const [selectedContractId, setSelectedContractId] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
   const [manualPaymentOption, setManualPaymentOption] = useState<'minimo' | 'total' | 'otro'>('minimo')
+
+  // Edit Payment State
+  const [isEditPaymentModalOpen, setIsEditPaymentModalOpen] = useState(false)
+  const [editPaymentId, setEditPaymentId] = useState('')
+  const [editAmount, setEditAmount] = useState('')
+  const [editBank, setEditBank] = useState('')
+  const [editPaymentMethod, setEditPaymentMethod] = useState('')
+  const [editPaymentDate, setEditPaymentDate] = useState('')
+  const [editObservations, setEditObservations] = useState('')
+  const [editReason, setEditReason] = useState('')
+  const [isEditingPayment, setIsEditingPayment] = useState(false)
 
   const pendingQuotas = useMemo(() => {
     if (!clientDetails || !selectedContractId) return []
@@ -383,6 +395,55 @@ export default function PaymentsPage() {
       toast.error('Error al registrar el pago')
     } finally {
       setIsProcessing(false)
+    }
+  }
+
+  const handleOpenEditModal = (payment: PendingPayment) => {
+    setEditPaymentId(payment.id)
+    setEditAmount(String(payment.amount))
+    setEditBank(payment.banco || '')
+    setEditPaymentMethod(payment.paymentType || 'Transferencia bancaria')
+    setEditPaymentDate(payment.fechaPago ? dayjs(payment.fechaPago).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'))
+    setEditObservations(payment.observations || '')
+    setEditReason('')
+    setIsEditPaymentModalOpen(true)
+  }
+
+  const handleSaveEditPayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editAmount || Number(editAmount) <= 0) {
+      toast.error('Ingrese un monto válido mayor a 0')
+      return
+    }
+    if (!editReason.trim()) {
+      toast.error('Por favor ingrese el motivo de la corrección')
+      return
+    }
+
+    try {
+      setIsEditingPayment(true)
+      const res = await adminApi.editPayment(editPaymentId, {
+        amount: Number(editAmount),
+        bank: editBank,
+        paymentMethod: editPaymentMethod,
+        paymentDate: editPaymentDate,
+        observations: editObservations,
+        reason: editReason
+      })
+
+      if (res.data.success) {
+        toast.success('¡Pago corregido y cuotas recalculadas exitosamente!')
+        setIsEditPaymentModalOpen(false)
+        setIsModalOpen(false)
+        pagination.refresh()
+      } else {
+        toast.error(res.data.message || 'Error al editar el pago')
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.message || err.message || 'Error al procesar la corrección')
+    } finally {
+      setIsEditingPayment(false)
     }
   }
 
@@ -1083,11 +1144,117 @@ export default function PaymentsPage() {
                       </Button>
                     </div>
                   )}
+
+                  {/* Edit Payment Button for Admins */}
+                  {['superadmin', 'tenant_admin', 'company_admin', 'administrador', 'admin'].includes(admin?.role || '') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="glass-button w-full mt-3 border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs flex items-center justify-center font-medium"
+                      onClick={() => handleOpenEditModal(selectedPayment)}
+                    >
+                      <Edit className="w-3.5 h-3.5 mr-1.5" />
+                      Corregir / Editar Pago y Recalcular Cuotas
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Edit Payment Modal */}
+      <Modal
+        isOpen={isEditPaymentModalOpen}
+        onClose={() => setIsEditPaymentModalOpen(false)}
+        title="Corregir Pago y Recalcular Cuotas"
+        size="md"
+      >
+        <form onSubmit={handleSaveEditPayment} className="space-y-4 text-xs">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-600 dark:text-amber-400 space-y-1">
+            <p className="font-bold flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" /> Advertencia de Recálculo Automático
+            </p>
+            <p className="text-[11px] leading-relaxed">
+              Al modificar el monto, el sistema revertirá automáticamente las cuotas que fueron pagadas por exceso en este pago y las volverá a calcular en cascada con el nuevo valor real.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-text-secondary font-medium mb-1">Monto Real Correcto ($ COP)</label>
+            <Input
+              type="number"
+              step="any"
+              value={editAmount}
+              onChange={(e) => setEditAmount(e.target.value)}
+              placeholder="Ej: 1666000"
+              required
+              className="text-sm font-bold"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-text-secondary font-medium mb-1">Banco / Medio</label>
+              <Input
+                type="text"
+                value={editBank}
+                onChange={(e) => setEditBank(e.target.value)}
+                placeholder="Ej: Bancolombia"
+              />
+            </div>
+            <div>
+              <label className="block text-text-secondary font-medium mb-1">Fecha de Pago</label>
+              <Input
+                type="date"
+                value={editPaymentDate}
+                onChange={(e) => setEditPaymentDate(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-text-secondary font-medium mb-1">Motivo de la Corrección (Auditoría) *</label>
+            <textarea
+              value={editReason}
+              onChange={(e) => setEditReason(e.target.value)}
+              rows={2}
+              className="glass-input w-full px-3 py-2 text-xs focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
+              placeholder="Ej: Error de digitalización se fue un 0 de más en el valor..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-text-secondary font-medium mb-1">Observaciones Generales</label>
+            <textarea
+              value={editObservations}
+              onChange={(e) => setEditObservations(e.target.value)}
+              rows={2}
+              className="glass-input w-full px-3 py-2 text-xs"
+              placeholder="Observaciones adicionales..."
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-3 border-t border-glass-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditPaymentModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              loading={isEditingPayment}
+              className="bg-accent-blue text-white"
+            >
+              Guardar y Recalcular
+            </Button>
+          </div>
+        </form>
       </Modal>
 
       {/* Manual Payment Registration Modal */}

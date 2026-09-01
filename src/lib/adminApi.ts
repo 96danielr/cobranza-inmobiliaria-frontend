@@ -97,6 +97,9 @@ export const adminApi = {
   rejectPayment: (id: string, observacion: string) =>
     apiAdmin.put(`/payments/${id}/reject?companyId=${getCompanyId()}`, { observacion }),
 
+  editPayment: (id: string, data: { amount: number; bank?: string; paymentMethod?: string; paymentDate?: string; observations?: string; reason?: string }) =>
+    apiAdmin.put(`/payments/${id}/edit?companyId=${getCompanyId()}`, data),
+
   resendReceipt: (id: string) =>
     apiAdmin.post(`/payments/${id}/resend-receipt?companyId=${getCompanyId()}`),
 
@@ -508,6 +511,21 @@ export const adminApi = {
 
   applyPaymentSchedule: (data: { contractId: string; updatedQuotas: any[]; reason?: string }) =>
     apiAdmin.post(`/payment-schedule/apply?companyId=${getCompanyId()}`, data),
+
+  generateContractSchedule: (data: {
+    contractId: string;
+    totalValue: number;
+    installmentsCount: number;
+    installmentValue: number;
+    startDate?: string;
+    paymentDay?: number;
+    balloonInterval?: number;
+    balloonValue?: number;
+    initialQuotasCount?: number;
+    initialQuotaValue?: number;
+    preserveExistingPayments?: boolean;
+  }) =>
+    apiAdmin.post(`/payment-schedule/generate?companyId=${getCompanyId()}`, data),
 
   // AI Call Logs
   getCallLogs: (clientId: string, page: number = 1, limit: number = 10) =>

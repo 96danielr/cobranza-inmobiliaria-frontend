@@ -319,8 +319,8 @@ export default function CommissionsPage() {
                       ? 'Cobrar comisión - Cuota Inicial'
                       : `Cobrar comisión - 6ta Cuota`
                     const milestoneBadgeLabel = isInitialQuota
-                      ? 'Hito: Cuota Inicial'
-                      : `Hito: Cuota #${i.quotaNumber || 6}`
+                      ? 'Logro: Cuota Inicial'
+                      : `Logro: Cuota #${i.quotaNumber || 6}`
 
                     return (
                       <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl border border-glass-border/50 bg-glass-primary/10">
@@ -422,7 +422,7 @@ export default function CommissionsPage() {
                 <strong>Cliente:</strong> {filingTarget.commission.contractId?.client?.name}
               </p>
               <p>
-                <strong>Hito:</strong> {filingTarget.commission.installments[filingTarget.installmentIndex]?.milestoneKey === 'INITIAL_QUOTA' ? 'Cuota Inicial' : 'Sexta Cuota'}
+                <strong>Logro:</strong> {filingTarget.commission.installments[filingTarget.installmentIndex]?.milestoneKey === 'INITIAL_QUOTA' ? 'Cuota Inicial' : 'Sexta Cuota'}
               </p>
               <p>
                 <strong>Monto a Radicar:</strong>{' '}

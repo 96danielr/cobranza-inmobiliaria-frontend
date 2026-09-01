@@ -199,34 +199,46 @@ export function EditPlanPagosModal({
 
             </div>
 
-            <div className="bg-glass-primary/20 border border-glass-border/30 rounded-lg p-3 space-y-2">
-              <label className="block font-semibold text-text-primary">Estrategia para Acomodar el Saldo Restante</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <label className={`flex items-start p-2.5 rounded-md border cursor-pointer transition-colors ${strategy === 'REPARTIR_PENDIENTES' ? 'bg-accent-blue/10 border-accent-blue' : 'border-glass-border/40 hover:bg-glass-primary/10'}`}>
+            <div className="bg-glass-primary/20 border border-glass-border/30 rounded-lg p-3 space-y-2.5">
+              <div>
+                <label className="block font-semibold text-text-primary text-xs">
+                  ¿Cómo deseas compensar la diferencia de saldo?
+                </label>
+                <p className="text-[11px] text-text-muted">
+                  Al cambiar el valor de esta cuota, el valor total del contrato se mantiene balanceado ajustando las cuotas restantes:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <label className={`flex items-start p-3 rounded-lg border cursor-pointer transition-all ${strategy === 'REPARTIR_PENDIENTES' ? 'bg-accent-blue/10 border-accent-blue/70 shadow-sm' : 'border-glass-border/40 hover:bg-glass-primary/10'}`}>
                   <input
                     type="radio"
                     name="strategy"
                     checked={strategy === 'REPARTIR_PENDIENTES'}
                     onChange={() => setStrategy('REPARTIR_PENDIENTES')}
-                    className="mt-0.5 mr-2"
+                    className="mt-0.5 mr-2.5 accent-accent-blue"
                   />
-                  <div>
-                    <span className="font-medium text-text-primary block">Repartir en Cuotas Pendientes</span>
-                    <span className="text-[11px] text-text-secondary">Prorratea la diferencia entre todas las cuotas futuras sin pagar.</span>
+                  <div className="space-y-0.5">
+                    <span className="font-semibold text-text-primary text-xs block">Distribuir en cuotas pendientes</span>
+                    <p className="text-[11px] text-text-secondary leading-tight">
+                      Divide la diferencia en partes iguales entre todas las cuotas futuras por pagar (todas suben o bajan equitativamente).
+                    </p>
                   </div>
                 </label>
 
-                <label className={`flex items-start p-2.5 rounded-md border cursor-pointer transition-colors ${strategy === 'AJUSTAR_ULTIMAS' ? 'bg-accent-blue/10 border-accent-blue' : 'border-glass-border/40 hover:bg-glass-primary/10'}`}>
+                <label className={`flex items-start p-3 rounded-lg border cursor-pointer transition-all ${strategy === 'AJUSTAR_ULTIMAS' ? 'bg-accent-blue/10 border-accent-blue/70 shadow-sm' : 'border-glass-border/40 hover:bg-glass-primary/10'}`}>
                   <input
                     type="radio"
                     name="strategy"
                     checked={strategy === 'AJUSTAR_ULTIMAS'}
                     onChange={() => setStrategy('AJUSTAR_ULTIMAS')}
-                    className="mt-0.5 mr-2"
+                    className="mt-0.5 mr-2.5 accent-accent-blue"
                   />
-                  <div>
-                    <span className="font-medium text-text-primary block">Absorber en Últimas Cuotas</span>
-                    <span className="text-[11px] text-text-secondary">Descuenta o aumenta el valor empezando desde la última cuota.</span>
+                  <div className="space-y-0.5">
+                    <span className="font-semibold text-text-primary text-xs block">Ajustar en las cuotas finales</span>
+                    <p className="text-[11px] text-text-secondary leading-tight">
+                      Aplica la diferencia a la última cuota (o las últimas), manteniendo intactas las demás cuotas intermedias.
+                    </p>
                   </div>
                 </label>
               </div>

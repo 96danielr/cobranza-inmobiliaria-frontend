@@ -86,6 +86,8 @@ export function PortfolioCard({ client, onView, onDownloadStatement }: Portfolio
     if (client.daysInArrears === 0) return { text: 'Al día', color: 'text-accent-green' }
     if (client.daysInArrears <= 15) return { text: `${client.daysInArrears} días`, color: 'text-accent-yellow' }
     if (client.daysInArrears <= 30) return { text: `${client.daysInArrears} días`, color: 'text-accent-orange' }
+    if (client.daysInArrears <= 60) return { text: `${client.daysInArrears} días`, color: 'text-orange-500' }
+    if (client.daysInArrears <= 90) return { text: `${client.daysInArrears} días`, color: 'text-purple-500' }
     return { text: `${client.daysInArrears} días`, color: 'text-accent-red' }
   }
 

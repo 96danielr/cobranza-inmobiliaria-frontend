@@ -745,7 +745,9 @@ export default function ReportsPage() {
                           </div>
                           <div>
                             <h3 className="font-bold text-text-primary text-lg">{stat.projectName}</h3>
-                            <p className="text-sm text-text-secondary">Etapa: {stat.stage}</p>
+                            <p className="text-sm text-text-secondary">
+                              {stat.stage?.toLowerCase().startsWith('etapa') ? stat.stage : `Etapa: ${stat.stage}`}
+                            </p>
                           </div>
                         </div>
                         <div className="space-y-2 mt-4">
