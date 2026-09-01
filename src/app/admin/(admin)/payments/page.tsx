@@ -325,7 +325,7 @@ export default function PaymentsPage() {
 
     try {
       await navigator.clipboard.writeText(link)
-      toast.success('Link público copiado: ' + link, { duration: 4000 })
+      toast.success('Link del cliente copiado: ' + link, { duration: 4000 })
     } catch (err) {
       // Fallback for non-secure contexts if needed
 
@@ -538,7 +538,7 @@ export default function PaymentsPage() {
             onClick={copyPaymentLink}
           >
             <LinkIcon className="w-4 h-4 mr-2" />
-            Copiar Link Público
+            Copiar Link Cliente
           </Button>
           <Button
             variant="outline"
