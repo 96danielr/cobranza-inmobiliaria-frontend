@@ -109,14 +109,14 @@ export const TOUR_STEPS: Array<TourStepItem> = [
   {
     key: 'payments',
     route: '/admin/payments',
-    title: '7. Pagos Manuales y Link de Cobro',
+    title: '7. Pagos Manuales, Link y QR',
     shortLabel: 'Pagos',
     badge: 'Paso 7 de 7',
-    description: 'Aquí registras las consignaciones directas con "Registrar Pago" o compartes el enlace público QR con tus clientes.',
-    actionHint: 'Usa "Registrar Pago" para abonar a las cuotas o "Copiar Link" para el cliente.',
-    targetButtonLabel: 'Registrar Pago / Link Cliente',
+    description: 'Aquí registras las consignaciones directas con "Registrar Pago" o compartes el enlace y código QR con tus clientes.',
+    actionHint: 'Usa "Registrar Pago", "Compartir Link" o "Compartir QR".',
+    targetButtonLabel: 'Registrar Pago / Link / QR',
     targetSelector: '#tour-payments-actions',
-    calloutText: '👇 ¡Aquí registras pagos manuales o copias el link para clientes!'
+    calloutText: '👇 ¡Aquí registras pagos o compartes el link y código QR con tus clientes!'
   }
 ]
 

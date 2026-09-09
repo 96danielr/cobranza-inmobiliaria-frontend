@@ -23,8 +23,10 @@ import {
   Copy,
   ExternalLink,
   Mail,
-  Edit
+  Edit,
+  QrCode
 } from 'lucide-react'
+import { SharePaymentModal } from '@/components/admin/SharePaymentModal'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -138,6 +140,7 @@ export default function PaymentsPage() {
   const [manualPaymentMethod, setManualPaymentMethod] = useState<string>('Transferencia bancaria')
   const [manualPaymentDate, setManualPaymentDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [companySlug, setCompanySlug] = useState('')
+  const [isSharePaymentModalOpen, setIsSharePaymentModalOpen] = useState(false)
   const [companyDetails, setCompanyDetails] = useState<any>(null)
   const [banks, setBanks] = useState<any[]>([])
   const [loadingBanks, setLoadingBanks] = useState(false)
@@ -294,6 +297,33 @@ export default function PaymentsPage() {
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const getPaymentUrl = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    return companySlug ? `${origin}/p/${companySlug}/payments` : ''
+  }
+
+  const openShareModal = async () => {
+    let currentSlug = companySlug
+    if (!currentSlug && selectedCompanyId) {
+      try {
+        setModalLoading(true)
+        const res = await adminApi.getCompany(selectedCompanyId)
+        if (res.data.success) {
+          currentSlug = res.data.data.company.slug
+          setCompanySlug(currentSlug)
+        }
+      } catch (e) {
+      } finally {
+        setModalLoading(false)
+      }
+    }
+    if (!currentSlug) {
+      toast.error('No se pudo generar el enlace. Verifique el nombre de la inmobiliaria.')
+      return
+    }
+    setIsSharePaymentModalOpen(true)
   }
 
   const copyPaymentLink = async () => {
@@ -538,7 +568,15 @@ export default function PaymentsPage() {
             onClick={copyPaymentLink}
           >
             <LinkIcon className="w-4 h-4 mr-2" />
-            Copiar Link Cliente
+            Compartir Link
+          </Button>
+          <Button
+            variant="outline"
+            className="glass-button border-accent-purple/30 text-accent-purple hover:bg-accent-purple/10 min-h-[44px]"
+            onClick={openShareModal}
+          >
+            <QrCode className="w-4 h-4 mr-2" />
+            Compartir QR
           </Button>
           <Button
             variant="outline"
@@ -1830,6 +1868,15 @@ export default function PaymentsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Share Payment Link / QR Modal */}
+      <SharePaymentModal
+        isOpen={isSharePaymentModalOpen}
+        onClose={() => setIsSharePaymentModalOpen(false)}
+        url={getPaymentUrl()}
+        title="Compartir Portal de Pagos con Cliente"
+        subtitle="Permite a tus clientes consultar sus cuotas pendientes, realizar pagos o subir comprobantes de consignación."
+      />
     </div>
   )
 }

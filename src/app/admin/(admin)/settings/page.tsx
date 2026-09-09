@@ -35,8 +35,11 @@ import {
   ChevronRight,
   Calendar,
   BadgeDollarSign,
-  Landmark
+  Landmark,
+  QrCode,
+  Link as LinkIcon
 } from 'lucide-react'
+import { SharePaymentModal } from '@/components/admin/SharePaymentModal'
 import { BanksManagement } from '@/components/admin/BanksManagement'
 import { Card, CardContent, CardFooter } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -581,6 +584,7 @@ export default function SettingsPage() {
     qrCode: '',
     isActive: true
   })
+  const [isShareAccountsModalOpen, setIsShareAccountsModalOpen] = useState(false)
 
 
 
@@ -2070,13 +2074,24 @@ export default function SettingsPage() {
                           {window.location.origin}/p/{tenantConfig.slug}/accounts
                         </p>
                       </div>
-                      <Button
-                        onClick={copyAccountsLink}
-                        size="sm"
-                        className="glass-button bg-accent-blue/15 border-accent-blue/20 text-accent-blue shrink-0 min-h-[38px]"
-                      >
-                        Copiar Enlace
-                      </Button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          onClick={copyAccountsLink}
+                          size="sm"
+                          className="glass-button bg-accent-blue/15 border-accent-blue/20 text-accent-blue hover:bg-accent-blue/25 min-h-[38px]"
+                        >
+                          <LinkIcon className="w-3.5 h-3.5 mr-1.5" />
+                          Compartir Link
+                        </Button>
+                        <Button
+                          onClick={() => setIsShareAccountsModalOpen(true)}
+                          size="sm"
+                          className="glass-button bg-accent-purple/15 border-accent-purple/20 text-accent-purple hover:bg-accent-purple/25 min-h-[38px]"
+                        >
+                          <QrCode className="w-3.5 h-3.5 mr-1.5" />
+                          Compartir QR
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -2775,6 +2790,17 @@ export default function SettingsPage() {
           <ModalContentSkeleton />
         )}
       </Modal>
+
+      {/* Share Accounts Link / QR Modal */}
+      {tenantConfig.slug && (
+        <SharePaymentModal
+          isOpen={isShareAccountsModalOpen}
+          onClose={() => setIsShareAccountsModalOpen(false)}
+          url={typeof window !== 'undefined' ? `${window.location.origin}/p/${tenantConfig.slug}/accounts` : ''}
+          title="Compartir Cuentas Bancarias y QR"
+          subtitle="Tus clientes podrán ver las cuentas autorizadas para transferencias y escanear los códigos QR de pago directo."
+        />
+      )}
     </div>
   )
 }
