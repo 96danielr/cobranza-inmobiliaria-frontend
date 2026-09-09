@@ -478,3 +478,41 @@
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
+
+/* Guided Tour Spotlight & Pulsing Highlights */
+@keyframes tourPulseBorder {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.8), 0 0 25px rgba(59, 130, 246, 0.7);
+    border-color: rgba(96, 165, 250, 1) !important;
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0.25), 0 0 35px rgba(168, 85, 247, 0.8);
+    border-color: rgba(192, 132, 252, 1) !important;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0), 0 0 25px rgba(59, 130, 246, 0.7);
+    border-color: rgba(96, 165, 250, 1) !important;
+  }
+}
+
+.tour-spotlight-active {
+  position: relative !important;
+  z-index: 40 !important;
+  animation: tourPulseBorder 2s infinite ease-in-out !important;
+  border-width: 2px !important;
+  transition: all 0.3s ease !important;
+}
+
+@keyframes tourBouncePoint {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.tour-badge-bounce {
+  animation: tourBouncePoint 1.5s infinite ease-in-out;
+}
+

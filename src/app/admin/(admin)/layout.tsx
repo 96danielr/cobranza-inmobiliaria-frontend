@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check, ChevronLeft, Menu } from 'lucide-react'
+import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check, ChevronLeft, Menu, HelpCircle, Sparkles, BookOpen, LifeBuoy, PlayCircle, MessageSquare } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
 import { adminNavItems, filterAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
@@ -13,6 +13,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useClickAway } from '@/hooks/useClickAway'
 import toast from 'react-hot-toast'
 import { adminApi } from '@/lib/adminApi'
+import { GuidedTourWidget } from '@/components/onboarding/GuidedTourWidget'
+import { useGuidedTourStore } from '@/stores/guidedTourStore'
 
 const roleLabels: Record<AdminNavRole, string> = {
   superadmin: 'Super Admin',
@@ -55,6 +57,12 @@ export default function AdminLayout({
 
   useClickAway(profileRef, () => setIsProfileOpen(false))
 
+  // Help Menu Dropdown State
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const helpRef = useRef<HTMLDivElement>(null)
+
+  useClickAway(helpRef, () => setIsHelpOpen(false))
+
   // Project Selector State
   const [companies, setCompanies] = useState<any[]>([])
   const [isSelectorOpen, setIsSelectorOpen] = useState(false)
@@ -93,12 +101,26 @@ export default function AdminLayout({
     }
   }, [isAuthenticated, admin?.role])
 
-   const handleSelectCompanyInHeader = (companyId: string, companyName: string) => {
-     setSelectedCompany(companyId, companyName)
-     setIsSelectorOpen(false)
-     toast.success(`Proyecto seleccionado: ${companyName}`)
-     window.location.href = '/admin/dashboard'
-   }
+  const handleSelectCompanyInHeader = (companyId: string, companyName: string) => {
+    setSelectedCompany(companyId, companyName)
+    setIsSelectorOpen(false)
+    toast.success(`Proyecto seleccionado: ${companyName}`)
+    window.location.href = '/admin/dashboard'
+  }
+
+  // Auto-start Guided Tour in-vivo for new users or first access
+  useEffect(() => {
+    if (!isAuthenticated || !admin?.id || admin?.role === 'cliente') return
+    const storageKey = `live_tour_completed_${admin.id}`
+    const hasCompleted = localStorage.getItem(storageKey)
+    if (!hasCompleted) {
+      // Small delay to let page mount cleanly, then launch Live Tour immediately
+      const timer = setTimeout(() => {
+        useGuidedTourStore.getState().startTour(0)
+      }, 1200)
+      return () => clearTimeout(timer)
+    }
+  }, [isAuthenticated, admin?.id, admin?.role])
 
   useEffect(() => {
     if (!_hasHydrated) return
@@ -369,8 +391,97 @@ export default function AdminLayout({
                 </div>
               )}
                 
-              {/* Right Side: User Profile Dropdown */}
-              <div ref={profileRef} className="relative flex items-center border-l border-glass-border pl-6 ml-4 flex-shrink-0">
+              {/* Right Side: Ayuda + User Profile */}
+              <div className="flex items-center space-x-3 ml-auto z-10">
+                {/* Menú Desplegable de Ayuda y Tutoriales */}
+                <div ref={helpRef} className="relative">
+                  <button
+                    onClick={() => setIsHelpOpen(!isHelpOpen)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-glass-primary/30 hover:bg-accent-blue/15 text-text-secondary hover:text-accent-blue border border-glass-border/60 hover:border-accent-blue/40 text-xs font-semibold transition-all duration-200 shadow-sm"
+                    title="Centro de Ayuda y Tutoriales"
+                  >
+                    <HelpCircle className="w-4 h-4 text-accent-yellow" />
+                    <span className="hidden md:inline">Ayuda</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {isHelpOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 top-full mt-2 w-72 glass-card p-2 z-[60] shadow-glow"
+                      >
+                        <div className="px-3 py-2 border-b border-glass-border/50 mb-1">
+                          <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Centro de Ayuda</p>
+                          <p className="text-xs text-text-secondary font-medium">Recursos y guías para tu equipo</p>
+                        </div>
+
+                        {/* Opción Principal: Recorrido Guiado en Vivo */}
+                        <button
+                          onClick={() => {
+                            setIsHelpOpen(false)
+                            useGuidedTourStore.getState().startTour(0)
+                          }}
+                          className="w-full flex items-start p-2.5 rounded-xl bg-accent-blue/10 hover:bg-accent-blue/20 text-left transition-all duration-200 group border border-accent-blue/30 mb-1"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-accent-blue text-white flex items-center justify-center shrink-0 mr-2.5 mt-0.5 group-hover:scale-105 transition-transform shadow-sm">
+                            <Sparkles className="w-4 h-4 text-accent-yellow animate-pulse" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-accent-blue flex items-center gap-1.5">
+                              Recorrido en Vivo (Paso a Paso)
+                            </p>
+                            <p className="text-[11px] text-text-secondary leading-tight mt-0.5">
+                              Te llevamos pantalla por pantalla mostrándote cada sección y botón real.
+                            </p>
+                          </div>
+                        </button>
+
+                        {/* Opción: Documentación / Parámetros */}
+                        <Link
+                          href="/admin/settings"
+                          onClick={() => setIsHelpOpen(false)}
+                          className="w-full flex items-start p-2.5 rounded-xl hover:bg-glass-primary/50 text-left transition-all duration-200 group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-accent-purple/20 text-accent-purple flex items-center justify-center shrink-0 mr-2.5 mt-0.5 group-hover:scale-105 transition-transform">
+                            <BookOpen className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-text-primary group-hover:text-accent-purple transition-colors">
+                              Parámetros del Sistema
+                            </p>
+                            <p className="text-[11px] text-text-muted leading-tight mt-0.5">
+                              Revisa bancos, comisiones, bonos y auditoría general.
+                            </p>
+                          </div>
+                        </Link>
+
+                        {/* Opción: Reiniciar Tour Forzado */}
+                        <button
+                          onClick={() => {
+                            if (admin?.id) {
+                              localStorage.removeItem(`live_tour_completed_${admin.id}`)
+                            }
+                            setIsHelpOpen(false)
+                            useGuidedTourStore.getState().startTour(0)
+                            toast.success('Tour en vivo reiniciado desde el paso 1')
+                          }}
+                          className="w-full flex items-center justify-between px-3 py-2 mt-1 rounded-lg border border-glass-border/40 bg-glass-primary/20 hover:bg-glass-primary/40 text-[11px] text-text-secondary hover:text-text-primary transition-colors"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3 text-accent-yellow" />
+                            Reiniciar Recorrido Guiado
+                          </span>
+                          <ChevronRight className="w-3 h-3 text-text-muted" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Right Side: User Profile Dropdown */}
+                <div ref={profileRef} className="relative flex items-center border-l border-glass-border pl-4 flex-shrink-0">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center space-x-3 group hover:opacity-80 transition-all duration-200"
@@ -409,6 +520,16 @@ export default function AdminLayout({
                       <div className="px-3 py-2 border-b border-glass-border mb-1">
                         <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Mi Cuenta</p>
                       </div>
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false)
+                          useGuidedTourStore.getState().startTour(0)
+                        }}
+                        className="w-full flex items-center px-3 py-2.5 rounded-xl text-sm text-accent-blue hover:bg-accent-blue/10 transition-all duration-200"
+                      >
+                        <Sparkles className="w-4 h-4 mr-3 text-accent-yellow" />
+                        Recorrido Guiado en Vivo
+                      </button>
                       <Link
                         href="/admin/profile"
                         className="flex items-center px-3 py-2.5 rounded-xl text-sm text-text-primary hover:bg-accent-blue/10 hover:text-accent-blue transition-all duration-200"
@@ -438,6 +559,7 @@ export default function AdminLayout({
                     </motion.div>
                   )}
                 </AnimatePresence>
+                </div>
               </div>
             </div>
           </header>
@@ -448,6 +570,9 @@ export default function AdminLayout({
           </main>
         </div>
       </div>
+
+      {/* Interactive Guided Tour Widget (Live Walkthrough) */}
+      <GuidedTourWidget />
 
       {/* Mobile Bottom Navigation */}
       <BottomNavigation />

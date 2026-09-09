@@ -1079,8 +1079,7 @@ export default function ClientsPage() {
                                 setIsGeneratePlanModalOpen(true)
                               }}
                             >
-                              <Sparkles className="w-3 h-3 mr-1 text-accent-yellow" />
-                              Estructurar Plan
+                              {(!contract.quotas || contract.quotas.length === 0) ? 'Estructurar Plan' : 'Reestructurar Contrato'}
                             </Button>
 
                             <Button
@@ -1194,10 +1193,11 @@ export default function ClientsPage() {
                                     setSelectedContractForPlanGenerate(contract)
                                     setIsGeneratePlanModalOpen(true)
                                   }}
+                                  title={(!contract.quotas || contract.quotas.length === 0) ? 'Crear cronograma de financiación desde cero' : 'Regenerar o recalcular todo el plan de pagos'}
                                   className="text-xs h-7 py-0 px-2.5 bg-accent-blue/10 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/20"
                                 >
                                   <Sparkles className="w-3 h-3 mr-1" />
-                                  {(!contract.quotas || contract.quotas.length === 0) ? 'Generar Plan' : 'Estructurar / Regenerar'}
+                                  {(!contract.quotas || contract.quotas.length === 0) ? 'Estructurar Plan' : 'Reestructurar Contrato'}
                                 </Button>
                                 {contract.quotas && contract.quotas.length > 0 && (
                                   <Button
@@ -1207,10 +1207,11 @@ export default function ClientsPage() {
                                       setSelectedContractForPlanEdit(contract)
                                       setIsEditPlanModalOpen(true)
                                     }}
-                                    className="text-xs h-7 py-0 px-2.5"
+                                    title="Modificar cuotas puntuales sin alterar el valor total del contrato"
+                                    className="text-xs h-7 py-0 px-2.5 hover:bg-glass-primary/30"
                                   >
                                     <Edit className="w-3 h-3 mr-1" />
-                                    Reestructurar
+                                    Reestructurar Cuotas
                                   </Button>
                                 )}
                               </div>

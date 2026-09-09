@@ -524,6 +524,7 @@ export const adminApi = {
     initialQuotasCount?: number;
     initialQuotaValue?: number;
     preserveExistingPayments?: boolean;
+    reason?: string;
   }) =>
     apiAdmin.post(`/payment-schedule/generate?companyId=${getCompanyId()}`, data),
 

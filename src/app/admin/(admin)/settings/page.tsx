@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   Building2,
   Users,
@@ -147,7 +148,17 @@ const mockTenantConfig: TenantConfig = {
 export default function SettingsPage() {
   const { isAuthenticated, admin } = useAdminAuthStore()
   const selectedCompanyId = useAdminAuthStore(state => state.selectedCompanyId)
-  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'banks' | 'integrations' | 'quotas' | 'bonuses' | 'commissions' | 'audit'>('company')
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get('tab') as any
+  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'banks' | 'integrations' | 'quotas' | 'bonuses' | 'commissions' | 'audit'>(
+    (tabParam && ['company', 'users', 'banks', 'integrations', 'quotas', 'bonuses', 'commissions', 'audit'].includes(tabParam)) ? tabParam : 'company'
+  )
+
+  useEffect(() => {
+    if (tabParam && ['company', 'users', 'banks', 'integrations', 'quotas', 'bonuses', 'commissions', 'audit'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
   const [limits, setLimits] = useState<any[]>([])
   const [usage, setUsage] = useState<any[]>([])
   const [limitsLoading, setLimitsLoading] = useState(false)
@@ -1756,7 +1767,7 @@ export default function SettingsPage() {
             <>
               {/* Tenant Corporate Info (Only for tenant_admin) */}
               {admin?.role === 'tenant_admin' && (
-                <Card variant="elevated" className="animate-fade-in-up">
+                <Card id="tour-tenant-card" variant="elevated" className="animate-fade-in-up">
                   {tenantLoading ? (
                     <CardContent className="p-4 md:p-6"><ModalContentSkeleton /></CardContent>
                   ) : (
@@ -1859,11 +1870,12 @@ export default function SettingsPage() {
                 </Card>
               )}
 
-              <Card variant="elevated" className="animate-fade-in-up">
+              <Card id="tour-project-card" variant="elevated" className="animate-fade-in-up">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <h3 className="text-lg font-semibold text-text-primary">Información del Proyecto Activo</h3>
                     <Button
+                      id="tour-company-save-btn"
                       onClick={handleSaveCompanyInfo}
                       loading={isSaving}
                       className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
@@ -1898,7 +1910,7 @@ export default function SettingsPage() {
               </Card>
 
               {/* Logos de la Empresa y del Proyecto */}
-              <Card variant="elevated" className="animate-fade-in-up mt-6">
+              <Card id="tour-logos-card" variant="elevated" className="animate-fade-in-up mt-6">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
@@ -2025,7 +2037,7 @@ export default function SettingsPage() {
               </Card>
 
               {/* Cuentas Bancarias de la Empresa */}
-              <Card variant="elevated" className="animate-fade-in-up mt-6">
+              <Card id="tour-banks-card" variant="elevated" className="animate-fade-in-up mt-6">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
@@ -2327,7 +2339,11 @@ export default function SettingsPage() {
                     className="glass-input w-64"
                   />
                 </div>
-                <Button onClick={handleCreateUser} className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]">
+                <Button 
+                  id="tour-new-user-btn"
+                  onClick={handleCreateUser} 
+                  className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Nuevo Usuario
                 </Button>

@@ -531,7 +531,7 @@ export default function PaymentsPage() {
             {!pagination.loading && `(${pagination.total.toLocaleString('es-CO')} cuotas total)`}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div id="tour-payments-actions" className="flex flex-col sm:flex-row gap-3 rounded-2xl p-1 transition-all">
           <Button
             variant="outline"
             className="glass-button border-glass-border text-text-secondary min-h-[44px]"

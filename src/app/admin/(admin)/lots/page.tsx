@@ -952,7 +952,7 @@ export default function LotsPage() {
             Administra el inventario de lotes, precios e imágenes
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div id="tour-lots-actions" className="flex flex-col sm:flex-row gap-3 rounded-2xl p-1 transition-all">
           <Button
             onClick={copyCatalogLink}
             variant="outline"
