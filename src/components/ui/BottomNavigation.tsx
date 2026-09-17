@@ -22,6 +22,7 @@ import { useClickAway } from '@/hooks/useClickAway'
 import {
   adminNavItems,
   filterAdminNavItems,
+  getDynamicAdminNavItems,
   type AdminNavRole,
 } from '@/lib/adminNavItems'
 
@@ -46,15 +47,16 @@ const sheetExitSpring = {
 export function BottomNavigation() {
   const pathname = usePathname()
   const router = useRouter()
-  const { admin, logout } = useAdminAuthStore()
+  const { admin, logout, selectedCompanyPropertyType } = useAdminAuthStore()
   const [moreOpen, setMoreOpen] = useState(false)
 
   const isPortal = pathname.startsWith('/portal')
   const userRole = (admin?.role || 'agent') as AdminNavRole
   
+  const dynamicNavItems = getDynamicAdminNavItems(selectedCompanyPropertyType)
   const filtered = isPortal 
     ? require('@/lib/portalNavItems').portalNavItems 
-    : filterAdminNavItems(adminNavItems, userRole, admin?.activeModules)
+    : filterAdminNavItems(dynamicNavItems, userRole, admin?.activeModules)
 
   const withoutLogout = filtered.filter((i: any) => i.href !== 'logout')
   const dockItems = withoutLogout.slice(0, MOBILE_DOCK_VISIBLE)

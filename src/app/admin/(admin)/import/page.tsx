@@ -21,6 +21,7 @@ import { Modal } from '@/components/ui/Modal'
 import { StatsCardSkeleton, ModalContentSkeleton } from '@/components/ui/LoadingSpinner'
 import toast from 'react-hot-toast'
 import { adminApi } from '@/lib/adminApi'
+import { useAdminAuthStore } from '@/stores/adminAuthStore'
 
 interface ImportResult {
   success: boolean
@@ -51,6 +52,7 @@ interface ImportProgress {
 }
 
 export default function ImportPage() {
+  const selectedCompanyPropertyType = useAdminAuthStore((state) => state.selectedCompanyPropertyType)
   const [dragActive, setDragActive] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [importProgress, setImportProgress] = useState<ImportProgress>({
@@ -255,7 +257,7 @@ export default function ImportPage() {
   const downloadTemplate = async () => {
     try {
       toast.loading('Generando plantilla...', { id: 'download-template-toast' })
-      const response = await adminApi.downloadTemplate()
+      const response = await adminApi.downloadTemplate(selectedCompanyPropertyType)
 
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')

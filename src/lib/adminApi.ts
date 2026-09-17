@@ -123,7 +123,6 @@ export const adminApi = {
     return apiAdmin.get(`/contracts?${params.toString()}`)
   },
 
-  // Lots (company-scoped)
   getLots: (
     page: number = 1,
     limit: number = 10,
@@ -136,7 +135,9 @@ export const adminApi = {
     sellerId?: string,
     minArea?: string,
     maxArea?: string,
-    showDeleted?: boolean | string
+    showDeleted?: boolean | string,
+    tower?: string,
+    floor?: string
   ) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -152,6 +153,8 @@ export const adminApi = {
       ...(minArea && { minArea }),
       ...(maxArea && { maxArea }),
       ...(showDeleted !== undefined && { showDeleted: showDeleted.toString() }),
+      ...(tower && { tower }),
+      ...(floor && { floor }),
     })
     return apiAdmin.get(`/lots?${params.toString()}`)
   },
@@ -231,14 +234,14 @@ export const adminApi = {
     }),
     
   // Excel Template
-  downloadTemplate: () =>
-    apiAdmin.get('/import/template', {
+  downloadTemplate: (propertyType?: string) =>
+    apiAdmin.get(`/import/template${propertyType ? `?propertyType=${encodeURIComponent(propertyType)}` : ''}`, {
       responseType: 'blob',
     }),
 
   // Lot-only Excel Template
-  downloadLotsTemplate: () =>
-    apiAdmin.get('/import/template-lots', {
+  downloadLotsTemplate: (propertyType?: string) =>
+    apiAdmin.get(`/import/template-lots${propertyType ? `?propertyType=${encodeURIComponent(propertyType)}` : ''}`, {
       responseType: 'blob',
     }),
 

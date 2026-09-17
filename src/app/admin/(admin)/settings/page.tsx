@@ -56,6 +56,7 @@ import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { PropertyType, PROPERTY_TYPE_OPTIONS } from '@/lib/propertyTypes'
 
 interface AuditLog {
   _id: string
@@ -120,6 +121,7 @@ interface TenantConfig {
   }
   logo?: string
   projectLogo?: string
+  propertyType?: PropertyType
 }
 
 // Mock data
@@ -145,7 +147,8 @@ const mockTenantConfig: TenantConfig = {
     daptaApiKey: undefined
   },
   logo: '',
-  projectLogo: ''
+  projectLogo: '',
+  propertyType: 'lotes'
 }
 
 export default function SettingsPage() {
@@ -655,7 +658,8 @@ export default function SettingsPage() {
             daptaEnabled: false
           },
           logo: companyData.logo || '',
-          projectLogo: companyData.projectLogo || ''
+          projectLogo: companyData.projectLogo || '',
+          propertyType: companyData.propertyType || 'lotes'
         })
       }
     } catch (error) {
@@ -856,10 +860,11 @@ export default function SettingsPage() {
         email: tenantConfig.email,
         bankInfo: tenantConfig.bankInfo,
         logo: tenantConfig.logo,
-        projectLogo: tenantConfig.projectLogo
+        projectLogo: tenantConfig.projectLogo,
+        propertyType: tenantConfig.propertyType
       })
       toast.success('Información de la empresa guardada exitosamente')
-      useAdminAuthStore.getState().setSelectedCompany(selectedCompanyId, tenantConfig.name)
+      useAdminAuthStore.getState().setSelectedCompany(selectedCompanyId, tenantConfig.name, tenantConfig.propertyType)
       window.dispatchEvent(new Event('projects-updated'))
       fetchCompanyConfig() // Refresh data
     } catch (error: any) {
@@ -1908,6 +1913,32 @@ export default function SettingsPage() {
                         className="glass-input w-full px-3 py-2 focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue"
                         placeholder="Dirección del proyecto"
                       />
+                    </div>
+
+                    <div className="md:col-span-3 pt-2">
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Tipo de Inmueble Operado (Tipología)
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {PROPERTY_TYPE_OPTIONS.map((opt) => {
+                          const isSelected = (tenantConfig.propertyType || 'lotes') === opt.value
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setTenantConfig(prev => ({ ...prev, propertyType: opt.value }))}
+                              className={cn(
+                                'p-3 rounded-xl border flex items-center justify-center gap-2 transition-all duration-200 text-xs font-semibold',
+                                isSelected
+                                  ? 'border-accent-blue bg-accent-blue/20 text-white shadow-glow'
+                                  : 'border-glass-border bg-glass-primary/10 text-text-secondary hover:text-text-primary hover:border-accent-blue/30'
+                              )}
+                            >
+                              <span>{opt.label}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

@@ -27,6 +27,7 @@ import { apiPublic } from '@/lib/api'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
 import { useAuthStore } from '@/stores/authStore'
+import { formatPropertyUnit } from '@/lib/propertyTypes'
 
 const rotateImageFile = (file: File, rotationDegrees: number): Promise<File> => {
   return new Promise((resolve) => {
@@ -523,7 +524,7 @@ export default function PublicPaymentPage() {
                           : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700/80'
                       }`}
                     >
-                      Mz {contract.lot?.lotNumber} - Lote {contract.lot?.nomenclature}
+                      {formatPropertyUnit(contract.lot || {})}
                     </button>
                   );
                 })}
@@ -551,7 +552,7 @@ export default function PublicPaymentPage() {
                           </div>
                           <div>
                             <CardTitle className="text-lg text-text-primary">
-                              {contract.lot?.stage} - Mz {contract.lot?.lotNumber} Lote {contract.lot?.nomenclature}
+                              {contract.lot?.stage ? `${contract.lot.stage} - ` : ''}{formatPropertyUnit(contract.lot || {})}
                             </CardTitle>
                             <p className="text-xs text-text-muted italic">{contract.negotiation}</p>
                           </div>

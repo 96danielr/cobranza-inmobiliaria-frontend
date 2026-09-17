@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { PropertyType } from '../lib/propertyTypes'
 
 export interface CompanyAccess {
   id: string
@@ -43,13 +44,14 @@ interface AdminAuthState {
   // Selected company
   selectedCompanyId: string | null
   selectedCompanyName: string | null
+  selectedCompanyPropertyType: PropertyType
   companies: CompanyAccess[]
   // Actions
   setHasHydrated: (state: boolean) => void
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string; requiresTenantSelection?: boolean; requiresOtp?: boolean; otpData?: any }>
   verifyOtp: (otpData: any, otpCode: string) => Promise<{ success: boolean; message?: string }>
   selectTenant: (accountId: string, tenantId: string) => Promise<{ success: boolean; message?: string }>
-  setSelectedCompany: (companyId: string, companyName: string) => void
+  setSelectedCompany: (companyId: string, companyName: string, propertyType?: PropertyType) => void
   logout: () => void
   setLoading: (loading: boolean) => void
   updateAdmin: (data: Partial<AdminUser>) => void
@@ -68,6 +70,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       requiresTenantSelection: false,
       selectedCompanyId: null,
       selectedCompanyName: null,
+      selectedCompanyPropertyType: 'lotes',
       companies: [],
 
       setHasHydrated: (state: boolean) => {
@@ -214,8 +217,12 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         }
       },
 
-      setSelectedCompany: (companyId: string, companyName: string) => {
-        set({ selectedCompanyId: companyId, selectedCompanyName: companyName })
+      setSelectedCompany: (companyId: string, companyName: string, propertyType: PropertyType = 'lotes') => {
+        set({ 
+          selectedCompanyId: companyId, 
+          selectedCompanyName: companyName,
+          selectedCompanyPropertyType: propertyType || 'lotes'
+        })
       },
 
       logout: () => {
@@ -229,6 +236,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           requiresTenantSelection: false,
           selectedCompanyId: null,
           selectedCompanyName: null,
+          selectedCompanyPropertyType: 'lotes',
           companies: [],
         })
         
@@ -255,6 +263,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         isAuthenticated: state.isAuthenticated,
         selectedCompanyId: state.selectedCompanyId,
         selectedCompanyName: state.selectedCompanyName,
+        selectedCompanyPropertyType: state.selectedCompanyPropertyType,
         companies: state.companies,
       }),
       onRehydrateStorage: () => (state) => {

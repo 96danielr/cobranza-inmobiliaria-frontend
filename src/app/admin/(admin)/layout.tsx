@@ -7,7 +7,7 @@ import { useThemeStore } from '@/stores/themeStore'
 import { LogOut, Building2, ChevronRight, User, Settings as SettingsIcon, ChevronsUpDown, Check, ChevronLeft, Menu, HelpCircle, Sparkles, BookOpen, LifeBuoy, PlayCircle, MessageSquare } from 'lucide-react'
 import { BottomNavigation, QuickActionFAB, MobileBreadcrumbs, MobileHeader } from '@/components/ui/BottomNavigation'
 import { cn } from '@/lib/utils'
-import { adminNavItems, filterAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
+import { adminNavItems, filterAdminNavItems, getDynamicAdminNavItems, type AdminNavRole } from '@/lib/adminNavItems'
 import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useClickAway } from '@/hooks/useClickAway'
@@ -38,7 +38,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, _hasHydrated, admin, logout, selectedCompanyId, selectedCompanyName, setSelectedCompany } = useAdminAuthStore()
+  const { isAuthenticated, _hasHydrated, admin, logout, selectedCompanyId, selectedCompanyName, selectedCompanyPropertyType, setSelectedCompany } = useAdminAuthStore()
   const router = useRouter()
   const pathname = usePathname()
   const { theme } = useThemeStore()
@@ -101,8 +101,8 @@ export default function AdminLayout({
     }
   }, [isAuthenticated, admin?.role])
 
-  const handleSelectCompanyInHeader = (companyId: string, companyName: string) => {
-    setSelectedCompany(companyId, companyName)
+  const handleSelectCompanyInHeader = (companyId: string, companyName: string, propertyType?: any) => {
+    setSelectedCompany(companyId, companyName, propertyType || 'lotes')
     setIsSelectorOpen(false)
     toast.success(`Proyecto seleccionado: ${companyName}`)
     window.location.href = '/admin/dashboard'
@@ -186,9 +186,10 @@ export default function AdminLayout({
   const currentPageInfo = getCurrentPageInfo()
   const userRole = (admin?.role || 'agent') as AdminNavRole
 
-  // Filter items using centralized permission logic
+  // Filter items using centralized permission logic with dynamic property type
+  const dynamicNavItems = getDynamicAdminNavItems(selectedCompanyPropertyType)
   const filteredNavItems = filterAdminNavItems(
-    adminNavItems,
+    dynamicNavItems,
     admin?.role,
     admin?.activeModules
   )
@@ -371,7 +372,7 @@ export default function AdminLayout({
                         {companies.map((company) => (
                           <button
                             key={company._id}
-                            onClick={() => handleSelectCompanyInHeader(company._id, company.name)}
+                            onClick={() => handleSelectCompanyInHeader(company._id, company.name, company.propertyType)}
                             className={cn(
                               "w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-semibold transition-all duration-200 border border-transparent",
                               selectedCompanyId === company._id

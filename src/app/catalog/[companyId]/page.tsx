@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { adminApi } from '@/lib/adminApi'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getPropertyConfig, formatPropertyUnit, PropertyType } from '@/lib/propertyTypes'
 
 interface Lot {
   _id: string
@@ -33,10 +34,14 @@ interface Lot {
   area: number
   price?: number
   images?: string[]
+  propertyType?: PropertyType
+  tower?: string
+  floor?: string
+  manzana?: string
 }
 
 // 1. Memoized Lot Card - Simplified SVG icons to reduce node count
-const LotCard = memo(({ lot, onSelect, index }: { lot: Lot, onSelect: (l: Lot) => void, index: number }) => {
+const LotCard = memo(({ lot, companyName, onSelect, index }: { lot: Lot, companyName?: string, onSelect: (l: Lot) => void, index: number }) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -69,10 +74,10 @@ const LotCard = memo(({ lot, onSelect, index }: { lot: Lot, onSelect: (l: Lot) =
         </div>
         <div className="px-2 mb-6 flex justify-between items-start">
            <div>
-              <h3 className="text-xl font-black mb-1">Lote #{lot.lotNumber}</h3>
+              <h3 className="text-xl font-black mb-1">{formatPropertyUnit(lot)}</h3>
               <div className="flex items-center text-gray-400 text-sm font-bold">
                  <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                 <span className="truncate max-w-[120px]">Inmobiliaria</span>
+                 <span className="truncate max-w-[120px]">{lot.nomenclature || companyName || 'Inmobiliaria'}</span>
               </div>
            </div>
            <div className="text-xl font-black text-gray-900">
@@ -122,6 +127,8 @@ export default function CatalogPage() {
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null)
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   
+  const cfg = getPropertyConfig((company?.propertyType || 'lotes') as PropertyType)
+
   const [filters, setFilters] = useState({
     department: '',
     municipality: '',
@@ -167,10 +174,10 @@ export default function CatalogPage() {
   const MemoizedLotsList = useMemo(() => (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 min-h-[400px]">
       {lots.map((lot, index) => (
-        <LotCard key={lot._id} lot={lot} index={index} onSelect={handleSelectLot} />
+        <LotCard key={lot._id} lot={lot} companyName={company?.name} index={index} onSelect={handleSelectLot} />
       ))}
     </div>
-  ), [lots, handleSelectLot])
+  ), [lots, company?.name, handleSelectLot])
 
   if (loading && lots.length === 0) {
     return (
@@ -207,7 +214,7 @@ export default function CatalogPage() {
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-black transition-colors" />
                 <input 
                   type="text" 
-                  placeholder="Busca tu lote ideal..."
+                  placeholder={`Busca tu ${cfg.singular.toLowerCase()} ideal...`}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-[#F5F5F7] border-none rounded-2xl py-5 pl-14 pr-6 outline-none focus:ring-2 focus:ring-black/5 transition-all text-gray-800 font-medium placeholder:text-gray-400"
@@ -243,7 +250,7 @@ export default function CatalogPage() {
                 <button onClick={() => setSelectedLot(null)} className="w-12 h-12 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm text-gray-800 active:scale-90 transition-all">
                   <ChevronLeft className="w-6 h-6" />
                 </button>
-                <h2 className="text-lg font-bold">Detalle del Lote</h2>
+                <h2 className="text-lg font-bold">Detalle de {cfg.singular}</h2>
                 <div className="w-12 h-12 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm text-gray-800">
                   <Heart className="w-6 h-6" />
                 </div>
@@ -262,10 +269,10 @@ export default function CatalogPage() {
 
                 <div className="flex justify-between items-start mb-8">
                    <div>
-                       <h3 className="text-3xl font-black mb-1">{`Lote #${selectedLot.lotNumber}`}</h3>
+                       <h3 className="text-3xl font-black mb-1">{formatPropertyUnit(selectedLot)}</h3>
                       <div className="flex items-center text-gray-400 font-bold">
                          <MapPin className="w-5 h-5 mr-1" />
-                         Etapa {selectedLot.stage} - {company?.name || 'Inmobiliaria'}
+                         {cfg.stageLabel} {selectedLot.stage} - {company?.name || 'Inmobiliaria'}
                       </div>
                    </div>
                    <p className="text-3xl font-black text-gray-900">
@@ -302,7 +309,7 @@ export default function CatalogPage() {
                       </div>
                       <button 
                         onClick={() => {
-                          const msg = `Hola, me interesa el lote ${selectedLot.lotNumber}`
+                          const msg = `Hola, me interesa ${formatPropertyUnit(selectedLot)} en ${company?.name || 'su proyecto'}`
                           window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
                         }}
                         className="bg-black text-white px-8 py-4 rounded-3xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all"
@@ -371,7 +378,7 @@ export default function CatalogPage() {
                         <Navigation2 className="w-6 h-6" />
                       </div>
                       <div>
-                        <p className="font-black text-sm text-left">Lotes cerca de mí</p>
+                        <p className="font-black text-sm text-left">{cfg.plural} cerca de mí</p>
                       </div>
                     </div>
                   </button>

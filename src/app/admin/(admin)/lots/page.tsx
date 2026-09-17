@@ -52,11 +52,15 @@ import { useClientStore } from '@/stores/clientStore'
 import { Combobox } from '@/components/ui/Combobox'
 import toast from 'react-hot-toast'
 import dayjs from 'dayjs'
+import { PropertyType, getPropertyConfig, formatPropertyUnit } from '@/lib/propertyTypes'
 
 interface Lot {
   _id: string
   stage: string
   manzana?: string
+  tower?: string
+  floor?: string
+  propertyType?: PropertyType
   nomenclature: string
   lotNumber: string
   area: number
@@ -76,7 +80,8 @@ interface Lot {
 }
 
 export default function LotsPage() {
-  const { selectedCompanyId, admin } = useAdminAuthStore()
+  const { selectedCompanyId, selectedCompanyPropertyType, admin } = useAdminAuthStore()
+  const cfg = getPropertyConfig(selectedCompanyPropertyType)
   const searchParams = useSearchParams()
   const initialStatus = searchParams.get('status') || ''
   const initialStage = searchParams.get('stage') || ''
@@ -85,6 +90,8 @@ export default function LotsPage() {
   // Advanced Filter states
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(!!initialStage)
   const [manzanaFilter, setManzanaFilter] = useState('')
+  const [towerFilter, setTowerFilter] = useState('')
+  const [floorFilter, setFloorFilter] = useState('')
   const [stageFilter, setStageFilter] = useState(initialStage)
   const [sellerFilter, setSellerFilter] = useState('')
   const [minAreaFilter, setMinAreaFilter] = useState('')
@@ -218,8 +225,31 @@ export default function LotsPage() {
     lotNumber: '',
     area: '',
     price: '',
-    maxInstallments: '24'
+    maxInstallments: '24',
+    tower: '',
+    floor: '',
+    propertyType: (selectedCompanyPropertyType || 'lotes') as PropertyType
   })
+  const [isManualNomenclature, setIsManualNomenclature] = useState(false)
+
+  const generateDefaultNomenclature = (data: { stage?: string; manzana?: string; tower?: string; floor?: string; lotNumber?: string }, propType: PropertyType = selectedCompanyPropertyType || 'lotes') => {
+    const parts: string[] = []
+    if (data.stage && data.stage.trim()) parts.push(data.stage.trim())
+    if (propType === 'apartamentos') {
+      if (data.tower && data.tower.trim()) parts.push(`Torre ${data.tower.trim()}`)
+      if (data.floor && data.floor.trim()) parts.push(`Piso ${data.floor.trim()}`)
+      if (data.lotNumber && data.lotNumber.trim()) parts.push(`Apto ${data.lotNumber.trim()}`)
+    } else if (propType === 'casas') {
+      if (data.manzana && data.manzana.trim()) parts.push(`Mz ${data.manzana.trim()}`)
+      if (data.lotNumber && data.lotNumber.trim()) parts.push(`Casa ${data.lotNumber.trim()}`)
+    } else if (propType === 'locales') {
+      if (data.lotNumber && data.lotNumber.trim()) parts.push(`Local ${data.lotNumber.trim()}`)
+    } else {
+      if (data.manzana && data.manzana.trim()) parts.push(`Mz ${data.manzana.trim()}`)
+      if (data.lotNumber && data.lotNumber.trim()) parts.push(`Lote ${data.lotNumber.trim()}`)
+    }
+    return parts.join(' - ')
+  }
 
   const [sellFormData, setSellFormData] = useState({
     clientId: '',
@@ -258,7 +288,9 @@ export default function LotsPage() {
         sellerFilter || undefined,
         minAreaFilter || undefined,
         maxAreaFilter || undefined,
-        showDeletedFilter ? 'true' : undefined
+        showDeletedFilter ? 'true' : undefined,
+        towerFilter || undefined,
+        floorFilter || undefined
       )
       if (!response.data.success) {
         throw new Error('Error loading lots')
@@ -279,7 +311,7 @@ export default function LotsPage() {
   const pagination = useServerPagination({
     fetchData: fetchLots,
     initialLimit: 20,
-    dependencies: [statusFilter, manzanaFilter, stageFilter, sellerFilter, minAreaFilter, maxAreaFilter, showDeletedFilter]
+    dependencies: [selectedCompanyPropertyType, statusFilter, manzanaFilter, towerFilter, floorFilter, stageFilter, sellerFilter, minAreaFilter, maxAreaFilter, showDeletedFilter]
   })
 
   const handleLotsFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -333,12 +365,12 @@ export default function LotsPage() {
 
   const handleDownloadLotsTemplate = async () => {
     try {
-      toast.loading('Generando plantilla de lotes...', { id: 'download-lots-toast' })
-      const response = await adminApi.downloadLotsTemplate()
+      toast.loading(`Generando plantilla de ${cfg.plural.toLowerCase()}...`, { id: 'download-lots-toast' })
+      const response = await adminApi.downloadLotsTemplate(selectedCompanyPropertyType)
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', 'plantilla-lotes.xlsx')
+      link.setAttribute('download', `plantilla-${cfg.plural.toLowerCase()}.xlsx`)
       document.body.appendChild(link)
       link.click()
       link.parentNode?.removeChild(link)
@@ -360,7 +392,13 @@ export default function LotsPage() {
       const response = await adminApi.uploadLotsExcel(formData)
       if (response.data.success) {
         setImportLotsResult(response.data)
-        toast.success('Importación de lotes finalizada con éxito')
+        const summary = response.data.summary || {}
+        const issues = (summary.duplicatesInFile || 0) + (summary.archivedSkipped || 0) + (response.data.errors || []).length
+        if (issues > 0) {
+          toast.error(`Importación finalizada con ${issues} novedad(es). Revisa el detalle.`)
+        } else {
+          toast.success(`Importación de ${cfg.plural.toLowerCase()} finalizada con éxito`)
+        }
         pagination.refresh()
       } else {
         toast.error(response.data.message || 'Error en la importación')
@@ -374,18 +412,42 @@ export default function LotsPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value }
+      if (!isManualNomenclature && ['stage', 'manzana', 'tower', 'floor', 'lotNumber'].includes(name)) {
+        updated.nomenclature = generateDefaultNomenclature(updated, updated.propertyType)
+      }
+      return updated
+    })
   }
 
   const handleCreateOrUpdateLot = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.lotNumber || !formData.lotNumber.trim()) {
+      toast.error(`El ${cfg.unitLabel} es obligatorio`)
+      return
+    }
+
+    const parsedArea = parseFloat(formData.area)
+    if (isNaN(parsedArea) || parsedArea <= 0) {
+      toast.error('El área es obligatoria y debe ser mayor a 0 m²')
+      return
+    }
+
     setIsSubmitting(true)
     try {
-      const payload = {
+      const payload: any = {
         ...formData,
-        area: formData.area ? parseFloat(formData.area) : undefined,
+        area: parsedArea,
         price: formData.price ? parseFloat(formData.price) : undefined,
-        maxInstallments: formData.maxInstallments ? parseInt(formData.maxInstallments) : 24
+        maxInstallments: formData.maxInstallments ? parseInt(formData.maxInstallments) : 24,
+        propertyType: formData.propertyType || selectedCompanyPropertyType || 'lotes',
+        tower: formData.tower ? formData.tower.trim() : undefined,
+        floor: formData.floor ? formData.floor.trim() : undefined,
+        manzana: formData.manzana ? formData.manzana.trim() : undefined,
+        stage: formData.stage ? formData.stage.trim() : undefined,
+        nomenclature: formData.nomenclature ? formData.nomenclature.trim() : generateDefaultNomenclature(formData, formData.propertyType)
       }
 
       let response
@@ -396,26 +458,44 @@ export default function LotsPage() {
       }
 
       if (response.data.success) {
-        toast.success(formData._id ? 'Lote actualizado' : 'Lote creado correctamente')
+        toast.success(formData._id ? `${cfg.singular} actualizado` : `${cfg.singular} creado correctamente`)
         setIsCreateModalOpen(false)
         resetForm()
         pagination.refresh()
       } else {
         toast.error(response.data.message || 'Error en la operación')
       }
-    } catch (error) {
-
-      toast.error('Error al conectar con el servidor')
+    } catch (error: any) {
+      const data = error.response?.data
+      if (data?.code === 'DUPLICATE_UNIT') {
+        toast.error(data.message || 'Ya existe un inmueble con la misma identidad')
+      } else {
+        toast.error(data?.message || 'Error al conectar con el servidor')
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const resetForm = () => {
-    setFormData({ _id: '', stage: '', manzana: '', nomenclature: '', lotNumber: '', area: '', price: '', maxInstallments: '24' })
+    setFormData({
+      _id: '',
+      stage: '',
+      manzana: '',
+      nomenclature: '',
+      lotNumber: '',
+      area: '',
+      price: '',
+      maxInstallments: '24',
+      tower: '',
+      floor: '',
+      propertyType: (selectedCompanyPropertyType || 'lotes') as PropertyType
+    })
+    setIsManualNomenclature(false)
   }
 
   const handleEdit = (lot: Lot) => {
+    const propType = (lot.propertyType || selectedCompanyPropertyType || 'lotes') as PropertyType
     setFormData({
       _id: lot._id,
       stage: lot.stage || '',
@@ -424,8 +504,12 @@ export default function LotsPage() {
       lotNumber: lot.lotNumber || '',
       area: lot.area?.toString() || '',
       price: lot.price?.toString() || '',
-      maxInstallments: lot.maxInstallments?.toString() || '24'
+      maxInstallments: lot.maxInstallments?.toString() || '24',
+      tower: lot.tower || '',
+      floor: lot.floor || '',
+      propertyType: propType
     })
+    setIsManualNomenclature(Boolean(lot.nomenclature))
     setIsCreateModalOpen(true)
   }
 
@@ -947,9 +1031,9 @@ export default function LotsPage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
-          <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de Lotes</h1>
+          <h1 className="text-responsive-2xl font-bold text-text-primary">Gestión de {cfg.plural}</h1>
           <p className="text-text-secondary mt-2">
-            Administra el inventario de lotes, precios e imágenes
+            Administra el inventario de {cfg.plural.toLowerCase()}, precios e imágenes
           </p>
         </div>
         <div id="tour-lots-actions" className="flex flex-col sm:flex-row gap-3 rounded-2xl p-1 transition-all">
@@ -969,14 +1053,14 @@ export default function LotsPage() {
                 className="glass-button min-h-[44px]"
               >
                 <Upload className="w-4 h-4 mr-2 text-accent-green" />
-                Importar Lotes
+                Importar {cfg.plural}
               </Button>
               <Button
                 onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
                 className="glass-button bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30 min-h-[44px]"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Nuevo Lote
+                Nuevo {cfg.singular}
               </Button>
             </>
           )}
@@ -992,7 +1076,7 @@ export default function LotsPage() {
                 <Layers className="w-6 h-6 text-accent-blue" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-text-secondary font-medium">Lotes Totales</p>
+                <p className="text-sm text-text-secondary font-medium">{cfg.plural} Totales</p>
                 <p className="text-responsive-xl font-bold text-text-primary">{pagination.total}</p>
               </div>
             </div>
@@ -1006,7 +1090,7 @@ export default function LotsPage() {
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex-1 w-full">
               <Input
-                placeholder="Buscar por manzana, número de lote, etapa, nomenclatura o referencia..."
+                placeholder={`Buscar por ${cfg.showManzana ? (cfg.manzanaLabel?.toLowerCase() || 'manzana') + ', ' : ''}${cfg.showTower ? (cfg.towerLabel?.toLowerCase() || 'torre') + ', ' : ''}${cfg.showFloor ? (cfg.floorLabel?.toLowerCase() || 'piso') + ', ' : ''}${cfg.unitLabel.toLowerCase()}, ${cfg.stageLabel.toLowerCase()}, nomenclatura o referencia...`}
                 value={pagination.search}
                 onChange={(e) => pagination.handleSearch(e.target.value)}
                 className="glass-input"
@@ -1032,7 +1116,7 @@ export default function LotsPage() {
           {/* Advanced Expandable Filter Panel */}
           {isFilterPanelOpen && (
             <div className="mt-4 pt-4 border-t border-glass-border animate-fade-in-down">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {/* Estado */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Estado</label>
@@ -1049,22 +1133,50 @@ export default function LotsPage() {
                   </select>
                 </div>
 
-                {/* Manzana */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Manzana (Block)</label>
-                  <Input
-                    placeholder="Ej: A, B, Mz 3..."
-                    value={manzanaFilter}
-                    onChange={(e) => setManzanaFilter(e.target.value)}
-                    className="glass-input h-[38px] py-1 px-3 text-sm focus:ring-2 focus:ring-accent-blue/50"
-                  />
-                </div>
+                {/* Manzana (si aplica) */}
+                {cfg.showManzana && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">{cfg.manzanaLabel || 'Manzana'}</label>
+                    <Input
+                      placeholder="Ej: A, B, Mz 3..."
+                      value={manzanaFilter}
+                      onChange={(e) => setManzanaFilter(e.target.value)}
+                      className="glass-input h-[38px] py-1 px-3 text-sm focus:ring-2 focus:ring-accent-blue/50"
+                    />
+                  </div>
+                )}
+
+                {/* Torre (si aplica) */}
+                {cfg.showTower && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">{cfg.towerLabel || 'Torre'}</label>
+                    <Input
+                      placeholder="Ej: Torre 1, T2..."
+                      value={towerFilter}
+                      onChange={(e) => setTowerFilter(e.target.value)}
+                      className="glass-input h-[38px] py-1 px-3 text-sm focus:ring-2 focus:ring-accent-blue/50"
+                    />
+                  </div>
+                )}
+
+                {/* Piso (si aplica) */}
+                {cfg.showFloor && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">{cfg.floorLabel || 'Piso'}</label>
+                    <Input
+                      placeholder="Ej: 1, 2, 3..."
+                      value={floorFilter}
+                      onChange={(e) => setFloorFilter(e.target.value)}
+                      className="glass-input h-[38px] py-1 px-3 text-sm focus:ring-2 focus:ring-accent-blue/50"
+                    />
+                  </div>
+                )}
 
                 {/* Etapa */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Etapa (Stage)</label>
+                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">{cfg.stageLabel}</label>
                   <Input
-                    placeholder="Ej: Etapa 1, Condominio..."
+                    placeholder={`Ej: ${cfg.stageLabel} 1...`}
                     value={stageFilter}
                     onChange={(e) => setStageFilter(e.target.value)}
                     className="glass-input h-[38px] py-1 px-3 text-sm focus:ring-2 focus:ring-accent-blue/50"
@@ -1073,16 +1185,16 @@ export default function LotsPage() {
 
                 {/* Vendedor */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Vendedor (Seller)</label>
+                  <label className="text-xs text-text-secondary font-medium uppercase tracking-wider">Ejecutivo Comercial</label>
                   <select
                     value={sellerFilter}
                     onChange={(e) => setSellerFilter(e.target.value)}
                     className="w-full px-3 py-2 bg-glass-primary/30 text-text-primary border border-glass-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-blue/50 text-sm font-medium transition-all"
                   >
-                    <option value="" className="bg-slate-800 text-white">Todos los vendedores</option>
+                    <option value="" className="bg-slate-800 text-white">Todos los ejecutivos</option>
                     {sellers.map((s: any) => (
                       <option key={s._id} value={s._id} className="bg-slate-800 text-white">
-                        {s.accountId?.fullName || 'Vendedor sin nombre'}
+                        {s.accountId?.fullName || 'Sin nombre'}
                       </option>
                     ))}
                   </select>
@@ -1110,9 +1222,9 @@ export default function LotsPage() {
                   </div>
                 </div>
 
-                {/* Filtro Lotes Archivados/Eliminados */}
+                {/* Filtro Inmuebles Archivados/Eliminados */}
                 {admin?.role !== 'vendedor' && (
-                  <div className="flex items-center gap-2 pt-2 sm:col-span-2 md:col-span-3 lg:col-span-5">
+                  <div className="flex items-center gap-2 pt-2 sm:col-span-2 md:col-span-3 lg:col-span-4 xl:col-span-6">
                     <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-text-secondary hover:text-text-primary select-none bg-glass-primary/30 px-3 py-2 rounded-xl border border-glass-border">
                       <input
                         type="checkbox"
@@ -1121,19 +1233,21 @@ export default function LotsPage() {
                         className="w-4 h-4 rounded border-glass-border bg-glass-primary text-accent-red focus:ring-accent-red"
                       />
                       <Archive className="w-3.5 h-3.5 text-accent-red" />
-                      <span>Ver únicamente lotes archivados / eliminados</span>
+                      <span>Ver únicamente {cfg.plural.toLowerCase()} archivados / eliminados</span>
                     </label>
                   </div>
                 )}
               </div>
 
               {/* Clear Filters Toolbar */}
-              {(statusFilter || manzanaFilter || stageFilter || sellerFilter || minAreaFilter || maxAreaFilter || showDeletedFilter) && (
+              {(statusFilter || manzanaFilter || towerFilter || floorFilter || stageFilter || sellerFilter || minAreaFilter || maxAreaFilter || showDeletedFilter) && (
                 <div className="flex justify-end mt-4 animate-fade-in">
                   <Button
                     onClick={() => {
                       setStatusFilter('')
                       setManzanaFilter('')
+                      setTowerFilter('')
+                      setFloorFilter('')
                       setStageFilter('')
                       setSellerFilter('')
                       setMinAreaFilter('')
@@ -1162,7 +1276,7 @@ export default function LotsPage() {
               <thead>
                 <tr className="sticky top-0 z-20">
                   <SortHeader
-                    label="Lote"
+                    label={cfg.singular}
                     field="lotNumber"
                     currentSortBy={pagination.sortBy}
                     currentSortOrder={pagination.sortOrder}
@@ -1208,7 +1322,7 @@ export default function LotsPage() {
                     <td colSpan={6} className="py-12 text-center text-text-muted">
                       <div className="flex flex-col items-center space-y-3">
                         <Building2 className="w-12 h-12 text-text-disabled" />
-                        <p className="text-lg font-medium">No hay lotes registrados</p>
+                        <p className="text-lg font-medium">No hay {cfg.plural.toLowerCase()} registrados</p>
                       </div>
                     </td>
                   </tr>
@@ -1217,8 +1331,8 @@ export default function LotsPage() {
                     <tr key={lot._id} className="border-b border-glass-border hover:bg-glass-primary/20 transition-colors">
                       <td className="py-4 px-4 md:px-6">
                         <div>
-                          <p className="font-bold text-text-primary">E: {lot.stage || '-'} - M: {lot.manzana || '-'} - L: {lot.lotNumber}</p>
-                          <p className="text-sm text-text-muted">Nom: {lot.nomenclature || '-'}</p>
+                          <p className="font-bold text-text-primary">{formatPropertyUnit(lot)}</p>
+                          <p className="text-sm text-text-muted">{cfg.stageLabel}: {lot.stage || '-'} • Nom: {lot.nomenclature || '-'}</p>
                         </div>
                       </td>
                       <td className="py-4 px-4 md:px-6 text-text-secondary">
@@ -1255,7 +1369,7 @@ export default function LotsPage() {
                             <div className="flex -space-x-2">
                               {lot.images.slice(0, 3).map((img: any, i: number) => (
                                 <div key={i} className="w-8 h-8 rounded-md border border-white overflow-hidden bg-glass-primary">
-                                  <img src={img} alt="lot" className="w-full h-full object-cover" />
+                                  <img src={img} alt="inmueble" className="w-full h-full object-cover" />
                                 </div>
                               ))}
                               {lot.images.length > 3 && (
@@ -1286,14 +1400,14 @@ export default function LotsPage() {
                         <div className="flex items-center space-x-2">
                           {lot.isDeleted ? (
                             admin?.role !== 'vendedor' && (
-                              <ActionTooltip content="Restaurar Lote">
+                              <ActionTooltip content={`Restaurar ${cfg.singular}`}>
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   disabled={isRestoring}
                                   onClick={() => handleRestoreLot(lot)}
                                   className="glass-button min-h-[40px] px-3 text-accent-green hover:bg-accent-green/10"
-                                  title="Restaurar Lote"
+                                  title={`Restaurar ${cfg.singular}`}
                                 >
                                   <RotateCcw className="w-4 h-4 mr-1.5" />
                                   <span className="text-xs font-medium">Restaurar</span>
@@ -1316,25 +1430,25 @@ export default function LotsPage() {
                                 </ActionTooltip>
                               ) : (
                                 <div className="flex space-x-1">
-                                  <ActionTooltip content="Vender">
+                                  <ActionTooltip content={`Vender ${cfg.singular}`}>
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={() => handleSellClick(lot)}
                                       className="glass-button min-h-[40px] min-w-[40px] text-accent-green hover:bg-accent-green/10"
-                                      title="Vender Lote"
+                                      title={`Vender ${cfg.singular}`}
                                     >
                                       <ShoppingCart className="w-4 h-4" />
                                     </Button>
                                   </ActionTooltip>
                                   
-                                  <ActionTooltip content="Apartar">
+                                  <ActionTooltip content={`Apartar ${cfg.singular}`}>
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={() => handleReserveClick(lot)}
                                       className="glass-button min-h-[40px] min-w-[40px] text-accent-blue hover:bg-accent-blue/10"
-                                      title="Apartar/Separar Lote"
+                                      title={`Apartar/Separar ${cfg.singular}`}
                                     >
                                       <Users className="w-4 h-4" />
                                     </Button>
@@ -1356,25 +1470,25 @@ export default function LotsPage() {
                               )}
                               {admin?.role !== 'vendedor' && (
                                 <>
-                                  <ActionTooltip content="Editar">
+                                  <ActionTooltip content={`Editar ${cfg.singular}`}>
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={() => handleEdit(lot)}
                                       className="glass-button min-h-[40px] min-w-[40px] text-accent-blue"
-                                      title="Editar Lote"
+                                      title={`Editar ${cfg.singular}`}
                                     >
                                       <Edit className="w-4 h-4" />
                                     </Button>
                                   </ActionTooltip>
                                   
-                                  <ActionTooltip content="Eliminar">
+                                  <ActionTooltip content={`Eliminar ${cfg.singular}`}>
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={() => openDeleteModal(lot)}
                                       className="glass-button min-h-[40px] min-w-[40px] text-accent-red hover:bg-accent-red/10"
-                                      title="Eliminar Lote"
+                                      title={`Eliminar ${cfg.singular}`}
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </Button>
@@ -1399,8 +1513,8 @@ export default function LotsPage() {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-bold text-text-primary">E: {lot.stage} - M: {lot.manzana} - L: {lot.lotNumber}</h3>
-                      <p className="text-sm text-text-secondary">Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
+                      <h3 className="font-bold text-text-primary">{formatPropertyUnit(lot)}</h3>
+                      <p className="text-sm text-text-secondary">{cfg.stageLabel}: {lot.stage || '-'} • Área: {lot.area} m² - {lot.price ? formatCurrency(lot.price) : 'N/A'}</p>
                       <p className="text-xs text-text-muted mt-1">Ejecutivo: {lot.sellerId?.accountId?.fullName || 'N/A'}</p>
                       {lot.isDeleted ? (
                         <span className="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-900/30 text-red-400 border border-red-800/50">
@@ -1429,7 +1543,7 @@ export default function LotsPage() {
                             disabled={isRestoring}
                             onClick={() => handleRestoreLot(lot)}
                             className="glass-button text-accent-green"
-                            title="Restaurar Lote"
+                            title={`Restaurar ${cfg.singular}`}
                           >
                             <RotateCcw className="w-4 h-4 mr-1" />
                             <span className="text-xs">Restaurar</span>
@@ -1443,10 +1557,10 @@ export default function LotsPage() {
                             </Button>
                           ) : (
                             <div className="flex gap-1">
-                              <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green" title="Vender Lote">
+                              <Button size="sm" variant="outline" onClick={() => handleSellClick(lot)} className="glass-button text-accent-green" title={`Vender ${cfg.singular}`}>
                                 <ShoppingCart className="w-4 h-4" />
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleReserveClick(lot)} className="glass-button text-accent-blue" title="Apartar/Separar Lote">
+                              <Button size="sm" variant="outline" onClick={() => handleReserveClick(lot)} className="glass-button text-accent-blue" title={`Apartar/Separar ${cfg.singular}`}>
                                 <Users className="w-4 h-4" />
                               </Button>
                             </div>
@@ -1458,13 +1572,13 @@ export default function LotsPage() {
                           )}
                           {admin?.role !== 'vendedor' && (
                             <>
-                              <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button" title="Editar Lote">
+                              <Button size="sm" variant="outline" onClick={() => handleEdit(lot)} className="glass-button" title={`Editar ${cfg.singular}`}>
                                 <Edit className="w-4 h-4" />
                               </Button>
                               <Button size="sm" variant="outline" onClick={() => openImageModal(lot)} className="glass-button text-accent-blue" title="Administrar Imágenes">
                                 <ImagePlus className="w-4 h-4" />
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => openDeleteModal(lot)} className="glass-button text-accent-red" title="Eliminar Lote">
+                              <Button size="sm" variant="outline" onClick={() => openDeleteModal(lot)} className="glass-button text-accent-red" title={`Eliminar ${cfg.singular}`}>
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </>
@@ -1513,16 +1627,16 @@ export default function LotsPage() {
           setLotFile(null)
           setImportLotsResult(null)
         }}
-        title="Carga Masiva de Lotes (Proyectos Nuevos)"
+        title={`Carga Masiva de ${cfg.plural} (Proyectos Nuevos)`}
         size="lg"
       >
         <div className="space-y-4 pt-2">
           <div className="bg-glass-primary/10 border border-glass-border p-4 rounded-xl text-sm text-text-secondary space-y-2">
             <p className="font-semibold text-text-primary">Instrucciones para Proyectos Nuevos:</p>
-            <p>1. Descarga la plantilla simplificada que solo requiere datos del lote.</p>
-            <p>2. Columnas obligatorias: <span className="font-semibold text-text-primary">Etapa, Manzana, Lote, Valor, Area</span>.</p>
-            <p>3. El sistema creará los lotes con estado <span className="text-accent-green font-semibold">Disponible</span>.</p>
-            <p>4. Si un lote ya existe, sus datos de área y valor serán actualizados sin duplicarse.</p>
+            <p>1. Descarga la plantilla simplificada que solo requiere datos de {cfg.singular.toLowerCase()}.</p>
+            <p>2. Columnas obligatorias: <span className="font-semibold text-text-primary">{cfg.showTower ? 'Etapa, Torre, Piso, Número, Valor, Área' : 'Etapa, Manzana, Lote, Valor, Área'}</span>.</p>
+            <p>3. El sistema creará los {cfg.plural.toLowerCase()} con estado <span className="text-accent-green font-semibold">Disponible</span>.</p>
+            <p>4. Si un {cfg.singular.toLowerCase()} ya existe, sus datos de área y valor serán actualizados sin duplicarse.</p>
           </div>
 
           <div className="flex justify-center">
@@ -1533,7 +1647,7 @@ export default function LotsPage() {
               className="glass-button w-full sm:w-auto"
             >
               <Download className="w-4 h-4 mr-2 text-accent-green" />
-              Descargar Plantilla de Lotes
+              Descargar Plantilla de {cfg.plural}
             </Button>
           </div>
 
@@ -1582,7 +1696,16 @@ export default function LotsPage() {
                 <p>Creados: <span className="text-accent-green font-semibold">{importLotsResult.summary.lotsCreated}</span></p>
                 <p>Actualizados: <span className="text-accent-blue font-semibold">{importLotsResult.summary.lotsUpdated}</span></p>
                 <p>Omitidos: <span className="text-accent-yellow font-semibold">{importLotsResult.summary.rowsSkipped}</span></p>
+                <p>Duplicados en archivo: <span className="text-accent-red font-semibold">{importLotsResult.summary.duplicatesInFile ?? 0}</span></p>
+                <p>Archivados omitidos: <span className="text-accent-yellow font-semibold">{importLotsResult.summary.archivedSkipped ?? 0}</span></p>
               </div>
+              {importLotsResult.warnings && importLotsResult.warnings.length > 0 && (
+                <div className="mt-2 p-2 bg-accent-yellow/10 border border-accent-yellow/20 rounded-lg text-xs max-h-32 overflow-y-auto font-mono text-accent-yellow">
+                  {importLotsResult.warnings.map((warn: string, idx: number) => (
+                    <div key={idx}>{warn}</div>
+                  ))}
+                </div>
+              )}
               {importLotsResult.errors && importLotsResult.errors.length > 0 && (
                 <div className="mt-2 p-2 bg-accent-red/10 border border-accent-red/20 rounded-lg text-xs max-h-32 overflow-y-auto font-mono text-accent-red">
                   {importLotsResult.errors.map((err: string, idx: number) => (
@@ -1629,72 +1752,94 @@ export default function LotsPage() {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title={formData._id ? 'Editar Lote' : 'Registar Nuevo Lote'}
+        title={formData._id ? `Editar ${cfg.singular}` : `Registrar Nuevo ${cfg.singular}`}
         size="lg"
       >
         <form onSubmit={handleCreateOrUpdateLot} className="space-y-4 pt-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Etapa</label>
+              <label className="text-sm font-medium text-text-secondary">{cfg.stageLabel} *</label>
               <Input
                 name="stage"
                 value={formData.stage}
                 onChange={handleInputChange}
-                placeholder="Ej: ETAPA 1"
+                placeholder={`Ej: ${cfg.stageLabel} 1`}
                 required
                 className="glass-input"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Manzana</label>
-              <Input
-                name="manzana"
-                value={formData.manzana}
-                onChange={handleInputChange}
-                placeholder="Ej: MZ A"
-                required
-                className="glass-input"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {cfg.showManzana && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-secondary">{cfg.manzanaLabel || 'Manzana'} *</label>
+                <Input
+                  name="manzana"
+                  value={formData.manzana}
+                  onChange={handleInputChange}
+                  placeholder="Ej: MZ A"
+                  required
+                  className="glass-input"
+                />
+              </div>
+            )}
+
+            {cfg.showTower && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-secondary">{cfg.towerLabel || 'Torre'} *</label>
+                <Input
+                  name="tower"
+                  value={formData.tower || ''}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Torre 1"
+                  required
+                  className="glass-input"
+                />
+              </div>
+            )}
+
+            {cfg.showFloor && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-text-secondary">{cfg.floorLabel || 'Piso'} *</label>
+                <Input
+                  name="floor"
+                  value={formData.floor || ''}
+                  onChange={handleInputChange}
+                  placeholder="Ej: 3"
+                  required
+                  className="glass-input"
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Número de Lote</label>
+              <label className="text-sm font-medium text-text-secondary">{cfg.unitLabel} *</label>
               <Input
                 name="lotNumber"
                 value={formData.lotNumber}
                 onChange={handleInputChange}
-                placeholder="Ej: 275-2"
+                placeholder={cfg.showTower ? 'Ej: 301' : 'Ej: 275-2'}
                 required
                 className="glass-input"
               />
             </div>
+
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Cuotas Máximas Permitidas (Por defecto 24)</label>
+              <label className="text-sm font-medium text-text-secondary">Área (m²) *</label>
               <Input
-                name="maxInstallments"
+                name="area"
                 type="number"
-                value={formData.maxInstallments}
+                step="0.01"
+                min="0.01"
+                value={formData.area}
                 onChange={handleInputChange}
-                placeholder="24"
+                placeholder="Ej: 85.5"
+                required
                 className="glass-input"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Área (m²)</label>
-              <Input
-                name="area"
-                type="number"
-                value={formData.area}
-                onChange={handleInputChange}
-                placeholder="Ej: 120"
-                className="glass-input"
-              />
-            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-text-secondary">Precio de Venta</label>
               <div className="relative">
@@ -1709,6 +1854,32 @@ export default function LotsPage() {
                 />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Cuotas Máximas Permitidas (Por defecto 24)</label>
+              <Input
+                name="maxInstallments"
+                type="number"
+                value={formData.maxInstallments}
+                onChange={handleInputChange}
+                placeholder="24"
+                className="glass-input"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-text-secondary">Nomenclatura (Referencia Pública)</label>
+              <span className="text-xs text-text-muted">Se genera automáticamente o puedes personalizarla</span>
+            </div>
+            <Input
+              name="nomenclature"
+              value={formData.nomenclature || ''}
+              onChange={handleInputChange}
+              placeholder="Ej: Torre 1 - Piso 3 - Apto 301"
+              className="glass-input"
+            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-glass-border">
@@ -1731,7 +1902,7 @@ export default function LotsPage() {
                   Guardando...
                 </>
               ) : (
-                'Guardar Lote'
+                `Guardar ${cfg.singular}`
               )}
             </Button>
           </div>
@@ -1801,7 +1972,7 @@ export default function LotsPage() {
       <Modal
         isOpen={isSellModalOpen}
         onClose={() => setIsSellModalOpen(false)}
-        title={`Vender Lote: ${selectedLot?.nomenclature || `Etapa: ${selectedLot?.stage || '-'} - Manzana: ${selectedLot?.manzana || '-'} - Lote: ${selectedLot?.lotNumber || '-'}`}`}
+        title={`Vender ${cfg.singular}: ${selectedLot ? formatPropertyUnit(selectedLot) : ''}`}
         size="xl"
       >
         <form onSubmit={handleSellLot} className="space-y-6 pt-2">
@@ -2189,8 +2360,8 @@ export default function LotsPage() {
             {/* Lot & Contract Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 rounded-xl bg-glass-primary/10 border border-glass-border">
               <div>
-                <p className="text-xs text-text-muted uppercase font-bold mb-1">Información del Lote</p>
-                <h4 className="text-xl font-bold text-text-primary">{selectedLot?.nomenclature || `Etapa: ${selectedLot?.stage || '-'} - Manzana: ${selectedLot?.manzana || '-'} - Lote: ${selectedLot?.lotNumber || '-'}`}</h4>
+                <p className="text-xs text-text-muted uppercase font-bold mb-1">Información de {cfg.singular}</p>
+                <h4 className="text-xl font-bold text-text-primary">{selectedLot ? formatPropertyUnit(selectedLot) : ''}</h4>
                 <p className="text-sm text-text-secondary">Contrato Pro #{saleDetail.contract._id.slice(-6).toUpperCase()}</p>
               </div>
               <Button 
@@ -2489,7 +2660,7 @@ export default function LotsPage() {
       <Modal
         isOpen={isReserveModalOpen}
         onClose={() => setIsReserveModalOpen(false)}
-        title={`Reservar Lote: E: ${selectedLot?.stage || '-'} - M: ${selectedLot?.manzana || '-'} - L: ${selectedLot?.lotNumber || '-'}${selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}`}
+        title={`Reservar ${cfg.singular}: ${selectedLot ? formatPropertyUnit(selectedLot) : ''}`}
         size="lg"
       >
         <form onSubmit={handleReserveLot} className="space-y-6 pt-2">
@@ -2669,7 +2840,7 @@ export default function LotsPage() {
       <Modal
         isOpen={isReserveDetailModalOpen}
         onClose={() => setIsReserveDetailModalOpen(false)}
-        title={`Detalles de Reserva: E: ${selectedLot?.stage || '-'} - M: ${selectedLot?.manzana || '-'} - L: ${selectedLot?.lotNumber || '-'}${selectedLot?.nomenclature ? ` (${selectedLot.nomenclature})` : ''}`}
+        title={`Detalles de Reserva: ${selectedLot ? formatPropertyUnit(selectedLot) : ''}`}
         size="lg"
       >
         {loadingReserveDetail ? (
@@ -2786,13 +2957,13 @@ export default function LotsPage() {
       <Modal
         isOpen={isReleaseModalOpen}
         onClose={() => setIsReleaseModalOpen(false)}
-        title="Liberar Lote / Cancelar Reserva"
+        title={`Liberar ${cfg.singular} / Cancelar Reserva`}
         size="md"
       >
         <form onSubmit={handleReleaseLot} className="space-y-6 pt-2">
           <div className="p-4 bg-accent-red/10 border border-accent-red/20 rounded-xl">
             <p className="text-sm text-accent-red font-medium">
-              ¿Estás seguro de liberar este lote? Se eliminarán los datos del cliente actual y el lote volverá a estar disponible para la venta.
+              ¿Estás seguro de liberar este {cfg.singular.toLowerCase()}? Se eliminarán los datos del cliente actual y el {cfg.singular.toLowerCase()} volverá a estar disponible para la venta.
             </p>
           </div>
 
@@ -2850,16 +3021,16 @@ export default function LotsPage() {
             setLotToDelete(null)
           }
         }}
-        title="Eliminar Lote"
+        title={`Eliminar ${cfg.singular}`}
         size="md"
       >
         <div className="space-y-4 pt-2">
           <div className="p-4 bg-accent-red/10 border border-accent-red/30 rounded-xl flex items-start gap-3 text-sm text-text-primary">
             <AlertTriangle className="w-6 h-6 text-accent-red flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-accent-red">¿Estás seguro de que deseas eliminar este lote?</p>
+              <p className="font-semibold text-accent-red">¿Estás seguro de que deseas eliminar este {cfg.singular.toLowerCase()}?</p>
               <p className="text-xs text-text-secondary mt-1">
-                El lote será ocultado y archivado del inventario y del catálogo de ventas. Su información histórica se preservará de forma segura y podrás restaurarlo cuando lo requieras.
+                El {cfg.singular.toLowerCase()} será ocultado y archivado del inventario y del catálogo de ventas. Su información histórica se preservará de forma segura y podrás restaurarlo cuando lo requieras.
               </p>
             </div>
           </div>
@@ -2869,7 +3040,7 @@ export default function LotsPage() {
               <div className="flex justify-between">
                 <span className="text-text-secondary">Ubicación:</span>
                 <span className="font-bold text-text-primary">
-                  Etapa: {lotToDelete.stage || '-'} - Mz: {lotToDelete.manzana || '-'} - Lote: {lotToDelete.lotNumber}
+                  {formatPropertyUnit(lotToDelete)}
                 </span>
               </div>
               {lotToDelete.nomenclature && (
@@ -2894,7 +3065,7 @@ export default function LotsPage() {
               Motivo de eliminación (Opcional)
             </label>
             <Input
-              placeholder="Ej: Lote unificado, error de digitación, replanteo de manzana..."
+              placeholder={`Ej: ${cfg.singular} unificado, error de digitación...`}
               value={deleteReason}
               onChange={(e) => setDeleteReason(e.target.value)}
               className="glass-input text-sm"

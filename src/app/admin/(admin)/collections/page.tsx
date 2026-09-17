@@ -118,7 +118,7 @@ export default function CollectionsPage() {
         clientName: payment.contract?.client?.fullName || 'Cliente Desconocido',
         cedula: payment.contract?.client?.cedula || 'Sin cédula',
         phone: payment.contract?.client?.phone || 'Sin teléfono',
-        lote: `${payment.contract?.lot?.project?.name || 'Proyecto'} - Lote ${payment.contract?.lot?.number || 'N/A'}`,
+        lote: payment.contract?.lot?.nomenclature || (payment.contract?.lot?.lotNumber ? `Inmueble ${payment.contract?.lot?.lotNumber}` : 'N/A'),
         type: 'MANUAL',
         status: payment.status || 'PROGRAMADO',
         scheduledDate: payment.fechaPago || payment.createdAt,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { Building2, ChevronRight, RefreshCw, Plus, Edit2, Calendar, Shield, CreditCard } from 'lucide-react'
+import { Building2, ChevronRight, RefreshCw, Plus, Edit2, Calendar, Shield, CreditCard, Map, Home, Store } from 'lucide-react'
 
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
 import { adminApi } from '@/lib/adminApi'
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
+import { cn } from '@/lib/utils'
+import { PropertyType, getPropertyConfig, PROPERTY_TYPE_OPTIONS } from '@/lib/propertyTypes'
 
 interface Company {
   _id: string
@@ -22,6 +24,7 @@ interface Company {
   subscriptionStart?: string
   subscriptionEnd?: string
   activeModules?: string[]
+  propertyType?: PropertyType
 }
 
 export default function SelectCompanyPage() {
@@ -52,7 +55,8 @@ export default function SelectCompanyPage() {
     nit: '',
     address: '',
     phone: '',
-    email: ''
+    email: '',
+    propertyType: 'lotes' as PropertyType
   })
 
   // Edit Tenant Form
@@ -110,7 +114,7 @@ export default function SelectCompanyPage() {
   }
 
   const handleSelectCompany = (company: Company) => {
-    setSelectedCompany(company._id, company.name)
+    setSelectedCompany(company._id, company.name, company.propertyType)
     toast.success(`Proyecto seleccionado: ${company.name}`)
     router.push('/admin/dashboard')
   }
@@ -152,7 +156,7 @@ export default function SelectCompanyPage() {
       if (response.data.success) {
         toast.success('Proyecto creado exitosamente')
         setIsCompanyModalOpen(false)
-        setCompanyForm({ name: '', rfc: '', nit: '', address: '', phone: '', email: '' })
+        setCompanyForm({ name: '', rfc: '', nit: '', address: '', phone: '', email: '', propertyType: 'lotes' })
         fetchCompanies()
         window.dispatchEvent(new Event('projects-updated'))
       }
@@ -402,9 +406,21 @@ export default function SelectCompanyPage() {
                       <Building2 className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-text-primary">
-                        {company.name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-text-primary">
+                          {company.name}
+                        </h3>
+                        <span 
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider"
+                          style={{
+                            backgroundColor: `${getPropertyConfig(company.propertyType).color}15`,
+                            color: getPropertyConfig(company.propertyType).color,
+                            borderColor: `${getPropertyConfig(company.propertyType).color}30`
+                          }}
+                        >
+                          {getPropertyConfig(company.propertyType).plural}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-text-muted" />
@@ -574,6 +590,34 @@ export default function SelectCompanyPage() {
               value={companyForm.address}
               onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
+              Tipo de Inmueble a Operar
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {PROPERTY_TYPE_OPTIONS.map((opt) => {
+                const isSelected = companyForm.propertyType === opt.value
+                const IconComponent = opt.icon === 'Map' ? Map : opt.icon === 'Home' ? Home : opt.icon === 'Store' ? Store : Building2
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setCompanyForm({ ...companyForm, propertyType: opt.value })}
+                    className={cn(
+                      'p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-200 text-center',
+                      isSelected
+                        ? 'border-accent-blue bg-accent-blue/15 text-white shadow-glow'
+                        : 'border-glass-border hover:border-accent-blue/40 bg-white/5 text-text-secondary hover:text-text-primary'
+                    )}
+                  >
+                    <IconComponent className={cn('w-6 h-6', isSelected ? 'text-accent-blue' : 'text-text-muted')} />
+                    <span className="text-xs font-semibold">{opt.label}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

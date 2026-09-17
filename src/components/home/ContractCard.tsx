@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Contract } from '@/types'
 import { formatCurrency, getVencimientoColor } from '@/lib/utils'
+import { formatPropertyUnit, PropertyType } from '@/lib/propertyTypes'
 
 interface ContractCardProps {
   contract: Contract
@@ -20,6 +21,15 @@ export function ContractCard({ contract }: ContractCardProps) {
     contract.proximoVencimiento, 
     contract.diasMora
   )
+
+  const unitTitle = formatPropertyUnit({
+    propertyType: (contract.propertyType || contract.lote.propertyType || 'lotes') as PropertyType,
+    lotNumber: contract.lote.lotNumber || contract.lote.nomenclatura,
+    manzana: contract.lote.manzana,
+    tower: contract.lote.tower,
+    floor: contract.lote.floor,
+    nomenclature: contract.lote.nomenclatura
+  })
 
   const handleViewDetails = () => {
     router.push(`/contract/${contract.id}`)
@@ -36,7 +46,7 @@ export function ContractCard({ contract }: ContractCardProps) {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Manzana {contract.lote.manzana} - Lote {contract.lote.nomenclatura}
+              {unitTitle}
             </h3>
             <div className="flex items-center text-gray-600 text-sm mt-1">
               <MapPin className="w-4 h-4 mr-1" />

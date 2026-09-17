@@ -113,12 +113,12 @@ export default function PortalDashboard() {
               <span className="text-2xl md:text-3xl opacity-80">Bienvenido a tu portal de pagos.</span>
             </h1>
             <p className="text-text-secondary text-base max-w-lg">
-              Aquí puedes revisar el estado de tus lotes, descargar tus recibos y reportar tus pagos de forma rápida y sencilla.
+              Aquí puedes revisar el estado de tus inmuebles, descargar tus recibos y reportar tus pagos de forma rápida y sencilla.
             </p>
           </div>
           <div className="flex-shrink-0">
              <div className="glass-card p-6 border-accent-blue/30 flex flex-col items-center justify-center text-center shadow-xl">
-                <p className="text-[10px] text-text-muted font-black uppercase mb-1">Mis Lotes</p>
+                <p className="text-[10px] text-text-muted font-black uppercase mb-1">Mis Inmuebles</p>
                 <p className="text-4xl font-black text-accent-blue mb-2">{data?.lotsCount || 0}</p>
                 <div className="h-1 w-12 bg-accent-blue/30 rounded-full" />
              </div>
@@ -135,7 +135,7 @@ export default function PortalDashboard() {
                 <Map className="w-8 h-8" />
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Mis Lotes</p>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Mis Inmuebles</p>
                 <p className="text-3xl font-black text-text-primary mt-1">{data?.lotsCount || 0}</p>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function PortalDashboard() {
                 <div className="h-full bg-accent-blue w-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
               </div>
               <Link href="/portal/lots" className="flex items-center justify-center w-full py-3 glass-button text-xs font-bold uppercase tracking-wider group-hover:border-accent-blue/50 transition-all">
-                Ver mis lotes <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                Ver mis inmuebles <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </CardContent>

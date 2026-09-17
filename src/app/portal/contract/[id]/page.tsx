@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { FullPageLoading, CardSkeleton } from '@/components/ui/LoadingSpinner'
 import { PlanPagosTable } from '@/components/contract/PlanPagosTable'
+import { formatPropertyUnit, PropertyType } from '@/lib/propertyTypes'
 
 export default function ContractDetailPage() {
   const [contractDetail, setContractDetail] = useState<ContractDetail | null>(null)
@@ -137,7 +138,14 @@ export default function ContractDetailPage() {
         
         <div>
           <h1 className="text-responsive-lg font-bold text-text-primary">
-            Lote Mz{contractDetail.lote.manzana} - {contractDetail.lote.nomenclatura}
+            {formatPropertyUnit({
+              propertyType: (contractDetail.propertyType || contractDetail.lote.propertyType || 'lotes') as PropertyType,
+              lotNumber: contractDetail.lote.lotNumber || contractDetail.lote.nomenclatura,
+              manzana: contractDetail.lote.manzana,
+              tower: contractDetail.lote.tower,
+              floor: contractDetail.lote.floor,
+              nomenclature: contractDetail.lote.nomenclatura
+            })}
           </h1>
           <div className="flex flex-wrap items-center gap-4 mt-2 text-text-secondary">
             <div className="flex items-center">

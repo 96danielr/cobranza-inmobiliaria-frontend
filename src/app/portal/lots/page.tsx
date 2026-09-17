@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/Input'
 import { TableRowSkeleton } from '@/components/ui/LoadingSpinner'
 import { portalApi } from '@/lib/portalApi'
 import { formatCurrency, cn } from '@/lib/utils'
+import { formatPropertyUnit } from '@/lib/propertyTypes'
 
 export default function MyLotsPage() {
   const [loading, setLoading] = useState(true)
@@ -63,15 +64,15 @@ export default function MyLotsPage() {
       {/* Page Header matching Admin Style */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 animate-fade-in-up">
         <div>
-          <h1 className="text-responsive-2xl font-bold text-text-primary">Mis Lotes</h1>
+          <h1 className="text-responsive-2xl font-bold text-text-primary">Mis Inmuebles</h1>
           <p className="text-text-secondary mt-2">
-            Consulta el estado, área e imágenes de tus lotes adquiridos
+            Consulta el estado, área e imágenes de tus inmuebles adquiridos
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <div className="glass-card px-4 py-2 border-accent-blue/30 rounded-xl flex items-center shadow-glow">
             <Layers className="w-4 h-4 text-accent-blue mr-2" />
-            <span className="text-sm font-bold text-text-primary">{lots.length} Lotes Totales</span>
+            <span className="text-sm font-bold text-text-primary">{lots.length} Inmuebles Totales</span>
           </div>
         </div>
       </div>
@@ -81,7 +82,7 @@ export default function MyLotsPage() {
         <CardContent className="p-4">
           <div className="flex-1">
             <Input
-              placeholder="Buscar por etapa, nomenclatura o número de lote..."
+              placeholder="Buscar por etapa, nomenclatura o número..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="glass-input"
@@ -97,7 +98,7 @@ export default function MyLotsPage() {
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="sticky top-0 z-20">
-                <th className="text-left py-4 px-8 font-semibold text-text-primary bg-dark-secondary/80 backdrop-blur-md border-b border-glass-border">Lote / Etapa</th>
+                <th className="text-left py-4 px-8 font-semibold text-text-primary bg-dark-secondary/80 backdrop-blur-md border-b border-glass-border">Inmueble / Etapa</th>
                 <th className="text-left py-4 px-8 font-semibold text-text-primary bg-dark-secondary/80 backdrop-blur-md border-b border-glass-border">Área</th>
                 <th className="text-left py-4 px-8 font-semibold text-text-primary bg-dark-secondary/80 backdrop-blur-md border-b border-glass-border">Precio Pactado</th>
                 <th className="text-left py-4 px-8 font-semibold text-text-primary bg-dark-secondary/80 backdrop-blur-md border-b border-glass-border">Estado</th>
@@ -111,7 +112,7 @@ export default function MyLotsPage() {
                   <td colSpan={6} className="py-20 text-center text-text-muted">
                     <div className="flex flex-col items-center space-y-3">
                       <Building2 className="w-12 h-12 text-text-disabled opacity-20" />
-                      <p className="text-lg font-medium">No se encontraron lotes registrados</p>
+                      <p className="text-lg font-medium">No se encontraron inmuebles registrados</p>
                     </div>
                   </td>
                 </tr>
@@ -121,10 +122,10 @@ export default function MyLotsPage() {
                     <td className="py-5 px-8">
                       <div>
                         <p className="font-bold text-text-primary group-hover:text-accent-blue transition-colors">
-                          E: {lot.stage || '-'} - M: {lot.manzana || '-'} - L: {lot.lotNumber}
+                          {formatPropertyUnit(lot)}
                         </p>
                         <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-0.5">
-                          Nomenclatura: {lot.nomenclature || '-'}
+                          {lot.stage ? `Etapa: ${lot.stage} • ` : ''}Nomenclatura: {lot.nomenclature || '-'}
                         </p>
                       </div>
                     </td>
@@ -207,7 +208,7 @@ export default function MyLotsPage() {
                <div>
                   <h4 className="font-bold text-text-primary">Detalles de Ubicación</h4>
                   <p className="text-sm text-text-secondary mt-1">
-                    Puedes solicitar la geolocalización exacta de tu lote y los planos de urbanismo a través de la línea de soporte.
+                    Puedes solicitar la geolocalización exacta de tu inmueble y los planos de urbanismo a través de la línea de soporte.
                   </p>
                </div>
             </CardContent>

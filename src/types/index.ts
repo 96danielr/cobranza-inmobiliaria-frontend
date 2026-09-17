@@ -12,11 +12,16 @@ export interface AuthToken {
 
 export interface Contract {
   id: string
+  propertyType?: string
   lote: {
     manzana: string
     nomenclatura: string
     areaTotalM2: number
     proyecto: string
+    propertyType?: string
+    tower?: string
+    floor?: string
+    lotNumber?: string
   }
   valorTotal: number
   valorCuota: number
@@ -55,6 +60,7 @@ export interface Cuota {
 
 export interface ContractDetail {
   id: string
+  propertyType?: string
   lote: {
     manzana: string
     nomenclatura: string
@@ -62,6 +68,10 @@ export interface ContractDetail {
     valorTotalLote: number
     proyecto: string
     ubicacion: string
+    propertyType?: string
+    tower?: string
+    floor?: string
+    lotNumber?: string
   }
   valorTotal: number
   valorCuota: number

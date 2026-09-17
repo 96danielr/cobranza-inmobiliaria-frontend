@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard,
   CreditCard,
@@ -15,10 +14,15 @@ import {
   MailCheck,
   BookOpen,
   PhoneForwarded,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Map,
+  Home,
+  Store,
+  type LucideIcon,
 } from 'lucide-react'
 
 import { PERMISSIONS, hasPermission, type Permission } from './permissions'
+import { PropertyType, getPropertyConfig } from './propertyTypes'
 
 export type AdminNavRole = 'superadmin' | 'tenant_admin' | 'company_admin' | 'agent' | 'vendedor' | 'cliente' | 'cobrador' | 'administrador' | 'gerente' | 'jefe_cartera' | 'auxiliar_cartera' | 'contador' | 'auxiliar_contable' | 'ejecutivo_comercial'
 
@@ -52,6 +56,27 @@ export const adminNavItems: AdminNavItem[] = [
   { icon: LogOut, label: 'Cerrar Sesión', href: 'logout' },
 ]
 
+export function getDynamicAdminNavItems(propertyType?: PropertyType | string | null): AdminNavItem[] {
+  const cfg = getPropertyConfig(propertyType)
+  
+  let PropertyIcon = Building2
+  if (cfg.icon === 'Map') PropertyIcon = Map
+  else if (cfg.icon === 'Home') PropertyIcon = Home
+  else if (cfg.icon === 'Store') PropertyIcon = Store
+  else if (cfg.icon === 'Building2') PropertyIcon = Building2
+
+  return adminNavItems.map((item) => {
+    if (item.href === '/admin/lots') {
+      return {
+        ...item,
+        label: cfg.plural,
+        icon: PropertyIcon,
+      }
+    }
+    return item
+  })
+}
+
 export function filterAdminNavItems(
   items: AdminNavItem[],
   role: string | undefined,
@@ -65,3 +90,4 @@ export function filterAdminNavItems(
     return true
   })
 }
+
