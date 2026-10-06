@@ -94,13 +94,11 @@ export function mountHeroScene(root) {
     + '<div class="pin p2"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#0FA37F" stroke="#fff" stroke-width="1.6"/><path d="M5.9 10.3l2.7 2.7 5.5-5.9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></div>';
   // fully paid lots that are still empty show a "VENDIDO" real-estate sign instead of the check (the check stays for lots with a house):
   // a wooden post with an arm and a hanging white board with a red band, staked in the lot
-  const SOLD = '<div class="pin p3"><svg viewBox="0 0 30 30"><ellipse cx="7" cy="29.2" rx="4.5" ry=".8" fill="rgba(11,27,51,.2)"/>'
-    + '<path d="M6 29V3" stroke="#7A5136" stroke-width="2" stroke-linecap="round"/><path d="M5 4.2h21" stroke="#7A5136" stroke-width="1.6" stroke-linecap="round"/>'
-    + '<path d="M9 4.6v2.2M24 4.6v2.2" stroke="#8E959E" stroke-width=".6"/>'
-    + '<rect x="7.5" y="6.6" width="19" height="10.4" rx="1" fill="#FFFFFF" stroke="#D6D0C4" stroke-width=".5"/>'
-    + '<rect x="7.5" y="9.4" width="19" height="4.8" fill="#0FA37F"/>'
-    + '<text x="17" y="13.1" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="3.4" font-weight="800" letter-spacing=".1" fill="#FFFFFF">VENDIDO</text>'
-    + '<path d="M9.5 8.1h15M9.5 15.6h9" stroke="#B9B2A3" stroke-width=".55" stroke-linecap="round"/></svg></div>';
+  const SOLD = '<div class="pin p3"><svg viewBox="0 0 44 30"><ellipse cx="5" cy="29.2" rx="4" ry=".8" fill="rgba(11,27,51,.2)"/>'
+    + '<path d="M4 29V2.5" stroke="#7A5136" stroke-width="2" stroke-linecap="round"/><path d="M3 3.4h38" stroke="#7A5136" stroke-width="1.6" stroke-linecap="round"/>'
+    + '<path d="M8 3.8v2M38 3.8v2" stroke="#8E959E" stroke-width=".6"/>'
+    + '<rect x="5.5" y="5.8" width="36" height="12" rx="1.4" fill="#0FA37F" stroke="#FFFFFF" stroke-width="1"/>'
+    + '<text x="23.5" y="14.1" text-anchor="middle" textLength="29" lengthAdjust="spacingAndGlyphs" font-family="Inter, system-ui, sans-serif" font-size="6.4" font-weight="800" fill="#FFFFFF">VENDIDO</text></svg></div>';
   const pins = PAY_ORDER.map(key => { const [c, r] = key.split(',').map(Number), [x, y] = lotXY(c, r);
     const g = div('bb', { left: (x + LW / 2) + 'px', top: (y + LD / 2) + 'px' }); g.innerHTML = PIN + SOLD; if (key !== '3,3') g.classList.add('signed'); return g; });   // '3,3' gets a house
   const sitePin = div('bb', { left: (sx + SW / 2) + 'px', top: (sy + SD / 2) + 'px' }); sitePin.innerHTML = PIN;   // rides on the growing roof
