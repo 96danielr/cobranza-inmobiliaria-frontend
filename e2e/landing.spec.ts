@@ -178,3 +178,15 @@ test('unapproved testimonial is never in the production build', () => {
   const html = fs.readFileSync(built, 'utf8')
   expect(html).not.toContain('Antes cuadrábamos la cartera')
 })
+
+test('legal pages are server-rendered and linked from the footer', async ({ page, request }) => {
+  for (const [path, title] of [['/terminos', 'Términos y condiciones de uso de Operix'], ['/privacidad', 'Política de tratamiento de datos personales']]) {
+    const html = await (await request.get(path)).text()
+    expect(html).toContain(title)
+    expect(html).toContain('Ley 1581')
+  }
+  await page.goto('/')
+  await expect(page.locator('.landing footer a[href="/terminos"]')).toHaveCount(1)
+  await expect(page.locator('.landing footer a[href="/privacidad"]')).toHaveCount(1)
+  await expect(page.locator('.landing #contacto a[href="/privacidad"]')).toHaveCount(1)
+})

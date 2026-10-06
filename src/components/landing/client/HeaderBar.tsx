@@ -26,7 +26,7 @@ export default function HeaderBar() {
   return (
     <header className={'top' + (scrolled ? ' scrolled' : '')} id="top">
       <div className="wrap bar">
-        <a className="logo" href="#" aria-label="Operix"><Logo /></a>
+        <a className="logo" href="/" aria-label="Operix"><Logo /></a>
         <nav className="nav">{landing.nav.map(l => <a key={l.href} href={l.href}>{l.label}</a>)}</nav>
         <div className="right">
           <div className={'menu' + (open ? ' open' : '')} ref={menu}>

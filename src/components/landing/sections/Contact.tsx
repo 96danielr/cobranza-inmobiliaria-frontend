@@ -16,6 +16,7 @@ export default function Contact() {
               <a className="btn primary" href={whatsappHref}><WhatsApp />{landing.cta.whatsapp}</a>
               <span className="mail">o escríbenos a {c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : <a>{c.emailPending}</a>}</span>
             </div>
+            <p className="consent">{c.consent} <a href="/privacidad">{c.consentLink}</a>.</p>
           </div>
           <div className="vig"><MiniScene kind="close" className="mxw" /></div>
         </div>

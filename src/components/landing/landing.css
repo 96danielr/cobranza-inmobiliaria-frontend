@@ -439,3 +439,21 @@ body:has(.landing)::before { display: none; }
 @media (max-width: 1000px) { .landing .featcard.in-card { grid-template-columns: 1fr 1fr; padding: 12px; } }
 @media (max-width: 560px) { .landing .featcard.in-card { grid-template-columns: 1fr; } }
 .landing .bencard .cotas.grid4 .ct:nth-child(even) { padding-left: 32px; }
+/* legal pages */
+.landing .legal-sec { padding-top: 120px; }
+.landing .legal-doc { display: block; max-width: 860px; margin: 0 auto; padding: 56px 64px; color: var(--ink); font-size: 16px; line-height: 1.7; }
+.landing .legal-doc h1 { font-size: clamp(28px, 3vw, 40px); line-height: 1.1; letter-spacing: -.025em; }
+.landing .legal-doc h1 + p { margin-top: 10px; color: var(--muted); font-size: 14px; }
+.landing .legal-doc h2 { margin-top: 40px; font-size: 21px; letter-spacing: -.015em; }
+.landing .legal-doc p, .landing .legal-doc ul, .landing .legal-doc ol, .landing .legal-doc table { margin: 14px 0 0; }
+.landing .legal-doc ul, .landing .legal-doc ol { padding-left: 22px; }
+.landing .legal-doc ul { list-style: disc; } .landing .legal-doc ol { list-style: decimal; }
+.landing .legal-doc li + li { margin-top: 6px; }
+.landing .legal-doc a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.landing .legal-doc table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.landing .legal-doc th, .landing .legal-doc td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #EEEAE1; vertical-align: top; }
+.landing .legal-doc th { font-weight: 600; background: #FBFAF6; }
+.landing .legal-draft { margin: 0 0 24px !important; padding: 10px 14px; border-radius: 10px; background: #FBF0D4; color: #7A5A0E; font-size: 13px; font-weight: 600; }
+.landing .close2 .consent { margin: 16px 0 0; font-size: 13px; color: var(--muted); }
+.landing .close2 .consent a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .landing .legal-doc { padding: 32px 22px; font-size: 15px; } .landing .legal-sec { padding-top: 96px; } }

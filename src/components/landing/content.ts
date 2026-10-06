@@ -11,10 +11,10 @@ export const whatsappHref = WHATSAPP_NUMBER
 
 export const landing = {
   nav: [
-    { href: '#como', label: 'Cómo funciona' },
-    { href: '#beneficios', label: 'Beneficios' },
-    { href: '#planes', label: 'Planes' },
-    { href: '#seguridad', label: 'Seguridad' },
+    { href: '/#como', label: 'Cómo funciona' },
+    { href: '/#beneficios', label: 'Beneficios' },
+    { href: '/#planes', label: 'Planes' },
+    { href: '/#seguridad', label: 'Seguridad' },
   ],
   login: [
     { href: '/admin/login', label: 'Empresa', hint: 'Portal de tu inmobiliaria' },
@@ -115,10 +115,15 @@ export const landing = {
     lead: 'Únete a las inmobiliarias que ya optimizan sus recaudos con nuestra plataforma.',
     email: null as string | null,
     emailPending: '[correo comercial pendiente]',
+    consent: 'Al escribirnos aceptas nuestra',
+    consentLink: 'política de tratamiento de datos personales',
   },
   footer: {
     about: 'Automatización inteligente que reduce costos operativos y mejora la experiencia de pago de tus clientes.',
-    legalPending: ['[Términos pendientes]', '[Datos personales pendiente]'],
+    legal: [
+      { href: '/terminos', label: 'Términos y condiciones' },
+      { href: '/privacidad', label: 'Tratamiento de datos personales' },
+    ],
     rights: `© ${new Date().getFullYear()} Operix`,
     madeIn: 'Hecho en Colombia',
   },
