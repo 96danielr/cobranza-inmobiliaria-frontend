@@ -471,13 +471,24 @@ body:has(.landing)::before { display: none; }
 @media (max-width: 370px) { .landing .hero .ctas .btn svg { display: none; } .landing .hero .ctas .btn { font-size: 13px; } }
 .landing .bencard .cotas.grid4 .ct-text .num { margin-top: 4px; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.1; letter-spacing: -.02em; }
 .landing .bencard .cotas.grid4 .ct-text .lbl { margin-top: 0; }
-/* dark buttons: on hover a yellow wave rises from the bottom (rippling crest) and fills the button; the label turns ink */
-.landing .btn.primary { position: relative; overflow: hidden; isolation: isolate; transition: transform .2s ease, color .3s ease .12s, box-shadow .3s ease; }
-.landing .btn.primary:hover, .landing .btn.primary:focus-visible { background: var(--ink); color: var(--ink); box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 10px 24px -10px rgba(227,178,60,.6); }
-/* the wave layer is the button height + 10px of crest; it starts below the button and ends with the crest above it */
-.landing .btn.primary::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; top: 100%; height: calc(100% + 10px);
-  background: radial-gradient(12px 6px at 50% 100%, #E3B23C 97%, transparent 100%) 0 0 / 24px 6px repeat-x, linear-gradient(#E3B23C, #E3B23C) 0 6px / 100% 100% no-repeat;
-  transition: top .5s cubic-bezier(.3,.7,.3,1); animation: btn-wave .9s linear infinite; }
-.landing .btn.primary:hover::before, .landing .btn.primary:focus-visible::before { top: -10px; }
-@keyframes btn-wave { to { background-position: 24px 0, 0 6px; } }
-@media (prefers-reduced-motion: reduce) { .landing .btn.primary::before { transition: none; animation: none; } }
+/* dark buttons: a light yellow fill rises from the bottom with one smooth travelling wave on its crest;
+   idle buttons get a slow light sweep, and on hover they lift with a warm glow */
+.landing .btn.primary { position: relative; overflow: hidden; isolation: isolate; transition: transform .25s cubic-bezier(.3,.7,.3,1), color .3s ease .12s, box-shadow .3s ease; }
+.landing .btn.primary:hover, .landing .btn.primary:focus-visible { background: var(--ink); color: var(--ink); transform: translateY(-2px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 14px 30px -10px rgba(255,212,101,.75), 0 0 0 3px rgba(255,212,101,.28); }
+.landing .btn.primary::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; top: 100%; height: calc(100% + 12px);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 12' preserveAspectRatio='none'%3E%3Cpath d='M0 6C20 3 40 3 60 6S100 9 120 6V12H0z' fill='%23FFD465'/%3E%3C/svg%3E") 0 0 / 120px 12px repeat-x, linear-gradient(#FFD465, #FFD465) 0 11px / 100% 100% no-repeat;
+  transition: top .55s cubic-bezier(.3,.7,.3,1); animation: btn-wave 1.4s linear infinite; }
+.landing .btn.primary:hover::before, .landing .btn.primary:focus-visible::before { top: -12px; }
+@keyframes btn-wave { to { background-position: 120px 0, 0 11px; } }
+.landing .btn.primary::after { content: ''; position: absolute; z-index: 1; top: 0; bottom: 0; width: 40%; left: -60%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent); animation: btn-shine 4.5s ease-in-out 1.5s infinite; }
+.landing .btn.primary:hover::after { animation: none; opacity: 0; }
+@keyframes btn-shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+@media (prefers-reduced-motion: reduce) { .landing .btn.primary::before { transition: none; animation: none; } .landing .btn.primary::after { display: none; } }
+
+/* text links in the green of the statements (#0FA37F / ok text #0B7A5F for contrast on paper) */
+.landing .hero .already a, .landing .close2 .box .tx .mail a, .landing .close2 .consent a,
+.landing .feedtx .more, .landing .bc-tx .more, .landing .head > .more, .landing .il-link { color: #0E9671; border-bottom-color: currentColor; text-decoration-color: currentColor; transition: color .2s ease; }
+.landing .hero .already a:hover, .landing .close2 .box .tx .mail a:hover, .landing .close2 .consent a:hover,
+.landing .feedtx .more:hover, .landing .bc-tx .more:hover, .landing .head > .more:hover { color: #0B7A5F; }
