@@ -13,11 +13,6 @@ export function mountHeroScene(root) {
   const LW = 64, LD = 60, GAP = 9, O = 12, PW = 380, PH = 300;
   const lotXY = (c, r) => [O + c * (LW + GAP), O + r * (LD + GAP)];
   const div = (cls, css, parent = pl) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, css); parent.appendChild(d); return d; };
-  // road markings
-  for (let k = 0; k < 4; k++) div('dash v', { left: (O + LW + GAP / 2 - .5 + k * (LW + GAP)) + 'px', top: O + 'px', height: (4 * LD + 3 * GAP) + 'px' });
-  for (let k = 0; k < 3; k++) div('dash h', { left: O + 'px', top: (O + LD + GAP / 2 - .5 + k * (LD + GAP)) + 'px', width: (5 * LW + 4 * GAP) + 'px' });
-  div('dash h', { left: '0px', top: (O + 4 * LD + 3 * GAP + 10) + 'px', width: PW + 'px' });
-  div('dash v', { left: '5.5px', top: '0px', height: PH + 'px' });
   // lots
   const sold = ['0,0', '3,0', '4,0', '0,3', '2,3', '3,3'], lotQueue = [];
   for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) {
@@ -148,7 +143,6 @@ export function mountHeroScene(root) {
     box(g, X + W / 2 - 4, Y + D, 0, 8, 3.4, 2.2, { ...WOOD, top: '#B98A62' }); box(g, X + W / 2 - 3, Y + D + 3.4, 0, 6, 2, 1.1, { ...WOOD, top: '#B98A62' });
     box(g, X + W - 10, Y + 5, 15, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
     gableRoof(g, X, Y, 15, W, D, 9, 2.6);
-    box(g, x + 5, y + LD - 9, 0, 1.2, 1.2, 6, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true });
     g.style.visibility = 'hidden'; HOUSE_LOTS[k] = g; });
   const HOUSE_H = 24, HOUSE_DELAY = 500, HOUSE_DUR = 520;
   // trees as plan symbols
@@ -238,7 +232,7 @@ export function mountHeroScene(root) {
     // and both edges of the path (flowers ~0.3-0.5 m tall: dots of about 1 px, well below a person's knee)
     const WK = 7, pathTop = hy + hd + WK, pathBot = oy + SD - 2, PWD = 13;
     div('plan path walkway', { left: (hx - WK) + 'px', top: (hy - WK) + 'px', width: (hw + 2 * WK) + 'px', height: (hd + 2 * WK) + 'px' }, g4);
-    div('plan path', { left: (gate - 2.5) + 'px', top: pathTop + 'px', width: PWD + 'px', height: (pathBot - pathTop) + 'px' }, g4);
+    div('plan path entry', { left: (gate - 2.5) + 'px', top: (hy + hd) + 'px', width: PWD + 'px', height: (oy + SD - hy - hd) + 'px' }, g4);   // from the house to the street
     // flower beds only along the facade, either side of the entrance: a low planter (0.3 m) with standing flowering
     // shrubs (0.4-0.6 m, camera-facing), well below a person's knee
     const flowers = [];
@@ -482,7 +476,7 @@ export function mountHeroScene(root) {
       cls(A.el, 'walk', ps.walk && u0 >= 1); put(A.fig, 'transform', ps.face < 0 ? 'scaleX(-1)' : 'none');
       cls(A.el, 'cheer', !reduce && ps.since >= 0 && ps.since < 1300); });   // a happy jump when they get where they were going
     { const u = clamp((t - AT.end) / 420); put(cat.el, 'opacity', u > 0 ? '1' : '0'); put(cat.el, 'transform', `scale(${(u < 1 ? backOut(u) : 1).toFixed(3)})`); }
-    cls(site, 'lawn', t > B + STEP * 3.3);
+    cls(site, 'lawn', t > B);                                         // the green outline goes as soon as the house is up
     const BILL = `rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(CAM_X + ryv)).toFixed(2)}deg)`;
     bills.forEach(({ b, z }) => put(b, 'transform', `translate3d(${(b._dx || 0).toFixed(3)}px, ${(b._dy || 0).toFixed(3)}px, ${z}px) ${BILL}`));
     put(site2Pin, 'transform', `translateZ(2.5px) ${BILL}`);

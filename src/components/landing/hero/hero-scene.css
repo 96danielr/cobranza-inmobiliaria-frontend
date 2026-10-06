@@ -204,3 +204,4 @@
 .landing .ox .knob { position: absolute; width: .8px; height: .8px; border-radius: 50%; background: #E8C66A; }
 /* a lot whose house is already up keeps only its green area (no dark outline) */
 .landing .ox .plan.built, .landing .ox .site.lawn { box-shadow: none !important; }
+.landing .ox .plan.path.entry, .landing .ox .plan.walkway { border-radius: 0; }
