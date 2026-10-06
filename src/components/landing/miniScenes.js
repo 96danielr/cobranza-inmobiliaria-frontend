@@ -91,7 +91,7 @@ function cottage(m, HX, HY, HW, HD, WH, RH) {
     Object.assign(f.style, { left: ex + 'px', top: HY + 'px', width: RH + 'px', height: HD + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: '#DCCDB2', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }); roof.appendChild(f); });
   const TOP = 1.6 + WH + RH;
   house.style.visibility = 'hidden';
-  return { house, TOP };
+  return { house, TOP, body };
 }
 
 V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [];
@@ -108,37 +108,58 @@ V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [
     const u = clamp((t - 4300) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 5 * Math.sin(Math.PI * u) : 0;   // pops up with a little hop
     put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`); } }; };
 
-/** Hexagonal cabin centred at (cx, cy): side r, wall height h, roof rise rh. Walls are wood planks, one has a door. */
+/** Hexagonal gazebo centred at (cx, cy): side r, post height h, roof rise rh. Six wooden posts (open sides), a round table inside. */
 function hexCabin(m, cx, cy, r, h, rh) {
-  const ap = r * Math.cos(Math.PI / 6), L = Math.hypot(ap, rh), tilt = Math.atan2(rh, ap) * 180 / Math.PI;
-  const WOODS = ['#C99A6B', '#B5865A', '#A9794F', '#B98B5E', '#C5966A', '#D2A576'];
-  m.div('mhexbase', cx - r - 1.5, cy - r - 1.5, 2 * r + 3, 2 * r + 3);
+  const ap = r * Math.cos(Math.PI / 6), L = Math.hypot(ap + 1.5, rh), tilt = Math.atan2(rh, ap + 1.5) * 180 / Math.PI;
+  const POST = { top: '#8A5A3B', front: '#7A4F33', back: '#7A4F33', left: '#8A5A3B', right: '#6B4227', noLine: true };
+  m.div('mhexbase', cx - r - 2, cy - r - 2, 2 * r + 4, 2 * r + 4);
+  box(m, cx - 3, cy - 3, 0, 6, 6, 4, { top: '#C99A6B', front: '#A9794F', back: '#A9794F', left: '#B5865A', right: '#93673F', noLine: true });   // round-ish table
+  [[-6.5, -1], [4, -1]].forEach(([dx, dy]) => box(m, cx + dx, cy + dy, 0, 2.5, 2.5, 2.2, POST));                                            // stools
+  for (let k = 0; k < 6; k++) { const a = (k * 60) * Math.PI / 180; box(m, cx + r * Math.cos(a) - .7, cy + r * Math.sin(a) - .7, 0, 1.4, 1.4, h, POST); }
   for (let k = 0; k < 6; k++) {
     const g = document.createElement('div'); g.className = 'g'; g.style.transform = `translate3d(${cx}px, ${cy}px, 0) rotateZ(${k * 60 + 30}deg)`; m.pl.appendChild(g);
-    const w = document.createElement('div'); w.className = 'f'; Object.assign(w.style, { left: (-r / 2) + 'px', top: ap + 'px', width: r + 'px', height: h + 'px', transformOrigin: '50% 0', transform: 'rotateX(90deg)',
-      background: `repeating-linear-gradient(0deg, rgba(60,30,10,.18) 0 .5px, transparent .5px 2.4px), ${WOODS[k]}` }); g.appendChild(w);
-    if (k === 0) { const d = document.createElement('i'); Object.assign(d.style, { position: 'absolute', left: (r / 2 - 2.2) + 'px', top: '0px', width: '4.4px', height: '7.5px', background: '#6B4227', borderRadius: '0 0 1.4px 1.4px' }); w.appendChild(d); }
-    if (k === 2 || k === 4) { const wi = document.createElement('i'); wi.className = 'mwin'; Object.assign(wi.style, { left: (r / 2 - 2.5) + 'px', top: '3px', width: '5px', height: '4px' }); w.appendChild(wi); }
-    const t = document.createElement('div'); t.className = 'f'; Object.assign(t.style, { left: (-r / 2 - .6) + 'px', top: (ap - L) + 'px', width: (r + 1.2) + 'px', height: L + 'px', transformOrigin: '50% 100%',
+    const beam = document.createElement('div'); beam.className = 'f'; Object.assign(beam.style, { left: (-r / 2) + 'px', top: ap + 'px', width: r + 'px', height: '1.4px', transformOrigin: '50% 0', transform: `translateZ(${h - 1.4}px) rotateX(90deg)`, background: '#7A4F33' }); g.appendChild(beam);
+    const t = document.createElement('div'); t.className = 'f'; Object.assign(t.style, { left: (-r / 2 - 1.4) + 'px', top: (ap + 1.5 - L) + 'px', width: (r + 2.8) + 'px', height: L + 'px', transformOrigin: '50% 100%',
       transform: `translateZ(${h}px) rotateX(${-tilt}deg)`, clipPath: 'polygon(50% 0, 100% 100%, 0 100%)',
       background: `repeating-linear-gradient(180deg, transparent 0 2.6px, rgba(60,20,8,.3) 2.6px 3.1px), ${k % 2 ? '#C9693D' : '#B5552C'}` }); g.appendChild(t);
   }
 }
+const box = (m, ...a) => m.box(m.pl, ...a);
 
 // client sign-in · the finished home: an L-shaped country house on a paid lot, with a tree and a stone path (static)
 V.home = host => { const m = mk(host, 170, 150, { zoom: 1.02 }); const LX = 14, LY = 16, LW = 142, LD = 118;
   const l = m.lot(LX, LY, LW, LD); l.classList.add('sold', 'paid');
   // main wing along x, and a side wing turned 90° coming forward on the right: an L
-  const main = cottage(m, LX + 22, LY + 18, 72, 30, 14, 11);
+  const main = cottage(m, LX + 34, LY + 18, 72, 30, 14, 11);
   const wing = cottage(m, 0, 0, 40, 28, 14, 11);
   main.house.style.visibility = 'visible';
-  wing.house.style.visibility = 'visible'; wing.house.style.transform = `translate3d(${LX + 22 + 72 - 28}px, ${LY + 18 + 30 + 34}px, 0) rotateZ(-90deg)`;   // comes forward from the right end
+  { const d = main.body._front.querySelector('.mdoor'); Object.assign(d.style, { left: (72 / 2 - 4.5) + 'px', width: '9px', height: '10px' }); }   // wider main door
+  // two large windows on the main facade, left of the door (the right part is behind the wing)
+  main.body._front.querySelectorAll('.mwin').forEach(w => w.remove());
+  [5, 19.5].forEach(l => { const w = document.createElement('i'); w.className = 'mwin'; Object.assign(w.style, { left: l + 'px', top: '3px', width: '11px', height: '8px' }); main.body._front.appendChild(w); });
+  wing.house.style.visibility = 'visible'; wing.house.style.transform = `translate3d(${LX + 34 + 72 - 28}px, ${LY + 18 + 30 + 34}px, 0) rotateZ(-90deg)`;   // comes forward from the right end
+  // garage in the gable end of the side wing (it faces the front of the lot): open door, dark inside, a white car half out
+  { const GY = LY + 82, X0 = LX + 87, X1 = LX + 97, GH = 9.5;   // face plane y, opening span along x, opening height
+    wing.body.children[2].style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 19px, ${GH}px 19px, ${GH}px 9px, 0 9px)`;   // notch from the floor up
+    const DK = { top: '#2A3240', front: '#2A3240', back: '#2A3240', left: '#2A3240', right: '#384252', noLine: true };
+    box(m, X0, GY - 17, 1.6, X1 - X0, 17, .3, { ...DK, top: '#3A4352' });                                     // garage floor
+    box(m, X0, GY - 18, 1.6, X1 - X0, 1, GH, DK);                                                               // back wall
+    box(m, X0, GY - 9, 1.6 + GH - .5, X1 - X0, 8.5, .5, { top: '#E7E2D6', front: '#D6CFBF', back: '#D6CFBF', left: '#D6CFBF', right: '#C9C1AF', noLine: true });   // door rolled up
+    m.div('mdrive2', X0, GY, X1 - X0, LY + LD - GY - 1);                                                        // concrete apron to the lot front
+    const CW = { top: '#FFFFFF', front: '#ECEAE5', back: '#ECEAE5', left: '#F4F2EE', right: '#DDDAD2', noLine: true };
+    const GL = { top: 'linear-gradient(135deg, #CFE0F0, #8FB0D2 55%, #E8F1FA 57%, #8FB0D2 62%)', front: '#7E9EC0', back: '#7E9EC0', left: '#8FB0D2', right: '#6584A6', noLine: true };
+    const WH = { top: '#1F2937', front: '#111827', back: '#111827', left: '#111827', right: '#0B1220', noLine: true };
+    const cx0 = X0 + .7, cy0 = GY - 11;   // car 8.6 wide (x), 19 long (y): its nose sticks out of the garage toward the street
+    [[-.4, 2], [7.8, 2], [-.4, 14], [7.8, 14]].forEach(([dx, dy]) => box(m, cx0 + dx, cy0 + dy, .4, 1.2, 3.4, 2.6, WH));
+    box(m, cx0, cy0, 1.4, 8.6, 19, 3.4, CW); box(m, cx0 + .8, cy0 + 5, 4.8, 7, 8.5, 2.6, GL); box(m, cx0 + 1, cy0 + 5.3, 7.4, 6.6, 7.9, .5, CW);
+    const lamps = document.createElement('i'); lamps.className = 'mlamps'; m.pl.lastChild._front.appendChild(lamps);
+  }
   // gravel path with flagstones from the door to the front of the lot
-  m.div('mpath', LX + 52, LY + 48, 12, LD - 48);
+  m.div('mpath', LX + 64, LY + 48, 12, LD - 48);
   // small hexagonal wooden cabin (hexagonal prism + six-sided tiled roof), at the front-left of the lot
-  hexCabin(m, LX + 26, LY + LD - 30, 11, 10, 8);
-  const tree = m.div('bb', LX + LW - 18, LY + LD - 16, 0, 0); tree.innerHTML = '<i class="mtree"></i>'; put(tree, 'transform', m.bill(0));
-  const p = m.pin(LX + 58, LY + 33); cls(p, 'done', true); put(p, 'transform', m.bill(1 + main.TOP));
+  hexCabin(m, LX + 28, LY + LD - 30, 15, 19, 10);   // posts as tall as the house walls
+  const tree = m.div('bb', LX + LW - 18, LY + LD - 16, 0, 0); tree.innerHTML = '<svg class="mtree2" viewBox="0 0 20 26"><ellipse cx="10" cy="25.2" rx="6" ry="1" fill="rgba(11,27,51,.18)"/><path d="M9 25V15h2v10z" fill="#7A6A57"/><circle cx="10" cy="10" r="8.6" fill="#6FAF8E"/><circle cx="7.4" cy="7.2" r="4.2" fill="#9ED3B4" opacity=".55"/><path d="M3 12a8.6 8.6 0 0 0 14 4" stroke="#4E8A6D" stroke-width="2.4" fill="none" opacity=".45"/></svg>'; put(tree, 'transform', m.bill(0));
+  const p = m.pin(LX + 70, LY + 33); cls(p, 'done', true); put(p, 'transform', m.bill(1 + main.TOP));
   return { period: 1e9, update() {} }; };
 
 /** Builds the vignette `kind` inside `host`, animates it while on screen, and returns a cleanup. */
