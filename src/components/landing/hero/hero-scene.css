@@ -134,3 +134,24 @@
 .landing .ox .puff { left: -5px; }
 .landing .ox .fence-sh { position: absolute; border-radius: 3px; box-shadow: inset 0 0 0 1.6px rgba(11,27,51,.16); }
 .landing .ox .round .f { border-radius: 2px; }
+/* v3: tiled roof, ridge cap, walking figures with joints */
+.landing .ox .roof { box-shadow: inset 0 -2px 0 rgba(70,25,8,.45), inset 0 0 0 .5px rgba(70,25,8,.35); }
+.landing .ox .ridge { border-radius: 1.6px; background: linear-gradient(180deg, #E08A5C, #B0582F 60%, #8F4420); box-shadow: 0 .6px 0 rgba(0,0,0,.2); }
+.landing .ox .fence-sh { box-shadow: inset 0 0 0 1.4px rgba(11,27,51,.08); }
+.landing .ox .fig { overflow: visible; }
+.landing .ox .fig g { transform-box: view-box; }
+.landing .ox .walk .body { animation: hs-bob .36s ease-in-out infinite alternate; }
+.landing .ox .walk .thigh.f, .landing .ox .walk .uarm.b { animation: hs-swing .72s ease-in-out infinite; }
+.landing .ox .walk .thigh.b, .landing .ox .walk .uarm.f { animation: hs-swing .72s ease-in-out -.36s infinite; }
+.landing .ox .walk .thigh.f .shin { animation: hs-knee .72s ease-in-out infinite; }
+.landing .ox .walk .thigh.b .shin { animation: hs-knee .72s ease-in-out -.36s infinite; }
+.landing .ox .walk .farm { transform: rotate(-24deg); }
+.landing .ox .walk .paw.f0, .landing .ox .walk .paw.b1 { animation: hs-paw .4s ease-in-out infinite; }
+.landing .ox .walk .paw.f1, .landing .ox .walk .paw.b0 { animation: hs-paw .4s ease-in-out -.2s infinite; }
+.landing .ox .walk .tail { animation: hs-tail .3s ease-in-out infinite alternate; }
+@keyframes hs-swing { 0%, 100% { transform: rotate(26deg); } 50% { transform: rotate(-26deg); } }
+@keyframes hs-knee { 0%, 50%, 100% { transform: rotate(0deg); } 75% { transform: rotate(48deg); } }
+@keyframes hs-paw { 0%, 100% { transform: rotate(24deg); } 50% { transform: rotate(-24deg); } }
+@keyframes hs-tail { from { transform: rotate(-12deg); } to { transform: rotate(14deg); } }
+@keyframes hs-bob { from { transform: translateY(0); } to { transform: translateY(-.7px); } }
+@media (prefers-reduced-motion: reduce) { .landing .ox .walk * { animation: none !important; } }
