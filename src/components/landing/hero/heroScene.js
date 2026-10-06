@@ -208,7 +208,8 @@ export function mountHeroScene(root) {
   function countryHouse(ox, oy, o) {
     // storeys of 2.9 m (12.8 px) on a 0.5 m stone base; the main house has two floors, which is why it stands taller
     const FLOOR = 12.8, BASE = 2.2, floors = o.floors || 1, WH = FLOOR * floors;
-    const hx = ox + 10, hy = oy + 10, hw = o.hw, hd = 44, WALL_H = BASE + WH, ROOF_H = 16, wins = [], st = [];
+    const FI = 6;                                                     // fence inset: a strip of lawn stays outside the fence
+    const hx = ox + 14, hy = oy + 15, hw = o.hw, hd = 44, WALL_H = BASE + WH, ROOF_H = 16, wins = [], st = [];
     const stage = (z = 0) => { const g = group(); g.classList.add('round'); st.push({ g, z }); return g; };
     const g0 = stage(); box(g0, hx - 3, hy - 3, 0, hw + 6, hd + 6, .8, { ...STONE, top: '#D9D3C6' }); box(g0, hx - .6, hy - .6, .8, hw + 1.2, hd + 1.2, BASE - .8, STONE);
     const g1 = stage(BASE); const walls = box(g1, hx, hy, 0, hw, hd, WH, WALL);
@@ -242,14 +243,14 @@ export function mountHeroScene(root) {
     const PIL = { top: '#E4DCCB', front: 'repeating-linear-gradient(180deg, #CFC4AE 0 2.6px, #B9AD95 2.6px 3px)', back: '#C9BEA8', left: '#C2B69F', right: '#ADA08A', noLine: true };
     const CAP = { top: '#F1ECE1', front: '#D9D1C0', back: '#D9D1C0', left: '#D9D1C0', right: '#C4BBA8', noLine: true };
     const LAN = { top: '#2E3440', front: 'linear-gradient(180deg, #2E3440 0 20%, #FFE7A6 20% 80%, #2E3440 80%)', back: '#FFE7A6', left: '#FFE7A6', right: '#F3D58A', noLine: true };
-    const gy = oy + SD - 4.2;
+    const gy = oy + SD - FI - 2.2;
     [gate - 5.2, gate + 10.2].forEach(px => { box(g4, px, gy, 0, 3.4, 3.4, 9, PIL); box(g4, px - .5, gy - .5, 9, 4.4, 4.4, 1, CAP); box(g4, px + .7, gy + .7, 10, 2, 2, 2.6, LAN); });
     const GATE = { top: '#9C6B45', front: 'repeating-linear-gradient(90deg, #8A5A3B 0 1px, #A8774F 1px 1.9px)', back: 'repeating-linear-gradient(90deg, #8A5A3B 0 1px, #A8774F 1px 1.9px)', left: '#734A30', right: '#734A30', noLine: true };
     [[gate - 1.8, 1], [gate + 10.2, -1]].forEach(([hx0, sgn]) => { const leaf = div('g', { transform: `translate3d(${hx0}px, ${gy + 1.5}px, 0) rotateZ(${sgn * -68}deg)`, transformOrigin: '0 0' }, g4);
       box(leaf, sgn > 0 ? 0 : -6.2, -.3, .6, 6.2, .6, 6.2, GATE); });                     // gate leaves, swung open inward
     box(g4, gate + 15.5, gy + .6, 0, .8, .8, 6.5, { top: '#3A4556', front: '#2A3442', back: '#2A3442', left: '#2A3442', right: '#1E2733', noLine: true });   // mailbox post
     box(g4, gate + 14.4, gy - .4, 6.5, 3, 2.8, 2.4, { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true });
-    fence(g4, ox + 2, oy + 2, SW - 4, SD - 4, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
+    fence(g4, ox + FI, oy + FI, SW - 2 * FI, SD - 2 * FI, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => bill(x, y, 0, SVG.tree(17)));   // trunk + canopy in one drawing
     const H = { st, wins, door, greens: [...greens, ...trees, ...flowers], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
@@ -284,8 +285,8 @@ export function mountHeroScene(root) {
     }
     return H;
   }
-  const cpX = sx + 10 + 82 + 7, cpW = SW - 99 - 7;
-  const HM = countryHouse(sx, sy, { hw: 82, carport: true, cpX, cpW });
+  const cpX = sx + 14 + 76 + 10, cpW = SW - 100 - 8;
+  const HM = countryHouse(sx, sy, { hw: 76, carport: true, cpX, cpW });
   // the family and pets walk along routes on the front yard (ground coordinates); they appear during the build
   const yard = { gx: HM.gate + 3.5, door: HM.hy + HM.hd + 9, front: sy + SD - 9, l: HM.hx + 6, r: HM.hx + HM.hw - 6 };
   // Script (what each one does; they walk only to get somewhere, then stay):
