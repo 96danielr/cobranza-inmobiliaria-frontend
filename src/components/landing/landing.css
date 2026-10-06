@@ -471,3 +471,13 @@ body:has(.landing)::before { display: none; }
 @media (max-width: 370px) { .landing .hero .ctas .btn svg { display: none; } .landing .hero .ctas .btn { font-size: 13px; } }
 .landing .bencard .cotas.grid4 .ct-text .num { margin-top: 4px; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.1; letter-spacing: -.02em; }
 .landing .bencard .cotas.grid4 .ct-text .lbl { margin-top: 0; }
+/* dark buttons: on hover a yellow wave rises from the bottom (rippling crest) and fills the button; the label turns ink */
+.landing .btn.primary { position: relative; overflow: hidden; isolation: isolate; transition: transform .2s ease, color .3s ease .12s, box-shadow .3s ease; }
+.landing .btn.primary:hover, .landing .btn.primary:focus-visible { background: var(--ink); color: var(--ink); box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 10px 24px -10px rgba(227,178,60,.6); }
+/* the wave layer is the button height + 10px of crest; it starts below the button and ends with the crest above it */
+.landing .btn.primary::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; top: 100%; height: calc(100% + 10px);
+  background: radial-gradient(12px 6px at 50% 100%, #E3B23C 97%, transparent 100%) 0 0 / 24px 6px repeat-x, linear-gradient(#E3B23C, #E3B23C) 0 6px / 100% 100% no-repeat;
+  transition: top .5s cubic-bezier(.3,.7,.3,1); animation: btn-wave .9s linear infinite; }
+.landing .btn.primary:hover::before, .landing .btn.primary:focus-visible::before { top: -10px; }
+@keyframes btn-wave { to { background-position: 24px 0, 0 6px; } }
+@media (prefers-reduced-motion: reduce) { .landing .btn.primary::before { transition: none; animation: none; } }
