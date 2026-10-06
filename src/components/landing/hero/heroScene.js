@@ -315,7 +315,7 @@ export function mountHeroScene(root) {
   const actorOf = (svg, w, steps, speed, at) => { const el = actor(steps[0][1], steps[0][2], svg, w); return { el, b: el.parentElement, fig: el.querySelector('svg'), steps, speed, at, x0: steps[0][1], y0: steps[0][2] }; };
   const P = (dx, dy) => [yard.gx + dx, yard.door + dy];
   const actors = [
-    actorOf(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 3.49,
+    actorOf(SVG.person('#F7F5F0', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#DCD8CF' }), 3.49,
       [['at', ...P(0, 34)], ['walk', ...P(0, 18)], ['face', -1], ['wait', 99999]], 7, 'buyer'),
     actorOf(SVG.dog('#8A5A3B'), 4.28, [['at', ...P(-2, 38)], ['walk', ...P(-9, 20)], ['face', 1], ['wait', 99999]], 11, 'dog'),
     actorOf(SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', pantsB: '#3A4456', skin: '#EAC2A0', shirtB: '#A9532F', belt: '#3A2A20' }), 3.29,
