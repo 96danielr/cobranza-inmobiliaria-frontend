@@ -432,12 +432,13 @@ export function mountHeroScene(root) {
   LOTS.push({ key: 'site', el: site, pin: sitePin, fill: addFill(site), start: 250, done: T0, st: -1 });
   const SITE2_DONE = T0 + 3.4 * STEP;                                 // the second large lot finishes paying, then its house goes up
   LOTS.push({ key: 'site2', el: site2, pin: site2Pin, fill: addFill(site2), start: T0 + .6 * STEP, done: SITE2_DONE, st: -1 });
-  let recaudo = 0, lastPct = '', soldN = 0;                          // soldN: lots that have turned green in this cycle
+  let recaudo = 0, lastPct = '', soldN = 0;
   const CYCLE = T0 + BUILD_DELAY + (NS - 1) * STEP + STEP * .45 + DUR + 6800;   // build, then ~5 s of the house being lived in
   const easeOut = t => 1 - Math.pow(1 - t, 3), clamp = v => Math.min(Math.max(v, 0), 1);
   const backOut = t => { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
   const easeIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const stage = $('ox');
+  const toast = document.createElement('div'); toast.className = 'sold-toast'; toast.innerHTML = '<i>✓</i><span></span>'; stage.appendChild(toast);                          // soldN: lots that have turned green in this cycle
   const listen = (type, fn) => stage.addEventListener(type, fn, { signal: ac.signal });   // removed by ac.abort() in the cleanup
   const wrap = $('oxw');
   const fitStage = () => { const w = stage.clientWidth || 800, mobile = window.innerWidth < 760 || w < 420;   // layout follows the viewport
@@ -516,9 +517,9 @@ export function mountHeroScene(root) {
     // bar = average collection across all lots; turns green when the whole portfolio is collected
     paidS += (recaudo - paidS) * .12;
     soldN = LOTS.filter(L => L.st === 2).length;                   // lots that are green right now
-    const pct = `RECAUDO ${Math.round(recaudo * 100)} %` + (soldN ? `|Lote ${soldN} vendido` : '');
-    if (pct !== lastPct) { lastPct = pct; const [a, b] = pct.split('|');
-      [lblN, n2].forEach(el => { el.textContent = a; if (b) { const sp = document.createElement('span'); sp.className = 'sold'; sp.textContent = b; el.appendChild(sp); } }); }
+    const pct = `RECAUDO ${Math.round(recaudo * 100)} %`; if (pct !== lastPct) { lastPct = pct; lblN.textContent = pct; n2.textContent = pct; }
+    if (soldN !== toast._n) { toast._n = soldN;                       // big flat badge: "Lote n vendido", pops each time a lot turns green
+      toast.classList.remove('pop'); if (soldN) { toast.lastChild.textContent = `Lote ${soldN} vendido`; void toast.offsetWidth; toast.classList.add('pop'); } }
     put(barG, 'transform', `translate3d(14px, ${BY}px, 0) scale3d(${Math.max(paidS * lenK, .002).toFixed(3)},1,1)`);
     const isDone = t > endT;
     if (isDone !== green) { green = isDone; barColor(isDone ? BAR_G : BAR_Y); fill2.classList.toggle('done', isDone); }
