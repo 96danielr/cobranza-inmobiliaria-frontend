@@ -10,17 +10,19 @@ export function mountHeroScene(root) {
   let alive = true; const observers = [], timers = new Set(); const ac = new AbortController();
   const later = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
   const CAM_Z = 22, CAM_X = 56;                                  // rest pose: scene rotation and camera tilt
-  const LW = 64, LD = 60, GAP = 9, O = 12, PW = 380, PH = 300;
-  const lotXY = (c, r) => [O + c * (LW + GAP), O + r * (LD + GAP)];
+  // grid of columns 1-4 and rows 1-3 (the old left column and top row were removed); lotXY keeps the original indices
+  const LW = 64, LD = 60, GAP = 9, O = 12, PW = 2 * O + 4 * LW + 3 * GAP, PH = 2 * O + 3 * LD + 2 * GAP + 9;
+  const lotXY = (c, r) => [O + (c - 1) * (LW + GAP), O + (r - 1) * (LD + GAP)];
   const div = (cls, css, parent = pl) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, css); parent.appendChild(d); return d; };
   // lots
-  const sold = ['0,0', '3,0', '4,0', '0,3', '2,3', '3,3'], lotQueue = [];
-  for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) {
+  const sold = ['1,3', '2,3', '3,3'], lotQueue = [];
+  for (let r = 1; r < 4; r++) for (let c = 1; c < 5; c++) {
     if ((c >= 1 && c <= 4) && (r === 1 || r === 2) && c !== 0) continue;   // two large lots: the centre one and the right one
     const [x, y] = lotXY(c, r), isSold = sold.includes(c + ',' + r);
     lotQueue.push([x, y, isSold, c + ',' + r]);
   }
   const [sx, sy] = lotXY(1, 1), SW = LW * 2 + GAP, SD = LD * 2 + GAP;
+  Object.assign(pl.style, { width: PW + 'px', height: PH + 'px', marginLeft: (-PW / 2) + 'px', marginTop: (-PH / 2) + 'px' });   // plane matches the grid
   const site = div('site', { left: sx + 'px', top: sy + 'px', width: SW + 'px', height: SD + 'px' });
   const [s2x, s2y] = lotXY(3, 1);
   const site2 = div('site', { left: s2x + 'px', top: s2y + 'px', width: SW + 'px', height: SD + 'px' });
@@ -89,7 +91,7 @@ export function mountHeroScene(root) {
   const lotEl = {};
   lotQueue.forEach(([x, y, s, key]) => { lotEl[key] = div('plan ' + (s ? 'sold' : 'free'), { left: x + 'px', top: y + 'px', width: LW + 'px', height: LD + 'px' }); });
   // each sold lot turns green when its buyer is up to date: one lot per step, the last step closes two
-  const PAY_ORDER = ['0,0', '3,0', '4,0', '0,3', '2,3', '3,3'], PAY_STEP = [2, 3, 3, 5, 6, 6];
+  const PAY_ORDER = ['1,3', '2,3', '3,3'], PAY_STEP = [3, 5, 6];
   const PIN = '<div class="pin p1"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#E3B23C" stroke="#fff" stroke-width="1.6"/><text x="10" y="14.3" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="Inter, system-ui, sans-serif">&#36;</text></svg><i></i></div>'
     + '<div class="pin p2"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#0FA37F" stroke="#fff" stroke-width="1.6"/><path d="M5.9 10.3l2.7 2.7 5.5-5.9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></div>';
   const pins = PAY_ORDER.map(key => { const [c, r] = key.split(',').map(Number), [x, y] = lotXY(c, r);
@@ -264,7 +266,7 @@ export function mountHeroScene(root) {
       box(leaf, sgn > 0 ? 0 : -6.2, -.3, .6, 6.2, .6, 6.2, GATE); });                     // gate leaves, swung open inward
     // rural mailbox outside the fence, beside the gate: a wooden post with a rounded box and a red flag (1.1 m tall)
     bill(gate + 16.5, gy + 5.5, 0, SVG.mailbox(4.4));
-    fence(g4, ox + FI, oy + FI, SW - 2 * FI, SD - 2 * FI, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
+    fence(g4, ox + FI, oy + FI, SW - 2 * FI, SD - 2 * FI, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[gate + 13.6, o.cpX + o.cpW]] : [])]);   // front is open from the gate to the parking spot
     const hammockEl = bill(hx + hw - 18, hy + hd + 17, 0, SVG.hammock(14));   // next to the bush, same scale as the people
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => bill(x, y, 0, SVG.tree(17)));   // trunk + canopy in one drawing
@@ -273,9 +275,6 @@ export function mountHeroScene(root) {
       const cg = stage(); const DY = hy + 2, PD = 44, DECK = 4;                          // a long lap pool (about 10 m)
       const CAR_Y = DY + PD + 14;                                                    // the car parks right after the pool deck
       div('plan gravel', { left: (o.cpX - DECK) + 'px', top: (DY - 1) + 'px', width: (o.cpW + DECK) + 'px', height: (CAR_Y - DY - 2) + 'px' }, cg);   // pool deck / leisure area
-      // rural driveway: two worn wheel tracks (0.4 m wide, 1.5 m apart) from the parking spot out to the street
-      { const tw = 2.8, gauge = 1.5 * M, tx = o.cpX + o.cpW / 2 - gauge / 2 - tw / 2;
-        [tx, tx + gauge].forEach(x0 => div('plan track', { left: x0 + 'px', top: CAR_Y + 'px', width: tw + 'px', height: (oy + SD - CAR_Y) + 'px' }, cg)); }
       // two sun loungers (0.7 x 1.9 m): a white frame with legs, a blue cushion, and a raised backrest facing the pool
       const LF = { top: '#FFFFFF', front: '#E4E1D9', back: '#E4E1D9', left: '#DCD8CE', right: '#C9C4B8', noLine: true };
       const CUSH = { top: '#7FB6D9', front: '#5E97BD', back: '#5E97BD', left: '#6AA3C9', right: '#4F86AB', noLine: true };
@@ -444,10 +443,10 @@ export function mountHeroScene(root) {
   const wrap = $('oxw');
   const fitStage = () => { const w = stage.clientWidth || 800, mobile = window.innerWidth < 760 || w < 420;   // layout follows the viewport
     wrap.classList.toggle('mobile', mobile);
-    pl.style.setProperty('--s', Math.min(1.4, w / 560).toFixed(3));
+    pl.style.setProperty('--s', Math.min(1.75, w / 450).toFixed(3));
     pl.style.top = mobile ? '28%' : '';
     if (mobile) { pool2.forEach(el => { if (el._slot <= 1) fit2(el); }); layout2(); }                                   // lift the model to leave room for the 2D HUD
-    stage.style.height = Math.round(mobile ? 20 + w * .62 + 150 : Math.min(620, 300 + w * .42)) + 'px'; };
+    stage.style.height = Math.round(mobile ? 20 + w * .5 + 150 : Math.min(620, 300 + w * .42)) + 'px'; };
   fitStage(); if (window.ResizeObserver) { const ro = new ResizeObserver(fitStage); ro.observe(stage); observers.push(ro); }
   let onScreen = true; if (window.IntersectionObserver) { const io = new IntersectionObserver(es => { const was = onScreen; onScreen = es[0].isIntersecting; if (onScreen && !was && alive) requestAnimationFrame(frame); }); /* the loop stops off screen and restarts on return */ io.observe(stage); observers.push(io); }
   let mx = 0, my = 0, rz = 0, ryv = 0, paidS = 0;
