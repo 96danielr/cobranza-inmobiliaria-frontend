@@ -113,8 +113,12 @@ function hexCabin(m, cx, cy, r, h, rh) {
   const ap = r * Math.cos(Math.PI / 6), L = Math.hypot(ap + 1.5, rh), tilt = Math.atan2(rh, ap + 1.5) * 180 / Math.PI;
   const POST = { top: '#8A5A3B', front: '#7A4F33', back: '#7A4F33', left: '#8A5A3B', right: '#6B4227', noLine: true };
   m.div('mhexbase', cx - r - 2, cy - r - 2, 2 * r + 4, 2 * r + 4);
-  box(m, cx - 3, cy - 3, 0, 6, 6, 4, { top: '#C99A6B', front: '#A9794F', back: '#A9794F', left: '#B5865A', right: '#93673F', noLine: true });   // round-ish table
-  [[-6.5, -1], [4, -1]].forEach(([dx, dy]) => box(m, cx + dx, cy + dy, 0, 2.5, 2.5, 2.2, POST));                                            // stools
+  // brick barbecue (fogón) with a grill on top and glowing coals
+  const BRICK = 'repeating-linear-gradient(0deg, rgba(255,255,255,.35) 0 .4px, transparent .4px 1.6px), repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 .35px, transparent .35px 2.4px), #B35A3A';
+  box(m, cx - 4, cy - 2.5, 0, 8, 5, 5, { top: '#8E4A2A', front: BRICK, back: BRICK, left: BRICK, right: BRICK, noLine: true });
+  const grill = m.div('mgrill', cx - 3.4, cy - 2, 6.8, 4); grill.style.transform = 'translateZ(5.1px)';
+  box(m, cx + 2, cy - 2.3, 5, 1.4, 1.4, 5, { top: '#3A4352', front: '#4A5466', back: '#4A5466', left: '#4A5466', right: '#3A4352', noLine: true });   // small chimney
+  [[-7, 4], [5, 4]].forEach(([dx, dy]) => box(m, cx + dx, cy + dy, 0, 2.5, 2.5, 2.2, POST));                                            // stools
   for (let k = 0; k < 6; k++) { const a = (k * 60) * Math.PI / 180; box(m, cx + r * Math.cos(a) - .7, cy + r * Math.sin(a) - .7, 0, 1.4, 1.4, h, POST); }
   for (let k = 0; k < 6; k++) {
     const g = document.createElement('div'); g.className = 'g'; g.style.transform = `translate3d(${cx}px, ${cy}px, 0) rotateZ(${k * 60 + 30}deg)`; m.pl.appendChild(g);
@@ -133,26 +137,33 @@ V.home = host => { const m = mk(host, 170, 150, { zoom: 1.02 }); const LX = 14, 
   const main = cottage(m, LX + 34, LY + 18, 72, 30, 14, 11);
   const wing = cottage(m, 0, 0, 40, 28, 14, 11);
   main.house.style.visibility = 'visible';
-  { const d = main.body._front.querySelector('.mdoor'); Object.assign(d.style, { left: (72 / 2 - 4.5) + 'px', width: '9px', height: '10px' }); }   // wider main door
+  { const d = main.body._front.querySelector('.mdoor'); Object.assign(d.style, { left: (72 / 2 - 4.5) + 'px', width: '9px', height: '10px' }); const k = document.createElement('i'); k.className = 'mknob'; d.appendChild(k); }   // wider main door with a handle
   // two large windows on the main facade, left of the door (the right part is behind the wing)
   main.body._front.querySelectorAll('.mwin').forEach(w => w.remove());
   [5, 19.5].forEach(l => { const w = document.createElement('i'); w.className = 'mwin'; Object.assign(w.style, { left: l + 'px', top: '3px', width: '11px', height: '8px' }); main.body._front.appendChild(w); });
   wing.house.style.visibility = 'visible'; wing.house.style.transform = `translate3d(${LX + 34 + 72 - 28}px, ${LY + 18 + 30 + 34}px, 0) rotateZ(-90deg)`;   // comes forward from the right end
-  // garage in the gable end of the side wing (it faces the front of the lot): open door, dark inside, a white car half out
-  { const GY = LY + 82, X0 = LX + 87, X1 = LX + 97, GH = 9.5;   // face plane y, opening span along x, opening height
-    wing.body.children[2].style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 19px, ${GH}px 19px, ${GH}px 9px, 0 9px)`;   // notch from the floor up
-    const DK = { top: '#2A3240', front: '#2A3240', back: '#2A3240', left: '#2A3240', right: '#384252', noLine: true };
-    box(m, X0, GY - 17, 1.6, X1 - X0, 17, .3, { ...DK, top: '#3A4352' });                                     // garage floor
-    box(m, X0, GY - 18, 1.6, X1 - X0, 1, GH, DK);                                                               // back wall
-    box(m, X0, GY - 9, 1.6 + GH - .5, X1 - X0, 8.5, .5, { top: '#E7E2D6', front: '#D6CFBF', back: '#D6CFBF', left: '#D6CFBF', right: '#C9C1AF', noLine: true });   // door rolled up
-    m.div('mdrive2', X0, GY, X1 - X0, LY + LD - GY - 1);                                                        // concrete apron to the lot front
-    const CW = { top: '#FFFFFF', front: '#ECEAE5', back: '#ECEAE5', left: '#F4F2EE', right: '#DDDAD2', noLine: true };
-    const GL = { top: 'linear-gradient(135deg, #CFE0F0, #8FB0D2 55%, #E8F1FA 57%, #8FB0D2 62%)', front: '#7E9EC0', back: '#7E9EC0', left: '#8FB0D2', right: '#6584A6', noLine: true };
-    const WH = { top: '#1F2937', front: '#111827', back: '#111827', left: '#111827', right: '#0B1220', noLine: true };
-    const cx0 = X0 + .7, cy0 = GY - 11;   // car 8.6 wide (x), 19 long (y): its nose sticks out of the garage toward the street
-    [[-.4, 2], [7.8, 2], [-.4, 14], [7.8, 14]].forEach(([dx, dy]) => box(m, cx0 + dx, cy0 + dy, .4, 1.2, 3.4, 2.6, WH));
-    box(m, cx0, cy0, 1.4, 8.6, 19, 3.4, CW); box(m, cx0 + .8, cy0 + 5, 4.8, 7, 8.5, 2.6, GL); box(m, cx0 + 1, cy0 + 5.3, 7.4, 6.6, 7.9, .5, CW);
-    const lamps = document.createElement('i'); lamps.className = 'mlamps'; m.pl.lastChild._front.appendChild(lamps);
+  // garage in the gable end of the side wing (faces the front of the lot): a wide open doorway, the door rolled up inside,
+  // and a white car parked nose-out
+  { const GY = LY + 82, X0 = LX + 82, X1 = LX + 102, GH = 11;   // face plane y, opening span along x, opening height
+    wing.body.children[2].style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 24px, ${GH}px 24px, ${GH}px 4px, 0 4px)`;   // wide notch from the floor up
+    const DK = { top: '#232B38', front: '#232B38', back: '#232B38', left: '#2E3746', right: '#2E3746', noLine: true };
+    box(m, X0, GY - 20, 1.6, X1 - X0, 20, .3, { ...DK, top: '#3A4352' });                                      // garage floor
+    box(m, X0, GY - 21, 1.6, X1 - X0, 1, GH, DK);                                                                // back wall
+    box(m, X0 - .5, GY - 20, 1.6, .5, 20, GH, DK); box(m, X1, GY - 20, 1.6, .5, 20, GH, DK);                     // inner side walls
+    box(m, X0, GY - 10, 1.6 + GH - .7, X1 - X0, 9.5, .6, { top: '#F1EDE4', front: 'repeating-linear-gradient(0deg, #D6CFBF 0 .5px, #E7E2D6 .5px 1.8px)', back: '#D6CFBF', left: '#D6CFBF', right: '#C9C1AF', noLine: true });   // sectional door rolled up under the ceiling
+    box(m, X0 - 1, GY, 1.6 + GH, X1 - X0 + 2, .7, 1.1, { top: '#FBF8F1', front: '#FFFFFF', back: '#E8DFCC', left: '#E8DFCC', right: '#DCCDB2', noLine: true });   // white lintel over the opening
+    m.div('mdrive2', X0, GY, X1 - X0, LY + LD - GY - 1);                                                          // concrete apron to the lot front
+    // white car (1.8 x 4.3 m): low body, cabin with glass all round, black wheels, headlights and grille facing out
+    const WHT = { top: '#FFFFFF', front: '#EFEDE8', back: '#E3E0D9', left: '#F4F2EE', right: '#D9D5CC', noLine: true };
+    const GLS = { top: '#FFFFFF', front: 'linear-gradient(170deg, #E9F2FA, #8FB0D2 45%, #6E90B5)', back: '#6E90B5', left: 'linear-gradient(100deg, #A9C4DE, #7E9EC0)', right: '#6584A6', noLine: true };
+    const TYR = { top: '#1F2937', front: '#111827', back: '#111827', left: '#1F2937', right: '#0B1220', noLine: true };
+    const cw = 9, cl = 18, cx0 = X0 + (X1 - X0 - cw) / 2, cy0 = GY - 12;
+    [[-.5, 2.6], [cw - .9, 2.6], [-.5, cl - 6], [cw - .9, cl - 6]].forEach(([dx, dy]) => box(m, cx0 + dx, cy0 + dy, .2, 1.4, 3.4, 3, TYR));
+    const body = box(m, cx0, cy0, 1.2, cw, cl, 3.4, WHT);
+    box(m, cx0 + .7, cy0 + 4.5, 4.6, cw - 1.4, 8.5, 2.8, GLS);                                                   // glass cabin
+    box(m, cx0 + .9, cy0 + 4.9, 7.4, cw - 1.8, 7.7, .45, WHT);                                                  // roof
+    box(m, cx0 - .3, cy0 + cl - .4, 1.2, cw + .6, .6, 1.1, TYR);                                                // front bumper
+    const face = document.createElement('i'); face.className = 'mcarface'; body._front.appendChild(face);   // headlights + grille
   }
   // gravel path with flagstones from the door to the front of the lot
   m.div('mpath', LX + 64, LY + 48, 12, LD - 48);

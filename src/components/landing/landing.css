@@ -516,3 +516,6 @@ body:has(.landing)::before { display: none; }
 :is(.landing, .auth) .mx .mtree2 { position: absolute; left: -10px; bottom: 0; width: 20px; height: auto; display: block; }
 :is(.landing, .auth) .mx .mdrive2 { position: absolute; background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(11,27,51,.08) 7px 7.5px), #E9E5DC; box-shadow: inset 0 0 0 .5px rgba(11,27,51,.15); }
 :is(.landing, .auth) .mx .mlamps { position: absolute; left: 0; right: 0; top: .6px; height: 1.2px; background: linear-gradient(90deg, #FFF4C8 0 20%, transparent 20% 80%, #FFF4C8 80%); }
+:is(.landing, .auth) .mx .mcarface { position: absolute; inset: 0; background: radial-gradient(circle at 16% 40%, #FFF4C8 0 9%, transparent 11%), radial-gradient(circle at 84% 40%, #FFF4C8 0 9%, transparent 11%), linear-gradient(90deg, transparent 32%, #3A4352 32% 68%, transparent 68%) 0 55% / 100% 30% no-repeat; }
+:is(.landing, .auth) .mx .mknob { position: absolute; right: 1.4px; top: 4.8px; width: 1.4px; height: 1.4px; border-radius: 50%; background: #E8C66A; box-shadow: 0 0 0 .3px #8A6A20; }
+:is(.landing, .auth) .mx .mgrill { position: absolute; border-radius: .6px; background: repeating-linear-gradient(90deg, #2A3240 0 .5px, transparent .5px 1.2px), radial-gradient(ellipse at 50% 50%, #FFB25A 0 25%, #E0602F 55%, #6B2A14 100%); box-shadow: 0 0 4px 1px rgba(255,140,60,.45); }
