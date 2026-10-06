@@ -7,7 +7,8 @@ export function mountHeroScene(root) {
   const pl = $('pl'), scene = pl && pl.parentElement;
   if (!pl || pl.dataset.init) return () => {};
   pl.dataset.init = '1';
-  let alive = true; const observers = [];
+  let alive = true; const observers = [], timers = new Set(); const ac = new AbortController();
+  const later = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; };
   const LW = 64, LD = 60, GAP = 9, O = 12, PW = 380, PH = 300;
   const lotXY = (c, r) => [O + c * (LW + GAP), O + r * (LD + GAP)];
   const div = (cls, css, parent = pl) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, css); parent.appendChild(d); return d; };
@@ -210,7 +211,7 @@ export function mountHeroScene(root) {
     EDGES.forEach((E, i) => { const v = readAngle(i, a, cp); if (v < bestV) { best = i; bestV = v; } });
     if (best === edge || bestV > cur - 8) return;
     edgeBusy = true; hud.classList.add('out');
-    setTimeout(() => { edge = best; hud.style.transform = EDGES[best].tr; fitTrack(); barG._c = null; requestAnimationFrame(() => { hud.classList.remove('out'); edgeBusy = false; }); }, 130); }
+    later(() => { edge = best; hud.style.transform = EDGES[best].tr; fitTrack(); barG._c = null; requestAnimationFrame(() => { hud.classList.remove('out'); edgeBusy = false; }); }, 130); }
   const lines = $('lines'), n2 = $('n2'), fill2 = $('fill2');
   const pool2 = [0, 1, 2, 3].map(() => { const el = document.createElement('div'); el.className = 'ln'; el.style.opacity = 0; el._slot = 9; lines.appendChild(el); return el; });
   // Stack layout from real heights: the current line (slot 0) sits on top; slot 1 starts right below the
@@ -256,6 +257,7 @@ export function mountHeroScene(root) {
   const easeOut = t => 1 - Math.pow(1 - t, 3), clamp = v => Math.min(Math.max(v, 0), 1);
   const easeIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const stage = $('ox');
+  const listen = (type, fn) => stage.addEventListener(type, fn, { signal: ac.signal });   // removed by ac.abort() in the cleanup
   const wrap = $('oxw');
   const fitStage = () => { const w = stage.clientWidth || 800, mobile = window.innerWidth < 760 || w < 420;   // layout follows the viewport
     wrap.classList.toggle('mobile', mobile);
@@ -266,21 +268,21 @@ export function mountHeroScene(root) {
   fitStage(); if (window.ResizeObserver) { const ro = new ResizeObserver(fitStage); ro.observe(stage); observers.push(ro); }
   let onScreen = true; if (window.IntersectionObserver) { const io = new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }); io.observe(stage); observers.push(io); }
   let mx = 0, my = 0, rz = 0, ryv = 0, paidS = 0;
-  stage.addEventListener('mousemove', e => { const r = stage.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - .5; my = (e.clientY - r.top) / r.height - .5; });
-  stage.addEventListener('mouseleave', () => { mx = 0; my = 0; });
+  listen('mousemove', e => { const r = stage.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - .5; my = (e.clientY - r.top) / r.height - .5; });
+  listen('mouseleave', () => { mx = 0; my = 0; });
   let dz = 0, dx = 0, vz = 0, vx = 0, dragging = false, lastX = 0, lastY = 0, lastMove = 0;
-  stage.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; vz = vx = 0; stage.setPointerCapture(e.pointerId); stage.classList.add('dragging'); });
-  stage.addEventListener('pointermove', e => { if (!dragging) return;
+  listen('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; vz = vx = 0; stage.setPointerCapture(e.pointerId); stage.classList.add('dragging'); });
+  listen('pointermove', e => { if (!dragging) return;
     const ddx = e.clientX - lastX, ddy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; lastMove = performance.now();
     vz = -ddx * .35; vx = -ddy * .2; dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); });
   const endDrag = () => { dragging = false; stage.classList.remove('dragging'); lastMove = performance.now(); };
-  stage.addEventListener('pointerup', endDrag); stage.addEventListener('pointercancel', endDrag);
+  listen('pointerup', endDrag); listen('pointercancel', endDrag);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const start = performance.now();
   function frame(now) {
     if (!alive) return;
     if (!onScreen) { requestAnimationFrame(frame); return; }      // paused while off screen
-    const t = reduce ? 12500 : (now - start) % CYCLE;
+    const t = reduce ? CYCLE - 2100 : (now - start) % CYCLE;   // reduced motion: the finished scene (crane gone, 100 %)
     let built = 0, paid = 0, top = 0;
     levels.forEach((L, i) => {
       const t0 = T0 + BUILD_DELAY + Math.floor(i / 2) * STEP + (i % 2) * STEP * .45, e = easeOut(clamp((t - t0) / DUR));   // two floors per step, after the sale
@@ -342,7 +344,7 @@ export function mountHeroScene(root) {
   }
   requestAnimationFrame(frame);
   return () => {
-    alive = false; observers.forEach(o => o.disconnect());
+    alive = false; ac.abort(); timers.forEach(clearTimeout); observers.forEach(o => o.disconnect());
     // empty the generated nodes so a remount (React Strict Mode) starts clean
     pl.replaceChildren(); $('lines').replaceChildren(); delete pl.dataset.init;
   };

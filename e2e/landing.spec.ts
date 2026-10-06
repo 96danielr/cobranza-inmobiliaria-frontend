@@ -98,3 +98,68 @@ test('leaving the landing does not restyle the app', async ({ page }) => {
   const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
   expect(bodyBg).not.toBe('rgb(242, 240, 233)')
 })
+
+// ---- final review fixes ----
+test('reduced motion shows the finished hero', async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' })
+  const page = await ctx.newPage()
+  await page.goto('/')
+  await page.waitForTimeout(1500)
+  await expect(page.locator('.landing #n2')).toHaveText(/RECAUDO 100/)
+  await ctx.close()
+})
+
+// Next always uses localhost for metadata URLs in dev, so this checks the production build (run `npm run build` first).
+test('og:image is an absolute operix.com.co URL in the production build', () => {
+  const built = '.next/server/app/index.html'
+  test.skip(!fs.existsSync(built), 'needs npm run build')
+  const html = fs.readFileSync(built, 'utf8')
+  expect(html).toMatch(/<meta property="og:image" content="https:\/\/operix\.com\.co\/opengraph-image/)
+})
+
+test('hero copy is visible before JavaScript runs', async ({ page }) => {
+  await page.route(/\/_next\/static\/chunks\/.*\.js/, r => r.abort())
+  await page.goto('/')
+  await page.waitForTimeout(500)
+  expect(await page.locator('.landing .hero h1').evaluate(el => getComputedStyle(el).opacity)).toBe('1')
+  expect(await page.locator('.landing .hero .ctas').evaluate(el => getComputedStyle(el).opacity)).toBe('1')
+})
+
+test('login menu is keyboard friendly', async ({ page }) => {
+  await page.goto('/')
+  const button = page.locator('.landing .menu > button')
+  await button.focus(); await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab')
+  expect(await button.evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none')
+  expect(await page.locator('.landing .menu .pop a').first().evaluate(el => getComputedStyle(el).visibility)).toBe('hidden')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.landing .menu')).toHaveClass(/open/)
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.landing .menu')).not.toHaveClass(/open/)
+  await expect(button).toBeFocused()
+})
+
+test('hero stage keeps a single set of pointer listeners after remounts', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __ox: Record<string, number> }
+    w.__ox = {}
+    const add = EventTarget.prototype.addEventListener, rem = EventTarget.prototype.removeEventListener
+    EventTarget.prototype.addEventListener = function (this: Element, t: string, ...a: unknown[]) {
+      if (this.id === 'ox') w.__ox[t] = (w.__ox[t] || 0) + 1
+      return add.call(this, t, ...(a as [EventListener]))
+    }
+    EventTarget.prototype.removeEventListener = function (this: Element, t: string, ...a: unknown[]) {
+      if (this.id === 'ox') w.__ox[t] = (w.__ox[t] || 0) - 1
+      return rem.call(this, t, ...(a as [EventListener]))
+    }
+  })
+  await page.goto('/')
+  await page.waitForTimeout(2000)
+  const counts = await page.evaluate(() => (window as unknown as { __ox: Record<string, number> }).__ox)
+  expect(counts.pointerdown).toBe(1)
+})
+
+test('header WhatsApp link has an accessible name on phones', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await expect(page.locator('.landing header').getByRole('link', { name: 'Hablar por WhatsApp' })).toBeVisible()
+})

@@ -382,3 +382,8 @@ html:has(.landing) {scroll-behavior: smooth;}
 /* the app paints a fixed tinted overlay on body::before; the landing keeps its own plain paper */
 body:has(.landing)::before { display: none; }
 @media (max-width: 1000px) { .landing .close2 .box .tx { padding: 32px 24px 8px; } }
+/* keyboard: visible focus everywhere, and the closed login menu is out of the tab order */
+.landing :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.landing .menu > button:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; border-radius: 6px; }
+.landing .menu .pop { visibility: hidden; }
+.landing .menu.open .pop { visibility: visible; }
