@@ -474,10 +474,10 @@ body:has(.landing)::before { display: none; }
 /* dark buttons: a light yellow fill rises from the bottom with one smooth travelling wave on its crest;
    idle buttons get a slow light sweep, and on hover they lift with a warm glow */
 .landing .btn.primary { position: relative; overflow: hidden; isolation: isolate; transition: transform .25s cubic-bezier(.3,.7,.3,1), color .3s ease .12s, box-shadow .3s ease; }
-.landing .btn.primary:hover, .landing .btn.primary:focus-visible { background: var(--ink); color: #fff; transform: translateY(-2px);
-  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 14px 30px -10px rgba(15,163,127,.6), 0 0 0 3px rgba(15,163,127,.22); }
+.landing .btn.primary:hover, .landing .btn.primary:focus-visible { background: var(--ink); color: var(--ink); transform: translateY(-2px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 14px 30px -12px rgba(15,163,127,.45), 0 0 0 1px rgba(15,163,127,.35); }
 .landing .btn.primary::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; top: 100%; height: calc(100% + 12px);
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 12' preserveAspectRatio='none'%3E%3Cpath d='M0 6C20 3 40 3 60 6S100 9 120 6V12H0z' fill='%230FA37F'/%3E%3C/svg%3E") 0 0 / 120px 12px repeat-x, linear-gradient(#0FA37F, #0FA37F) 0 11px / 100% 100% no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 12' preserveAspectRatio='none'%3E%3Cpath d='M0 6C20 3 40 3 60 6S100 9 120 6V12H0z' fill='%23CDEFDF'/%3E%3C/svg%3E") 0 0 / 120px 12px repeat-x, linear-gradient(#CDEFDF, #CDEFDF) 0 11px / 100% 100% no-repeat;
   transition: top .55s cubic-bezier(.3,.7,.3,1); animation: btn-wave 1.4s linear infinite; }
 .landing .btn.primary:hover::before, .landing .btn.primary:focus-visible::before { top: -12px; }
 @keyframes btn-wave { to { background-position: 120px 0, 0 11px; } }
