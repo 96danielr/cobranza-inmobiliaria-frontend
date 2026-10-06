@@ -9,7 +9,7 @@ export default function LegalDoc({ markdown }: { markdown: string }) {
     <section className="sec legal-sec">
       <div className="wrap">
         <article className="howcard legal-doc">
-          {showDraft && <p className="legal-draft">Borrador para revisión legal. Completa los datos entre corchetes en src/components/legal/company.ts.</p>}
+          {showDraft && <p className="legal-draft">Borrador legal</p>}
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
         </article>
       </div>

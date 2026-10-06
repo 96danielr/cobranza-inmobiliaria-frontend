@@ -72,7 +72,7 @@ export const landing = {
     ],
   },
   quote: {
-    text: '[Cita pendiente: pedir a Alfasur unas palabras sobre su experiencia con Operix]',
+    text: '[Testimonio de Alfasur]',
     pending: true,
     // Proposed wording to send to Alfasur. It is not their words until they approve it: shown only in
     // local development (with a "draft" tag); production keeps the placeholder until `approved` is true.
@@ -115,7 +115,7 @@ export const landing = {
     title: '¿Listo para transformar tu cobranza?',
     lead: 'Únete a las inmobiliarias que ya optimizan sus recaudos con nuestra plataforma.',
     email: null as string | null,
-    emailPending: '[correo comercial pendiente]',
+    emailPending: '[Correo comercial]',
     consent: 'Al escribirnos aceptas nuestra',
     consentLink: 'política de tratamiento de datos personales',
   },

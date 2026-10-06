@@ -458,3 +458,4 @@ body:has(.landing)::before { display: none; }
 .landing .close2 .consent a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 760px) { .landing .legal-doc { padding: 32px 22px; font-size: 15px; } .landing .legal-sec { padding-top: 96px; } }
 .landing #planes + .interlude { padding: 88px 0; } .landing .interlude + #contacto { padding-top: 0; }
+.landing .legal-draft { display: inline-block; padding: 6px 12px; border-radius: 99px; font-size: 12px; letter-spacing: .04em; }
