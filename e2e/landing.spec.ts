@@ -46,3 +46,27 @@ test('hero scene mounts once and runs', async ({ page }) => {
   await expect(page.locator('.landing #n2')).not.toHaveText('RECAUDO 0 %')
   expect(errors).toEqual([])
 })
+
+test('live lot reports and approves instalments, then moves to the next lot', async ({ page }) => {
+  test.setTimeout(40_000)
+  const errors = collectErrors(page)
+  await page.goto('/')
+  await page.locator('#como').scrollIntoViewIfNeeded()
+  const front = page.locator('.landing .lf[data-pos="0"]:not(.leave)')
+  await expect(front.locator('.lf-ev').first()).toContainText('Cuota 1 reportada', { timeout: 4000 })
+  await expect(front.locator('.lf-n')).toHaveText('1 de 6', { timeout: 4000 })
+  await expect(front.locator('.lf-lot')).toHaveText('Lote 7', { timeout: 20_000 })
+  await page.waitForTimeout(800); expect(await page.locator('.landing .lf[data-pos="0"]').count()).toBe(1)
+  expect(errors).toEqual([])
+})
+
+test('reduced motion shows the collected state', async ({ browser }) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' })
+  const page = await ctx.newPage()
+  const errors = collectErrors(page)
+  await page.goto('/')
+  await expect(page.locator('.landing .lf[data-pos="0"] .lf-n')).toHaveText('6 de 6')
+  await expect(page.locator('.landing .bc-st .num').first()).toHaveText('120+')
+  expect(errors).toEqual([])
+  await ctx.close()
+})
