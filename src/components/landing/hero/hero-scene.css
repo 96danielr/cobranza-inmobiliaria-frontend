@@ -239,7 +239,7 @@
 .landing .ox .bb.done.signed .p2 { transform: scale(0); opacity: 0; }
 .landing .ox .bb.done.signed .p3 { transform: scale(1); opacity: 1; }
 /* "VENDIDO" painted inside each paid lot, along its bottom (front) edge */
-.landing .ox .sold-tag { position: absolute; left: 0; right: 0; bottom: 3px; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .14em;
+.landing .ox .sold-tag { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .14em;
   color: #0B7A5F; opacity: 0; transform: translateY(3px); transition: opacity .5s ease .15s, transform .5s ease .15s; pointer-events: none; }
 .landing .ox .paid > .sold-tag, .landing .ox .site.paid > .sold-tag { opacity: .9; transform: none; }
-.landing .ox .site > .sold-tag { font-size: 11px; bottom: 4px; }
+.landing .ox .site > .sold-tag { font-size: 9px; bottom: 9px; left: auto; right: 10px; text-align: right; }   /* inside the fence line */   /* large lots: same size, bottom-right corner */
