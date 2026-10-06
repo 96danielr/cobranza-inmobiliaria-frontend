@@ -44,8 +44,11 @@ const V = {};
 V.secure = host => { const m = mk(host, 220, 170, { zoom: .68 });
   // 1) three data layers drop in and stack  2) a large padlock lands on top and its shackle closes (green)
   // 3) a ring pulses out over the stack, then the stack rests with a slow breathing motion
-  const LAY = { top: '#FBFAF6', front: '#E7E2D6', back: '#E7E2D6', left: '#DCD6C8', right: '#CFC8B8' };   // paper sheets with a thin ink outline, like the hero plan
-  const plates = [0, 1, 2].map(k => { const g = m.group(); m.box(g, 55, 40, 0, 110, 86, 7, k === 2 ? { ...LAY, top: '#FFFFFF' } : LAY); g._faces = [...g.querySelectorAll('.f')]; return g; });
+  // navy data layers on the dark panel; once the lock closes the panel turns white and the layers become paper sheets
+  const DARK = ['#1E3A63', '#14294A', '#14294A', '#14294A', '#0E1F3A'], DARK_TOP = '#2B4F84';
+  const LIGHT = ['#FBFAF6', '#E7E2D6', '#DCD6C8', '#CFC8B8', '#E7E2D6'], LIGHT_TOP = '#FFFFFF';   // top, back, left, right, front (face order)
+  const LAY = { top: DARK[0], front: DARK[4], back: DARK[1], left: DARK[2], right: DARK[3], noLine: true };
+  const plates = [0, 1, 2].map(k => { const g = m.group(); m.box(g, 55, 40, 0, 110, 86, 7, k === 2 ? { ...LAY, top: DARK_TOP } : LAY); g._faces = [...g.querySelectorAll('.f')]; return g; });
   const ring = m.div('sec-ring', 110 - 40, 83 - 40, 80, 80);
   const lk = m.div('bb', 110, 83, 0, 0);
   lk.innerHTML = '<div class="sec-lock"><svg viewBox="0 0 64 76" aria-hidden="true">'
@@ -62,6 +65,8 @@ V.secure = host => { const m = mk(host, 220, 170, { zoom: .68 });
     put(lock, 'opacity', land.toFixed(2));
     const close = clamp((t - 1900) / 360), b = close < 1 ? close * close : 1;   // shackle snaps down
     put(shk, 'transform', `translateY(${(-9 * (1 - b)).toFixed(2)}px)`);
+    if (plates._light !== close >= 1) { plates._light = close >= 1;   // swap the layer palette with the panel
+      plates.forEach((g, k) => g._faces.forEach((f, i) => { f.style.background = (plates._light ? (k === 2 && i === 0 ? LIGHT_TOP : LIGHT[i]) : (k === 2 && i === 0 ? DARK_TOP : DARK[i])); f.style.boxShadow = plates._light && i === 0 ? 'inset 0 0 0 .6px rgba(11,27,51,.25)' : ''; f.style.transition = 'background-color .9s ease'; })); }
     cls(lock, 'closed', close >= 1); if (host.parentElement) cls(host.parentElement, 'safe', close >= 1);   // the panel brightens once the data is locked
     const r = clamp((t - 2250) / 1100);
     put(ring, 'transform', `translateZ(${top + 1}px) scale(${(.4 + 1.3 * easeOut(r)).toFixed(3)})`);
