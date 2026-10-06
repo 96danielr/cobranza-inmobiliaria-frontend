@@ -45,7 +45,7 @@ V.secure = host => { const m = mk(host, 220, 170, { zoom: .68 });
   // 1) three data layers drop in and stack  2) a large padlock lands on top and its shackle closes (green)
   // 3) a ring pulses out over the stack, then the stack rests with a slow breathing motion
   // navy data layers on the dark panel; once the lock closes the panel turns white and the layers become paper sheets
-  const DARK = ['#1E3A63', '#14294A', '#14294A', '#14294A', '#0E1F3A'], DARK_TOP = '#2B4F84';
+  const DARK = ['#3A5F96', '#2A4B7C', '#2A4B7C', '#2A4B7C', '#203D68'], DARK_TOP = '#4A72AD';
   const LIGHT = ['#FBFAF6', '#E7E2D6', '#DCD6C8', '#CFC8B8', '#E7E2D6'], LIGHT_TOP = '#FFFFFF';   // top, back, left, right, front (face order)
   const LAY = { top: DARK[0], front: DARK[4], back: DARK[1], left: DARK[2], right: DARK[3], noLine: true };
   const plates = [0, 1, 2].map(k => { const g = m.group(); m.box(g, 55, 40, 0, 110, 86, 7, k === 2 ? { ...LAY, top: DARK_TOP } : LAY); g._faces = [...g.querySelectorAll('.f')]; return g; });
