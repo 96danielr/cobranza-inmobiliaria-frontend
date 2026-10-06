@@ -195,3 +195,7 @@
 .landing .ox .water { border-radius: 1.5px; background: repeating-linear-gradient(115deg, rgba(255,255,255,.0) 0 3px, rgba(255,255,255,.35) 3px 3.6px, rgba(255,255,255,0) 3.6px 7px), linear-gradient(135deg, #BDEBF5, #8BD6EC 60%, #6CC6E2); box-shadow: inset 0 0 0 1px rgba(20,90,130,.35), inset 1.5px 1.5px 0 rgba(0,40,70,.25); animation: hs-water 3s linear infinite; background-size: 14px 14px, 100% 100%; }
 @keyframes hs-water { to { background-position: 14px 0, 0 0; } }
 .landing .ox .hedge .f { border-radius: 1px; }
+/* roof slabs keep square corners so the ridge and gable ends meet the walls cleanly (only the tiles are rounded) */
+.landing .ox .round .f.roof, .landing .ox .round .roof > .f { border-radius: 0; }
+.landing .ox .plan.gravel { border-radius: 2px; box-shadow: inset 0 0 0 .6px rgba(11,27,51,.12);
+  background: radial-gradient(circle at 30% 40%, rgba(160,150,135,.28) 0 .3px, transparent .45px) 0 0/1.7px 1.3px, radial-gradient(circle at 70% 60%, rgba(160,150,135,.22) 0 .35px, transparent .5px) .5px .4px/2.3px 1.9px, #F6F4EE; }
