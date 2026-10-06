@@ -238,12 +238,8 @@
 .landing .ox .bb .pin.p3 svg { width: 50px; height: auto; }
 .landing .ox .bb.done.signed .p2 { transform: scale(0); opacity: 0; }
 .landing .ox .bb.done.signed .p3 { transform: scale(1); opacity: 1; }
-/* "Lote n vendido": a flat green badge at the top of the stage, large and readable; pops each time a lot is sold */
-.landing .ox .sold-toast { position: absolute; z-index: 4; top: 18%; right: 6%; display: flex; align-items: center; gap: 10px; padding: 10px 18px 10px 10px;
-  border-radius: 99px; background: #fff; color: #0B1B33; font-size: 17px; font-weight: 650; letter-spacing: -.01em;
-  box-shadow: 0 0 0 1px rgba(15,163,127,.25), 0 14px 30px -14px rgba(11,27,51,.35); opacity: 0; transform: translateY(6px) scale(.9); pointer-events: none; }
-.landing .ox .sold-toast i { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #0FA37F; color: #fff; font-style: normal; font-size: 15px; font-weight: 800; }
-.landing .ox .sold-toast.pop { animation: sold-pop 2.1s cubic-bezier(.3,1.4,.5,1) forwards; }
-@keyframes sold-pop { 0% { opacity: 0; transform: translateY(8px) scale(.85); } 14% { opacity: 1; transform: translateY(0) scale(1.06); } 22% { transform: scale(1); } 85% { opacity: 1; transform: none; } 100% { opacity: .0; transform: translateY(-6px); } }
-.landing .ox.mobile .sold-toast { top: 4%; right: 50%; translate: 50% 0; font-size: 15px; }
-@media (prefers-reduced-motion: reduce) { .landing .ox .sold-toast.pop { animation: none; opacity: 1; transform: none; } }
+/* "VENDIDO" painted inside each paid lot, along its bottom (front) edge */
+.landing .ox .sold-tag { position: absolute; left: 0; right: 0; bottom: 3px; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .14em;
+  color: #0B7A5F; opacity: 0; transform: translateY(3px); transition: opacity .5s ease .15s, transform .5s ease .15s; pointer-events: none; }
+.landing .ox .paid > .sold-tag, .landing .ox .site.paid > .sold-tag { opacity: .9; transform: none; }
+.landing .ox .site > .sold-tag { font-size: 11px; bottom: 4px; }
