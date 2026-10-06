@@ -68,7 +68,7 @@ V.secure = host => { const m = mk(host, 220, 170, { dark: true, zoom: .68 });
     put(ring, 'opacity', (r > 0 && r < 1 ? (1 - r) * .9 : 0).toFixed(2)); } }; };
 // closing · the whole portfolio collected, one buyer builds
 V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [];
-  // each lot shows its state on the ground near its front edge: "EN RECAUDO" while it fills yellow, "VENDIDO" once green
+  // each lot shows its state on the ground near its front edge: "RECAUDO" while it fills yellow, "VENDIDO" once green
   for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { const x = 10 + c * 78, y = 24 + r * 70, l = m.lot(x, y, 70, 60); l.classList.add('sold');
     const tag = document.createElement('b'); tag.className = 'mtag'; l.appendChild(tag); lots.push({ l, tag, p: m.pin(x + 35, y + 30) }); }
   // a small country house on lot 5, set back toward the rear: white walls, door and windows, a tiled gable roof
@@ -91,7 +91,7 @@ V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [
   return { period: 7000, update(t) {
     lots.forEach((o, k) => { const s = 300 + k * 420, q = Math.floor(clamp((t - s) / 1300) * 4 + 1e-6) / 4;
       put(o.l._fill, 'transform', `scaleY(${q})`); cls(o.l, 'paid', q >= 1); cls(o.p, 'prog', q > 0 && q < 1); cls(o.p, 'done', q >= 1);
-      const txt = q >= 1 ? 'VENDIDO' : q > 0 ? 'EN RECAUDO' : ''; if (o.tag._t !== txt) { o.tag._t = txt; o.tag.textContent = txt; o.tag.className = 'mtag' + (q >= 1 ? ' ok' : ' due'); }
+      const txt = q >= 1 ? 'VENDIDO' : q > 0 ? 'RECAUDO' : ''; if (o.tag._t !== txt) { o.tag._t = txt; o.tag.textContent = txt; o.tag.className = 'mtag' + (q >= 1 ? ' ok' : ' due'); }
       put(o.p, 'transform', m.bill(k === 4 ? 1 + TOP * easeOut(clamp((t - 4300) / 700)) : 1)); });
     const u = clamp((t - 4300) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 5 * Math.sin(Math.PI * u) : 0;   // pops up with a little hop
     put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`); } }; };
