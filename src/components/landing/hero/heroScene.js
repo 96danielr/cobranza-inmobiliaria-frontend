@@ -98,7 +98,7 @@ export function mountHeroScene(root) {
     + '<path d="M6 29V3" stroke="#7A5136" stroke-width="2" stroke-linecap="round"/><path d="M5 4.2h21" stroke="#7A5136" stroke-width="1.6" stroke-linecap="round"/>'
     + '<path d="M9 4.6v2.2M24 4.6v2.2" stroke="#8E959E" stroke-width=".6"/>'
     + '<rect x="7.5" y="6.6" width="19" height="10.4" rx="1" fill="#FFFFFF" stroke="#D6D0C4" stroke-width=".5"/>'
-    + '<rect x="7.5" y="9.4" width="19" height="4.8" fill="#D94A3A"/>'
+    + '<rect x="7.5" y="9.4" width="19" height="4.8" fill="#0FA37F"/>'
     + '<text x="17" y="13.1" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="3.4" font-weight="800" letter-spacing=".1" fill="#FFFFFF">VENDIDO</text>'
     + '<path d="M9.5 8.1h15M9.5 15.6h9" stroke="#B9B2A3" stroke-width=".55" stroke-linecap="round"/></svg></div>';
   const pins = PAY_ORDER.map(key => { const [c, r] = key.split(',').map(Number), [x, y] = lotXY(c, r);
