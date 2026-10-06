@@ -181,3 +181,6 @@
 .landing .ox .cheer .dhead { transform: rotate(-14deg); }
 .landing .ox .cheer .ear { transform: rotate(-35deg); }
 @keyframes hs-jump { 0%, 100% { translate: 0 0; } 15% { translate: 0 .8px; scale: 1.06 .92; } 45% { translate: 0 -24%; scale: .96 1.05; } 75% { translate: 0 0; scale: 1.05 .94; } }
+.landing .ox .band { position: absolute; background: #D8CCB4; }
+.landing .ox .walk .body { animation-duration: .4s; } .landing .ox .walk .thigh, .landing .ox .walk .uarm, .landing .ox .walk .shin, .landing .ox .walk .farm { animation-duration: .8s !important; animation-timing-function: cubic-bezier(.45,0,.55,1) !important; }
+.landing .ox .pet .thigh, .landing .ox .pet .uarm, .landing .ox .pet .shin, .landing .ox .pet .farm, .landing .ox .pet .paw, .landing .ox .pet .lpaw { transition: transform .25s ease; }

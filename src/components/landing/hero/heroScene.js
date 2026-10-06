@@ -109,14 +109,14 @@ export function mountHeroScene(root) {
     // a door with a step, chimney and a barrel-tile roof; a tree beside it
     const g = group(); g.classList.add('round');
     const X = x + 12, Y = y + 14, W = 40, D = 26;
-    box(g, X - 2, Y - 2, 0, W + 4, D + 4, 1.4, { ...STONE, top: '#D9D3C6' });
-    const hb = box(g, X, Y, 1.4, W, D, 12.8, WALL);
+    box(g, X - 2, Y - 2, 0, W + 4, D + 4, 2.2, { ...STONE, top: '#D9D3C6' });
+    const hb = box(g, X, Y, 2.2, W, D, 12.8, WALL);
     const wn = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win lit'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); };
-    [4, 30].forEach(l => wn(hb._front, l, 3.2, 1.2 * M, 1.1 * M)); [9].forEach(tp => { wn(hb._faces[2], 3.2, tp, 1.1 * M, 1.2 * M); wn(hb._faces[3], 3.2, tp, 1.1 * M, 1.2 * M); });
-    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: (W / 2 - .95 * M / 2) + 'px', top: (12.8 - 2.1 * M) + 'px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); hb._front.appendChild(dr);
-    box(g, X + W / 2 - 4, Y + D, 0, 8, 3.2, 1.4, { ...WOOD, top: '#B98A62' });
-    box(g, X + W - 10, Y + 5, 14.2, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
-    gableRoof(g, X, Y, 14.2, W, D, 9, 2.6);
+    [4, 30].forEach(l => wn(hb._front, l, 3.6, 1.2 * M, 1.1 * M)); [9].forEach(tp => { wn(hb._faces[2], 3.6, tp, 1.1 * M, 1.2 * M); wn(hb._faces[3], 3.6, tp, 1.1 * M, 1.2 * M); });
+    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: (W / 2 - .95 * M / 2) + 'px', top: '0px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); hb._front.appendChild(dr);
+    box(g, X + W / 2 - 4, Y + D, 0, 8, 3.4, 2.2, { ...WOOD, top: '#B98A62' }); box(g, X + W / 2 - 3, Y + D + 3.4, 0, 6, 2, 1.1, { ...WOOD, top: '#B98A62' });
+    box(g, X + W - 10, Y + 5, 15, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
+    gableRoof(g, X, Y, 15, W, D, 9, 2.6);
     box(g, x + 5, y + LD - 9, 0, 1.2, 1.2, 6, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true });
     g.style.visibility = 'hidden'; HOUSE_LOTS[k] = g; });
   const HOUSE_H = 24, HOUSE_DELAY = 500, HOUSE_DUR = 520;
@@ -173,17 +173,26 @@ export function mountHeroScene(root) {
     fx(x, x + w, y); fy(y, y + d, x); fy(y, y + d, x + w - .6);
     let cx0 = x; gaps.forEach(([g1, g2]) => { fx(cx0, g1, y + d - .6); cx0 = g2; }); fx(cx0, x + w, y + d - .6); };
   function countryHouse(ox, oy, o) {
-    const hx = ox + 10, hy = oy + 10, hw = o.hw, hd = 44, WALL_H = 15, ROOF_H = 16, wins = [], st = [];
+    // storeys of 2.9 m (12.8 px) on a 0.5 m stone base; the main house has two floors, which is why it stands taller
+    const FLOOR = 12.8, BASE = 2.2, floors = o.floors || 1, WH = FLOOR * floors;
+    const hx = ox + 10, hy = oy + 10, hw = o.hw, hd = 44, WALL_H = BASE + WH, ROOF_H = 16, wins = [], st = [];
     const stage = (z = 0) => { const g = group(); g.classList.add('round'); st.push({ g, z }); return g; };
-    const g0 = stage(); box(g0, hx - 4, hy - 4, 0, hw + 8, hd + 8, 1.6, { ...STONE, top: '#D9D3C6' }); box(g0, hx - .6, hy - .6, 1.6, hw + 1.2, hd + 1.2, 2.6, STONE);
-    const g1 = stage(4.2); const walls = box(g1, hx, hy, 0, hw, hd, WALL_H - 2.2, WALL);
+    const g0 = stage(); box(g0, hx - 3, hy - 3, 0, hw + 6, hd + 6, .8, { ...STONE, top: '#D9D3C6' }); box(g0, hx - .6, hy - .6, .8, hw + 1.2, hd + 1.2, BASE - .8, STONE);
+    const g1 = stage(BASE); const walls = box(g1, hx, hy, 0, hw, hd, WH, WALL);
     const win = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); wins.push(el); };
-    const fw = hw / 2; [fw - 30, fw - 19, fw + 13, fw + 24].forEach(l => win(walls._front, l, 3.2, 1.2 * M, 1.1 * M));
-    const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - .95 * M / 2) + 'px', top: (WALL_H - 2.2 - 2.1 * M) + 'px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); walls._front.appendChild(door);
-    [10, 28].forEach(tp => { win(walls._faces[2], 3.2, tp, 1.1 * M, 1.2 * M); win(walls._faces[3], 3.2, tp, 1.1 * M, 1.2 * M); });   // side windows (x runs up the wall)
-    gableRoof(g1, hx, hy, WALL_H - 2.2, hw, hd, ROOF_H, 4);   // the roof rises with the walls, in one go
-    const g3 = stage(); box(g3, hx + hw - 18, hy + 7, 2 + WALL_H, 6, 6, ROOF_H + 4, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
-    box(g3, hx + fw - 9, hy + hd, 0, 18, 6, 2.4, WOOD); box(g3, hx + fw - 6, hy + hd + 6, 0, 12, 3, 1.2, WOOD);   // entrance deck and step, no roof
+    // on a wall face, `top` is the height above the floor: sills at 0.9 m, door on the floor
+    const fw = hw / 2;
+    for (let f = 0; f < floors; f++) {
+      const z0 = f * FLOOR + 3.6;
+      [fw - 30, fw - 19, fw + 13, fw + 24].forEach(l => win(walls._front, l, z0, 1.2 * M, 1.1 * M));
+      if (f > 0) win(walls._front, fw - .6 * M, z0, 1.2 * M, 1.1 * M);
+      [10, 28].forEach(tp => { win(walls._faces[2], z0, tp, 1.1 * M, 1.2 * M); win(walls._faces[3], z0, tp, 1.1 * M, 1.2 * M); });   // side windows (x runs up the wall)
+    }
+    if (floors > 1) div('f band', { left: '0px', top: (FLOOR - .5) + 'px', width: hw + 'px', height: '1px' }, walls._front);   // floor line between storeys
+    const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - .95 * M / 2) + 'px', top: '0px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); walls._front.appendChild(door);
+    gableRoof(g1, hx, hy, WH, hw, hd, ROOF_H, 4);   // the roof rises with the walls, in one go
+    const g3 = stage(); box(g3, hx + hw - 18, hy + 7, WALL_H, 6, 6, ROOF_H + 4, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
+    box(g3, hx + fw - 7, hy + hd, 0, 14, 5, BASE, WOOD); box(g3, hx + fw - 5, hy + hd + 5, 0, 10, 2.6, BASE / 2, WOOD);   // entrance landing at floor level and one step, no roof
     const g4 = stage(); const gate = hx + fw - 3;
     // entrance: a flagstone path from the gate to the door step, framed by two stone pillars with lanterns and an open wooden gate
     const pathTop = hy + hd + 8.5, pathBot = oy + SD - 2;
@@ -201,7 +210,7 @@ export function mountHeroScene(root) {
     fence(g4, ox + 2, oy + 2, SW - 4, SD - 4, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => { box(g4, x - .8, y - .8, 0, 1.6, 1.6, 9, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true }); return bill(x, y, 8, SVG.canopy(15)); });
-    const H = { st, wins, door, greens: [...greens, ...trees], top: 2 + WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, 2 + WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
+    const H = { st, wins, door, greens: [...greens, ...trees], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
     if (o.carport) {                                                  // carport: driveway, open pergola, a rounded car that drives in later
       const cg = stage(); div('plan drive', { left: o.cpX + 'px', top: (hy + 4) + 'px', width: o.cpW + 'px', height: (oy + SD - hy - 4) + 'px' }, cg);
       [[0, 0], [o.cpW - 1.4, 0], [0, 42.6], [o.cpW - 1.4, 42.6]].forEach(([dx, dy]) => box(cg, o.cpX + dx, hy + 4 + dy, 0, 1.2, 1.2, 11, { top: '#7D8794', front: '#68727F', back: '#68727F', left: '#68727F', right: '#565F6B', noLine: true }));
@@ -221,7 +230,7 @@ export function mountHeroScene(root) {
     return H;
   }
   const cpX = sx + 10 + 82 + 7, cpW = SW - 99 - 7;
-  const HM = countryHouse(sx, sy, { hw: 82, carport: true, cpX, cpW });
+  const HM = countryHouse(sx, sy, { floors: 2, hw: 82, carport: true, cpX, cpW });
   // the family and pets walk along routes on the front yard (ground coordinates); they appear during the build
   const yard = { gx: HM.gate + 3.5, door: HM.hy + HM.hd + 9, front: sy + SD - 9, l: HM.hx + 6, r: HM.hx + HM.hw - 6 };
   // Script (what each one does; they walk only to get somewhere, then stay):
@@ -231,7 +240,7 @@ export function mountHeroScene(root) {
   //  4. When the lights come on, the father walks to the door; the boy runs a few steps on the lawn with the puppy and they stop.
   //  5. The cat waits by the door.
   // Steps: ['at', x, y] place, ['walk', x, y] walk there, ['wait', ms] stand still, ['face', 1 | -1] turn (screen right / left).
-  const actorOf = (svg, w, steps, speed, at) => { const el = actor(steps[0][1], steps[0][2], svg, w); return { el, b: el.parentElement, fig: el.querySelector('svg'), steps, speed, at }; };
+  const actorOf = (svg, w, steps, speed, at) => { const el = actor(steps[0][1], steps[0][2], svg, w); return { el, b: el.parentElement, fig: el.querySelector('svg'), steps, speed, at, x0: steps[0][1], y0: steps[0][2] }; };
   const P = (dx, dy) => [yard.gx + dx, yard.door + dy];
   const actors = [
     actorOf(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 3.49,
@@ -252,7 +261,7 @@ export function mountHeroScene(root) {
       if (st[0] === 'wait') { if (tt < st[1]) return out(false); tt -= st[1]; clock += st[1]; continue; }
       if (st[0] === 'walk') { const dx = st[1] - x, dy = st[2] - y, d = Math.hypot(dx, dy), dur = d / A.speed * 1000;
         face = dx * cosZ0 - dy * sinZ0 < 0 ? -1 : 1;
-        if (tt < dur) { const f = tt / dur, r = { x: x + dx * f, y: y + dy * f, walk: true, face, since: -1 }; return r; }
+        if (tt < dur) { const q = tt / dur, f = q * q * (3 - 2 * q) * .35 + q * .65, r = { x: x + dx * f, y: y + dy * f, walk: true, face, since: -1 }; return r; }
         tt -= dur; clock += dur; x = st[1]; y = st[2]; arrived = clock; } }
     return out(false); };
   const sinZ0 = Math.sin(-CAM_Z * Math.PI / 180), cosZ0 = Math.cos(-CAM_Z * Math.PI / 180);
@@ -390,7 +399,7 @@ export function mountHeroScene(root) {
       put(g, 'visibility', u > 0 ? 'visible' : 'hidden'); put(g, 'transform', `translateZ(${(z + hop).toFixed(2)}px) scale3d(1,1,${Math.max(e, .002).toFixed(3)})`); return clamp(u * 1.4); };
     const POP_AT = [0, 0, 0, 0, 0];                                 // the whole place pops up at once: house, yard, fence, carport
     const eM = HM.st.map((S, k) => pop(S.g, S.z, B + POP_AT[k]));
-    top = 2 * eM[0] + 31 * eM[1];
+    top = HM.top * eM[1];
     for (let j = 0; j < NS; j++) if (t >= T0 + j * STEP) paid = j + 1;
     // greenery grows with the garden stage
     const gE = backOut(clamp((t - B) / 520));
@@ -407,13 +416,13 @@ export function mountHeroScene(root) {
       let ps = pose(A, reduce ? 99999 : Math.max(0, t - AT[A.at]), A.steps);
       const extra = k === 0 ? ACT4.father : k === 3 ? ACT4.boy : null;            // act 4 continues from where they stood
       if (extra && t > ACT4_T) ps = pose(A, reduce ? 99999 : t - ACT4_T, [['at', ps.x, ps.y], ['face', ps.face], ...extra]);
-      put(A.b, 'left', ps.x.toFixed(2) + 'px'); put(A.b, 'top', ps.y.toFixed(2) + 'px');
+      A.b._dx = ps.x - A.x0; A.b._dy = ps.y - A.y0;                    // moved with a transform (sub-pixel, no layout)
       cls(A.el, 'walk', ps.walk && u0 >= 1); put(A.fig, 'transform', ps.face < 0 ? 'scaleX(-1)' : 'none');
       cls(A.el, 'cheer', !reduce && ps.since >= 0 && ps.since < 1300); });   // a happy jump when they get where they were going
     { const u = clamp((t - AT.end) / 420); put(cat.el, 'opacity', u > 0 ? '1' : '0'); put(cat.el, 'transform', `scale(${(u < 1 ? backOut(u) : 1).toFixed(3)})`); }
     cls(site, 'lawn', t > B + STEP * 3.3);
     const BILL = `rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(CAM_X + ryv)).toFixed(2)}deg)`;
-    bills.forEach(({ b, z }) => put(b, 'transform', `translateZ(${z}px) ${BILL}`));
+    bills.forEach(({ b, z }) => put(b, 'transform', `translate3d(${(b._dx || 0).toFixed(3)}px, ${(b._dy || 0).toFixed(3)}px, ${z}px) ${BILL}`));
     put(site2Pin, 'transform', `translateZ(2.5px) ${BILL}`);
     // trees and context
     trees.forEach((g, k) => { const e = easeOut(clamp((t - 250 - k * 80) / 650)); put(g, 'transform', `scale3d(1,1,${Math.max(e, .002).toFixed(3)})`); put(g, 'visibility', e > .002 ? 'visible' : 'hidden'); });
