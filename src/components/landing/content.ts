@@ -60,6 +60,8 @@ export const landing = {
       { value: 520, suffix: 'k+', label: 'cuotas procesadas' },
       { value: 20, suffix: '+', label: 'bancos integrados' },
     ],
+    featuresTitle: 'Todo incluido',
+    featuresNote: 'en el plan único',
     features: [
       { icon: 'bell', label: 'Recordatorios inteligentes' },
       { icon: 'chart', label: 'Dashboard en tiempo real' },
@@ -72,6 +74,10 @@ export const landing = {
   quote: {
     text: '[Cita pendiente: pedir a Alfasur unas palabras sobre su experiencia con Operix]',
     pending: true,
+    // Proposed wording to send to Alfasur. It is not their words until they approve it: shown only in
+    // local development (with a "draft" tag); production keeps the placeholder until `approved` is true.
+    draft: 'Antes cuadrábamos la cartera en planillas y perseguíamos cada comprobante por WhatsApp. Con Operix cada pago llega con su soporte, lo aprobamos en un clic y el comprador recibe su recibo al instante.',
+    approved: false,
     name: 'Alfonso Jiménez',
     role: 'Director Administrativo, Alfasur',
     initials: 'AJ',

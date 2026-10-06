@@ -171,3 +171,10 @@ test('login menu opens on click and closes on an outside click', async ({ page }
   await page.mouse.click(40, 400)
   await expect(page.locator('.landing .menu')).not.toHaveClass(/open/)
 })
+
+test('unapproved testimonial is never in the production build', () => {
+  const built = '.next/server/app/index.html'
+  test.skip(!fs.existsSync(built), 'needs npm run build')
+  const html = fs.readFileSync(built, 'utf8')
+  expect(html).not.toContain('Antes cuadrábamos la cartera')
+})

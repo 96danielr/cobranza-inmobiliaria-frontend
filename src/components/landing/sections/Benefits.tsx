@@ -31,6 +31,7 @@ export default function Benefits() {
             </div>
           </div>
           <div className="specs specs3 featcard in-card">
+            <div className="ft-lbl"><span>{b.featuresTitle}</span><small>{b.featuresNote}</small></div>
             {b.features.map((f, i) => (
               <div className={'sp rv' + (i % 2 ? ' d1' : '')} key={f.label}><div className="ic draw"><Icon name={f.icon} /></div><div><h3>{f.label}</h3></div></div>
             ))}

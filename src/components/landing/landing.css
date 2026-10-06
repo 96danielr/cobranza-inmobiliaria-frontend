@@ -392,3 +392,22 @@ body:has(.landing)::before { display: none; }
 .landing .logo img { display: block; width: auto; }
 .landing .logo .logo-mark { height: 28px; }
 .landing .logo .logo-word { height: 13px; }
+/* feature band v2: a label column, then 3 x 2 compact items on a tinted strip; green line icons, no boxes */
+.landing .featcard.in-card { grid-template-columns: 190px repeat(3, 1fr); background: #FBFAF6; padding: 10px 24px; border-top: 1px solid #EEEAE1; }
+.landing .featcard .ft-lbl { grid-row: span 2; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 24px 0 16px; border-right: 1px solid #EEEAE1; }
+.landing .featcard .ft-lbl span { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+.landing .featcard .ft-lbl small { font-size: 13px; color: var(--muted); }
+.landing .featcard .sp, .landing .featcard .sp:nth-child(3n+1) { padding: 18px 24px; border: 0; grid-template-columns: 24px 1fr; gap: 12px; align-items: center; border-radius: 14px; transition: background .25s ease; }
+.landing .featcard .sp:hover { background: #fff; }
+.landing .featcard .sp .ic { width: 24px; height: 24px; background: none; border: 0; border-radius: 0; }
+.landing .featcard .sp .ic svg { width: 22px; height: 22px; stroke: var(--green); stroke-width: 1.6; }
+.landing .featcard .sp h3 { font-size: 15.5px; font-weight: 550; }
+@media (max-width: 1000px) {
+  .landing .featcard.in-card { grid-template-columns: 1fr 1fr; padding: 16px; }
+  .landing .featcard .ft-lbl { grid-column: 1 / -1; grid-row: auto; flex-direction: row; align-items: baseline; padding: 8px 8px 12px; border-right: 0; }
+  .landing .featcard .sp, .landing .featcard .sp:nth-child(3n+1) { padding: 12px 8px; }
+}
+@media (max-width: 560px) { .landing .featcard.in-card { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .landing .featcard .sp, .landing .featcard .sp:nth-last-child(-n+3) { border: 0; } .landing .featcard .ft-lbl { justify-content: flex-start; gap: 8px; } }
+.landing .q2 .draft-tag { display: block; margin: 18px auto 0; width: fit-content; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: #7A5A0E; background: #FBF0D4; padding: 5px 10px; border-radius: 99px; }
+.landing .quote3 .q2 blockquote { font-size: clamp(24px, 2.6vw, 36px); max-width: 34ch; line-height: 1.22; }
