@@ -462,3 +462,10 @@ body:has(.landing)::before { display: none; }
 .landing .il-link { display: inline-block; margin-top: 22px; font-size: 17px; font-weight: 600; color: var(--green); text-decoration: none; border-bottom: 1.5px solid currentColor; padding-bottom: 3px; }
 .landing .il-link span { display: inline-block; transition: transform .3s ease; } .landing .il-link:hover span { transform: translateX(4px); }
 .landing .il-link.is-pending { cursor: default; opacity: .55; } .landing .il-link.is-pending:hover span { transform: none; }
+/* small phones: the two hero buttons side by side, same width */
+@media (max-width: 520px) {
+  .landing .hero .ctas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .landing .hero .ctas .btn { justify-content: center; height: 46px; padding: 0 10px; gap: 7px; font-size: 13.5px; }
+  .landing .hero .ctas .btn svg { width: 16px; height: 16px; }
+}
+@media (max-width: 370px) { .landing .hero .ctas .btn svg { display: none; } .landing .hero .ctas .btn { font-size: 13px; } }
