@@ -494,4 +494,4 @@ body:has(.landing)::before { display: none; }
 .landing .mx .mwin { position: absolute; border-radius: .8px; background: linear-gradient(135deg, #FFF1C9, #F6D68A 42%, #FFFBEE 46%, #F2C96E 54%, #E8B85A); box-shadow: inset 0 0 0 .6px #8A5A3B; }
 .landing .mx .mdoor { position: absolute; border-radius: 0 0 1.4px 1.4px; background: #8A5A3B; }
 .landing .sc-vis { transition: background-color .9s ease; }
-.landing .sc-vis.safe { background-color: #1D3658; }   /* a little lighter once the lock closes */
+.landing .sc-vis.safe { background-color: #E6F2EC; }   /* light mint once the lock closes: the green lock and blue layers stand out */
