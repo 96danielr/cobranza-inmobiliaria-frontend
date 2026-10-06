@@ -41,11 +41,11 @@ function mk(host, W, D, opts = {}) {
 
 const V = {};
 // security · backup layers with a check on top (dark section)
-V.secure = host => { const m = mk(host, 220, 170, { dark: true, zoom: .68 });
+V.secure = host => { const m = mk(host, 220, 170, { zoom: .68 });
   // 1) three data layers drop in and stack  2) a large padlock lands on top and its shackle closes (green)
   // 3) a ring pulses out over the stack, then the stack rests with a slow breathing motion
-  const LAY = { top: '#1E3A63', front: '#14294A', back: '#14294A', left: '#14294A', right: '#0E1F3A', noLine: true };
-  const plates = [0, 1, 2].map(k => { const g = m.group(); m.box(g, 55, 40, 0, 110, 86, 7, k === 2 ? { ...LAY, top: '#2B4F84' } : LAY); g._faces = [...g.querySelectorAll('.f')]; return g; });
+  const LAY = { top: '#FBFAF6', front: '#E7E2D6', back: '#E7E2D6', left: '#DCD6C8', right: '#CFC8B8' };   // paper sheets with a thin ink outline, like the hero plan
+  const plates = [0, 1, 2].map(k => { const g = m.group(); m.box(g, 55, 40, 0, 110, 86, 7, k === 2 ? { ...LAY, top: '#FFFFFF' } : LAY); g._faces = [...g.querySelectorAll('.f')]; return g; });
   const ring = m.div('sec-ring', 110 - 40, 83 - 40, 80, 80);
   const lk = m.div('bb', 110, 83, 0, 0);
   lk.innerHTML = '<div class="sec-lock"><svg viewBox="0 0 64 76" aria-hidden="true">'

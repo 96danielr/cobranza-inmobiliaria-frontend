@@ -312,7 +312,7 @@ html:has(.landing) {scroll-behavior: smooth;}
   .landing .interlude {padding: 72px 0;}
 }
 .landing .seccard {display: grid; grid-template-columns: repeat(12, 1fr); gap: 0; padding: 0; overflow: hidden;}
-.landing .sc-vis {grid-column: 1 / span 5; background: var(--ink); display: grid; place-items: center; padding: 40px;}
+.landing .sc-vis {grid-column: 1 / span 5; background: #FFFFFF; display: grid; place-items: center; padding: 40px;}
 .landing .sc-vis .vig {width: 100%; max-width: 380px;}
 .landing .sc-tx {grid-column: 6 / span 7; padding: 56px 64px;}
 .landing .sc-tx .h2 {margin-top: 18px;}
@@ -494,9 +494,15 @@ body:has(.landing)::before { display: none; }
 .landing .mx .mwin { position: absolute; border-radius: .8px; background: linear-gradient(135deg, #FFF1C9, #F6D68A 42%, #FFFBEE 46%, #F2C96E 54%, #E8B85A); box-shadow: inset 0 0 0 .6px #8A5A3B; }
 .landing .mx .mdoor { position: absolute; border-radius: 0 0 1.4px 1.4px; background: #8A5A3B; }
 .landing .sc-vis { transition: background-color .9s ease; }
-.landing .sc-vis.safe { background-color: #FFFFFF; }   /* white once the lock closes */
+
 .landing .seccard { transition: box-shadow .9s ease; }
 .landing .seccard:has(.sc-vis.safe) { box-shadow: 0 1px 0 rgba(11,27,51,.06), 0 44px 80px -40px rgba(11,27,51,.6), 0 0 0 1px rgba(11,27,51,.06); }   /* deeper shadow */
-.landing .sc-vis.safe .sec-lock.closed .bd { fill: #0B8F6E; }   /* a deeper, crisper green on white */
-.landing .sc-vis.safe .sec-lock.closed .shk path { stroke: #0B8F6E; }
-.landing .sc-vis.safe + .sc-tx { border-left: 1px solid #EEEAE1; }
+.landing .sec-lock.closed .bd { fill: #0B8F6E; }   /* a deeper, crisper green on white */
+.landing .sec-lock.closed .shk path { stroke: #0B8F6E; }
+.landing .sc-vis + .sc-tx { border-left: 1px solid #EEEAE1; }
+/* security vignette on white: unlocked padlock in soft grey, ring in green */
+.landing .sc-vis .sec-lock .bd { fill: #E4E8EE; } .landing .sc-vis .sec-lock .shk path { stroke: #B9C2CE; }
+.landing .sc-vis .sec-lock svg { filter: drop-shadow(0 8px 10px rgba(11,27,51,.18)); }
+.landing .sc-vis .sec-lock circle, .landing .sc-vis .sec-lock rect:not(.bd) { fill: #0B1B33; }
+.landing .sc-vis .sec-ring { box-shadow: inset 0 0 0 2px rgba(15,163,127,.75); }
+.landing .sc-vis .sec-lock.closed .shk path { stroke: #0B8F6E; }
