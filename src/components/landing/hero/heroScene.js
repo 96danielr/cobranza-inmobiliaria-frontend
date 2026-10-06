@@ -143,7 +143,7 @@ export function mountHeroScene(root) {
     const hb = box(g, X, Y, 2.2, W, D, 12.8, WALL);
     const wn = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win lit'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); };
     [3.5, W - 3.5 - WIN_W].forEach(l => wn(hb._front, l, SILL, WIN_W, WIN_H)); [D / 2 - WIN_W / 2].forEach(tp => { wn(hb._faces[2], SILL, tp, WIN_H, WIN_W); wn(hb._faces[3], SILL, tp, WIN_H, WIN_W); });
-    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: (W / 2 - .95 * M / 2) + 'px', top: '0px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); hb._front.appendChild(dr);
+    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: (W / 2 - 1.15 * M / 2) + 'px', top: '0px', width: (1.15 * M) + 'px', height: (2.1 * M) + 'px' }); hb._front.appendChild(dr);
     box(g, X + W / 2 - 4, Y + D, 0, 8, 3.4, 2.2, { ...WOOD, top: '#B98A62' }); box(g, X + W / 2 - 3, Y + D + 3.4, 0, 6, 2, 1.1, { ...WOOD, top: '#B98A62' });
     box(g, X + W - 10, Y + 5, 15, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
     gableRoof(g, X, Y, 15, W, D, 9, 2.6);
@@ -222,7 +222,7 @@ export function mountHeroScene(root) {
       [hd / 2 - WIN_W / 2].forEach(tp => { win(walls._faces[2], z0, tp, WIN_H, WIN_W); win(walls._faces[3], z0, tp, WIN_H, WIN_W); });   // one per side (x runs up the wall)
     }
     if (floors > 1) div('f band', { left: '0px', top: (FLOOR - .5) + 'px', width: hw + 'px', height: '1px' }, walls._front);   // floor line between storeys
-    const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - .95 * M / 2) + 'px', top: '0px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); walls._front.appendChild(door);
+    const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - 1.15 * M / 2) + 'px', top: '0px', width: (1.15 * M) + 'px', height: (2.1 * M) + 'px' }); walls._front.appendChild(door);
     gableRoof(g1, hx, hy, WH, hw, hd, ROOF_H, 4);   // the roof rises with the walls, in one go
     const g3 = stage(); box(g3, hx + hw - 18, hy + 7, WALL_H, 6, 6, ROOF_H + 4, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
     box(g3, hx + fw - 7, hy + hd, 0, 14, 5, BASE, WOOD); box(g3, hx + fw - 5, hy + hd + 5, 0, 10, 2.6, BASE / 2, WOOD);   // entrance landing at floor level and one step, no roof
