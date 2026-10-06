@@ -522,13 +522,16 @@ export function mountHeroScene(root) {
     if (isDone !== green) { green = isDone; barColor(isDone ? BAR_G : BAR_Y); fill2.classList.toggle('done', isDone); }
     put(fill2, 'width', (paidS * 100).toFixed(1) + '%');
     say(t > endT ? NS : Math.min(paid, NS - 1));
-    const fo = t > CYCLE - 1200 ? clamp((CYCLE - t) / 1200) : 1, fi = clamp(t / 600);
+    const fo = t > CYCLE - 350 ? clamp((CYCLE - t) / 350) : 1, fi = clamp(t / 600);
     put(scene, 'opacity', Math.min(fo, fi).toFixed(2));
     if (t < 60) paidS = 0;
     if (!dragging) { dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); vz *= .92; vx *= .88;
       if (now - lastMove > 2600) { dz += (0 - dz) * .03; dx += (0 - dx) * .03; } }
     const hover = dragging ? 0 : 1;
-    { const drift = reduce ? CAM_Z : CAM_Z * easeIO(clamp(t / (endT + 1500)));   // slow turn to the left until the board faces the viewer
+    { // each cycle opens with a quick full 360° turn to the left that ends with the board facing the viewer, then it stays front-on
+      const SPIN = 1400, drift = reduce ? CAM_Z : t < SPIN ? CAM_Z - 360 * (1 - easeIO(t / SPIN)) : CAM_Z;
+      if (pl._drift !== undefined && pl._drift - drift > 180) rz -= 360;   // the cycle wrapped: keep the eased angle continuous
+      pl._drift = drift;
       const tz = mx * 8 * hover + dz + drift, tx = -my * 4 * hover + dx;   // ease toward the target, then settle exactly (no endless sub-pixel shimmer)
       rz = Math.abs(tz - rz) < .02 ? tz : rz + (tz - rz) * .12; ryv = Math.abs(tx - ryv) < .02 ? tx : ryv + (tx - ryv) * .12;
       rz = Math.round(rz * 20) / 20; ryv = Math.round(ryv * 20) / 20; }
