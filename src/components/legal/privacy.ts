@@ -74,19 +74,7 @@ Operix solicita la autorización de los titulares de los que es Responsable al m
 
 ## 8. Proveedores y transferencia o transmisión internacional
 
-Para prestar el servicio usamos proveedores que pueden tratar datos por nuestra cuenta, en servidores ubicados en Colombia o en el exterior:
-
-| Proveedor | Uso |
-|---|---|
-| DigitalOcean | Servidores de la aplicación |
-| MongoDB Atlas | Base de datos |
-| Cloudflare (R2) | Almacenamiento de archivos, como comprobantes y recibos |
-| Twilio y Meta (WhatsApp Business) | Mensajes de WhatsApp y SMS |
-| Resend | Envío de correos |
-| Google (Gemini) | Funciones de inteligencia artificial |
-| ElevenLabs | Agente de voz |
-
-Exigimos a estos proveedores medidas de seguridad y confidencialidad adecuadas y que traten los datos solo para prestarnos sus servicios. La transmisión internacional se hace conforme a los artículos 26 de la Ley 1581 de 2012 y 2.2.2.25.5.2 del Decreto 1074 de 2015.
+Para prestar el servicio usamos proveedores de alojamiento de servidores, base de datos, almacenamiento de archivos, mensajería (WhatsApp y SMS), correo electrónico, inteligencia artificial y agente de voz, que pueden tratar datos por nuestra cuenta en servidores ubicados en Colombia o en el exterior. Les exigimos medidas de seguridad y confidencialidad adecuadas y que traten los datos solo para prestarnos sus servicios. Si desea conocer el listado de proveedores vigente, puede solicitarlo al correo ${c.privacyEmail}. La transmisión internacional se hace conforme a los artículos 26 de la Ley 1581 de 2012 y 2.2.2.25.5.2 del Decreto 1074 de 2015.
 
 ## 9. Seguridad
 
