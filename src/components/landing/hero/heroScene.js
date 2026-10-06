@@ -453,11 +453,12 @@ export function mountHeroScene(root) {
   listen('mousemove', e => { const r = stage.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - .5; my = (e.clientY - r.top) / r.height - .5; });
   listen('mouseleave', () => { mx = 0; my = 0; });
   let dz = 0, dx = 0, vz = 0, vx = 0, dragging = false, lastX = 0, lastY = 0, lastMove = 0;
-  listen('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; vz = vx = 0; stage.setPointerCapture(e.pointerId); stage.classList.add('dragging'); });
+  let downX = 0, downY = 0, faceFront = false;                   // a click without dragging turns the board to face the viewer
+  listen('pointerdown', e => { dragging = true; lastX = downX = e.clientX; lastY = downY = e.clientY; vz = vx = 0; stage.setPointerCapture(e.pointerId); stage.classList.add('dragging'); });
   listen('pointermove', e => { if (!dragging) return;
     const ddx = e.clientX - lastX, ddy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; lastMove = performance.now();
     vz = -ddx * .35; vx = -ddy * .2; dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); });
-  const endDrag = () => { dragging = false; stage.classList.remove('dragging'); lastMove = performance.now(); };
+  const endDrag = e => { if (e && Math.hypot(e.clientX - downX, e.clientY - downY) < 4) { faceFront = true; dz = dx = vz = vx = 0; } else faceFront = false; dragging = false; stage.classList.remove('dragging'); lastMove = performance.now(); };
   listen('pointerup', endDrag); listen('pointercancel', endDrag);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const start = performance.now();
@@ -528,10 +529,9 @@ export function mountHeroScene(root) {
     if (!dragging) { dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); vz *= .92; vx *= .88;
       if (now - lastMove > 2600) { dz += (0 - dz) * .03; dx += (0 - dx) * .03; } }
     const hover = dragging ? 0 : 1;
-    { // the cycle opens with a quick small turn to face the viewer; it closes with a fast full turn to the left
-      // that lands back on the starting angle (22 -> 360, which equals 0) just before the next cycle
-      const IN = 1000, S0 = CYCLE - 1500, S1 = CYCLE - 350;
-      const drift = reduce ? CAM_Z : t < IN ? CAM_Z * easeIO(t / IN) : t < S0 ? CAM_Z : CAM_Z + (360 - CAM_Z) * easeIO(clamp((t - S0) / (S1 - S0)));
+    { // front-on after a plain click; the cycle closes with a fast full turn to the left back to the same angle
+      const base = faceFront ? CAM_Z : 0, S0 = CYCLE - 1500, S1 = CYCLE - 350;
+      const drift = reduce ? base : t < S0 ? base : base + 360 * easeIO(clamp((t - S0) / (S1 - S0)));
       if (pl._drift !== undefined && pl._drift - drift > 180) rz -= 360;   // the cycle wrapped: keep the eased angle continuous
       pl._drift = drift;
       const tz = mx * 8 * hover + dz + drift, tx = -my * 4 * hover + dx;   // ease toward the target, then settle exactly (no endless sub-pixel shimmer)
