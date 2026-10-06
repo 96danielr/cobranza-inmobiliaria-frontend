@@ -155,3 +155,4 @@
 @keyframes hs-tail { from { transform: rotate(-12deg); } to { transform: rotate(14deg); } }
 @keyframes hs-bob { from { transform: translateY(0); } to { transform: translateY(-.7px); } }
 @media (prefers-reduced-motion: reduce) { .landing .ox .walk * { animation: none !important; } }
+.landing .ox .pet:not(.walk) .tail { animation: hs-tail .5s ease-in-out infinite alternate; }   /* dogs wag while standing */

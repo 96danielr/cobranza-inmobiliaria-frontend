@@ -191,16 +191,37 @@ export function mountHeroScene(root) {
   const HM = countryHouse(sx, sy, { hw: 82, carport: true, cpX, cpW });
   // the family and pets walk along routes on the front yard (ground coordinates); they appear during the build
   const yard = { gx: HM.gate + 3.5, door: HM.hy + HM.hd + 9, front: sy + SD - 9, l: HM.hx + 6, r: HM.hx + HM.hw - 6 };
-  const mover = (svg, w, route, speed, at, pause = 900) => {
-    const el = actor(route[0][0], route[0][1], svg, w), b = el.parentElement, fig = el.querySelector('svg');
-    const segs = []; let L = 0; for (let i = 1; i < route.length; i++) { const d = Math.hypot(route[i][0] - route[i - 1][0], route[i][1] - route[i - 1][1]); segs.push(d); L += d; }
-    return { el, b, fig, route, segs, L, speed, at, pause }; };
-  const movers = [
-    mover(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 9.5, [[yard.gx, yard.front], [yard.gx, yard.door + 3], [yard.gx + 14, yard.door + 8]], 22, 'k1'),
-    mover(SVG.dog('#8A5A3B'), 12, [[yard.l + 4, yard.door + 26], [yard.gx - 6, yard.door + 34], [yard.l + 2, yard.front - 4]], 30, 'k3', 500),
-    mover(SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', pantsB: '#3A4456', skin: '#EAC2A0', shirtB: '#A9532F' }), 9.2, [[yard.r - 8, yard.front - 6], [yard.gx + 18, yard.door + 22], [yard.r - 4, yard.door + 12]], 18, 'k4', 1200),
-    mover(SVG.person('#E3B23C', { hair: '#8A5A3B', pants: '#5B8DB8', pantsB: '#4A79A2', skin: '#EFC7A4', shirtB: '#C99A2E' }), 6.4, [[yard.gx + 24, yard.door + 30], [yard.l + 8, yard.door + 30], [yard.l + 14, yard.front - 2]], 34, 'k4b', 400),
-    mover(SVG.dog('#D9B48A'), 8.5, [[yard.r - 14, yard.door + 34], [yard.gx + 10, yard.front - 3]], 36, 'end2', 600) ];
+  // Script (what each one does; they walk only to get somewhere, then stay):
+  //  1. The buyer arrives at the gate as the house pops up, walks halfway up the path and stops to look at his house.
+  //  2. The dog shows up behind him and trots to his side, then sits wagging its tail.
+  //  3. His wife and son come in through the gate and walk to meet him; the three stand together in front of the house.
+  //  4. When the lights come on, the father walks to the door; the boy runs a few steps on the lawn with the puppy and they stop.
+  //  5. The cat waits by the door.
+  // Steps: ['at', x, y] place, ['walk', x, y] walk there, ['wait', ms] stand still, ['face', 1 | -1] turn (screen right / left).
+  const actorOf = (svg, w, steps, speed, at) => { const el = actor(steps[0][1], steps[0][2], svg, w); return { el, b: el.parentElement, fig: el.querySelector('svg'), steps, speed, at }; };
+  const P = (dx, dy) => [yard.gx + dx, yard.door + dy];
+  const actors = [
+    actorOf(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 9.5,
+      [['at', ...P(0, 34)], ['walk', ...P(0, 18)], ['face', -1], ['wait', 99999]], 20, 'buyer'),
+    actorOf(SVG.dog('#8A5A3B'), 12, [['at', ...P(-2, 38)], ['walk', ...P(-9, 20)], ['face', 1], ['wait', 99999]], 30, 'dog'),
+    actorOf(SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', pantsB: '#3A4456', skin: '#EAC2A0', shirtB: '#A9532F' }), 9.2,
+      [['at', ...P(3, 36)], ['walk', ...P(9, 21)], ['face', -1], ['wait', 99999]], 18, 'family'),
+    actorOf(SVG.person('#E3B23C', { hair: '#8A5A3B', pants: '#5B8DB8', pantsB: '#4A79A2', skin: '#EFC7A4', shirtB: '#C99A2E' }), 6.4,
+      [['at', ...P(5, 38)], ['walk', ...P(15, 24)], ['face', -1], ['wait', 99999]], 22, 'family'),
+    actorOf(SVG.dog('#D9B48A'), 8.5, [['at', ...P(22, 30)], ['wait', 99999]], 30, 'puppy') ];
+  // act 4: once the house is lived in, the father goes to the door and the boy plays a little with the puppy
+  const ACT4 = { father: [['walk', ...P(0, 4)], ['face', -1], ['wait', 99999]], boy: [['walk', ...P(26, 30)], ['wait', 600], ['walk', ...P(19, 26)], ['face', -1], ['wait', 99999]] };
+  /** Position, walking flag and facing of an actor at local time lt (ms since it appeared). */
+  const pose = (A, lt, steps) => { let x = steps[0][1], y = steps[0][2], face = 1, tt = lt;
+    for (const st of steps.slice(1)) {
+      if (st[0] === 'face') { face = st[1]; continue; }
+      if (st[0] === 'wait') { if (tt < st[1]) return { x, y, walk: false, face }; tt -= st[1]; continue; }
+      if (st[0] === 'walk') { const dx = st[1] - x, dy = st[2] - y, d = Math.hypot(dx, dy), dur = d / A.speed * 1000;
+        const sx2 = dx * cosZ0 - dy * sinZ0; face = sx2 < 0 ? -1 : 1;
+        if (tt < dur) { const f = tt / dur; return { x: x + dx * f, y: y + dy * f, walk: true, face }; }
+        tt -= dur; x = st[1]; y = st[2]; } }
+    return { x, y, walk: false, face }; };
+  const sinZ0 = Math.sin(-CAM_Z * Math.PI / 180), cosZ0 = Math.cos(-CAM_Z * Math.PI / 180);
   const cat = { el: actor(HM.hx + HM.hw - 12, HM.hy + HM.hd + 6, SVG.cat, 8), at: 'end' };
   const smoke = [0, 1, 2].map(() => bill(HM.chim[0], HM.chim[1], HM.chim[2], '<i class="puff"></i>'));
   const N = 6;
@@ -333,33 +354,28 @@ export function mountHeroScene(root) {
     const B = T0 + BUILD_DELAY;
     const pop = (g, z, t0) => { const u = clamp((t - t0) / 520), e = backOut(u), hop = u > 0 && u < 1 ? 7 * Math.sin(Math.PI * u) : 0;
       put(g, 'visibility', u > 0 ? 'visible' : 'hidden'); put(g, 'transform', `translateZ(${(z + hop).toFixed(2)}px) scale3d(1,1,${Math.max(e, .002).toFixed(3)})`); return clamp(u * 1.4); };
-    const POP_AT = [0, 120, 260, 520, 760];
+    const POP_AT = [0, 0, 0, 0, 0];                                 // the whole place pops up at once: house, yard, fence, carport
     const eM = HM.st.map((S, k) => pop(S.g, S.z, B + POP_AT[k]));
     top = 2 * eM[0] + 31 * eM[1];
     for (let j = 0; j < NS; j++) if (t >= T0 + j * STEP) paid = j + 1;
     // greenery grows with the garden stage
-    const gE = backOut(clamp((t - B - 700) / 500));
+    const gE = backOut(clamp((t - B) / 520));
     HM.greens.forEach(el => { put(el, 'transform', `scale(${gE.toFixed(3)})`); });
     // lived in: lights on window by window, door open, chimney smoke, car drives in
     HM.wins.forEach((w, k) => cls(w, 'lit', t > endT + 200 + k * 220));
     cls(HM.door, 'open', t > endT + 900);
     smoke.forEach((el, k) => { const ph = ((t - endT - 600 - k * 700) % 2100 + 2100) % 2100 / 2100, on = t > endT + 600 + k * 700;
       put(el, 'opacity', on ? (Math.sin(ph * Math.PI) * .75).toFixed(2) : '0'); put(el, 'transform', `translateY(${(-ph * 22).toFixed(1)}px) scale(${(.6 + ph * .9).toFixed(2)})`); });
-    const ce = easeIO(clamp((t - endT - 300) / 1400));
-    put(HM.car, 'visibility', ce > 0 ? 'visible' : 'hidden'); put(HM.car, 'transform', `translate3d(0, ${(70 * (1 - ce)).toFixed(1)}px, 0)`);
-    const AT = { k1: B + 900, k3: B + STEP * 1.6, k4: B + STEP * 2.6, k4b: B + STEP * 2.9, end: endT + 1200, end2: endT + 2000 };
-    const sinZ = Math.sin((-CAM_Z + rz) * Math.PI / 180), cosZ = Math.cos((-CAM_Z + rz) * Math.PI / 180);
-    movers.forEach(M => {
-      const u0 = clamp((t - AT[M.at]) / 420); put(M.el, 'opacity', u0 > 0 ? '1' : '0'); put(M.el, 'transform', `scale(${(u0 < 1 ? backOut(u0) : 1).toFixed(3)})`);
-      const walkT = M.L / M.speed * 1000, period = 2 * (walkT + M.pause), lt = reduce ? 0 : Math.max(0, t - AT[M.at]) % period;
-      let s0, dir = 0;
-      if (lt < M.pause) s0 = 0; else if (lt < M.pause + walkT) { s0 = (lt - M.pause) / walkT * M.L; dir = 1; }
-      else if (lt < 2 * M.pause + walkT) s0 = M.L; else { s0 = M.L * (1 - (lt - 2 * M.pause - walkT) / walkT); dir = -1; }
-      let i = 0, acc = 0; while (i < M.segs.length - 1 && acc + M.segs[i] < s0) acc += M.segs[i++];
-      const A = M.route[i], Bp = M.route[i + 1], f = M.segs[i] ? (s0 - acc) / M.segs[i] : 0;
-      put(M.b, 'left', (A[0] + (Bp[0] - A[0]) * f).toFixed(2) + 'px'); put(M.b, 'top', (A[1] + (Bp[1] - A[1]) * f).toFixed(2) + 'px');
-      cls(M.el, 'walk', dir !== 0 && u0 >= 1);
-      if (dir) { const dx = (Bp[0] - A[0]) * dir, dy = (Bp[1] - A[1]) * dir, sx2 = dx * cosZ - dy * sinZ; put(M.fig, 'transform', sx2 < 0 ? 'scaleX(-1)' : 'none'); } });
+    pop(HM.car, 0, B);                                             // the car is already parked when the house pops up
+    const AT = { buyer: B + 700, dog: B + STEP * 1.4, family: B + STEP * 2.4, puppy: endT + 1800, end: endT + 1200 };
+    const ACT4_T = endT + 400;
+    actors.forEach((A, k) => {
+      const u0 = clamp((t - AT[A.at]) / 420); put(A.el, 'opacity', u0 > 0 ? '1' : '0'); put(A.el, 'transform', `scale(${(u0 < 1 ? backOut(u0) : 1).toFixed(3)})`);
+      let ps = pose(A, reduce ? 99999 : Math.max(0, t - AT[A.at]), A.steps);
+      const extra = k === 0 ? ACT4.father : k === 3 ? ACT4.boy : null;            // act 4 continues from where they stood
+      if (extra && t > ACT4_T) ps = pose(A, reduce ? 99999 : t - ACT4_T, [['at', ps.x, ps.y], ['face', ps.face], ...extra]);
+      put(A.b, 'left', ps.x.toFixed(2) + 'px'); put(A.b, 'top', ps.y.toFixed(2) + 'px');
+      cls(A.el, 'walk', ps.walk && u0 >= 1); put(A.fig, 'transform', ps.face < 0 ? 'scaleX(-1)' : 'none'); });
     { const u = clamp((t - AT.end) / 420); put(cat.el, 'opacity', u > 0 ? '1' : '0'); put(cat.el, 'transform', `scale(${(u < 1 ? backOut(u) : 1).toFixed(3)})`); }
     cls(site, 'lawn', t > B + STEP * 3.3);
     const BILL = `rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(CAM_X + ryv)).toFixed(2)}deg)`;
