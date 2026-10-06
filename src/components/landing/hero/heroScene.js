@@ -482,7 +482,8 @@ export function mountHeroScene(root) {
     // lived in: lights on window by window, door open, chimney smoke, car drives in
     HM.wins.forEach((w, k) => cls(w, 'lit', t > endT + 200 + k * 220));
     { const o = easeIO(clamp((t - endT - 900) / 700)); put(HM.leaf, 'transform', `${HM.leaf._base || (HM.leaf._base = HM.leaf.style.transform)} rotateZ(${(78 * o).toFixed(1)}deg)`); }   // the door swings open
-    smoke.forEach((el, k) => { const ph = ((t - endT - 600 - k * 700) % 2100 + 2100) % 2100 / 2100, on = t > endT + 600 + k * 700;
+    smoke.forEach((el, k) => { const S0 = B + 400;   // smoke starts as soon as the house is up
+      const ph = ((t - S0 - k * 700) % 2100 + 2100) % 2100 / 2100, on = t > S0 + k * 700;
       put(el, 'opacity', on ? (Math.sin(ph * Math.PI) * .75).toFixed(2) : '0'); put(el, 'transform', `translateY(${(-ph * 22).toFixed(1)}px) scale(${(.6 + ph * .9).toFixed(2)})`); });
     const AT = { buyer: B + 700, dog: B + STEP * 1.4, family: B + STEP * 2.4, puppy: endT + 1800, end: endT + 1200 };
     const ACT4_T = endT + 400;

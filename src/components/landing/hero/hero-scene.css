@@ -243,3 +243,5 @@
   color: #0B7A5F; opacity: 0; transform: translateY(3px); transition: opacity .5s ease .15s, transform .5s ease .15s; pointer-events: none; }
 .landing .ox .paid > .sold-tag, .landing .ox .site.paid > .sold-tag { opacity: .9; transform: none; }
 .landing .ox .site > .sold-tag { font-size: 9px; bottom: 9px; left: auto; right: 10px; text-align: right; }   /* inside the fence line */   /* large lots: same size, bottom-right corner */
+/* chimney smoke with a soft grey tint and edge so it reads on the light background */
+.landing .ox .puff { background: radial-gradient(circle at 40% 35%, #FFFFFF 0 30%, #E2E4E8 75%, #CDD1D7 100%); box-shadow: 0 0 0 .7px rgba(110,118,130,.35), 0 1px 2px rgba(11,27,51,.12); }
