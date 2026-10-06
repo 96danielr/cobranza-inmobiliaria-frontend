@@ -21,7 +21,7 @@ test('landing CSS is scoped under .landing', () => {
     const css = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*\s*\}/g, '')
     const preludes = Array.from(css.matchAll(/([^{};]+)\{/g)).map(m => m[1].trim()).filter(p => !p.startsWith('@'))
     expect(preludes.length).toBeGreaterThan(50)
-    for (const prelude of preludes) for (const sel of prelude.split(',')) {
+    for (const prelude of preludes) for (const sel of prelude.replace(/:is\(\.landing, \.auth\)/g, '.landing').split(',')) {   // shared mini-scene rules are also scoped to .auth
       const s = sel.trim()
       expect(s.startsWith('.landing') || s.startsWith(':is(.landing, .auth)') || /^(html|body):has\(\.landing\)/.test(s), `unscoped selector: ${s}`).toBe(true)
     }

@@ -108,18 +108,19 @@ V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [
     const u = clamp((t - 4300) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 5 * Math.sin(Math.PI * u) : 0;   // pops up with a little hop
     put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`); } }; };
 
-// client sign-in · your lot: six instalments fill it one by one, then your country house pops up on it
-V.home = host => { const m = mk(host, 170, 150, { zoom: 1.02 }); const LX = 20, LY = 22, LW = 130, LD = 104;
-  const l = m.lot(LX, LY, LW, LD); l.classList.add('sold'); const tag = document.createElement('b'); tag.className = 'mtag'; l.appendChild(tag);
-  const p = m.pin(LX + LW / 2, LY + LD / 2 + 4);
-  const { house, TOP } = cottage(m, LX + 30, LY + 16, 70, 42, 16, 13);
-  return { period: 8000, update(t) {
-    const q = Math.floor(clamp((t - 400) / 4200) * 6 + 1e-6) / 6;
-    put(l._fill, 'transform', `scaleY(${q.toFixed(3)})`); cls(l, 'paid', q >= 1); cls(p, 'prog', q > 0 && q < 1); cls(p, 'done', q >= 1);
-    const txt = q >= 1 ? 'TU CASA' : q > 0 ? `CUOTA ${Math.round(q * 6)} DE 6` : ''; if (tag._t !== txt) { tag._t = txt; tag.textContent = txt; tag.className = 'mtag' + (q >= 1 ? ' ok' : ' due'); }
-    const u = clamp((t - 5000) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 7 * Math.sin(Math.PI * u) : 0;
-    put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`);
-    put(p, 'transform', m.bill(1 + TOP * easeOut(clamp((t - 5000) / 700)))); } }; };
+// client sign-in · the finished home: an L-shaped country house on a paid lot, with a tree and a stone path (static)
+V.home = host => { const m = mk(host, 170, 150, { zoom: 1.02 }); const LX = 14, LY = 16, LW = 142, LD = 118;
+  const l = m.lot(LX, LY, LW, LD); l.classList.add('sold', 'paid');
+  const tag = document.createElement('b'); tag.className = 'mtag ok'; tag.textContent = 'TU CASA'; l.appendChild(tag);
+  // main wing along x, and a side wing turned 90° coming forward on the right: an L
+  const main = cottage(m, LX + 22, LY + 18, 72, 30, 14, 11);
+  const wing = cottage(m, 0, 0, 40, 28, 14, 11);
+  main.house.style.visibility = 'visible';
+  wing.house.style.visibility = 'visible'; wing.house.style.transform = `translate3d(${LX + 22 + 72 - 28}px, ${LY + 18 + 30 + 34}px, 0) rotateZ(-90deg)`;   // comes forward from the right end
+  for (let k = 0; k < 4; k++) { const st = document.createElement('i'); st.className = 'mstone'; Object.assign(st.style, { left: (LX + 52) + 'px', top: (LY + 54 + k * 12) + 'px' }); m.pl.appendChild(st); }
+  const tree = m.div('bb', LX + 16, LY + LD - 26, 0, 0); tree.innerHTML = '<i class="mtree"></i>'; put(tree, 'transform', m.bill(0));
+  const p = m.pin(LX + 58, LY + 33); cls(p, 'done', true); put(p, 'transform', m.bill(1 + main.TOP));
+  return { period: 1e9, update() {} }; };
 
 /** Builds the vignette `kind` inside `host`, animates it while on screen, and returns a cleanup. */
 export function mountMiniScene(host, kind) {
