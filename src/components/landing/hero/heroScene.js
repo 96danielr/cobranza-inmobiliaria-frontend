@@ -191,6 +191,11 @@ export function mountHeroScene(root) {
     bush: d => `<i class="bush" style="width:${d}px;height:${d}px"></i>`,
     flower: c => `<svg class="flw" viewBox="0 0 12 12" style="width:3.2px"><path d="M6 12V6.5M6 9.4 3.6 7.6M6 8.8l2.4-1.6" stroke="#4E8A4A" stroke-width=".9" stroke-linecap="round"/><ellipse cx="3.4" cy="7.6" rx="1.6" ry=".9" fill="#5E9B57"/><ellipse cx="8.6" cy="7" rx="1.6" ry=".9" fill="#6FAF5A"/>`
       + [[6, 4.2], [3.6, 5.2], [8.4, 4.8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.7" fill="${c}"/><circle cx="${x}" cy="${y}" r=".55" fill="#F7D24A"/>`).join('') + '</svg>',
+    // hammock on a wooden A-frame stand: about 2.2 m long, so it reads next to a 1.75 m person
+    hammock: w => `<svg class="flw" viewBox="0 0 30 13" style="width:${w}px"><ellipse cx="15" cy="12.4" rx="12" ry=".7" fill="rgba(11,27,51,.15)"/>`
+      + `<path d="M3 12.4 6 3l3 9.4M21 12.4 24 3l3 9.4" stroke="#8A5A3B" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="M6 3h18" stroke="#734A30" stroke-width=".9"/><path d="M6 3.6q9 8 18 0" stroke="#5E97BD" stroke-width="2.6" fill="none" stroke-linecap="round"/>`
+      + `<path d="M8 4.6q7 5.4 14 0" stroke="#F2E6C9" stroke-width=".8" fill="none" opacity=".9"/></svg>`,
     tree: d => `<svg class="flw" viewBox="0 0 20 26" style="width:${d}px"><ellipse cx="10" cy="25.2" rx="6" ry="1" fill="rgba(11,27,51,.18)"/><path d="M9 25V15h2v10z" fill="#7A6A57"/><circle cx="10" cy="10" r="8.6" fill="#6FAF8E"/><circle cx="7.4" cy="7.2" r="4.2" fill="#9ED3B4" opacity=".55"/><path d="M3 12a8.6 8.6 0 0 0 14 4" stroke="#4E8A6D" stroke-width="2.4" fill="none" opacity=".45"/></svg>`,
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
   const actor = (x, y, svg, w) => bill(x, y, 0, `<div class="pet" style="width:${w}px">${svg}</div>`);
@@ -250,9 +255,10 @@ export function mountHeroScene(root) {
     box(g4, gate + 15.5, gy + .6, 0, .8, .8, 6.5, { top: '#3A4556', front: '#2A3442', back: '#2A3442', left: '#2A3442', right: '#1E2733', noLine: true });   // mailbox post
     box(g4, gate + 14.4, gy - .4, 6.5, 3, 2.8, 2.4, { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true });
     fence(g4, ox + FI, oy + FI, SW - 2 * FI, SD - 2 * FI, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
+    const hammockEl = bill(hx + hw - 18, hy + hd + 17, 0, SVG.hammock(9.6));   // next to the bush, same scale as the people
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => bill(x, y, 0, SVG.tree(17)));   // trunk + canopy in one drawing
-    const H = { st, wins, door, leaf, greens: [...greens, ...trees, ...flowers], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
+    const H = { st, wins, door, leaf, greens: [...greens, ...trees, ...flowers, hammockEl], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
     if (o.carport) {                                                  // driveway with the car near the gate, and a pool behind it
       const cg = stage(); const DY = hy + 2, PD = 44, DECK = 4;                          // a long lap pool (about 10 m)
       const CAR_Y = DY + PD + 14;                                                    // the car parks right after the pool deck

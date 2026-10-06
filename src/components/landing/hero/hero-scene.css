@@ -218,3 +218,13 @@
     linear-gradient(90deg, rgba(126,160,110,.35), transparent 14%, transparent 86%, rgba(126,160,110,.35)),
     #EBE2CE;
   background-size: 100% 13px, 100% 13px, 100% 13px, 100% 13px, 100% 13px, 1.3px 1.1px, 100% 100%, auto; }
+/* the walkway around the house matches the entrance: warm gravel with flagstones */
+.landing .ox .plan.walkway { box-shadow: none;
+  background:
+    radial-gradient(ellipse 2.4px 1.6px at 25% 30%, #CDBF9F 0 92%, transparent 100%),
+    radial-gradient(ellipse 2.1px 1.4px at 70% 65%, #C8B998 0 92%, transparent 100%),
+    radial-gradient(ellipse 2px 1.4px at 55% 15%, #D0C2A3 0 92%, transparent 100%),
+    radial-gradient(circle, rgba(140,120,90,.22) 0 .3px, transparent .45px) 0 0/1.3px 1.1px,
+    #EBE2CE;
+  background-size: 11px 9px, 11px 9px, 11px 9px, 1.3px 1.1px, auto; }
+.landing .ox .plan.walkway { opacity: .55; }   /* the walkway stays in the background */
