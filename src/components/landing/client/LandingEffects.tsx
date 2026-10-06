@@ -21,12 +21,14 @@ export default function LandingEffects() {
       ticking = true
       requestAnimationFrame(() => {
         ticking = false
-        const r = art.getBoundingClientRect(), c = r.top + r.height / 2 - innerHeight / 2
-        art.style.transform = `translate3d(0, ${(c * -0.06).toFixed(1)}px, 0)`
+        // parallax only while the hero is near the top, measured from the page offset (not the moved element),
+        // and clamped, so the art can never drift into the sections below
+        const y = Math.min(window.scrollY, innerHeight)
+        art.style.transform = `translate3d(0, ${(y * 0.06).toFixed(1)}px, 0)`
       })
     }
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!reduce) window.addEventListener('scroll', onScroll, { passive: true })
+    if (!reduce) { window.addEventListener('scroll', onScroll, { passive: true }); onScroll() }
     return () => { io.disconnect(); window.removeEventListener('scroll', onScroll) }
   }, [])
   return null
