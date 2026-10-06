@@ -98,49 +98,65 @@ export function mountHeroScene(root) {
   // white massing houses that buyers build after their lot is paid off (only some lots)
   const WHITE = { top: '#FFFFFF', front: '#EFEDE7', back: '#E6E3DC', left: '#E6E3DC', right: '#D3CFC6' };
   const ROOFW = { top: '#F7F6F2', front: '#DCD8CF', back: '#DCD8CF', left: '#DCD8CF', right: '#C8C3B8', noLine: true };
-  const HOUSE_LOTS = { '0,0': 0, '3,3': 0 };                 // lot key -> house group
+  const WALL = { top: '#FBF8F1', front: '#FFFAF0', back: '#E8DFCC', left: '#DCCDB2', right: '#CBBB9C' };
+  const STONE = { top: '#B7AA92', front: '#A99C85', back: '#A99C85', left: '#9C8F78', right: '#8E826C', noLine: true };
+  const WOOD = { top: '#B98A62', front: '#8A5A3B', back: '#8A5A3B', left: '#8A5A3B', right: '#734A30', noLine: true };
+  const HOUSE_LOTS = { '3,3': 0 };                 // lot key -> house group
   Object.keys(HOUSE_LOTS).forEach(k => { const [c, r] = k.split(',').map(Number), [x, y] = lotXY(c, r);
-    // small country houses (same language as the main one): white walls, tile gable roof, a lit window
-    const g = group(); const hb = box(g, x + 15, y + 17, 0, 34, 24, 9, { top: '#FBF8F1', front: '#F1EBDD', back: '#E6DFCE', left: '#E6DFCE', right: '#DCD3C0' });
-    const w1 = document.createElement('i'); w1.className = 'win lit'; Object.assign(w1.style, { left: '6px', top: '3px', width: '5px', height: '4.5px' }); hb._front.appendChild(w1);
-    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: '20px', top: '2px', width: '5px', height: '7px' }); hb._front.appendChild(dr);
-    gableRoof(g, x + 15, y + 17, 9, 34, 24, 8, 2.5);
+    // small country house, same language as the main one: stone plinth, white walls with windows (glass reflection),
+    // a door with a step, chimney and a barrel-tile roof; a tree beside it
+    const g = group(); g.classList.add('round');
+    const X = x + 12, Y = y + 14, W = 40, D = 26;
+    box(g, X - 2, Y - 2, 0, W + 4, D + 4, 1.4, { ...STONE, top: '#D9D3C6' });
+    const hb = box(g, X, Y, 1.4, W, D, 9.6, WALL);
+    const wn = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win lit'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); };
+    [4, 11, 27, 34].forEach(l => wn(hb._front, l - 1, 2.4, 4.6, 4.4)); [6, 15].forEach(tp => { wn(hb._faces[2], 2.2, tp, 4.6, 5); wn(hb._faces[3], 2.2, tp, 4.6, 5); });
+    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: '18px', top: '1.6px', width: '5.4px', height: '7.6px' }); hb._front.appendChild(dr);
+    box(g, X + 16.4, Y + D, 0, 8.6, 3.2, 1.4, { ...WOOD, top: '#B98A62' });
+    box(g, X + W - 10, Y + 5, 11, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
+    gableRoof(g, X, Y, 11, W, D, 9, 2.6);
+    box(g, x + 5, y + LD - 9, 0, 1.2, 1.2, 6, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true });
     g.style.visibility = 'hidden'; HOUSE_LOTS[k] = g; });
-  const HOUSE_H = 17, HOUSE_DELAY = 500, HOUSE_DUR = 520;
+  const HOUSE_H = 20, HOUSE_DELAY = 500, HOUSE_DUR = 520;
   // trees as plan symbols
   const tree = (x, y, s = 1) => { const g = group(); div('plan tree', { left: x + 'px', top: y + 'px', width: (9 * s) + 'px', height: (9 * s) + 'px' }, g); return g; };   // plan symbol
   const trees = [];                                             // the big lot keeps a clean plan (no inner outlines)
 
   // country houses (casa campestre): built in stages with no scaffolding, then lived in little by little.
   // Everything is soft and rounded: round bushes and tree canopies, rounded car, pets and people as flat drawings.
-  const WALL = { top: '#FBF8F1', front: '#FFFAF0', back: '#E8DFCC', left: '#DCCDB2', right: '#CBBB9C' };
-  const STONE = { top: '#B7AA92', front: '#A99C85', back: '#A99C85', left: '#9C8F78', right: '#8E826C', noLine: true };
-  const WOOD = { top: '#B98A62', front: '#8A5A3B', back: '#8A5A3B', left: '#8A5A3B', right: '#734A30', noLine: true };
   const PICKX = 'linear-gradient(#FFFFFF 0 .5px, #BDB3A1 .5px 1px, transparent 1.1px calc(100% - 1.6px), #BDB3A1 calc(100% - 1.5px) calc(100% - 1px), #FFFFFF calc(100% - 1px)), repeating-linear-gradient(90deg, #C2B9A8 0 .35px, #FFFFFF .35px 1.7px, #C2B9A8 1.7px 2.05px, transparent 2.05px 3.6px)';
   const PICKY = 'linear-gradient(90deg, #FFFFFF 0 .5px, #BDB3A1 .5px 1px, transparent 1.1px calc(100% - 1.6px), #BDB3A1 calc(100% - 1.5px) calc(100% - 1px), #FFFFFF calc(100% - 1px)), repeating-linear-gradient(180deg, #C2B9A8 0 .35px, #FFFFFF .35px 1.7px, #C2B9A8 1.7px 2.05px, transparent 2.05px 3.6px)';
   const bills = [];                                                // camera-facing items: { b, z }
   const bill = (x, y, z, html) => { const b = div('bb', { left: x + 'px', top: y + 'px' }); b.innerHTML = html; bills.push({ b, z }); return b.firstChild; };
   const SVG = {
     // side-view figure with joints: hip -> knee -> foot and shoulder -> elbow; each limb is a group rotated around its joint
-    person: (shirt, o = {}) => { const skin = o.skin || '#E2B48F', pants = o.pants || '#33415A', hair = o.hair || '#3B2A20', shoe = '#2A2420';
-      const leg = (k, c) => `<g class="thigh ${k}" style="transform-origin:8px 19.5px"><path d="M8 19.5V26" stroke="${c}" stroke-width="3.3" stroke-linecap="round"/>`
-        + `<g class="shin" style="transform-origin:8px 26px"><path d="M8 26v5.6" stroke="${c}" stroke-width="2.9" stroke-linecap="round"/><path d="M7 32.2h3.6" stroke="${shoe}" stroke-width="2.2" stroke-linecap="round"/></g></g>`;
-      const arm = (k, c, sk) => `<g class="uarm ${k}" style="transform-origin:8px 11.2px"><path d="M8 11.2v5" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>`
-        + `<g class="farm" style="transform-origin:8px 16.2px"><path d="M8 16.2v4.2" stroke="${sk}" stroke-width="2.1" stroke-linecap="round"/><circle cx="8" cy="20.9" r="1.25" fill="${sk}"/></g></g>`;
-      return `<svg viewBox="0 0 16 35" class="fig"><ellipse cx="8.5" cy="33.6" rx="5" ry="1" fill="rgba(11,27,51,.18)"/>`
+    // side-view figure, ~7.5 heads tall: shoulders, chest and hips; thigh -> shin -> shoe and upper arm -> forearm -> hand,
+    // each limb a group rotated around its joint (hip 9,20 · knee 9,27 · shoulder 9,11.6 · elbow 9,16.8)
+    person: (shirt, o = {}) => { const skin = o.skin || '#E2B48F', pants = o.pants || '#33415A', hair = o.hair || '#3B2A20';
+      const leg = (k, c) => `<g class="thigh ${k}" style="transform-origin:9px 20px"><path d="M9 20v7" stroke="${c}" stroke-width="3.9" stroke-linecap="round"/>`
+        + `<g class="shin" style="transform-origin:9px 27px"><path d="M9 27v5.4" stroke="${c}" stroke-width="3.3" stroke-linecap="round"/>`
+        + `<path d="M7.6 33.1h4.6a1.2 1.2 0 0 0 0-2.2H9.4" fill="#2A2420"/><path d="M7.4 33.6h5.2" stroke="#F1ECE4" stroke-width=".5" stroke-linecap="round"/></g></g>`;
+      const arm = (k, c, sk) => `<g class="uarm ${k}" style="transform-origin:9px 11.6px"><path d="M9 11.6v5.2" stroke="${c}" stroke-width="2.9" stroke-linecap="round"/>`
+        + `<g class="farm" style="transform-origin:9px 16.8px"><path d="M9 16.8v4" stroke="${sk}" stroke-width="2.3" stroke-linecap="round"/><ellipse cx="9.3" cy="21.5" rx="1.25" ry="1.45" fill="${sk}"/></g></g>`;
+      return `<svg viewBox="0 0 18 36" class="fig"><ellipse cx="9.6" cy="34.4" rx="5.4" ry="1.1" fill="rgba(11,27,51,.2)"/>`
         + `<g class="body">${leg('b', o.pantsB || '#26324A')}${arm('b', o.shirtB || shirt, skin)}`
-        + `<rect x="5.2" y="9.6" width="5.8" height="11" rx="2.6" fill="${shirt}"/><path d="M5.6 18.6h5" stroke="rgba(0,0,0,.18)" stroke-width="1"/>`
-        + `<rect x="7" y="7.4" width="2.4" height="2.8" rx="1" fill="${skin}"/><circle cx="8.6" cy="5" r="3.6" fill="${skin}"/><path d="M11.9 5.2l1 .9-1 .3" fill="${skin}"/>`
-        + `<circle cx="10.3" cy="4.6" r=".5" fill="#2A2420"/><path d="M10 6.8q.7.3 1.2-.1" stroke="#9A5B45" stroke-width=".45" fill="none" stroke-linecap="round"/>`
-        + `<path d="${o.long ? 'M5 5.4C4.6 1.6 7 .8 8.8 1.1c2.6.3 3.9 1.8 3.4 3.3-1.4-.6-3-1-4.3-.8-.4 1.3-.5 3.5-.2 6.7-1.9-.8-2.9-2.6-2.7-4.9z' : 'M5.1 5.4C4.9 2 6.8 1.1 8.8 1.2c2.4.2 3.7 1.6 3.3 3.2-1.3-.5-2.8-.8-4.2-.6-.5.6-.8 1.3-.9 2.3-.7-.4-1.4-.4-1.9-.7z'}" fill="${hair}"/>`
+        + `<path d="M6.4 11.2C6.6 9.9 7.7 9.3 9 9.3h.9c1.6 0 2.7.9 2.9 2.4l.4 6.4c.1 1.3-.3 2.1-1.3 2.4H6.9c-.9-.3-1.2-1-1.1-2z" fill="${shirt}"/>`
+        + `<path d="M6.2 19.6h6.7v1.2H6.2z" fill="${o.belt || '#5E3B24'}"/><path d="M11.6 10.2c.6 2 .7 4.6.4 7.6" stroke="rgba(0,0,0,.12)" stroke-width="1" fill="none"/>`
+        + `<rect x="8.3" y="7.3" width="2.4" height="2.6" rx="1.1" fill="${skin}"/>`
+        + `<ellipse cx="9.7" cy="4.9" rx="3.3" ry="3.6" fill="${skin}"/><path d="M12.8 4.6l.9 1.2-.8.4" fill="${skin}"/><ellipse cx="8.4" cy="5.2" rx=".75" ry=".95" fill="#D49E7A"/>`
+        + `<circle cx="11.6" cy="4.3" r=".42" fill="#2A2420"/><path d="M11.1 3.4h1" stroke="${hair}" stroke-width=".4" stroke-linecap="round"/><path d="M11.4 6.6q.6.25 1-.1" stroke="#9A5B45" stroke-width=".4" fill="none" stroke-linecap="round"/>`
+        + `<path d="${o.long ? 'M6.1 5.6C5.5 1.9 7.6.9 9.6 1c2.3.1 3.6 1.3 3.5 2.9-1.3-.5-2.7-.7-4-.5-.6 1.6-.6 4.1-.1 7.4-.9 0-1.6-.3-2.2-1.1-.7-1-.8-2.5-.7-4.1z' : 'M6.2 5.5C6 2.3 7.8 1.2 9.7 1.3c2.2.1 3.4 1.2 3.3 2.7-1.2-.4-2.6-.6-3.9-.4-.5.6-.8 1.4-.9 2.4-.6-.4-1.3-.4-1.9-.5z'}" fill="${hair}"/>`
         + `${leg('f', pants)}${arm('f', shirt, skin)}</g></svg>`; },
-    dog: c => `<svg viewBox="0 0 34 24" class="fig"><ellipse cx="17" cy="22.8" rx="10" ry="1" fill="rgba(11,27,51,.18)"/><g class="body">`
-      + ['8.5 13', '23.5 13'].map((p, i) => `<g class="paw b${i}" style="transform-origin:${p.replace(' ', 'px ')}px"><path d="M${p}v8.6" stroke="${c}" stroke-width="2.6" stroke-linecap="round" opacity=".75"/></g>`).join('')
-      + `<path d="M6 11.5q-4-2.5-3.2-6.4" stroke="${c}" stroke-width="2.4" fill="none" stroke-linecap="round" class="tail" style="transform-origin:6px 11.5px"/>`
-      + `<rect x="5" y="8.6" width="21" height="8.6" rx="4.3" fill="${c}"/><circle cx="26.5" cy="7.6" r="4.6" fill="${c}"/><ellipse cx="30.2" cy="9.2" rx="2.8" ry="2" fill="${c}"/>`
-      + `<circle cx="32.4" cy="8.6" r=".9" fill="#1F1712"/><path d="M23.6 4.8q-1.4 3.6.8 5" stroke="#5E3B24" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".6"/><circle cx="27.8" cy="6.6" r=".8" fill="#1F1712"/>`
-      + ['10.5 13', '21.5 13'].map((p, i) => `<g class="paw f${i}" style="transform-origin:${p.replace(' ', 'px ')}px"><path d="M${p}v8.6" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/></g>`).join('')
-      + `</g></svg>`,
+    dog: (c, d = 'rgba(0,0,0,.22)') => { const leg = (k, x, back) => `<g class="paw ${k}" style="transform-origin:${x}px 13.5px"><path d="M${x} 13.5v7" stroke="${c}" stroke-width="2.7" stroke-linecap="round"${back ? ' opacity=".72"' : ''}/><ellipse cx="${x + .6}" cy="21.2" rx="1.7" ry=".9" fill="${c}"${back ? ' opacity=".72"' : ''}/></g>`;
+      return `<svg viewBox="0 0 34 24" class="fig"><ellipse cx="17" cy="22.6" rx="11" ry="1.1" fill="rgba(11,27,51,.18)"/><g class="body">`
+        + leg('b0', 9, 1) + leg('b1', 23, 1)
+        + `<path class="tail" style="transform-origin:6.5px 10.5px" d="M6.5 10.5C3.5 9.5 2.6 7 3.4 4.6" stroke="${c}" stroke-width="2.3" fill="none" stroke-linecap="round"/>`
+        + `<path d="M6 11.2C6 8.6 8 7.6 10.6 7.6h10.6c2.5 0 4 1.3 4.2 3.4l.2 2.2c.1 1.6-1 2.6-2.6 2.6H9.6C7.4 15.8 6 14 6 11.2z" fill="${c}"/>`
+        + `<path d="M9 14.6h12.4" stroke="${d}" stroke-width="1.2" stroke-linecap="round"/>`
+        + `<path d="M22.4 9.6c.2-2.4 1.2-4 3.1-4.4 1.6-.3 3 .3 3.8 1.5l2.6.6c.9.2 1.3.9 1.1 1.7-.2.8-.9 1.2-1.8 1.2h-3.4c-.9 1.2-2.3 1.8-3.9 1.6z" fill="${c}"/>`
+        + `<path d="M25.1 5.9c-1.1.4-1.6 1.7-1.3 3.4.8.4 1.6.3 2.1-.3.3-1.3.1-2.4-.8-3.1z" fill="${d}"/>`
+        + `<circle cx="27.6" cy="7.4" r=".75" fill="#1F1712"/><ellipse cx="32.7" cy="8.6" rx=".85" ry=".7" fill="#1F1712"/>`
+        + leg('f0', 11, 0) + leg('f1', 21, 0) + `</g></svg>`; },
     cat: `<svg viewBox="0 0 24 24"><path d="M17 20q5 0 4.5-6" stroke="#33415A" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="17" rx="6.5" ry="5.6" fill="#33415A"/><circle cx="11" cy="9" r="4.7" fill="#33415A"/><path d="M7.1 6.7 6.9 2.4l3.2 2.4zM14.9 6.7l.2-4.3-3.2 2.4z" fill="#33415A"/><circle cx="9.3" cy="9" r=".95" fill="#E3B23C"/><circle cx="12.7" cy="9" r=".95" fill="#E3B23C"/></svg>`,
     bush: d => `<i class="bush" style="width:${d}px;height:${d}px"></i>`,
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
@@ -164,8 +180,20 @@ export function mountHeroScene(root) {
     const g3 = stage(); box(g3, hx + hw - 18, hy + 7, 2 + WALL_H, 6, 6, ROOF_H + 4, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
     box(g3, hx + fw - 9, hy + hd, 0, 18, 6, 2.4, WOOD); box(g3, hx + fw - 6, hy + hd + 6, 0, 12, 3, 1.2, WOOD);   // entrance deck and step, no roof
     const g4 = stage(); const gate = hx + fw - 3;
-    for (let yy = hy + hd + 11; yy < oy + SD - 8; yy += 7) div('plan stone', { left: (gate - 1) + 'px', top: yy + 'px', width: '9px', height: '5px' }, g4);   // stone path door -> gate
-    fence(g4, ox + 2, oy + 2, SW - 4, SD - 4, [[gate - 3, gate + 10], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
+    // entrance: a flagstone path from the gate to the door step, framed by two stone pillars with lanterns and an open wooden gate
+    const pathTop = hy + hd + 8.5, pathBot = oy + SD - 2;
+    div('plan path', { left: (gate - 2) + 'px', top: pathTop + 'px', width: '12px', height: (pathBot - pathTop) + 'px' }, g4);
+    const PIL = { top: '#E4DCCB', front: 'repeating-linear-gradient(180deg, #CFC4AE 0 2.6px, #B9AD95 2.6px 3px)', back: '#C9BEA8', left: '#C2B69F', right: '#ADA08A', noLine: true };
+    const CAP = { top: '#F1ECE1', front: '#D9D1C0', back: '#D9D1C0', left: '#D9D1C0', right: '#C4BBA8', noLine: true };
+    const LAN = { top: '#2E3440', front: 'linear-gradient(180deg, #2E3440 0 20%, #FFE7A6 20% 80%, #2E3440 80%)', back: '#FFE7A6', left: '#FFE7A6', right: '#F3D58A', noLine: true };
+    const gy = oy + SD - 4.2;
+    [gate - 5.2, gate + 10.2].forEach(px => { box(g4, px, gy, 0, 3.4, 3.4, 9, PIL); box(g4, px - .5, gy - .5, 9, 4.4, 4.4, 1, CAP); box(g4, px + .7, gy + .7, 10, 2, 2, 2.6, LAN); });
+    const GATE = { top: '#9C6B45', front: 'repeating-linear-gradient(90deg, #8A5A3B 0 1px, #A8774F 1px 1.9px)', back: 'repeating-linear-gradient(90deg, #8A5A3B 0 1px, #A8774F 1px 1.9px)', left: '#734A30', right: '#734A30', noLine: true };
+    [[gate - 1.8, 1], [gate + 10.2, -1]].forEach(([hx0, sgn]) => { const leaf = div('g', { transform: `translate3d(${hx0}px, ${gy + 1.5}px, 0) rotateZ(${sgn * -68}deg)`, transformOrigin: '0 0' }, g4);
+      box(leaf, sgn > 0 ? 0 : -6.2, -.3, .6, 6.2, .6, 6.2, GATE); });                     // gate leaves, swung open inward
+    box(g4, gate + 15.5, gy + .6, 0, .8, .8, 6.5, { top: '#3A4556', front: '#2A3442', back: '#2A3442', left: '#2A3442', right: '#1E2733', noLine: true });   // mailbox post
+    box(g4, gate + 14.4, gy - .4, 6.5, 3, 2.8, 2.4, { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true });
+    fence(g4, ox + 2, oy + 2, SW - 4, SD - 4, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => { box(g4, x - .8, y - .8, 0, 1.6, 1.6, 9, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true }); return bill(x, y, 8, SVG.canopy(15)); });
     const H = { st, wins, door, greens: [...greens, ...trees], top: 2 + WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, 2 + WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
@@ -175,7 +203,7 @@ export function mountHeroScene(root) {
       const ALU = { top: '#C9CFD6', front: '#AEB6C0', back: '#AEB6C0', left: '#AEB6C0', right: '#97A0AB', noLine: true };
       box(cg, o.cpX - 1, hy + 3, 13, o.cpW + 2, 46, 1, ALU);                            // aluminium frame
       const sheet = box(cg, o.cpX - .4, hy + 3.6, 14, o.cpW + .8, 44.8, .4, { top: 'repeating-linear-gradient(180deg, rgba(255,255,255,.55) 0 .5px, rgba(190,214,228,.0) .5px 3.6px), linear-gradient(135deg, rgba(214,232,242,.82), rgba(176,204,222,.72) 60%, rgba(232,244,250,.85))', front: '#B4C8D6', back: '#B4C8D6', left: '#B4C8D6', right: '#9FB4C4', noLine: true });   // translucent polycarbonate roof, corrugated
-      const car = group(); car.classList.add('round');
+      const car = group(cg); car.classList.add('round');
       const CAR = { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true };
       const GL = { top: 'linear-gradient(135deg, #CFE0F0, #8FB0D2 55%, #E8F1FA 57%, #8FB0D2 62%)', front: 'linear-gradient(120deg, #9DBAD8, #6E90B5 50%, #D8E6F3 53%, #6E90B5 58%)', back: '#6E90B5', left: '#7E9EC0', right: '#6584A6', noLine: true };
       const WH = { top: '#1F2937', front: '#111827', back: '#111827', left: '#111827', right: '#0B1220', noLine: true };
@@ -201,14 +229,14 @@ export function mountHeroScene(root) {
   const actorOf = (svg, w, steps, speed, at) => { const el = actor(steps[0][1], steps[0][2], svg, w); return { el, b: el.parentElement, fig: el.querySelector('svg'), steps, speed, at }; };
   const P = (dx, dy) => [yard.gx + dx, yard.door + dy];
   const actors = [
-    actorOf(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 9.5,
+    actorOf(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 10.5,
       [['at', ...P(0, 34)], ['walk', ...P(0, 18)], ['face', -1], ['wait', 99999]], 20, 'buyer'),
-    actorOf(SVG.dog('#8A5A3B'), 12, [['at', ...P(-2, 38)], ['walk', ...P(-9, 20)], ['face', 1], ['wait', 99999]], 30, 'dog'),
-    actorOf(SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', pantsB: '#3A4456', skin: '#EAC2A0', shirtB: '#A9532F' }), 9.2,
+    actorOf(SVG.dog('#8A5A3B'), 13, [['at', ...P(-2, 38)], ['walk', ...P(-9, 20)], ['face', 1], ['wait', 99999]], 30, 'dog'),
+    actorOf(SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', pantsB: '#3A4456', skin: '#EAC2A0', shirtB: '#A9532F', belt: '#3A2A20' }), 10,
       [['at', ...P(3, 36)], ['walk', ...P(9, 21)], ['face', -1], ['wait', 99999]], 18, 'family'),
-    actorOf(SVG.person('#E3B23C', { hair: '#8A5A3B', pants: '#5B8DB8', pantsB: '#4A79A2', skin: '#EFC7A4', shirtB: '#C99A2E' }), 6.4,
+    actorOf(SVG.person('#E3B23C', { hair: '#8A5A3B', pants: '#5B8DB8', pantsB: '#4A79A2', skin: '#EFC7A4', shirtB: '#C99A2E' }), 7,
       [['at', ...P(5, 38)], ['walk', ...P(15, 24)], ['face', -1], ['wait', 99999]], 22, 'family'),
-    actorOf(SVG.dog('#D9B48A'), 8.5, [['at', ...P(22, 30)], ['wait', 99999]], 30, 'puppy') ];
+    actorOf(SVG.dog('#D9B48A'), 9.5, [['at', ...P(22, 30)], ['wait', 99999]], 30, 'puppy') ];
   // act 4: once the house is lived in, the father goes to the door and the boy plays a little with the puppy
   const ACT4 = { father: [['walk', ...P(0, 4)], ['face', -1], ['wait', 99999]], boy: [['walk', ...P(26, 30)], ['wait', 600], ['walk', ...P(19, 26)], ['face', -1], ['wait', 99999]] };
   /** Position, walking flag and facing of an actor at local time lt (ms since it appeared). */
@@ -366,7 +394,6 @@ export function mountHeroScene(root) {
     cls(HM.door, 'open', t > endT + 900);
     smoke.forEach((el, k) => { const ph = ((t - endT - 600 - k * 700) % 2100 + 2100) % 2100 / 2100, on = t > endT + 600 + k * 700;
       put(el, 'opacity', on ? (Math.sin(ph * Math.PI) * .75).toFixed(2) : '0'); put(el, 'transform', `translateY(${(-ph * 22).toFixed(1)}px) scale(${(.6 + ph * .9).toFixed(2)})`); });
-    pop(HM.car, 0, B);                                             // the car is already parked when the house pops up
     const AT = { buyer: B + 700, dog: B + STEP * 1.4, family: B + STEP * 2.4, puppy: endT + 1800, end: endT + 1200 };
     const ACT4_T = endT + 400;
     actors.forEach((A, k) => {

@@ -156,3 +156,5 @@
 @keyframes hs-bob { from { transform: translateY(0); } to { transform: translateY(-.7px); } }
 @media (prefers-reduced-motion: reduce) { .landing .ox .walk * { animation: none !important; } }
 .landing .ox .pet:not(.walk) .tail { animation: hs-tail .5s ease-in-out infinite alternate; }   /* dogs wag while standing */
+.landing .ox .plan.path { border-radius: 2px; box-shadow: inset 0 0 0 .5px rgba(11,27,51,.18);
+  background: repeating-linear-gradient(180deg, transparent 0 5.4px, #CFC6B4 5.4px 6.2px), linear-gradient(90deg, #E6DECD 0 48%, #CFC6B4 48% 52%, #E3DACA 52%); }
