@@ -68,13 +68,33 @@ V.secure = host => { const m = mk(host, 220, 170, { dark: true, zoom: .68 });
     put(ring, 'opacity', (r > 0 && r < 1 ? (1 - r) * .9 : 0).toFixed(2)); } }; };
 // closing · the whole portfolio collected, one buyer builds
 V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [];
-  for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { const x = 10 + c * 78, y = 24 + r * 70, l = m.lot(x, y, 70, 60); l.classList.add('sold'); lots.push({ l, p: m.pin(x + 35, y + 30) }); }
-  const house = m.group(); m.box(house, 10 + 78 + 18, 24 + 70 + 14, 0, 34, 30, 12, WHITE); m.box(house, 10 + 78 + 16.5, 24 + 70 + 12.5, 12, 37, 33, 1.6, { ...WHITE, top: '#F7F6F2', noLine: true });
+  // each lot shows its state on the ground near its front edge: "EN RECAUDO" while it fills yellow, "VENDIDO" once green
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { const x = 10 + c * 78, y = 24 + r * 70, l = m.lot(x, y, 70, 60); l.classList.add('sold');
+    const tag = document.createElement('b'); tag.className = 'mtag'; l.appendChild(tag); lots.push({ l, tag, p: m.pin(x + 35, y + 30) }); }
+  // a small country house on lot 5, set back toward the rear: white walls, door and windows, a tiled gable roof
+  const HX = 10 + 78 + 17, HY = 24 + 70 + 7, HW = 36, HD = 24, WH = 11, RH = 8, OV = 2.4;
+  const house = m.group();
+  const WALLS = { top: '#FBF8F1', front: '#FFFAF0', back: '#E8DFCC', left: '#DCCDB2', right: '#CBBB9C' };
+  m.box(house, HX - 1.5, HY - 1.5, 0, HW + 3, HD + 3, 1.6, { top: '#D9D3C6', front: '#A99C85', back: '#A99C85', left: '#9C8F78', right: '#8E826C', noLine: true });
+  const body = m.box(house, HX, HY, 1.6, HW, HD, WH, WALLS);
+  const add = (cls, css) => { const e = document.createElement('i'); e.className = cls; Object.assign(e.style, css); body._front.appendChild(e); };
+  add('mwin', { left: '4px', top: '3.4px', width: '7px', height: '5px' }); add('mwin', { left: (HW - 11) + 'px', top: '3.4px', width: '7px', height: '5px' });
+  add('mdoor', { left: (HW / 2 - 2.6) + 'px', top: '0px', width: '5.2px', height: '9px' });
+  const roof = document.createElement('div'); roof.className = 'g'; roof.style.transform = `translateZ(${1.6 + WH}px)`; house.appendChild(roof);
+  const half = HD / 2 + OV, L = Math.hypot(half, RH), ang = Math.atan2(RH, half) * 180 / Math.PI;
+  const TILE = 'repeating-linear-gradient(180deg, transparent 0 4px, rgba(60,20,8,.32) 4px 4.8px), repeating-linear-gradient(90deg, #8F4320 0 .6px, #C9693D .6px 2px, #E08A5C 2px 3px, #C9693D 3px 4px)';
+  [[-ang, TILE], [-(180 - ang), TILE]].forEach(([deg, bg]) => { const f = document.createElement('div'); f.className = 'f';
+    Object.assign(f.style, { left: (HX - OV) + 'px', top: (HY + HD / 2) + 'px', width: (HW + 2 * OV) + 'px', height: L + 'px', transformOrigin: '50% 0', transform: `translateZ(${RH}px) rotateX(${deg}deg)`, background: bg }); roof.appendChild(f); });
+  [HX, HX + HW].forEach(ex => { const f = document.createElement('div'); f.className = 'f';
+    Object.assign(f.style, { left: ex + 'px', top: HY + 'px', width: RH + 'px', height: HD + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: '#DCCDB2', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }); roof.appendChild(f); });
+  const TOP = 1.6 + WH + RH;
   return { period: 7000, update(t) {
     lots.forEach((o, k) => { const s = 300 + k * 420, q = Math.floor(clamp((t - s) / 1300) * 4 + 1e-6) / 4;
       put(o.l._fill, 'transform', `scaleY(${q})`); cls(o.l, 'paid', q >= 1); cls(o.p, 'prog', q > 0 && q < 1); cls(o.p, 'done', q >= 1);
-      put(o.p, 'transform', m.bill(k === 4 ? 1 + 13.6 * easeOut(clamp((t - 4300) / 900)) : 1)); });
-    const e = easeOut(clamp((t - 4300) / 900)); put(house, 'visibility', e > .01 ? 'visible' : 'hidden'); put(house, 'transform', `scale3d(1,1,${Math.max(e, .01).toFixed(3)})`); } }; };
+      const txt = q >= 1 ? 'VENDIDO' : q > 0 ? 'EN RECAUDO' : ''; if (o.tag._t !== txt) { o.tag._t = txt; o.tag.textContent = txt; o.tag.className = 'mtag' + (q >= 1 ? ' ok' : ' due'); }
+      put(o.p, 'transform', m.bill(k === 4 ? 1 + TOP * easeOut(clamp((t - 4300) / 700)) : 1)); });
+    const u = clamp((t - 4300) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 5 * Math.sin(Math.PI * u) : 0;   // pops up with a little hop
+    put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`); } }; };
 
 /** Builds the vignette `kind` inside `host`, animates it while on screen, and returns a cleanup. */
 export function mountMiniScene(host, kind) {

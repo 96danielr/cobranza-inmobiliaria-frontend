@@ -488,3 +488,8 @@ body:has(.landing)::before { display: none; }
 .landing .feedtx .more, .landing .bc-tx .more, .landing .head > .more { transition: color .2s ease, border-color .2s ease; }
 .landing .hero .already a:hover, .landing .close2 .box .tx .mail a:hover, .landing .close2 .consent a:hover,
 .landing .feedtx .more:hover, .landing .bc-tx .more:hover, .landing .head > .more:hover { color: #0FA37F; border-bottom-color: #0FA37F; text-decoration-color: #0FA37F; }
+/* closing vignette: lot state written on the ground, small country house details */
+.landing .mx .mtag { position: absolute; left: 0; right: 0; bottom: 5px; text-align: center; font-size: 7px; font-weight: 800; letter-spacing: .12em; pointer-events: none; }
+.landing .mx .mtag.due { color: #6E500C; } .landing .mx .mtag.ok { color: #0B7A5F; }
+.landing .mx .mwin { position: absolute; border-radius: .8px; background: linear-gradient(135deg, #FFF1C9, #F6D68A 42%, #FFFBEE 46%, #F2C96E 54%, #E8B85A); box-shadow: inset 0 0 0 .6px #8A5A3B; }
+.landing .mx .mdoor { position: absolute; border-radius: 0 0 1.4px 1.4px; background: #8A5A3B; }
