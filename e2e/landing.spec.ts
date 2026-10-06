@@ -70,3 +70,12 @@ test('reduced motion shows the collected state', async ({ browser }) => {
   expect(errors).toEqual([])
   await ctx.close()
 })
+
+test('security and closing mini scenes mount once', async ({ page }) => {
+  const errors = collectErrors(page)
+  await page.goto('/')
+  await page.waitForTimeout(1500)
+  await expect(page.locator('.landing [data-mini].mx')).toHaveCount(2)
+  for (const kind of ['secure', 'close']) expect(await page.locator(`.landing [data-mini="${kind}"] > .pl`).count()).toBe(1)
+  expect(errors).toEqual([])
+})

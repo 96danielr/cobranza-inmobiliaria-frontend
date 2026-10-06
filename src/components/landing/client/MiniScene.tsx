@@ -1,6 +1,11 @@
 'use client'
 
-/** Small 3D vignette ("secure" or "close"). The engine is mounted in Task 5. */
+import { useEffect, useRef } from 'react'
+import { mountMiniScene } from '../miniScenes'
+
+/** Small 3D vignette ("secure" or "close") from the approved prototype. */
 export default function MiniScene({ kind, className }: { kind: 'secure' | 'close'; className?: string }) {
-  return <div className={className} data-mini={kind} aria-hidden="true" />
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => (ref.current ? mountMiniScene(ref.current, kind) : undefined), [kind])
+  return <div className={className} data-mini={kind} ref={ref} aria-hidden="true" />
 }
