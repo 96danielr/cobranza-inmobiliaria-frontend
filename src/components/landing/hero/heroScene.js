@@ -192,10 +192,19 @@ export function mountHeroScene(root) {
     flower: c => `<svg class="flw" viewBox="0 0 12 12" style="width:3.2px"><path d="M6 12V6.5M6 9.4 3.6 7.6M6 8.8l2.4-1.6" stroke="#4E8A4A" stroke-width=".9" stroke-linecap="round"/><ellipse cx="3.4" cy="7.6" rx="1.6" ry=".9" fill="#5E9B57"/><ellipse cx="8.6" cy="7" rx="1.6" ry=".9" fill="#6FAF5A"/>`
       + [[6, 4.2], [3.6, 5.2], [8.4, 4.8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.7" fill="${c}"/><circle cx="${x}" cy="${y}" r=".55" fill="#F7D24A"/>`).join('') + '</svg>',
     // hammock on a wooden A-frame stand: about 2.2 m long, so it reads next to a 1.75 m person
-    hammock: w => `<svg class="flw" viewBox="0 0 30 13" style="width:${w}px"><ellipse cx="15" cy="12.4" rx="12" ry=".7" fill="rgba(11,27,51,.15)"/>`
-      + `<path d="M3 12.4 6 3l3 9.4M21 12.4 24 3l3 9.4" stroke="#8A5A3B" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-      + `<path d="M6 3h18" stroke="#734A30" stroke-width=".9"/><path d="M6 3.6q9 8 18 0" stroke="#5E97BD" stroke-width="2.6" fill="none" stroke-linecap="round"/>`
-      + `<path d="M8 4.6q7 5.4 14 0" stroke="#F2E6C9" stroke-width=".8" fill="none" opacity=".9"/></svg>`,
+    // hammock on a wooden stand (side view): two splayed A-legs on a base beam, curved arms up to the hooks,
+    // ropes fanning to spreader bars, a striped fabric bed that sags in a catenary, and a small pillow
+    hammock: w => `<svg class="flw" viewBox="0 0 40 16" style="width:${w}px"><ellipse cx="20" cy="15.3" rx="16" ry=".8" fill="rgba(11,27,51,.16)"/>`
+      + `<path d="M5 15h30" stroke="#7A4F33" stroke-width="1.3" stroke-linecap="round"/>`
+      + `<path d="M7 15C5.5 10.5 3.8 6 2.6 2.4M33 15c1.5-4.5 3.2-9 4.4-12.6" stroke="#8A5A3B" stroke-width="1.3" fill="none" stroke-linecap="round"/>`
+      + `<path d="M7 15 9.2 12M33 15l-2.2-3" stroke="#734A30" stroke-width="1" stroke-linecap="round"/>`
+      + `<circle cx="2.6" cy="2.4" r=".55" fill="#C9CFD6"/><circle cx="37.4" cy="2.4" r=".55" fill="#C9CFD6"/>`
+      + `<path d="M2.8 2.6 8 6.3M2.8 2.6 8 8.4M37.2 2.6 32 6.3M37.2 2.6 32 8.4" stroke="#CDBA94" stroke-width=".35"/>`
+      + `<path d="M8 5.8v3M32 5.8v3" stroke="#8A5A3B" stroke-width=".8" stroke-linecap="round"/>`
+      + `<path d="M8 6.2Q20 15.5 32 6.2V8.6Q20 17.4 8 8.6z" fill="#E8DCC0"/>`
+      + `<path d="M8 6.9Q20 16.2 32 6.9" stroke="#5E97BD" stroke-width=".8" fill="none"/><path d="M8 7.8Q20 17 32 7.8" stroke="#E3B23C" stroke-width=".6" fill="none"/>`
+      + `<path d="M8 6.2Q20 15.5 32 6.2" stroke="rgba(120,90,55,.45)" stroke-width=".35" fill="none"/>`
+      + `<ellipse cx="11.6" cy="9.2" rx="2.2" ry="1" fill="#FFFFFF" transform="rotate(26 11.6 9.2)"/></svg>`,
     tree: d => `<svg class="flw" viewBox="0 0 20 26" style="width:${d}px"><ellipse cx="10" cy="25.2" rx="6" ry="1" fill="rgba(11,27,51,.18)"/><path d="M9 25V15h2v10z" fill="#7A6A57"/><circle cx="10" cy="10" r="8.6" fill="#6FAF8E"/><circle cx="7.4" cy="7.2" r="4.2" fill="#9ED3B4" opacity=".55"/><path d="M3 12a8.6 8.6 0 0 0 14 4" stroke="#4E8A6D" stroke-width="2.4" fill="none" opacity=".45"/></svg>`,
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
   const actor = (x, y, svg, w) => bill(x, y, 0, `<div class="pet" style="width:${w}px">${svg}</div>`);
@@ -255,7 +264,7 @@ export function mountHeroScene(root) {
     box(g4, gate + 15.5, gy + .6, 0, .8, .8, 6.5, { top: '#3A4556', front: '#2A3442', back: '#2A3442', left: '#2A3442', right: '#1E2733', noLine: true });   // mailbox post
     box(g4, gate + 14.4, gy - .4, 6.5, 3, 2.8, 2.4, { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true });
     fence(g4, ox + FI, oy + FI, SW - 2 * FI, SD - 2 * FI, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
-    const hammockEl = bill(hx + hw - 18, hy + hd + 17, 0, SVG.hammock(13));   // next to the bush, same scale as the people
+    const hammockEl = bill(hx + hw - 18, hy + hd + 17, 0, SVG.hammock(14));   // next to the bush, same scale as the people
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => bill(x, y, 0, SVG.tree(17)));   // trunk + canopy in one drawing
     const H = { st, wins, door, leaf, greens: [...greens, ...trees, ...flowers, hammockEl], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };

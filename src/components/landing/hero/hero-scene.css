@@ -228,3 +228,4 @@
     #EBE2CE;
   background-size: 11px 9px, 11px 9px, 11px 9px, 1.3px 1.1px, auto; }
 .landing .ox .plan.walkway { opacity: .55; }   /* the walkway stays in the background */
+.landing .ox .plan.path.entry { opacity: .7; }
