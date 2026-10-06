@@ -205,3 +205,4 @@
 /* a lot whose house is already up keeps only its green area (no dark outline) */
 .landing .ox .plan.built, .landing .ox .site.lawn { box-shadow: none !important; }
 .landing .ox .plan.path.entry, .landing .ox .plan.walkway { border-radius: 0; }
+.landing .ox .plan.track { border-radius: 0; box-shadow: none; background: linear-gradient(90deg, rgba(150,128,100,.25), rgba(170,148,118,.55) 50%, rgba(150,128,100,.25)); }

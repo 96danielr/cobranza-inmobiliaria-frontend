@@ -258,7 +258,9 @@ export function mountHeroScene(root) {
       const cg = stage(); const DY = hy + 2, PD = 44, DECK = 4;                          // a long lap pool (about 10 m)
       const CAR_Y = DY + PD + 14;                                                    // the car parks right after the pool deck
       div('plan gravel', { left: (o.cpX - DECK) + 'px', top: (DY - 1) + 'px', width: (o.cpW + DECK) + 'px', height: (CAR_Y - DY - 2) + 'px' }, cg);   // pool deck / leisure area
-      div('plan drive', { left: o.cpX + 'px', top: CAR_Y + 'px', width: o.cpW + 'px', height: (oy + SD - CAR_Y - 2) + 'px' }, cg);
+      // rural driveway: two worn wheel tracks (0.4 m wide, 1.5 m apart) from the parking spot out to the street
+      { const tw = 1.8, gauge = 1.5 * M, tx = o.cpX + o.cpW / 2 - gauge / 2 - tw / 2;
+        [tx, tx + gauge].forEach(x0 => div('plan track', { left: x0 + 'px', top: CAR_Y + 'px', width: tw + 'px', height: (oy + SD - CAR_Y) + 'px' }, cg)); }
       // two sun loungers (0.7 x 1.9 m): a white frame with legs, a blue cushion, and a raised backrest facing the pool
       const LF = { top: '#FFFFFF', front: '#E4E1D9', back: '#E4E1D9', left: '#DCD8CE', right: '#C9C4B8', noLine: true };
       const CUSH = { top: '#7FB6D9', front: '#5E97BD', back: '#5E97BD', left: '#6AA3C9', right: '#4F86AB', noLine: true };
