@@ -49,31 +49,40 @@ export function mountHeroScene(root) {
   const group = (parent = pl) => div('g', {}, parent);
   // the board is a chunk of land: a thin, faint grass margin and a layer of earth underneath with a ragged, torn-off bottom.
   // Kept translucent and low in contrast so the eye stays on the lots and the house.
-  const GM = 6, SOIL = 24;
+  const GM = 6, SOIL = 13;
   const SPECK = 'radial-gradient(circle at 30% 40%, rgba(70,45,25,.22) 0 .6px, transparent .8px) 0 0/5px 4px, radial-gradient(circle at 70% 70%, rgba(255,240,215,.25) 0 .5px, transparent .7px) 0 0/6px 5px, radial-gradient(circle, rgba(60,40,22,.18) 0 1.1px, transparent 1.3px) 2px 3px/11px 9px';
-  const EARTH = dir => `${SPECK}, linear-gradient(${dir}, rgba(126,160,110,.35) 0 1.4px, rgba(150,112,78,.34) 1.4px 45%, rgba(165,130,96,.26) 45% 75%, rgba(150,138,122,.16) 75%)`;
-  const soil = box(pl, -GM, -GM, -SOIL - .3, PW + 2 * GM, PH + 2 * GM, SOIL, { top: 'rgba(170,198,152,.38)', front: EARTH('180deg'), back: EARTH('180deg'), left: EARTH('90deg'), right: EARTH('90deg'), noLine: true });
+  const EARTH = dir => `${SPECK}, linear-gradient(${dir}, rgba(150,138,122,.5) 0 25%, rgba(165,130,96,.62) 25% 55%, rgba(150,112,78,.72) 55% calc(100% - 1.6px), rgba(126,160,110,.8) calc(100% - 1.6px))`;
+  const soil = box(pl, -GM, -GM, -SOIL - .3, PW + 2 * GM, PH + 2 * GM, SOIL, { top: 'rgba(170,198,152,.55)', front: EARTH('0deg'), back: EARTH('0deg'), left: EARTH('270deg'), right: EARTH('270deg'), noLine: true });
   // ragged bottom: the earth fades and breaks off irregularly (front/back run top -> bottom, sides run top -> right)
-  const RAG_Y = 'polygon(0 0, 100% 0, 100% 78%, 94% 92%, 87% 81%, 79% 96%, 70% 84%, 61% 100%, 52% 86%, 44% 95%, 35% 80%, 26% 93%, 17% 83%, 9% 97%, 0 85%)';
-  const RAG_X = 'polygon(0 0, 78% 0, 92% 6%, 81% 13%, 96% 21%, 84% 30%, 100% 39%, 86% 48%, 95% 56%, 80% 65%, 93% 74%, 83% 83%, 97% 91%, 85% 100%, 0 100%)';
+  const RAG_Y = 'polygon(0 15%, 9% 3%, 17% 17%, 26% 7%, 35% 20%, 44% 5%, 52% 14%, 61% 0, 70% 16%, 79% 4%, 87% 19%, 94% 8%, 100% 22%, 100% 100%, 0 100%)';   // element top = bottom of the block
+  const RAG_X = 'polygon(22% 0, 100% 0, 100% 100%, 15% 100%, 3% 91%, 17% 83%, 7% 74%, 20% 65%, 5% 56%, 14% 48%, 0 39%, 16% 30%, 4% 21%, 19% 13%, 8% 6%)';   // element left = bottom of the block
   soil._faces.forEach((f, i) => { if (i === 1 || i === 4) f.style.clipPath = RAG_Y; else if (i === 2 || i === 3) f.style.clipPath = RAG_X; });
   // gable roof over a w x d footprint, ridge along x: two tiled slopes and the two end triangles
   // gable roof over a w x d footprint, ridge along x. Barrel tiles: rounded channels across the slope (light crest,
   // dark trough) and horizontal courses every few px; a darker eave edge and a rounded ridge cap on top.
   const TILE = (base, light, dark) => `repeating-linear-gradient(180deg, transparent 0 6.6px, rgba(60,20,8,.34) 6.6px 8px, rgba(255,255,255,.14) 8px 8.6px), repeating-linear-gradient(90deg, ${dark} 0 1.1px, ${base} 1.1px 3px, ${light} 3px 5.2px, ${base} 5.2px 7.6px, ${dark} 7.6px 9px)`;   // large barrel tiles: 9 px channels, 8.6 px courses
-  const ROOF_A = TILE('#C9693D', '#E08A5C', '#93441F'), ROOF_B = TILE('#B0582F', '#C9714A', '#7D3818');
+  const ROOF_A = 'repeating-linear-gradient(180deg, transparent 0 5.5px, rgba(60,20,8,.35) 5.5px 6.2px), repeating-linear-gradient(90deg, #7D3818 0 .4px, #B5552C .4px 1.1px, #CF6E42 1.1px 1.8px, #B5552C 1.8px 2.5px, #7D3818 2.5px 3.4px)', ROOF_B = ROOF_A;   // canal tiles under the covers
   const gableRoof = (parent, x, y, z, w, d, h, ov) => {
     const g = div('g', { transform: `translateZ(${z}px)` }, parent), half = d / 2 + ov, L = Math.hypot(half, h), a = Math.atan2(h, half) * 180 / Math.PI;
     // each slope is a slab TK thick: the tiled face, an underside, and edge faces folded toward the underside
     // (eave along the bottom, barge edges at both ends). sgn: which side of the rotated plane is "under" (+1 front, -1 back)
     const TK = 4, EDGE = 'repeating-linear-gradient(90deg, #7A3518 0 .9px, #A64B26 .9px 3.4px, #C2633A 3.4px 5.6px, #A64B26 5.6px 8px, #7A3518 8px 9px)';
-    const slope = (bg, deg, sgn) => { const W = w + 2 * ov, el = div('f roof', { left: (x - ov) + 'px', top: (y + d / 2) + 'px', width: W + 'px', height: L + 'px', transformOrigin: '50% 0', transform: `translateZ(${h}px) rotateX(${deg}deg)`, background: bg, transformStyle: 'preserve-3d' }, g);
+    const slope = (bg, deg, sgn) => { const W = w + 2 * ov, Ls = L, el = div('f roof', { left: (x - ov) + 'px', top: (y + d / 2) + 'px', width: W + 'px', height: L + 'px', transformOrigin: '50% 0', transform: `translateZ(${h}px) rotateX(${deg}deg)`, background: bg, transformStyle: 'preserve-3d' }, g);
       const under = sgn > 0 ? -TK : TK;
       div('f', { left: '0px', top: '0px', width: W + 'px', height: L + 'px', transform: `translateZ(${under}px)`, background: '#8E4A2A' }, el);                          // underside
       div('f', { left: '0px', top: L + 'px', width: W + 'px', height: TK + 'px', transformOrigin: '50% 0', transform: `rotateX(${sgn > 0 ? -90 : 90}deg)`, background: EDGE }, el);   // eave edge
       [0, W].forEach(ex => div('f', { left: ex + 'px', top: '0px', width: TK + 'px', height: L + 'px', transformOrigin: '0 50%', transform: `rotateY(${sgn > 0 ? 90 : -90}deg)`, background: '#9A4A27' }, el));   // barge edges
+      // Spanish (barrel) tiles, built one by one with real proportions (45 x 20 x 8 cm -> L : W : H ~ 5.6 : 2.5 : 1):
+      // concave "canal" tiles lie in rows on the slab (the base stripes), convex "cover" tiles sit over the joints, each
+      // course overlapping the one below. Tiles grow outward from the slab: +z on the front slope, -z on the back one.
+      const tg = div('g', { transform: sgn > 0 ? 'none' : 'scale3d(1,1,-1)' }, el);
+      const TW = 3.4, TL = 7.4, TH = 1.4, STEP_L = 6.2, cols = Math.floor(W / TW), rows = Math.ceil(Ls / STEP_L);
+      const COVER = { top: 'linear-gradient(90deg, #8F4320 0%, #C9693D 22%, #F0A57A 48%, #D97B4C 70%, #8F4320 100%)', front: 'radial-gradient(ellipse at 50% 100%, #5E2A12 0 45%, #9A4A27 46%)', back: '#7A3518', left: '#93441F', right: '#7A3518', noLine: true };
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const y0 = r * STEP_L, d0 = Math.min(TL, Ls - y0); if (d0 < 2) continue;
+        box(tg, c * TW + TW - .9, y0, .1 + (rows - r) * .05, 1.8, d0, TH, COVER); }
       return el; };
-    const end = ex => div('f', { left: ex + 'px', top: y + 'px', width: h + 'px', height: d + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: 'linear-gradient(90deg, #E9DFCB, #DCCDB2)', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }, g);
+    const end = ex => div('f', { left: ex + 'px', top: (y - 1.5) + 'px', width: (h + 2.6) + 'px', height: (d + 3) + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: 'linear-gradient(90deg, #E9DFCB, #DCCDB2)', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }, g);   // closes the gable up to the slab underside
     end(x); end(x + w); slope(ROOF_B, -(180 - a), -1); slope(ROOF_A, -a, 1);
     const cap = div('g', { transform: `translateZ(${h + .2}px)` }, g);           // ridge cap: half-round tiles along the ridge
     div('f ridge', { left: (x - ov) + 'px', top: (y + d / 2 - 1.6) + 'px', width: (w + 2 * ov) + 'px', height: '3.2px' }, cap);
@@ -183,14 +192,21 @@ export function mountHeroScene(root) {
         + leg('f0', 11, 0) + leg('f1', 21, 0) + `</g></svg>`; },
     cat: `<svg viewBox="0 0 24 24"><path d="M17 20q5 0 4.5-6" stroke="#33415A" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="17" rx="6.5" ry="5.6" fill="#33415A"/><circle cx="11" cy="9" r="4.7" fill="#33415A"/><path d="M7.1 6.7 6.9 2.4l3.2 2.4zM14.9 6.7l.2-4.3-3.2 2.4z" fill="#33415A"/><circle cx="9.3" cy="9" r=".95" fill="#E3B23C"/><circle cx="12.7" cy="9" r=".95" fill="#E3B23C"/></svg>`,
     bush: d => `<i class="bush" style="width:${d}px;height:${d}px"></i>`,
+    flower: c => `<svg class="flw" viewBox="0 0 12 12" style="width:3.2px"><path d="M6 12V6.5M6 9.4 3.6 7.6M6 8.8l2.4-1.6" stroke="#4E8A4A" stroke-width=".9" stroke-linecap="round"/><ellipse cx="3.4" cy="7.6" rx="1.6" ry=".9" fill="#5E9B57"/><ellipse cx="8.6" cy="7" rx="1.6" ry=".9" fill="#6FAF5A"/>`
+      + [[6, 4.2], [3.6, 5.2], [8.4, 4.8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.7" fill="${c}"/><circle cx="${x}" cy="${y}" r=".55" fill="#F7D24A"/>`).join('') + '</svg>',
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
   const actor = (x, y, svg, w) => bill(x, y, 0, `<div class="pet" style="width:${w}px">${svg}</div>`);
-  const fence = (parent, x, y, w, d, gaps) => {                       // picket fence on the lot edge; gaps = [[x1, x2], ...] on the front side
+  // clipped Swinglea hedge on the lot edge instead of a fence: 1.2 m tall (5.3 px) and 0.6 m thick (2.6 px), a flat
+  // sheared top and straight sides, small leaf texture; gaps = [[x1, x2], ...] on the front side (gate, driveway)
+  const LEAVES = (a, b) => `radial-gradient(circle at 30% 30%, rgba(255,255,255,.16) 0 .4px, transparent .6px) 0 0/1.6px 1.4px, radial-gradient(circle, rgba(0,40,10,.22) 0 .45px, transparent .65px) .8px .7px/1.9px 1.7px, linear-gradient(180deg, ${a}, ${b})`;
+  const HEDGE = { top: LEAVES('#7DBB5E', '#6CAA50'), front: LEAVES('#4F8F3E', '#3F7A31'), back: LEAVES('#4A8739', '#3B732E'), left: LEAVES('#4A8739', '#3B732E'), right: LEAVES('#3F7A31', '#336628'), noLine: true };
+  const fence = (parent, x, y, w, d, gaps) => {
     div('fence-sh', { left: x + 'px', top: y + 'px', width: w + 'px', height: d + 'px' }, parent);   // soft shadow on the ground
-    const H = 6, fx = (x1, x2, yy) => { if (x2 - x1 > 1) box(parent, x1, yy, 0, x2 - x1, .6, H, { top: '#FDFBF6', front: PICKX, back: PICKX, left: '#FDFBF6', right: '#FDFBF6', noLine: true }); };
-    const fy = (y1, y2, xx) => box(parent, xx, y1, 0, .6, y2 - y1, H, { top: '#FDFBF6', front: '#FDFBF6', back: '#FDFBF6', left: PICKY, right: PICKY, noLine: true });
-    fx(x, x + w, y); fy(y, y + d, x); fy(y, y + d, x + w - .6);
-    let cx0 = x; gaps.forEach(([g1, g2]) => { fx(cx0, g1, y + d - .6); cx0 = g2; }); fx(cx0, x + w, y + d - .6); };
+    const H = 5.3, T = 2.6;
+    const fx = (x1, x2, yy) => { if (x2 - x1 > 1) box(parent, x1, yy, 0, x2 - x1, T, H, HEDGE).classList.add('hedge'); };
+    const fy = (y1, y2, xx) => box(parent, xx, y1, 0, T, y2 - y1, H, HEDGE).classList.add('hedge');
+    fx(x, x + w, y); fy(y + T, y + d - T, x); fy(y + T, y + d - T, x + w - T);
+    let cx0 = x; gaps.forEach(([g1, g2]) => { fx(cx0, g1, y + d - T); cx0 = g2; }); fx(cx0, x + w, y + d - T); };
   function countryHouse(ox, oy, o) {
     // storeys of 2.9 m (12.8 px) on a 0.5 m stone base; the main house has two floors, which is why it stands taller
     const FLOOR = 12.8, BASE = 2.2, floors = o.floors || 1, WH = FLOOR * floors;
@@ -218,9 +234,12 @@ export function mountHeroScene(root) {
     const WK = 7, pathTop = hy + hd + WK, pathBot = oy + SD - 2, PWD = 13;
     div('plan path walkway', { left: (hx - WK) + 'px', top: (hy - WK) + 'px', width: (hw + 2 * WK) + 'px', height: (hd + 2 * WK) + 'px' }, g4);
     div('plan path', { left: (gate - 2.5) + 'px', top: pathTop + 'px', width: PWD + 'px', height: (pathBot - pathTop) + 'px' }, g4);
-    const bed = (x, y, w, d) => div('plan flowers', { left: x + 'px', top: y + 'px', width: w + 'px', height: d + 'px' }, g4);
-    bed(hx - WK, pathTop, gate - 2.5 - (hx - WK) - .5, 2.8); bed(gate - 2.5 + PWD + .5, pathTop, hx + hw + WK - (gate - 2.5 + PWD + .5), 2.8);   // along the facade
-    bed(gate - 2.5 - 3.2, pathTop + 3.2, 2.8, pathBot - pathTop - 9); bed(gate - 2.5 + PWD + .4, pathTop + 3.2, 2.8, pathBot - pathTop - 9);       // both edges of the path
+    // flower beds only along the facade, either side of the entrance: a low planter (0.3 m) with standing flowering
+    // shrubs (0.4-0.6 m, camera-facing), well below a person's knee
+    const planter = (x0, x1) => { const y0 = pathTop + .4, w0 = x1 - x0;
+      box(g4, x0, y0, 0, w0, 3, 1.3, { top: 'radial-gradient(rgba(60,40,25,.35) .4px, transparent .6px) 0 0/1.6px 1.4px, #6B4A33', front: '#C9BEA8', back: '#BFB39C', left: '#B3A790', right: '#A69A83', noLine: true });
+      for (let fx = x0 + 2; fx < x1 - 1.5; fx += 3.3) bill(fx, y0 + 1.6, 1.3, SVG.flower(['#F25C78', '#FFD25A', '#FFFFFF', '#9B7BEA', '#FF8A4C'][Math.round(fx) % 5])); };
+    planter(hx - WK + 1, gate - 3.5); planter(gate - 2.5 + PWD + 1, hx + hw + WK - 1);
     const PIL = { top: '#E4DCCB', front: 'repeating-linear-gradient(180deg, #CFC4AE 0 2.6px, #B9AD95 2.6px 3px)', back: '#C9BEA8', left: '#C2B69F', right: '#ADA08A', noLine: true };
     const CAP = { top: '#F1ECE1', front: '#D9D1C0', back: '#D9D1C0', left: '#D9D1C0', right: '#C4BBA8', noLine: true };
     const LAN = { top: '#2E3440', front: 'linear-gradient(180deg, #2E3440 0 20%, #FFE7A6 20% 80%, #2E3440 80%)', back: '#FFE7A6', left: '#FFE7A6', right: '#F3D58A', noLine: true };
@@ -235,17 +254,20 @@ export function mountHeroScene(root) {
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => { box(g4, x - .8, y - .8, 0, 1.6, 1.6, 9, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true }); return bill(x, y, 8, SVG.canopy(15)); });
     const H = { st, wins, door, greens: [...greens, ...trees], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
-    if (o.carport) {                                                  // carport: driveway, open pergola, a rounded car that drives in later
-      const cg = stage(); div('plan drive', { left: o.cpX + 'px', top: (hy + 4) + 'px', width: o.cpW + 'px', height: (oy + SD - hy - 4) + 'px' }, cg);
-      [[0, 0], [o.cpW - 1.4, 0], [0, 42.6], [o.cpW - 1.4, 42.6]].forEach(([dx, dy]) => box(cg, o.cpX + dx, hy + 4 + dy, 0, 1.2, 1.2, 11, { top: '#7D8794', front: '#68727F', back: '#68727F', left: '#68727F', right: '#565F6B', noLine: true }));
-      const ALU = { top: '#7D8794', front: '#68727F', back: '#68727F', left: '#68727F', right: '#565F6B', noLine: true };   // darker aluminium: the roof reads against the drive and lawn
-      [[0, 0, o.cpW + 2, 1.2], [0, 44.8, o.cpW + 2, 1.2], [0, 0, 1.2, 46], [o.cpW + .8, 0, 1.2, 46]].forEach(([dx, dy, w, d]) => box(cg, o.cpX - 1 + dx, hy + 3 + dy, 11, w, d, 1, ALU));   // hollow aluminium frame
-      box(cg, o.cpX - .4, hy + 3.6, 12, o.cpW + .8, 44.8, .3, { top: 'repeating-linear-gradient(180deg, rgba(255,255,255,.7) 0 .45px, transparent .45px 3.6px), linear-gradient(135deg, rgba(150,190,220,.30), rgba(120,165,205,.22) 60%, rgba(210,232,248,.38))', front: 'rgba(104,114,127,.9)', back: 'rgba(104,114,127,.9)', left: 'rgba(104,114,127,.9)', right: 'rgba(86,95,107,.9)', noLine: true });   // translucent polycarbonate: the car shows through
+    if (o.carport) {                                                  // driveway with the car near the gate, and a pool behind it
+      const cg = stage(); const DY = hy + 4, PD = 34;
+      div('plan drive', { left: o.cpX + 'px', top: (DY + PD + 3) + 'px', width: o.cpW + 'px', height: (oy + SD - DY - PD - 5) + 'px' }, cg);
+      // pool 6 x 7.5 m: stone coping, recessed water with a light ripple, a small ladder
+      const COP = { top: '#EFEBE2', front: '#D8D1C2', back: '#D8D1C2', left: '#D8D1C2', right: '#C7BFAE', noLine: true };
+      box(cg, o.cpX, DY, 0, o.cpW, PD, 1.2, COP);
+      div('f water', { left: (o.cpX + 2) + 'px', top: (DY + 2) + 'px', width: (o.cpW - 4) + 'px', height: (PD - 4) + 'px', transform: 'translateZ(1.25px)' }, cg);
+      box(cg, o.cpX + o.cpW - 6, DY + 2.2, 1.2, .5, .5, 3, { top: '#C9CFD6', front: '#AEB6C0', back: '#AEB6C0', left: '#AEB6C0', right: '#97A0AB', noLine: true });
+      box(cg, o.cpX + o.cpW - 4, DY + 2.2, 1.2, .5, .5, 3, { top: '#C9CFD6', front: '#AEB6C0', back: '#AEB6C0', left: '#AEB6C0', right: '#97A0AB', noLine: true });
       const car = group(cg); car.classList.add('round');
       const CAR = { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true };
       const GL = { top: 'linear-gradient(135deg, #CFE0F0, #8FB0D2 55%, #E8F1FA 57%, #8FB0D2 62%)', front: 'linear-gradient(120deg, #9DBAD8, #6E90B5 50%, #D8E6F3 53%, #6E90B5 58%)', back: '#6E90B5', left: '#7E9EC0', right: '#6584A6', noLine: true };
       const WH = { top: '#1F2937', front: '#111827', back: '#111827', left: '#111827', right: '#0B1220', noLine: true };
-      const CW = 1.8 * M, CL = 4.5 * M, cx = o.cpX + (o.cpW - CW) / 2, cy = hy + 14;          // car to scale: 1.8 x 4.5 x 1.5 m
+      const CW = 1.8 * M, CL = 4.5 * M, cx = o.cpX + (o.cpW - CW) / 2, cy = DY + PD + 8;          // car to scale: 1.8 x 4.5 x 1.5 m
       [[-.3, 3], [CW - .9, 3], [-.3, CL - 6.2], [CW - .9, CL - 6.2]].forEach(([dx, dy]) => box(car, cx + dx, cy + dy, .2, 1.2, 3.2, 2.4, WH));
       const body = box(car, cx, cy, 1, CW, CL, 3, CAR); box(car, cx + .6, cy + 5, 4, CW - 1.2, 9, 2.4, GL); box(car, cx + .8, cy + 5.3, 6.4, CW - 1.6, 8.4, .4, CAR);
       [1, CW - 2.6].forEach(l => { const hl = document.createElement('i'); hl.className = 'hlamp'; hl.style.left = l + 'px'; body._front.appendChild(hl); });

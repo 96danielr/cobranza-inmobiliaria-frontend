@@ -190,3 +190,8 @@
 .landing .ox .plan.walkway { border-radius: 3px; background: repeating-linear-gradient(90deg, transparent 0 6px, rgba(150,138,118,.5) 6px 6.5px), repeating-linear-gradient(180deg, transparent 0 6px, rgba(150,138,118,.5) 6px 6.5px), #E4DCCB; box-shadow: inset 0 0 0 .6px rgba(11,27,51,.2); }
 .landing .ox .plan.flowers { border-radius: 1.4px; box-shadow: none;
   background: radial-gradient(circle, #F25C78 0 .55px, transparent .7px) 0 0/2.6px 2.2px, radial-gradient(circle, #FFD25A 0 .5px, transparent .65px) 1.3px 1.1px/2.6px 2.2px, radial-gradient(circle, #FFFFFF 0 .45px, transparent .6px) .6px 1.6px/3.1px 2.6px, radial-gradient(circle, #9B7BEA 0 .45px, transparent .6px) 2px .3px/3.4px 2.9px, #5E9B57; }
+.landing .ox .flw { position: absolute; left: 0; bottom: 0; translate: -50% 0; display: block; height: auto; overflow: visible; }
+.landing .ox .hdoor { border-radius: 0 0 1.6px 1.6px !important; }   /* the face's top edge is the floor: square at the bottom, rounded at the top */
+.landing .ox .water { border-radius: 1.5px; background: repeating-linear-gradient(115deg, rgba(255,255,255,.0) 0 3px, rgba(255,255,255,.35) 3px 3.6px, rgba(255,255,255,0) 3.6px 7px), linear-gradient(135deg, #7FD3E8, #3FA9D0 60%, #2B8DBA); box-shadow: inset 0 0 0 1px rgba(20,90,130,.35), inset 1.5px 1.5px 0 rgba(0,40,70,.25); animation: hs-water 3s linear infinite; background-size: 14px 14px, 100% 100%; }
+@keyframes hs-water { to { background-position: 14px 0, 0 0; } }
+.landing .ox .hedge .f { border-radius: 1px; }
