@@ -72,12 +72,9 @@ V.secure = host => { const m = mk(host, 220, 170, { zoom: .68 });
     put(ring, 'transform', `translateZ(${top + 1}px) scale(${(.4 + 1.3 * easeOut(r)).toFixed(3)})`);
     put(ring, 'opacity', (r > 0 && r < 1 ? (1 - r) * .9 : 0).toFixed(2)); } }; };
 // closing · the whole portfolio collected, one buyer builds
-V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [];
-  // each lot shows its state on the ground near its front edge: "RECAUDO" while it fills yellow, "VENDIDO" once green
-  for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { const x = 10 + c * 78, y = 24 + r * 70, l = m.lot(x, y, 70, 60); l.classList.add('sold');
-    const tag = document.createElement('b'); tag.className = 'mtag'; l.appendChild(tag); lots.push({ l, tag, p: m.pin(x + 35, y + 30) }); }
-  // a small country house on lot 5, set back toward the rear: white walls, door and windows, a tiled gable roof
-  const HX = 10 + 78 + 17, HY = 24 + 70 + 7, HW = 36, HD = 24, WH = 11, RH = 8, OV = 2.4;
+/** Small country house (stone base, white walls, door, lit windows, tiled gable roof); starts hidden. */
+function cottage(m, HX, HY, HW, HD, WH, RH) {
+  const OV = 2.4;
   const house = m.group();
   const WALLS = { top: '#FBF8F1', front: '#FFFAF0', back: '#E8DFCC', left: '#DCCDB2', right: '#CBBB9C' };
   m.box(house, HX - 1.5, HY - 1.5, 0, HW + 3, HD + 3, 1.6, { top: '#D9D3C6', front: '#A99C85', back: '#A99C85', left: '#9C8F78', right: '#8E826C', noLine: true });
@@ -93,6 +90,16 @@ V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [
   [HX, HX + HW].forEach(ex => { const f = document.createElement('div'); f.className = 'f';
     Object.assign(f.style, { left: ex + 'px', top: HY + 'px', width: RH + 'px', height: HD + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: '#DCCDB2', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }); roof.appendChild(f); });
   const TOP = 1.6 + WH + RH;
+  house.style.visibility = 'hidden';
+  return { house, TOP };
+}
+
+V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [];
+  // each lot shows its state on the ground near its front edge: "RECAUDO" while it fills yellow, "VENDIDO" once green
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { const x = 10 + c * 78, y = 24 + r * 70, l = m.lot(x, y, 70, 60); l.classList.add('sold');
+    const tag = document.createElement('b'); tag.className = 'mtag'; l.appendChild(tag); lots.push({ l, tag, p: m.pin(x + 35, y + 30) }); }
+  // a small country house on lot 5, set back toward the rear
+  const { house, TOP } = cottage(m, 10 + 78 + 17, 24 + 70 + 7, 36, 24, 11, 8);
   return { period: 7000, update(t) {
     lots.forEach((o, k) => { const s = 300 + k * 420, q = Math.floor(clamp((t - s) / 1300) * 4 + 1e-6) / 4;
       put(o.l._fill, 'transform', `scaleY(${q})`); cls(o.l, 'paid', q >= 1); cls(o.p, 'prog', q > 0 && q < 1); cls(o.p, 'done', q >= 1);
@@ -100,6 +107,19 @@ V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [
       put(o.p, 'transform', m.bill(k === 4 ? 1 + TOP * easeOut(clamp((t - 4300) / 700)) : 1)); });
     const u = clamp((t - 4300) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 5 * Math.sin(Math.PI * u) : 0;   // pops up with a little hop
     put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`); } }; };
+
+// client sign-in · your lot: six instalments fill it one by one, then your country house pops up on it
+V.home = host => { const m = mk(host, 170, 150, { zoom: 1.02 }); const LX = 20, LY = 22, LW = 130, LD = 104;
+  const l = m.lot(LX, LY, LW, LD); l.classList.add('sold'); const tag = document.createElement('b'); tag.className = 'mtag'; l.appendChild(tag);
+  const p = m.pin(LX + LW / 2, LY + LD / 2 + 4);
+  const { house, TOP } = cottage(m, LX + 30, LY + 16, 70, 42, 16, 13);
+  return { period: 8000, update(t) {
+    const q = Math.floor(clamp((t - 400) / 4200) * 6 + 1e-6) / 6;
+    put(l._fill, 'transform', `scaleY(${q.toFixed(3)})`); cls(l, 'paid', q >= 1); cls(p, 'prog', q > 0 && q < 1); cls(p, 'done', q >= 1);
+    const txt = q >= 1 ? 'TU CASA' : q > 0 ? `CUOTA ${Math.round(q * 6)} DE 6` : ''; if (tag._t !== txt) { tag._t = txt; tag.textContent = txt; tag.className = 'mtag' + (q >= 1 ? ' ok' : ' due'); }
+    const u = clamp((t - 5000) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 7 * Math.sin(Math.PI * u) : 0;
+    put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`);
+    put(p, 'transform', m.bill(1 + TOP * easeOut(clamp((t - 5000) / 700)))); } }; };
 
 /** Builds the vignette `kind` inside `host`, animates it while on screen, and returns a cleanup. */
 export function mountMiniScene(host, kind) {

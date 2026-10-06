@@ -23,7 +23,7 @@ test('landing CSS is scoped under .landing', () => {
     expect(preludes.length).toBeGreaterThan(50)
     for (const prelude of preludes) for (const sel of prelude.split(',')) {
       const s = sel.trim()
-      expect(s.startsWith('.landing') || /^(html|body):has\(\.landing\)/.test(s), `unscoped selector: ${s}`).toBe(true)
+      expect(s.startsWith('.landing') || s.startsWith(':is(.landing, .auth)') || /^(html|body):has\(\.landing\)/.test(s), `unscoped selector: ${s}`).toBe(true)
     }
   }
 })

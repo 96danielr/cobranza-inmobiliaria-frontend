@@ -84,40 +84,40 @@ html:has(.landing) {scroll-behavior: smooth;}
   .landing .sec {padding: 84px 0;}
   .landing .top .right .btn span {display: none;}
 }
-.landing .mx {position: relative; width: 100%; aspect-ratio: 1 / 1; perspective: 1300px; perspective-origin: 50% 20%; overflow: hidden;}
-.landing .mx .pl {position: absolute; left: 50%; top: 66%; transform-style: preserve-3d;}
-.landing .mx .g {position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d;}
-.landing .mx .b {position: absolute; transform-style: preserve-3d;}
-.landing .mx .f {position: absolute;}
-.landing .mx .lot {position: absolute; background: #F7F5EF; box-shadow: inset 0 0 0 .8px rgba(11,27,51,.38); transition: background-color .6s ease, box-shadow .6s ease;}
-.landing .mx .lot.sold {background: repeating-linear-gradient(45deg, rgba(11,27,51,.12) 0 .6px, transparent .6px 5px), #F4F1EA; box-shadow: inset 0 0 0 1.2px rgba(11,27,51,.6);}
-.landing .mx .lot.paid {background: repeating-linear-gradient(45deg, rgba(15,163,127,.22) 0 .6px, transparent .6px 5px), #DDEFE6; box-shadow: inset 0 0 0 1.3px rgba(15,163,127,.9);}
-.landing .mx .lfill {position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: rgba(227,178,60,.38); transform-origin: 50% 100%; transform: scaleY(0); transition: transform .6s cubic-bezier(.2,.8,.2,1), opacity .5s ease;}
-.landing .mx .lot.paid > .lfill {opacity: 0;}
-.landing .mx .bb {position: absolute; width: 0; height: 0;}
-.landing .mx .pin {position: absolute; left: -9px; bottom: 0; width: 18px; transform-origin: 50% 100%; transform: scale(0); opacity: 0; transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;}
-.landing .mx .pin svg {display: block; width: 18px; height: 18px; filter: drop-shadow(0 2px 3px rgba(11,27,51,.25));}
-.landing .mx .pin i {display: block; width: 1.2px; height: 10px; margin: 0 auto;}
-.landing .mx .bb.prog .p1, .landing .mx .bb.done .p2 {transform: scale(1); opacity: 1;}
-.landing .mx .p1 i {background: rgba(201,154,46,.9);}
-.landing .mx .p2 i {background: rgba(15,163,127,.85);}
-.landing .mx.dark .lot {background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 .8px rgba(255,255,255,.28);}
-.landing .mx .card {position: absolute; left: 0; bottom: 0; transform-origin: 50% 100%; background: #fff; border-radius: 12px; padding: 11px 13px; font: 500 11.5px/1.35 Inter, system-ui, sans-serif; color: #0B1B33;
+:is(.landing, .auth) .mx {position: relative; width: 100%; aspect-ratio: 1 / 1; perspective: 1300px; perspective-origin: 50% 20%; overflow: hidden;}
+:is(.landing, .auth) .mx .pl {position: absolute; left: 50%; top: 66%; transform-style: preserve-3d;}
+:is(.landing, .auth) .mx .g {position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d;}
+:is(.landing, .auth) .mx .b {position: absolute; transform-style: preserve-3d;}
+:is(.landing, .auth) .mx .f {position: absolute;}
+:is(.landing, .auth) .mx .lot {position: absolute; background: #F7F5EF; box-shadow: inset 0 0 0 .8px rgba(11,27,51,.38); transition: background-color .6s ease, box-shadow .6s ease;}
+:is(.landing, .auth) .mx .lot.sold {background: repeating-linear-gradient(45deg, rgba(11,27,51,.12) 0 .6px, transparent .6px 5px), #F4F1EA; box-shadow: inset 0 0 0 1.2px rgba(11,27,51,.6);}
+:is(.landing, .auth) .mx .lot.paid {background: repeating-linear-gradient(45deg, rgba(15,163,127,.22) 0 .6px, transparent .6px 5px), #DDEFE6; box-shadow: inset 0 0 0 1.3px rgba(15,163,127,.9);}
+:is(.landing, .auth) .mx .lfill {position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: rgba(227,178,60,.38); transform-origin: 50% 100%; transform: scaleY(0); transition: transform .6s cubic-bezier(.2,.8,.2,1), opacity .5s ease;}
+:is(.landing, .auth) .mx .lot.paid > .lfill {opacity: 0;}
+:is(.landing, .auth) .mx .bb {position: absolute; width: 0; height: 0;}
+:is(.landing, .auth) .mx .pin {position: absolute; left: -9px; bottom: 0; width: 18px; transform-origin: 50% 100%; transform: scale(0); opacity: 0; transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;}
+:is(.landing, .auth) .mx .pin svg {display: block; width: 18px; height: 18px; filter: drop-shadow(0 2px 3px rgba(11,27,51,.25));}
+:is(.landing, .auth) .mx .pin i {display: block; width: 1.2px; height: 10px; margin: 0 auto;}
+:is(.landing, .auth) .mx .bb.prog .p1, :is(.landing, .auth) .mx .bb.done .p2 {transform: scale(1); opacity: 1;}
+:is(.landing, .auth) .mx .p1 i {background: rgba(201,154,46,.9);}
+:is(.landing, .auth) .mx .p2 i {background: rgba(15,163,127,.85);}
+:is(.landing, .auth) .mx.dark .lot {background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 .8px rgba(255,255,255,.28);}
+:is(.landing, .auth) .mx .card {position: absolute; left: 0; bottom: 0; transform-origin: 50% 100%; background: #fff; border-radius: 12px; padding: 11px 13px; font: 500 11.5px/1.35 Inter, system-ui, sans-serif; color: #0B1B33;
   box-shadow: 0 0 0 1px rgba(11,27,51,.08), 0 14px 30px -16px rgba(11,27,51,.5); white-space: nowrap;}
-.landing .mx .card .t {font-weight: 650; font-size: 12.5px; letter-spacing: -.01em;}
-.landing .mx .card .s {color: #6B6F78; font-size: 10.5px; margin-top: 2px;}
-.landing .mx .card .v {font-weight: 650; font-size: 16px; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums;}
-.landing .mx .card .ok {color: #0B7A5F; font-weight: 600;}
-.landing .mx .card .due {color: #8A6510; font-weight: 600;}
-.landing .mx .card .bar {height: 5px; border-radius: 3px; background: #EEEAE0; margin-top: 7px; overflow: hidden;}
-.landing .mx .card .bar i {display: block; height: 100%; width: 0; background: #0FA37F;}
-.landing .mx .card {translate: -50% 0;}
+:is(.landing, .auth) .mx .card .t {font-weight: 650; font-size: 12.5px; letter-spacing: -.01em;}
+:is(.landing, .auth) .mx .card .s {color: #6B6F78; font-size: 10.5px; margin-top: 2px;}
+:is(.landing, .auth) .mx .card .v {font-weight: 650; font-size: 16px; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums;}
+:is(.landing, .auth) .mx .card .ok {color: #0B7A5F; font-weight: 600;}
+:is(.landing, .auth) .mx .card .due {color: #8A6510; font-weight: 600;}
+:is(.landing, .auth) .mx .card .bar {height: 5px; border-radius: 3px; background: #EEEAE0; margin-top: 7px; overflow: hidden;}
+:is(.landing, .auth) .mx .card .bar i {display: block; height: 100%; width: 0; background: #0FA37F;}
+:is(.landing, .auth) .mx .card {translate: -50% 0;}
 .landing .close2 .vig .mx {aspect-ratio: 4 / 3;}
 .landing .close2 .vig .mx .pl {top: 56%;}
-.landing .mx .card .v, .landing .mx .card .t {white-space: nowrap;}
-.landing .mx .card .tg {display: inline-block; margin-top: 8px; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: #EFEDE7; color: #6B6F78;}
-.landing .mx .card .tg.due {background: #FBF0D4; color: #8A6510;}
-.landing .mx .card .tg.ok {background: #E3F3EC; color: #0B7A5F;}
+:is(.landing, .auth) .mx .card .v, :is(.landing, .auth) .mx .card .t {white-space: nowrap;}
+:is(.landing, .auth) .mx .card .tg {display: inline-block; margin-top: 8px; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: #EFEDE7; color: #6B6F78;}
+:is(.landing, .auth) .mx .card .tg.due {background: #FBF0D4; color: #8A6510;}
+:is(.landing, .auth) .mx .card .tg.ok {background: #E3F3EC; color: #0B7A5F;}
 .landing .logos2 {padding: 8px 0 8px;}
 .landing .logos2 .eyebrow {justify-content: center;}
 .landing .logos2 .eyebrow::before {content: ''; flex: 0 0 36px; height: 1px; background: var(--line);}
@@ -417,14 +417,14 @@ body:has(.landing)::before { display: none; }
 .landing .featcard .sp h3 { font-size: 15.5px; font-weight: 600; }
 .landing .featcard .sp p { margin: 4px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--muted); max-width: 30ch; }
 /* security vignette v2: large padlock that closes, pulse ring */
-.landing .mx .sec-lock { position: absolute; left: -26px; bottom: 0; width: 52px; transform-origin: 50% 100%; }
-.landing .mx .sec-lock svg { display: block; width: 52px; height: auto; filter: drop-shadow(0 10px 14px rgba(0,0,0,.35)); overflow: visible; }
-.landing .mx .sec-lock .shk path { stroke: #C9D3E2; transition: stroke .3s ease; }
-.landing .mx .sec-lock .bd { fill: #E8EDF4; transition: fill .3s ease; }
-.landing .mx .sec-lock.closed .shk path { stroke: #5FD3B0; }
-.landing .mx .sec-lock.closed .bd { fill: #0FA37F; }
-.landing .mx .sec-ring { position: absolute; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(95,211,176,.9); opacity: 0; }
-.landing .mx .sec-lock { left: -34px; width: 68px; } .landing .mx .sec-lock svg { width: 68px; }
+:is(.landing, .auth) .mx .sec-lock { position: absolute; left: -26px; bottom: 0; width: 52px; transform-origin: 50% 100%; }
+:is(.landing, .auth) .mx .sec-lock svg { display: block; width: 52px; height: auto; filter: drop-shadow(0 10px 14px rgba(0,0,0,.35)); overflow: visible; }
+:is(.landing, .auth) .mx .sec-lock .shk path { stroke: #C9D3E2; transition: stroke .3s ease; }
+:is(.landing, .auth) .mx .sec-lock .bd { fill: #E8EDF4; transition: fill .3s ease; }
+:is(.landing, .auth) .mx .sec-lock.closed .shk path { stroke: #5FD3B0; }
+:is(.landing, .auth) .mx .sec-lock.closed .bd { fill: #0FA37F; }
+:is(.landing, .auth) .mx .sec-ring { position: absolute; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(95,211,176,.9); opacity: 0; }
+:is(.landing, .auth) .mx .sec-lock { left: -34px; width: 68px; } :is(.landing, .auth) .mx .sec-lock svg { width: 68px; }
 .landing .sc-vis .vig { max-width: 460px; }
 /* benefits card, compact: smaller paddings and figures; feature band in three plain columns */
 .landing .bencard .bc-tx { padding: 44px 40px 44px 52px; }
@@ -489,10 +489,10 @@ body:has(.landing)::before { display: none; }
 .landing .hero .already a:hover, .landing .close2 .box .tx .mail a:hover, .landing .close2 .consent a:hover,
 .landing .feedtx .more:hover, .landing .bc-tx .more:hover, .landing .head > .more:hover { color: #0FA37F; border-bottom-color: #0FA37F; text-decoration-color: #0FA37F; }
 /* closing vignette: lot state written on the ground, small country house details */
-.landing .mx .mtag { position: absolute; left: 0; right: 0; bottom: 5px; text-align: center; font-size: 7px; font-weight: 800; letter-spacing: .12em; pointer-events: none; }
-.landing .mx .mtag.due { color: #6E500C; } .landing .mx .mtag.ok { color: #0B7A5F; }
-.landing .mx .mwin { position: absolute; border-radius: .8px; background: linear-gradient(135deg, #FFF1C9, #F6D68A 42%, #FFFBEE 46%, #F2C96E 54%, #E8B85A); box-shadow: inset 0 0 0 .6px #8A5A3B; }
-.landing .mx .mdoor { position: absolute; border-radius: 0 0 1.4px 1.4px; background: #8A5A3B; }
+:is(.landing, .auth) .mx .mtag { position: absolute; left: 0; right: 0; bottom: 5px; text-align: center; font-size: 7px; font-weight: 800; letter-spacing: .12em; pointer-events: none; }
+:is(.landing, .auth) .mx .mtag.due { color: #6E500C; } :is(.landing, .auth) .mx .mtag.ok { color: #0B7A5F; }
+:is(.landing, .auth) .mx .mwin { position: absolute; border-radius: .8px; background: linear-gradient(135deg, #FFF1C9, #F6D68A 42%, #FFFBEE 46%, #F2C96E 54%, #E8B85A); box-shadow: inset 0 0 0 .6px #8A5A3B; }
+:is(.landing, .auth) .mx .mdoor { position: absolute; border-radius: 0 0 1.4px 1.4px; background: #8A5A3B; }
 .landing .sc-vis { transition: background-color .9s ease; }
 
 .landing .seccard { transition: box-shadow .9s ease; }

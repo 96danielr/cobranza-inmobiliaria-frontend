@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { Eye, EyeOff, ChevronRight } from 'lucide-react'
 
 import { useAdminAuthStore, TenantMembership } from '@/stores/adminAuthStore'
+import '@/components/landing/landing.css'   // shared 3D mini-scene styles
 import AuthShell, { AuthField } from '@/components/auth/AuthShell'
 
 const adminLoginSchema = z.object({
