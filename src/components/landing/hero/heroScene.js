@@ -128,7 +128,7 @@ export function mountHeroScene(root) {
   const WOOD = { top: '#B98A62', front: '#8A5A3B', back: '#8A5A3B', left: '#8A5A3B', right: '#734A30', noLine: true };
   // Scale: 1 m ≈ 4.4 px (a 2.1 m door is 9.3 px). Doors, windows, walls, car and figures all follow it, in both houses.
   const M = 4.4;
-  const WIN_W = 1.8 * M, WIN_H = 1.4 * M, SILL = .8 * M;              // one window size for every house: 1.8 x 1.4 m, sill at 0.8 m
+  const WIN_W = 2.1 * M, WIN_H = 1.6 * M, SILL = .7 * M;              // one window size for every house: 2.1 x 1.6 m, sill at 0.7 m
   const HOUSE_LOTS = { '3,3': 0 };                 // lot key -> house group
   Object.keys(HOUSE_LOTS).forEach(k => { const [c, r] = k.split(',').map(Number), [x, y] = lotXY(c, r);
     // small country house, same language as the main one: stone plinth, white walls with windows (glass reflection),
@@ -195,7 +195,6 @@ export function mountHeroScene(root) {
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
   const actor = (x, y, svg, w) => bill(x, y, 0, `<div class="pet" style="width:${w}px">${svg}</div>`);
   const fence = (parent, x, y, w, d, gaps) => {                       // white picket fence on the lot edge; gaps = [[x1, x2], ...] on the front side
-    div('fence-sh', { left: x + 'px', top: y + 'px', width: w + 'px', height: d + 'px' }, parent);   // soft shadow on the ground
     const H = 5, fx = (x1, x2, yy) => { if (x2 - x1 > 1) box(parent, x1, yy, 0, x2 - x1, .6, H, { top: '#FDFBF6', front: PICKX, back: PICKX, left: '#FDFBF6', right: '#FDFBF6', noLine: true }); };
     const fy = (y1, y2, xx) => box(parent, xx, y1, 0, .6, y2 - y1, H, { top: '#FDFBF6', front: '#FDFBF6', back: '#FDFBF6', left: PICKY, right: PICKY, noLine: true });
     fx(x, x + w, y); fy(y, y + d, x); fy(y, y + d, x + w - .6);
@@ -213,7 +212,7 @@ export function mountHeroScene(root) {
     const fw = hw / 2;
     for (let f = 0; f < floors; f++) {
       const z0 = f * FLOOR + SILL;
-      [fw - 26, fw + 18].forEach(l => win(walls._front, l, z0, WIN_W, WIN_H));                // two large windows, one each side of the door
+      [fw - 27, fw + 17].forEach(l => win(walls._front, l, z0, WIN_W, WIN_H));                // two large windows, one each side of the door
       [hd / 2 - WIN_W / 2].forEach(tp => { win(walls._faces[2], z0, tp, WIN_H, WIN_W); win(walls._faces[3], z0, tp, WIN_H, WIN_W); });   // one per side (x runs up the wall)
     }
     if (floors > 1) div('f band', { left: '0px', top: (FLOOR - .5) + 'px', width: hw + 'px', height: '1px' }, walls._front);   // floor line between storeys
