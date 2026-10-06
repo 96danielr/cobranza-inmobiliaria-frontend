@@ -60,16 +60,14 @@ export const landing = {
       { value: 520, suffix: 'k+', label: 'cuotas procesadas' },
       { value: 20, suffix: '+', label: 'bancos integrados' },
     ],
-    featuresTitle: 'Todo incluido',
-    featuresNote: 'en el plan único',
     // descriptions from the original landing (kept by product decision; see tarea-45 in the Mapa)
     features: [
-      { icon: 'bell', label: 'Recordatorios inteligentes', text: 'Avisos automáticos por WhatsApp y correo antes de cada vencimiento.' },
-      { icon: 'chart', label: 'Dashboard en tiempo real', text: 'Cartera, mora y recaudo al día, con reportes en Excel y PDF.' },
-      { icon: 'user', label: 'Portal del cliente', text: 'Tu comprador ve sus pagos, recibos y estado de cuenta desde el celular.' },
-      { icon: 'card', label: 'Múltiples medios de pago', text: 'Transferencias, link de pago y pasarelas, desde donde prefiera pagar.' },
-      { icon: 'swap', label: 'Conciliación automática', text: 'Cada pago se cruza con su cuota sin digitar nada a mano.' },
-      { icon: 'shield', label: 'Seguridad y auditoría', text: 'Cada movimiento queda registrado, con quién lo hizo y cuándo.' },
+      { icon: 'bell', label: 'Recordatorios inteligentes', text: 'Avisos antes de cada vencimiento.' },
+      { icon: 'chart', label: 'Dashboard en tiempo real', text: 'Cartera, mora y recaudo al día.' },
+      { icon: 'user', label: 'Portal del cliente', text: 'Pagos y recibos desde el celular.' },
+      { icon: 'card', label: 'Múltiples medios de pago', text: 'Transferencia, link o pasarela.' },
+      { icon: 'swap', label: 'Conciliación automática', text: 'Cada pago cruza con su cuota.' },
+      { icon: 'shield', label: 'Seguridad y auditoría', text: 'Quién hizo qué y cuándo.' },
     ],
   },
   quote: {
