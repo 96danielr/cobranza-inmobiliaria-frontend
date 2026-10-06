@@ -163,3 +163,11 @@ test('header WhatsApp link has an accessible name on phones', async ({ page }) =
   await page.goto('/')
   await expect(page.locator('.landing header').getByRole('link', { name: 'Hablar por WhatsApp' })).toBeVisible()
 })
+
+test('login menu opens on click and closes on an outside click', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('.landing .menu > button').click()
+  await expect(page.locator('.landing .menu')).toHaveClass(/open/)
+  await page.mouse.click(40, 400)
+  await expect(page.locator('.landing .menu')).not.toHaveClass(/open/)
+})
