@@ -47,6 +47,16 @@ export function mountHeroScene(root) {
     parent.appendChild(b); b._faces = faces; b._front = front; return b;
   }
   const group = (parent = pl) => div('g', {}, parent);
+  // the board is a chunk of land: a thin, faint grass margin and a layer of earth underneath with a ragged, torn-off bottom.
+  // Kept translucent and low in contrast so the eye stays on the lots and the house.
+  const GM = 6, SOIL = 24;
+  const SPECK = 'radial-gradient(circle at 30% 40%, rgba(70,45,25,.22) 0 .6px, transparent .8px) 0 0/5px 4px, radial-gradient(circle at 70% 70%, rgba(255,240,215,.25) 0 .5px, transparent .7px) 0 0/6px 5px, radial-gradient(circle, rgba(60,40,22,.18) 0 1.1px, transparent 1.3px) 2px 3px/11px 9px';
+  const EARTH = dir => `${SPECK}, linear-gradient(${dir}, rgba(126,160,110,.35) 0 1.4px, rgba(150,112,78,.34) 1.4px 45%, rgba(165,130,96,.26) 45% 75%, rgba(150,138,122,.16) 75%)`;
+  const soil = box(pl, -GM, -GM, -SOIL - .3, PW + 2 * GM, PH + 2 * GM, SOIL, { top: 'rgba(170,198,152,.38)', front: EARTH('180deg'), back: EARTH('180deg'), left: EARTH('90deg'), right: EARTH('90deg'), noLine: true });
+  // ragged bottom: the earth fades and breaks off irregularly (front/back run top -> bottom, sides run top -> right)
+  const RAG_Y = 'polygon(0 0, 100% 0, 100% 78%, 94% 92%, 87% 81%, 79% 96%, 70% 84%, 61% 100%, 52% 86%, 44% 95%, 35% 80%, 26% 93%, 17% 83%, 9% 97%, 0 85%)';
+  const RAG_X = 'polygon(0 0, 78% 0, 92% 6%, 81% 13%, 96% 21%, 84% 30%, 100% 39%, 86% 48%, 95% 56%, 80% 65%, 93% 74%, 83% 83%, 97% 91%, 85% 100%, 0 100%)';
+  soil._faces.forEach((f, i) => { if (i === 1 || i === 4) f.style.clipPath = RAG_Y; else if (i === 2 || i === 3) f.style.clipPath = RAG_X; });
   // gable roof over a w x d footprint, ridge along x: two tiled slopes and the two end triangles
   // gable roof over a w x d footprint, ridge along x. Barrel tiles: rounded channels across the slope (light crest,
   // dark trough) and horizontal courses every few px; a darker eave edge and a rounded ridge cap on top.
@@ -54,9 +64,17 @@ export function mountHeroScene(root) {
   const ROOF_A = TILE('#C9693D', '#E08A5C', '#93441F'), ROOF_B = TILE('#B0582F', '#C9714A', '#7D3818');
   const gableRoof = (parent, x, y, z, w, d, h, ov) => {
     const g = div('g', { transform: `translateZ(${z}px)` }, parent), half = d / 2 + ov, L = Math.hypot(half, h), a = Math.atan2(h, half) * 180 / Math.PI;
-    const slope = (bg, deg) => div('f roof', { left: (x - ov) + 'px', top: (y + d / 2) + 'px', width: (w + 2 * ov) + 'px', height: L + 'px', transformOrigin: '50% 0', transform: `translateZ(${h}px) rotateX(${deg}deg)`, background: bg }, g);
+    // each slope is a slab TK thick: the tiled face, an underside, and edge faces folded toward the underside
+    // (eave along the bottom, barge edges at both ends). sgn: which side of the rotated plane is "under" (+1 front, -1 back)
+    const TK = 4, EDGE = 'repeating-linear-gradient(90deg, #7A3518 0 .9px, #A64B26 .9px 3.4px, #C2633A 3.4px 5.6px, #A64B26 5.6px 8px, #7A3518 8px 9px)';
+    const slope = (bg, deg, sgn) => { const W = w + 2 * ov, el = div('f roof', { left: (x - ov) + 'px', top: (y + d / 2) + 'px', width: W + 'px', height: L + 'px', transformOrigin: '50% 0', transform: `translateZ(${h}px) rotateX(${deg}deg)`, background: bg, transformStyle: 'preserve-3d' }, g);
+      const under = sgn > 0 ? -TK : TK;
+      div('f', { left: '0px', top: '0px', width: W + 'px', height: L + 'px', transform: `translateZ(${under}px)`, background: '#8E4A2A' }, el);                          // underside
+      div('f', { left: '0px', top: L + 'px', width: W + 'px', height: TK + 'px', transformOrigin: '50% 0', transform: `rotateX(${sgn > 0 ? -90 : 90}deg)`, background: EDGE }, el);   // eave edge
+      [0, W].forEach(ex => div('f', { left: ex + 'px', top: '0px', width: TK + 'px', height: L + 'px', transformOrigin: '0 50%', transform: `rotateY(${sgn > 0 ? 90 : -90}deg)`, background: '#9A4A27' }, el));   // barge edges
+      return el; };
     const end = ex => div('f', { left: ex + 'px', top: y + 'px', width: h + 'px', height: d + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: 'linear-gradient(90deg, #E9DFCB, #DCCDB2)', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }, g);
-    end(x); end(x + w); slope(ROOF_B, -(180 - a)); slope(ROOF_A, -a);
+    end(x); end(x + w); slope(ROOF_B, -(180 - a), -1); slope(ROOF_A, -a, 1);
     const cap = div('g', { transform: `translateZ(${h + .2}px)` }, g);           // ridge cap: half-round tiles along the ridge
     div('f ridge', { left: (x - ov) + 'px', top: (y + d / 2 - 1.6) + 'px', width: (w + 2 * ov) + 'px', height: '3.2px' }, cap);
     return g; };
@@ -195,8 +213,14 @@ export function mountHeroScene(root) {
     box(g3, hx + fw - 7, hy + hd, 0, 14, 5, BASE, WOOD); box(g3, hx + fw - 5, hy + hd + 5, 0, 10, 2.6, BASE / 2, WOOD);   // entrance landing at floor level and one step, no roof
     const g4 = stage(); const gate = hx + fw - 3;
     // entrance: a flagstone path from the gate to the door step, framed by two stone pillars with lanterns and an open wooden gate
-    const pathTop = hy + hd + 8.5, pathBot = oy + SD - 2;
-    div('plan path', { left: (gate - 2) + 'px', top: pathTop + 'px', width: '12px', height: (pathBot - pathTop) + 'px' }, g4);
+    // walkway (andén) 1.6 m wide all around the house, the front path joins it; flower beds 0.6 m deep along the facade
+    // and both edges of the path (flowers ~0.3-0.5 m tall: dots of about 1 px, well below a person's knee)
+    const WK = 7, pathTop = hy + hd + WK, pathBot = oy + SD - 2, PWD = 13;
+    div('plan path walkway', { left: (hx - WK) + 'px', top: (hy - WK) + 'px', width: (hw + 2 * WK) + 'px', height: (hd + 2 * WK) + 'px' }, g4);
+    div('plan path', { left: (gate - 2.5) + 'px', top: pathTop + 'px', width: PWD + 'px', height: (pathBot - pathTop) + 'px' }, g4);
+    const bed = (x, y, w, d) => div('plan flowers', { left: x + 'px', top: y + 'px', width: w + 'px', height: d + 'px' }, g4);
+    bed(hx - WK, pathTop, gate - 2.5 - (hx - WK) - .5, 2.8); bed(gate - 2.5 + PWD + .5, pathTop, hx + hw + WK - (gate - 2.5 + PWD + .5), 2.8);   // along the facade
+    bed(gate - 2.5 - 3.2, pathTop + 3.2, 2.8, pathBot - pathTop - 9); bed(gate - 2.5 + PWD + .4, pathTop + 3.2, 2.8, pathBot - pathTop - 9);       // both edges of the path
     const PIL = { top: '#E4DCCB', front: 'repeating-linear-gradient(180deg, #CFC4AE 0 2.6px, #B9AD95 2.6px 3px)', back: '#C9BEA8', left: '#C2B69F', right: '#ADA08A', noLine: true };
     const CAP = { top: '#F1ECE1', front: '#D9D1C0', back: '#D9D1C0', left: '#D9D1C0', right: '#C4BBA8', noLine: true };
     const LAN = { top: '#2E3440', front: 'linear-gradient(180deg, #2E3440 0 20%, #FFE7A6 20% 80%, #2E3440 80%)', back: '#FFE7A6', left: '#FFE7A6', right: '#F3D58A', noLine: true };
@@ -270,7 +294,7 @@ export function mountHeroScene(root) {
   const N = 6;
   // single 3D progress bar on the ground, parallel to the plane's front edge
   const hud = group(); hud.classList.add('hud');
-  const BY = 12, BL = PW - 28;                                // full length on the long edges
+  const BY = GM + 14, BL = PW - 28;                           // on the ground, a little in front of the block                                // full length on the long edges
   const trackG = group(hud); box(trackG, 0, 0, 0, BL, 7, 2, { top: '#E1DCD0', front: '#CFC9BB', back: '#CFC9BB', left: '#CFC9BB', right: '#BDB6A7', noLine: true });
   const barG = group(hud); const barBox = box(barG, 0, 0, 0, BL, 7, 3.4, { top: '#EDC45A', front: '#E3B23C', back: '#E3B23C', left: '#E3B23C', right: '#C99A2E', noLine: true });
   barG.classList.add('bf');
@@ -291,10 +315,10 @@ export function mountHeroScene(root) {
     'Recibo enviado por WhatsApp y correo', 'Pago reportado desde el portal', 'Apruebas el pago en un clic',
     'Estados de cuenta siempre al día', 'Comisiones de asesores calculadas', 'Cartera recaudada'];
   const EDGES = [
-    { tr: `translate3d(0px, ${PH}px, 0) rotateZ(0deg)`, len: PW, down: a => Math.cos(a) },     // front
-    { tr: `translate3d(${PW}px, ${PH}px, 0) rotateZ(-90deg)`, len: PH, down: a => Math.sin(a) }, // right
-    { tr: `translate3d(${PW}px, 0px, 0) rotateZ(180deg)`, len: PW, down: a => -Math.cos(a) },   // back
-    { tr: `translate3d(0px, 0px, 0) rotateZ(90deg)`, len: PH, down: a => -Math.sin(a) }];      // left
+    { tr: `translate3d(0px, ${PH}px, ${-SOIL}px) rotateZ(0deg)`, len: PW, down: a => Math.cos(a) },     // front
+    { tr: `translate3d(${PW}px, ${PH}px, ${-SOIL}px) rotateZ(-90deg)`, len: PH, down: a => Math.sin(a) }, // right
+    { tr: `translate3d(${PW}px, 0px, ${-SOIL}px) rotateZ(180deg)`, len: PW, down: a => -Math.cos(a) },   // back
+    { tr: `translate3d(0px, 0px, ${-SOIL}px) rotateZ(90deg)`, len: PH, down: a => -Math.sin(a) }];      // left
   let edge = 0, edgeBusy = false, lenK = 1; hud.style.transform = EDGES[0].tr;
   // text never runs past the edge: shrink the font only when the line is longer than the available length
   const fitText = el => { el.style.fontSize = ''; const avail = EDGES[edge].len - 28, w = el.scrollWidth;
