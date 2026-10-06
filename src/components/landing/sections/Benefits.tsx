@@ -26,7 +26,9 @@ export default function Benefits() {
           <div className="bc-st">
             <div className="cotas grid4">
               {b.stats.map((s, i) => (
-                <div className={'ct rv' + delay(i)} key={s.label}><CountUp value={s.value} suffix={s.suffix} /><div className="lbl">{s.label}</div></div>
+                'value' in s
+                  ? <div className={'ct rv' + delay(i)} key={s.label}><CountUp value={s.value} suffix={s.suffix} /><div className="lbl">{s.label}</div></div>
+                  : <div className={'ct ct-text rv' + delay(i)} key={s.text}><div className="lbl">{s.lead}</div><div className="num">{s.text}</div></div>
               ))}
             </div>
           </div>

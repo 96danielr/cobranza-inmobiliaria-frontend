@@ -2,6 +2,8 @@
 // Values in [brackets] are pending from the commercial team (see ./PENDIENTES.md in the Operix folder).
 import { money, monthlyPrice } from './lotFeed'
 
+export type Stat = { value: number; suffix: string; label: string } | { lead: string; text: string }
+
 /** WhatsApp link with a prefilled message. Until the commercial number arrives, CTAs point to the contact section. */
 const WHATSAPP_NUMBER: string | null = null
 const WHATSAPP_TEXT = 'Hola, quiero conocer Operix para la cobranza de mis lotes.'
@@ -58,11 +60,12 @@ export const landing = {
       { icon: 'receipt', title: 'Recibos de caja al instante', text: 'Se genera al aprobar el pago y le llega a tu comprador por WhatsApp y correo.' },
     ],
     more: 'Ver planes y precios',
-    stats: [
+    // a stat is either a counted number or a short text figure (with a small lead-in line above it)
+    stats: <Stat[]>[
       { value: 120, suffix: '+', label: 'proyectos inmobiliarios' },
       { value: 100, suffix: '%', label: 'automatización' },
       { value: 520, suffix: 'k+', label: 'cuotas procesadas' },
-      { value: 20, suffix: '+', label: 'bancos integrados' },
+      { lead: 'Acepta pagos desde', text: 'cualquier banco' },
     ],
     // descriptions from the original landing (kept by product decision; see tarea-45 in the Mapa)
     features: [

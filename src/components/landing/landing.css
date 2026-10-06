@@ -469,3 +469,5 @@ body:has(.landing)::before { display: none; }
   .landing .hero .ctas .btn svg { width: 16px; height: 16px; }
 }
 @media (max-width: 370px) { .landing .hero .ctas .btn svg { display: none; } .landing .hero .ctas .btn { font-size: 13px; } }
+.landing .bencard .cotas.grid4 .ct-text .num { margin-top: 4px; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.1; letter-spacing: -.02em; }
+.landing .bencard .cotas.grid4 .ct-text .lbl { margin-top: 0; }
