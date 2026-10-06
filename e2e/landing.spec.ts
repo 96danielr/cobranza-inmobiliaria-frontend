@@ -79,3 +79,22 @@ test('security and closing mini scenes mount once', async ({ page }) => {
   for (const kind of ['secure', 'close']) expect(await page.locator(`.landing [data-mini="${kind}"] > .pl`).count()).toBe(1)
   expect(errors).toEqual([])
 })
+
+test('open graph image is served and linked', async ({ request }) => {
+  const html = await (await request.get('/')).text()
+  expect(html).toMatch(/<meta property="og:image" content="[^"]*opengraph-image/)
+  const img = await request.get('/opengraph-image')
+  expect(img.status()).toBe(200)
+  expect(img.headers()['content-type']).toContain('image/png')
+})
+
+test('leaving the landing does not restyle the app', async ({ page }) => {
+  await page.goto('/')
+  await page.waitForTimeout(1000)
+  await page.goto('/login')
+  await page.waitForTimeout(1500)
+  // landing classes are scoped under .landing, so nothing on /login may pick up their rules
+  expect(await page.locator('.landing').count()).toBe(0)
+  const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+  expect(bodyBg).not.toBe('rgb(242, 240, 233)')
+})
