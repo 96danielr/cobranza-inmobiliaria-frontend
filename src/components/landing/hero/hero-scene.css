@@ -8,7 +8,7 @@
 .landing .ox .scene {position: absolute; inset: 0; perspective: 1800px; perspective-origin: 50% 10%;}
 .landing .ox .plane {position: absolute; left: 50%; top: 44%; width: 380px; height: 300px; margin: -150px 0 0 -190px;
   background: #ECE9E1; box-shadow: inset 0 0 0 1px rgba(11,27,51,.28); transform-style: preserve-3d;
-  transform: scale3d(var(--s,1.18),var(--s,1.18),var(--s,1.18)) rotateX(calc(56deg + var(--ry,0deg))) rotateZ(calc(-34deg + var(--rz,0deg)));}
+  transform: scale3d(var(--s,1.18),var(--s,1.18),var(--s,1.18)) rotateX(calc(56deg + var(--ry,0deg))) rotateZ(calc(-22deg + var(--rz,0deg)));}
 .landing .ox .hud2 {display: none; position: absolute; left: 20px; right: 20px; bottom: 22px; z-index: 3; color: var(--ink);}
 .landing .ox.mobile .hud2 {display: block;}
 .landing .ox.mobile .hud {visibility: hidden;}
@@ -108,3 +108,15 @@
 .landing .ox .bf .f {transition: background-color .6s ease;}
 .landing .ox .hud .f {transition: opacity .16s ease;}
 .landing .ox .hud.out .f, .landing .ox .hud.out .tx {opacity: 0 !important; transition: opacity .12s ease;}
+/* country house: windows and door light up when the family moves in; smoke, pets, lawn */
+.landing .ox .win { position: absolute; background: #3B4F6B; box-shadow: inset 0 0 0 .7px #8A5A3B; transition: background-color .6s ease, box-shadow .6s ease; }
+.landing .ox .win.lit { background: #F6D68A; box-shadow: inset 0 0 0 .7px #8A5A3B, 0 0 6px 1px rgba(246,214,138,.65); }
+.landing .ox .hdoor { position: absolute; background: #8A5A3B; box-shadow: inset 0 0 0 .7px #5E3B24; transition: background-color .6s ease; }
+.landing .ox .hdoor.open { background: linear-gradient(90deg, #F6D68A 0 55%, #8A5A3B 55%); }
+.landing .ox .puff { position: absolute; left: -5px; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.95); box-shadow: 0 0 0 .6px rgba(11,27,51,.15); opacity: 0; }
+.landing .ox .pet { position: absolute; left: 0; bottom: 0; translate: -50% 0; transform-origin: 50% 100%; opacity: 0; }
+.landing .ox .pet svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 1.5px 1px rgba(11,27,51,.25)); }
+.landing .ox .plan.stone { background: #E3DDD0; border-radius: 1.5px; box-shadow: inset 0 0 0 .6px rgba(11,27,51,.3); }
+.landing .ox .site.lawn { background: repeating-linear-gradient(45deg, rgba(15,163,127,.14) 0 .6px, transparent .6px 5px), #E3F0E4; }
+.landing .ox .plan.drive { background: repeating-linear-gradient(0deg, rgba(11,27,51,.08) 0 .6px, transparent .6px 4px), #E4DED1; box-shadow: inset 0 0 0 .6px rgba(11,27,51,.25); }
+.landing .ox .plan.bed { background: repeating-linear-gradient(90deg, #7FBF9D 0 1.4px, #CDB79A 1.4px 3px); border-radius: 1px; box-shadow: none; }

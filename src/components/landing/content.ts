@@ -24,9 +24,9 @@ export const landing = {
   ],
   cta: { whatsapp: 'Hablar por WhatsApp', demo: 'Pide una demo' },
   hero: {
-    eyebrow: ['Operix', 'Cobranza inmobiliaria'],
-    title: 'Construyendo el futuro de la cobranza inmobiliaria inteligente',
-    lead: 'Automatizamos procesos de recaudo para reducir tareas manuales y mejorar la experiencia de pago.',
+    eyebrow: ['Operix', 'Cobranza de lotes a plazos'],
+    title: 'Ellos construyen su sueño. Tú recaudas cada cuota.',
+    lead: 'Tus compradores pagan su lote campestre desde el celular, tú apruebas en un clic y tu cartera se recauda cuota a cuota.',
     secondary: 'Ver cómo funciona',
   },
   logos: {

@@ -10,7 +10,7 @@ const collectErrors = (page: Page) => {
 
 test('server HTML carries the copy (no JS needed)', async ({ request }) => {
   const html = await (await request.get('/')).text()
-  for (const t of ['Construyendo el futuro', 'Cada cuota, cobrada y registrada', 'Menos planillas', 'Menos tiempo persiguiendo pagos',
+  for (const t of ['Ellos construyen su sueño', 'Cada cuota, cobrada y registrada', 'Menos planillas', 'Menos tiempo persiguiendo pagos',
     'Tus datos y transacciones', 'Un solo plan, sin sorpresas', '$10.000', '¿Listo para transformar tu cobranza?']) expect(html).toContain(t)
   expect(html).not.toContain('images.unsplash.com')
   expect(html).toContain('<title>Operix')
