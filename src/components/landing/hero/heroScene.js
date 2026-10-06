@@ -528,8 +528,10 @@ export function mountHeroScene(root) {
     if (!dragging) { dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); vz *= .92; vx *= .88;
       if (now - lastMove > 2600) { dz += (0 - dz) * .03; dx += (0 - dx) * .03; } }
     const hover = dragging ? 0 : 1;
-    { // each cycle opens with a quick full 360° turn to the left that ends with the board facing the viewer, then it stays front-on
-      const SPIN = 1400, drift = reduce ? CAM_Z : t < SPIN ? CAM_Z - 360 * (1 - easeIO(t / SPIN)) : CAM_Z;
+    { // the cycle opens with a quick small turn to face the viewer; it closes with a fast full turn to the left
+      // that lands back on the starting angle (22 -> 360, which equals 0) just before the next cycle
+      const IN = 1000, S0 = CYCLE - 1500, S1 = CYCLE - 350;
+      const drift = reduce ? CAM_Z : t < IN ? CAM_Z * easeIO(t / IN) : t < S0 ? CAM_Z : CAM_Z + (360 - CAM_Z) * easeIO(clamp((t - S0) / (S1 - S0)));
       if (pl._drift !== undefined && pl._drift - drift > 180) rz -= 360;   // the cycle wrapped: keep the eased angle continuous
       pl._drift = drift;
       const tz = mx * 8 * hover + dz + drift, tx = -my * 4 * hover + dx;   // ease toward the target, then settle exactly (no endless sub-pixel shimmer)
