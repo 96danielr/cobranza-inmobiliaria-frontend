@@ -134,7 +134,7 @@ export function mountHeroScene(root) {
     // small country house, same language as the main one: stone plinth, white walls with windows (glass reflection),
     // a door with a step, chimney and a barrel-tile roof; a tree beside it
     const g = group(); g.classList.add('round');
-    const X = x + 12, Y = y + 14, W = 40, D = 26;
+    const X = x + 12, Y = y + 7, W = 40, D = 26;                        // set back toward the rear of the lot
     box(g, X - 2, Y - 2, 0, W + 4, D + 4, 2.2, { ...STONE, top: '#D9D3C6' });
     const hb = box(g, X, Y, 2.2, W, D, 12.8, WALL);
     const wn = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win lit'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); };
