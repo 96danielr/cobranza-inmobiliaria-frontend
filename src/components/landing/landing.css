@@ -387,3 +387,8 @@ body:has(.landing)::before { display: none; }
 .landing .menu > button:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; border-radius: 6px; }
 .landing .menu .pop { visibility: hidden; }
 .landing .menu.open .pop { visibility: visible; }
+/* official logo: mark + wordmark on one line */
+.landing .logo { gap: 9px; }
+.landing .logo img { display: block; width: auto; }
+.landing .logo .logo-mark { height: 28px; }
+.landing .logo .logo-word { height: 13px; }

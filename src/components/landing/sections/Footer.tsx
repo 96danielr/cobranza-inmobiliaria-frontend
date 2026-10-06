@@ -7,7 +7,7 @@ export default function Footer() {
     <footer>
       <div className="wrap">
         <div className="grid">
-          <div><a className="logo" href="#"><Logo />OPERIX</a><p className="about">{f.about}</p></div>
+          <div><a className="logo" href="#" aria-label="Operix"><Logo /></a><p className="about">{f.about}</p></div>
           <div className="col"><b>Producto</b>{landing.nav.slice(0, 3).map(l => <a key={l.href} href={l.href}>{l.label}</a>)}</div>
           <div className="col"><b>Ingresar</b><a href="/admin/login">Portal empresa</a><a href="/login">Portal cliente</a></div>
           <div className="col"><b>Contacto</b><a href={whatsappHref}>WhatsApp</a>

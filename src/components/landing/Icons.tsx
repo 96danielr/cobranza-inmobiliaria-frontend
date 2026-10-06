@@ -3,19 +3,13 @@ import type { ReactElement } from 'react'
 
 const line = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
 
-export function Logo({ gradient = false }: { gradient?: boolean }) {
+/** Official Operix logo from main (public/logo fondo transparente.png), split into mark and wordmark to sit on one line. */
+export function Logo() {
   return (
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      {gradient && (
-        <defs>
-          <linearGradient id="operix-logo-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#1C6FD6" /><stop offset="1" stopColor="#0B2A6B" />
-          </linearGradient>
-        </defs>
-      )}
-      <path d="M29 7.5A15 15 0 1 0 34 24" fill="none" stroke={gradient ? 'url(#operix-logo-g)' : '#1C56C4'} strokeWidth="5" strokeLinecap="round" />
-      <path d="M14.5 24.5l7.5 7 13-18" fill="none" stroke="#0FB98C" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <>
+      <img className="logo-mark" src="/brand/operix-mark.png" alt="" width={325} height={315} />
+      <img className="logo-word" src="/brand/operix-wordmark.png" alt="Operix" width={805} height={106} />
+    </>
   )
 }
 

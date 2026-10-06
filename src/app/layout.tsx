@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   // absolute base for share images and other relative metadata URLs
   metadataBase: new URL('https://operix.com.co'),
+  icons: { icon: '/brand/operix-icon.png', apple: '/brand/operix-icon.png' },
   title: 'Portal Cliente - Sistema de gestión y automatización inmobiliaria',
   description: 'Portal del cliente para gestión de pagos, contratos e inmobiliarias',
 }
