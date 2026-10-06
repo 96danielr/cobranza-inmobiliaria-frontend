@@ -17,7 +17,7 @@ test('server HTML carries the copy (no JS needed)', async ({ request }) => {
 })
 
 test('landing CSS is scoped under .landing', () => {
-  for (const file of ['src/components/landing/landing.css']) {
+  for (const file of ['src/components/landing/landing.css', 'src/components/landing/hero/hero-scene.css']) {
     const css = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*\s*\}/g, '')
     const preludes = Array.from(css.matchAll(/([^{};]+)\{/g)).map(m => m[1].trim()).filter(p => !p.startsWith('@'))
     expect(preludes.length).toBeGreaterThan(50)
@@ -34,5 +34,15 @@ test('no horizontal scroll at 390 px and no console errors', async ({ page }) =>
   await page.goto('/')
   await page.waitForTimeout(1500)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+  expect(errors).toEqual([])
+})
+
+test('hero scene mounts once and runs', async ({ page }) => {
+  const errors = collectErrors(page)
+  await page.goto('/')
+  await page.waitForTimeout(3000)
+  expect(await page.locator('.landing .ox .plane').count()).toBe(1)
+  expect(await page.locator('.landing .ox .plane > *').count()).toBeGreaterThan(20)
+  await expect(page.locator('.landing #n2')).not.toHaveText('RECAUDO 0 %')
   expect(errors).toEqual([])
 })

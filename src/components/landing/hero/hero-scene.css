@@ -1,0 +1,110 @@
+/* 3D hero scene styles, ported from the approved prototype and scoped under .landing. */
+.landing .ox, .landing .ox * {box-sizing: border-box; font-family: inherit;}
+.landing .ox {--paper:#F2F0E9; --road:#E4E0D5; --lot:#FBFAF6; --lotLine:#D5CFC1; --sold:#E2EDE6; --soldLine:#BBD5C6;
+      --ink:#0B1B33; --green:#0FA37F; --concrete:#F4F2EC; --concreteS:#D2CEC4;
+      --glass:#2B4A76; --glassD:#1B3358; --mull:rgba(244,242,236,.85); --crane:#E3B23C;}
+.landing .ox .stage {position: relative; width: 100%; height: 620px; background: var(--paper); border-radius: 12px; overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none;}
+.landing .ox .stage.dragging {cursor: grabbing;}
+.landing .ox .scene {position: absolute; inset: 0; perspective: 1800px; perspective-origin: 50% 10%;}
+.landing .ox .plane {position: absolute; left: 50%; top: 44%; width: 380px; height: 300px; margin: -150px 0 0 -190px;
+  background: #ECE9E1; box-shadow: inset 0 0 0 1px rgba(11,27,51,.28); transform-style: preserve-3d;
+  transform: scale3d(var(--s,1.18),var(--s,1.18),var(--s,1.18)) rotateX(calc(56deg + var(--ry,0deg))) rotateZ(calc(-34deg + var(--rz,0deg)));}
+.landing .ox .hud2 {display: none; position: absolute; left: 20px; right: 20px; bottom: 22px; z-index: 3; color: var(--ink);}
+.landing .ox.mobile .hud2 {display: block;}
+.landing .ox.mobile .hud {visibility: hidden;}
+.landing .ox .hud2 .n2 {font-size: 11px; font-weight: 500; letter-spacing: .04em; color: #6B6F78; font-variant-numeric: tabular-nums; transition: opacity .4s;}
+.landing .ox .hud2 .lines {position: relative; height: 84px; margin-top: 6px; overflow: hidden;}
+.landing .ox .hud2 .ln {position: absolute; left: 0; top: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; white-space: nowrap; transform-origin: 0 0;
+  transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); display: inline-flex; align-items: center; gap: 7px;}
+.landing .ox .hud2 .ln .ck {width: 19px; height: 19px;}
+.landing .ox .hud2 .track2 {margin-top: 10px; height: 8px; border-radius: 4px; background: #E1DCD0; overflow: hidden;}
+.landing .ox .hud2 .track2 i {display: block; height: 100%; width: 0; border-radius: 4px; background: #E3B23C; transition: background-color .6s;}
+.landing .ox .hud2 .track2 i.done {background: #0FA37F;}
+.landing .ox .grain {position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: .07; mix-blend-mode: multiply; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>") 0 0/160px 160px;}
+.landing .ox .g {position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d;}
+.landing .ox .b {position: absolute; transform-style: preserve-3d;}
+.landing .ox .f {position: absolute;}
+.landing .ox .dash {position: absolute;}
+.landing .ox .dash.h {height: 1px; background: repeating-linear-gradient(90deg, rgba(11,27,51,.22) 0 4px, transparent 4px 8px);}
+.landing .ox .dash.v {width: 1px; background: repeating-linear-gradient(180deg, rgba(11,27,51,.22) 0 4px, transparent 4px 8px);}
+.landing .ox .plan {position: absolute; box-shadow: inset 0 0 0 .8px rgba(11,27,51,.38);}
+.landing .ox .plan.sold {background: repeating-linear-gradient(45deg, rgba(11,27,51,.10) 0 .6px, transparent .6px 5px), #F4F1EA; transition: background-color .7s ease, box-shadow .7s ease;}
+.landing .ox .plan.sold.paid {background: repeating-linear-gradient(45deg, rgba(15,163,127,.22) 0 .6px, transparent .6px 5px), #DDEFE6; box-shadow: inset 0 0 0 1.2px rgba(15,163,127,.85);}
+.landing .ox .plan.free {background: #F7F5EF;}
+.landing .ox .plan.fp {background: repeating-linear-gradient(-45deg, rgba(11,27,51,.22) 0 .6px, transparent .6px 3px), #F7F5EF; box-shadow: inset 0 0 0 1px rgba(11,27,51,.55);}
+.landing .ox .plan.tree {border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 .8px rgba(11,27,51,.45);}
+.landing .ox .plan.tree::after {content: ''; position: absolute; left: 50%; top: 50%; width: 1.6px; height: 1.6px; margin: -.8px 0 0 -.8px; border-radius: 50%; background: rgba(11,27,51,.5);}
+.landing .ox .lot {position: absolute; background: var(--lot); box-shadow: inset 0 0 0 1px var(--lotLine);}
+.landing .ox .lot.sold {background: var(--sold); box-shadow: inset 0 0 0 1px var(--soldLine);}
+.landing .ox .site {position: absolute; background: repeating-linear-gradient(45deg, rgba(11,27,51,.10) 0 .6px, transparent .6px 5px), #F4F1EA; box-shadow: inset 0 0 0 1.2px rgba(11,27,51,.5); transition: background-color .7s ease, box-shadow .7s ease;}
+.landing .ox .site.paid {background: repeating-linear-gradient(45deg, rgba(15,163,127,.22) 0 .6px, transparent .6px 5px), #DDEFE6; box-shadow: inset 0 0 0 1.4px rgba(15,163,127,.9);}
+.landing .ox .bb {position: absolute; width: 0; height: 0;}
+.landing .ox .bb .pin {position: absolute; left: -8px; bottom: 0; width: 16px; transform-origin: 50% 100%; transform: scale(0); opacity: 0; transition: transform .55s cubic-bezier(.34,1.56,.64,1), opacity .25s ease;}
+.landing .ox .bb.prog .p1, .landing .ox .bb.done .p2 {transform: scale(1); opacity: 1;}
+.landing .ox .bb .p1 i {background: rgba(201,154,46,.9) !important;}
+.landing .ox .lfill {position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: rgba(227,178,60,.34); box-shadow: inset 0 1px 0 rgba(201,154,46,.7);
+  transform-origin: 50% 100%; transform: scaleY(0); transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease;}
+.landing .ox .paid > .lfill {opacity: 0;}
+.landing .ox .bb .pin svg {display: block; width: 16px; height: 16px; filter: drop-shadow(0 2px 3px rgba(11,27,51,.28));}
+.landing .ox .bb .pin i {display: block; width: 1.2px; height: 9px; margin: 0 auto; background: rgba(15,163,127,.85);}
+.landing .ox .shadow {position: absolute; background: rgba(11,27,51,.15); filter: blur(6px); border-radius: 4px;}
+.landing .ox .icon {position: absolute; width: 10px; height: 10px; color: #5D6470;}
+.landing .ox .gF {background:
+    linear-gradient(90deg, var(--concrete) 0 4px, transparent 4px calc(100% - 4px), var(--concrete) calc(100% - 4px)),
+    repeating-linear-gradient(90deg, var(--mull) 0 1px, transparent 1px 9px),
+    linear-gradient(100deg, rgba(255,255,255,.28) 0 18%, rgba(255,255,255,0) 18% 62%, rgba(255,255,255,.10) 62%),
+    linear-gradient(to bottom, var(--glassD), var(--glass));}
+.landing .ox .gS {background:
+    linear-gradient(180deg, var(--concreteS) 0 4px, transparent 4px calc(100% - 4px), var(--concreteS) calc(100% - 4px)),
+    repeating-linear-gradient(180deg, rgba(210,206,196,.75) 0 1px, transparent 1px 9px),
+    linear-gradient(to right, #142847, #213B60);}
+.landing .ox .gF2 {background:
+    repeating-linear-gradient(90deg, var(--concrete) 0 2px, transparent 2px 7px),
+    linear-gradient(100deg, rgba(255,255,255,.25) 0 20%, rgba(255,255,255,0) 20%),
+    linear-gradient(to bottom, #22406A, #34557F);}
+.landing .ox .gS2 {background:
+    repeating-linear-gradient(180deg, var(--concreteS) 0 2px, transparent 2px 7px),
+    linear-gradient(to right, #142847, #213B60);}
+.landing .ox .lobbyF {background:
+    linear-gradient(90deg, var(--concrete) 0 5px, transparent 5px calc(100% - 5px), var(--concrete) calc(100% - 5px)),
+    repeating-linear-gradient(90deg, rgba(11,27,51,.65) 0 1.5px, transparent 1.5px 18px),
+    linear-gradient(to bottom, #3C5878, #8FA6C0);}
+.landing .ox .hF {background:
+    linear-gradient(to bottom, #F2EFE8 0 30%, transparent 30% 78%, #F2EFE8 78%),
+    linear-gradient(90deg, #F2EFE8 0 16%, #5F7A99 16% 36%, #F2EFE8 36% 64%, #5F7A99 64% 84%, #F2EFE8 84%);}
+.landing .ox .hS {background:
+    linear-gradient(to right, #D6D1C6 0 30%, transparent 30% 78%, #D6D1C6 78%),
+    linear-gradient(180deg, #D6D1C6 0 35%, #4F6886 35% 65%, #D6D1C6 65%);}
+.landing .ox {--cy:#E8B83F; --cyD:#B9872A;}
+.landing .ox .latM {background:
+    linear-gradient(90deg, var(--cyD) 0 1.3px, transparent 1.3px calc(100% - 1.3px), var(--cyD) calc(100% - 1.3px)),
+    repeating-linear-gradient(180deg, var(--cyD) 0 1.6px, transparent 1.6px 24px),
+    repeating-linear-gradient(180deg, var(--cy) 0 .8px, transparent .8px 6px),
+    repeating-linear-gradient(45deg, var(--cy) 0 .7px, transparent .7px 6px);}
+.landing .ox .latMS {background:
+    linear-gradient(180deg, var(--cyD) 0 1.3px, transparent 1.3px calc(100% - 1.3px), var(--cyD) calc(100% - 1.3px)),
+    repeating-linear-gradient(90deg, var(--cyD) 0 1.6px, transparent 1.6px 24px),
+    repeating-linear-gradient(90deg, var(--cy) 0 .8px, transparent .8px 6px),
+    repeating-linear-gradient(-45deg, var(--cy) 0 .7px, transparent .7px 6px);}
+.landing .ox .latJ {background:
+    linear-gradient(180deg, var(--cyD) 0 .9px, transparent .9px calc(100% - .9px), var(--cyD) calc(100% - .9px)),
+    repeating-linear-gradient(90deg, var(--cy) 0 .7px, transparent .7px 5px),
+    repeating-linear-gradient(60deg, var(--cy) 0 .6px, transparent .6px 5px);}
+.landing .ox .latJS {background:
+    linear-gradient(90deg, var(--cyD) 0 .9px, transparent .9px calc(100% - .9px), var(--cyD) calc(100% - .9px)),
+    repeating-linear-gradient(180deg, var(--cy) 0 .7px, transparent .7px 5px);}
+.landing .ox .latJT {background:
+    linear-gradient(180deg, var(--cyD) 0 .9px, transparent .9px calc(100% - .9px), var(--cyD) calc(100% - .9px)),
+    repeating-linear-gradient(90deg, var(--cy) 0 .7px, transparent .7px 10px);}
+.landing .ox .cabF {background: linear-gradient(to bottom, #EEF0EC 0 22%, #2B4A76 22% 80%, #EEF0EC 80%);}
+.landing .ox .door {position: absolute; left: 50%; bottom: 0; width: 16px; height: 12px; margin-left: -8px; background: #0B1B33;}
+.landing .ox .tx {position: absolute; color: var(--ink); white-space: nowrap; transition: opacity .75s ease, transform .75s cubic-bezier(.2,.8,.2,1);}
+.landing .ox .tx.m {display: inline-flex; align-items: center; gap: 6px;}
+.landing .ox .tx .ck {width: 17px; height: 17px; flex: none;}
+.landing .ox .tx.m {transform-origin: 0 50%; transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1);}
+.landing .ox .tx.n {transition: opacity .5s ease;}
+.landing .ox .tx.n {font-size: 8px; font-weight: 500; color: #6B6F78; letter-spacing: .02em; font-variant-numeric: tabular-nums;}
+.landing .ox .tx.m {font-size: 17px; font-weight: 600; letter-spacing: -.02em;}
+.landing .ox .bf .f {transition: background-color .6s ease;}
+.landing .ox .hud .f {transition: opacity .16s ease;}
+.landing .ox .hud.out .f, .landing .ox .hud.out .tx {opacity: 0 !important; transition: opacity .12s ease;}

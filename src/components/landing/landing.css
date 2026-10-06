@@ -60,6 +60,8 @@ html:has(.landing) {scroll-behavior: smooth;}
 .landing .hero .ctas {display: flex; gap: 12px; margin-top: 34px; flex-wrap: wrap;}
 .landing .hero .already {margin-top: 26px; font-size: 14px; color: var(--muted);}
 .landing .hero .already a {color: var(--ink); font-weight: 600; border-bottom: 1px solid var(--line);}
+.landing .hero .ox .stage {background: transparent !important;}
+.landing .hero .ox .grain {display: none;}
 .landing .card {background: var(--surface); border: 1px solid var(--line2); border-radius: 20px; padding: 32px;}
 .landing .card h3 {font-size: 22px; line-height: 1.25; letter-spacing: -.02em; text-wrap: balance;}
 .landing .card p {margin: 12px 0 0; font-size: 15.5px; line-height: 1.6; color: var(--muted);}

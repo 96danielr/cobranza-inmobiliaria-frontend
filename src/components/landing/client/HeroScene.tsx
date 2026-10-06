@@ -1,9 +1,15 @@
 'use client'
 
-/** 3D hero scene (approved prototype). The engine is mounted in Task 3. */
+import { useEffect, useRef } from 'react'
+import { mountHeroScene } from '../hero/heroScene'
+import '../hero/hero-scene.css'
+
+/** 3D hero scene (approved prototype): the markup is static, the engine builds the model and runs the loop. */
 export default function HeroScene() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => (ref.current ? mountHeroScene(ref.current) : undefined), [])
   return (
-    <div className="ox" id="oxw" aria-hidden="true">
+    <div className="ox" id="oxw" ref={ref} aria-hidden="true">
       <div className="stage" id="ox">
         <div className="grain" />
         <div className="hud2" id="hud2"><div className="n2" id="n2">RECAUDO 0 %</div><div className="lines" id="lines" /><div className="track2"><i id="fill2" /></div></div>
