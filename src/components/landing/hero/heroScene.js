@@ -528,7 +528,8 @@ export function mountHeroScene(root) {
     if (!dragging) { dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); vz *= .92; vx *= .88;
       if (now - lastMove > 2600) { dz += (0 - dz) * .03; dx += (0 - dx) * .03; } }
     const hover = dragging ? 0 : 1;
-    { const tz = mx * 8 * hover + dz, tx = -my * 4 * hover + dx;   // ease toward the target, then settle exactly (no endless sub-pixel shimmer)
+    { const drift = reduce ? CAM_Z : CAM_Z * easeIO(clamp(t / (endT + 1500)));   // slow turn to the left until the board faces the viewer
+      const tz = mx * 8 * hover + dz + drift, tx = -my * 4 * hover + dx;   // ease toward the target, then settle exactly (no endless sub-pixel shimmer)
       rz = Math.abs(tz - rz) < .02 ? tz : rz + (tz - rz) * .12; ryv = Math.abs(tx - ryv) < .02 ? tx : ryv + (tx - ryv) * .12;
       rz = Math.round(rz * 20) / 20; ryv = Math.round(ryv * 20) / 20; }
     pickEdge(-CAM_Z + rz, CAM_X + ryv);                   // real scene rotation and camera tilt
