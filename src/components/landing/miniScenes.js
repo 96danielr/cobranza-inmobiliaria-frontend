@@ -62,7 +62,7 @@ V.secure = host => { const m = mk(host, 220, 170, { dark: true, zoom: .68 });
     put(lock, 'opacity', land.toFixed(2));
     const close = clamp((t - 1900) / 360), b = close < 1 ? close * close : 1;   // shackle snaps down
     put(shk, 'transform', `translateY(${(-9 * (1 - b)).toFixed(2)}px)`);
-    cls(lock, 'closed', close >= 1);
+    cls(lock, 'closed', close >= 1); if (host.parentElement) cls(host.parentElement, 'safe', close >= 1);   // the panel brightens once the data is locked
     const r = clamp((t - 2250) / 1100);
     put(ring, 'transform', `translateZ(${top + 1}px) scale(${(.4 + 1.3 * easeOut(r)).toFixed(3)})`);
     put(ring, 'opacity', (r > 0 && r < 1 ? (1 - r) * .9 : 0).toFixed(2)); } }; };
