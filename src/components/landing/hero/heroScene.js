@@ -255,10 +255,17 @@ export function mountHeroScene(root) {
     const H = { st, wins, door, greens: [...greens, ...trees, ...flowers], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
     if (o.carport) {                                                  // driveway with the car near the gate, and a pool behind it
       const cg = stage(); const DY = hy + 2, PD = 44, DECK = 4;                          // a long lap pool (about 10 m)
-      const CAR_Y = oy + SD - 27;                                                    // parking pad just inside the driveway gate
+      const CAR_Y = DY + PD + 14;                                                    // the car parks right after the pool deck
       div('plan gravel', { left: (o.cpX - DECK) + 'px', top: (DY - 1) + 'px', width: (o.cpW + DECK) + 'px', height: (CAR_Y - DY - 2) + 'px' }, cg);   // pool deck / leisure area
       div('plan drive', { left: o.cpX + 'px', top: CAR_Y + 'px', width: o.cpW + 'px', height: (oy + SD - CAR_Y - 2) + 'px' }, cg);
-      [[o.cpX + 2, DY + PD + 5], [o.cpX + 10, DY + PD + 5]].forEach(([lx, ly]) => box(cg, lx, ly, 0, 3, 7, .9, { top: '#FFFFFF', front: '#E4E1D9', back: '#E4E1D9', left: '#DCD8CE', right: '#C9C4B8', noLine: true }));   // two loungers
+      // two sun loungers (0.7 x 1.9 m): a white frame with legs, a blue cushion, and a raised backrest facing the pool
+      const LF = { top: '#FFFFFF', front: '#E4E1D9', back: '#E4E1D9', left: '#DCD8CE', right: '#C9C4B8', noLine: true };
+      const CUSH = { top: '#7FB6D9', front: '#5E97BD', back: '#5E97BD', left: '#6AA3C9', right: '#4F86AB', noLine: true };
+      [o.cpX + 3, o.cpX + 12].forEach(lx => { const ly = DY + PD + 3;
+        [[0, 0], [2.6, 0], [0, 7.6], [2.6, 7.6]].forEach(([dx, dy]) => box(cg, lx + dx, ly + dy, 0, .5, .5, 1.2, LF));
+        box(cg, lx, ly + 2.6, 1.2, 3.1, 5.6, .5, LF); box(cg, lx + .2, ly + 2.8, 1.7, 2.7, 5.2, .5, CUSH);
+        const back = div('g', { transform: `translate3d(${lx}px, ${ly + 2.6}px, 1.7px) rotateX(-58deg)`, transformOrigin: '0 0' }, cg);
+        box(back, 0, -2.8, 0, 3.1, 2.8, .5, CUSH); });
       // pool 6 x 7.5 m: stone coping, recessed water with a light ripple, a small ladder
       const COP = { top: '#EFEBE2', front: '#D8D1C2', back: '#D8D1C2', left: '#D8D1C2', right: '#C7BFAE', noLine: true };
       box(cg, o.cpX + 1, DY + 1, 0, o.cpW - 2, PD, 1, COP);
