@@ -205,4 +205,4 @@
 /* a lot whose house is already up keeps only its green area (no dark outline) */
 .landing .ox .plan.built, .landing .ox .site.lawn { box-shadow: none !important; }
 .landing .ox .plan.path.entry, .landing .ox .plan.walkway { border-radius: 0; }
-.landing .ox .plan.track { border-radius: 1px; box-shadow: none; background: radial-gradient(circle, rgba(120,95,65,.12) 0 .3px, transparent .45px) 0 0/1.4px 2.3px, linear-gradient(90deg, rgba(176,150,112,.15), rgba(176,150,112,.5) 30%, rgba(170,144,108,.55) 50%, rgba(176,150,112,.5) 70%, rgba(176,150,112,.15)); }
+.landing .ox .plan.track { border-radius: 1px; box-shadow: none; background: radial-gradient(circle, rgba(120,95,65,.12) 0 .3px, transparent .45px) 0 0/1.4px 2.3px, linear-gradient(90deg, rgba(176,150,112,.05), rgba(176,150,112,.24) 30%, rgba(170,144,108,.28) 50%, rgba(176,150,112,.24) 70%, rgba(176,150,112,.05)); }
