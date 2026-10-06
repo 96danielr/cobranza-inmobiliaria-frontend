@@ -84,7 +84,7 @@ export function mountHeroScene(root) {
         div('f', { left: x0 + 'px', top: y0 + 'px', width: '1.8px', height: d0 + 'px', transform: `translateZ(${(z0 + TH).toFixed(2)}px)`, background: COVER.top, borderRadius: '.9px' }, tg);
         div('f', { left: x0 + 'px', top: (y0 + d0) + 'px', width: '1.8px', height: TH + 'px', transformOrigin: '50% 0', transform: `translateZ(${z0.toFixed(2)}px) rotateX(90deg)`, background: COVER.front, borderRadius: '.9px .9px 0 0' }, tg); }
       return el; };
-    const end = ex => div('f', { left: ex + 'px', top: (y - 1.5) + 'px', width: (h + 2.6) + 'px', height: (d + 3) + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: 'linear-gradient(90deg, #E9DFCB, #DCCDB2)', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }, g);   // closes the gable up to the slab underside
+    const end = ex => div('f', { left: ex + 'px', top: y + 'px', width: h + 'px', height: d + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: 'linear-gradient(90deg, #E9DFCB, #DCCDB2)', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }, g);   // gable wall: exactly under the roof line
     end(x); end(x + w); slope(ROOF_B, -(180 - a), -1); slope(ROOF_A, -a, 1);
     const cap = div('g', { transform: `translateZ(${h + .2}px)` }, g);           // ridge cap: half-round tiles along the ridge
     div('f ridge', { left: (x - ov) + 'px', top: (y + d / 2 - 1.6) + 'px', width: (w + 2 * ov) + 'px', height: '3.2px' }, cap);
