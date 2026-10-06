@@ -62,13 +62,14 @@ export const landing = {
     ],
     featuresTitle: 'Todo incluido',
     featuresNote: 'en el plan único',
+    // descriptions from the original landing (kept by product decision; see tarea-45 in the Mapa)
     features: [
-      { icon: 'bell', label: 'Recordatorios inteligentes' },
-      { icon: 'chart', label: 'Dashboard en tiempo real' },
-      { icon: 'user', label: 'Portal del cliente' },
-      { icon: 'card', label: 'Múltiples medios de pago' },
-      { icon: 'swap', label: 'Conciliación automática' },
-      { icon: 'shield', label: 'Seguridad y auditoría' },
+      { icon: 'bell', label: 'Recordatorios inteligentes', text: 'Avisos automáticos por WhatsApp y correo antes de cada vencimiento.' },
+      { icon: 'chart', label: 'Dashboard en tiempo real', text: 'Cartera, mora y recaudo al día, con reportes en Excel y PDF.' },
+      { icon: 'user', label: 'Portal del cliente', text: 'Tu comprador ve sus pagos, recibos y estado de cuenta desde el celular.' },
+      { icon: 'card', label: 'Múltiples medios de pago', text: 'Transferencias, link de pago y pasarelas, desde donde prefiera pagar.' },
+      { icon: 'swap', label: 'Conciliación automática', text: 'Cada pago se cruza con su cuota sin digitar nada a mano.' },
+      { icon: 'shield', label: 'Seguridad y auditoría', text: 'Cada movimiento queda registrado, con quién lo hizo y cuándo.' },
     ],
   },
   quote: {

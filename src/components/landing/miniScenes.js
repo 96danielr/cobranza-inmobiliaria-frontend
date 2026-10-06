@@ -41,12 +41,31 @@ function mk(host, W, D, opts = {}) {
 
 const V = {};
 // security · backup layers with a check on top (dark section)
-V.secure = host => { const m = mk(host, 220, 170, { dark: true, zoom: .95 }); const LAY = { top: '#1E3A63', front: '#14294A', back: '#14294A', left: '#14294A', right: '#0E1F3A', noLine: true };
-  const plates = [0, 1, 2].map(k => { const g = m.group(); m.box(g, 55, 40, 0, 110, 86, 7, k === 2 ? { ...LAY, top: '#2B4F84' } : LAY); return g; });
-  const p = m.div('bb', 110, 83, 0, 0); p.innerHTML = '<div class="pin p2"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#0FA37F" stroke="#fff" stroke-width="1.6"/><rect x="6.2" y="9" width="7.6" height="5.8" rx="1.2" fill="#fff"/><path d="M7.8 9V7.4a2.2 2.2 0 0 1 4.4 0V9" fill="none" stroke="#fff" stroke-width="1.5"/></svg><i></i></div>';
-  return { period: 6000, update(t) { const s = t / 1000;
-    plates.forEach((g, k) => { const z = 6 + k * 18 + Math.sin(s * 1.2 + k * .7) * 2.2; put(g, 'transform', `translateZ(${z.toFixed(2)}px)`); });
-    const top = 6 + 2 * 18 + 7 + Math.sin(s * 1.2 + 1.4) * 2.2; put(p, 'transform', m.bill(top + 2)); cls(p, 'done', t > 600); } }; };
+V.secure = host => { const m = mk(host, 220, 170, { dark: true, zoom: .68 });
+  // 1) three data layers drop in and stack  2) a large padlock lands on top and its shackle closes (green)
+  // 3) a ring pulses out over the stack, then the stack rests with a slow breathing motion
+  const LAY = { top: '#1E3A63', front: '#14294A', back: '#14294A', left: '#14294A', right: '#0E1F3A', noLine: true };
+  const plates = [0, 1, 2].map(k => { const g = m.group(); m.box(g, 55, 40, 0, 110, 86, 7, k === 2 ? { ...LAY, top: '#2B4F84' } : LAY); g._faces = [...g.querySelectorAll('.f')]; return g; });
+  const ring = m.div('sec-ring', 110 - 40, 83 - 40, 80, 80);
+  const lk = m.div('bb', 110, 83, 0, 0);
+  lk.innerHTML = '<div class="sec-lock"><svg viewBox="0 0 64 76" aria-hidden="true">'
+    + '<g class="shk"><path d="M17 36V24a15 15 0 0 1 30 0v12" fill="none" stroke-width="7" stroke-linecap="round"/></g>'
+    + '<rect class="bd" x="6" y="34" width="52" height="38" rx="10"/>'
+    + '<circle cx="32" cy="50" r="5.5" fill="#0B1B33"/><rect x="29.5" y="52" width="5" height="10" rx="2.5" fill="#0B1B33"/></svg></div>';
+  const lock = lk.firstChild, shk = lock.querySelector('.shk');
+  return { period: 7000, update(t) { const s = t / 1000;
+    plates.forEach((g, k) => { const e = easeOut(clamp((t - k * 260) / 700));
+      const z = 6 + k * 18 + 40 * (1 - e) + (t > 3200 ? Math.sin((t - 3200) / 1000 * 1.2 + k * .7) * 1.6 : 0);
+      put(g, 'transform', `translateZ(${z.toFixed(2)}px)`); g._faces.forEach(f => put(f, 'opacity', e.toFixed(2))); });
+    const land = easeOut(clamp((t - 1100) / 600)), top = 6 + 2 * 18 + 7;
+    put(lk, 'transform', m.bill(top + 4 + 46 * (1 - land)));
+    put(lock, 'opacity', land.toFixed(2));
+    const close = clamp((t - 1900) / 360), b = close < 1 ? close * close : 1;   // shackle snaps down
+    put(shk, 'transform', `translateY(${(-9 * (1 - b)).toFixed(2)}px)`);
+    cls(lock, 'closed', close >= 1);
+    const r = clamp((t - 2250) / 1100);
+    put(ring, 'transform', `translateZ(${top + 1}px) scale(${(.4 + 1.3 * easeOut(r)).toFixed(3)})`);
+    put(ring, 'opacity', (r > 0 && r < 1 ? (1 - r) * .9 : 0).toFixed(2)); } }; };
 // closing · the whole portfolio collected, one buyer builds
 V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [];
   for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { const x = 10 + c * 78, y = 24 + r * 70, l = m.lot(x, y, 70, 60); l.classList.add('sold'); lots.push({ l, p: m.pin(x + 35, y + 30) }); }
