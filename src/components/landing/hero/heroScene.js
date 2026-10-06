@@ -78,9 +78,11 @@ export function mountHeroScene(root) {
       const tg = div('g', { transform: sgn > 0 ? 'none' : 'scale3d(1,1,-1)' }, el);
       const TW = 3.4, TL = 7.4, TH = 1.4, STEP_L = 6.2, cols = Math.floor(W / TW), rows = Math.ceil(Ls / STEP_L);
       const COVER = { top: 'linear-gradient(90deg, #8F4320 0%, #C9693D 22%, #F0A57A 48%, #D97B4C 70%, #8F4320 100%)', front: 'radial-gradient(ellipse at 50% 100%, #5E2A12 0 45%, #9A4A27 46%)', back: '#7A3518', left: '#93441F', right: '#7A3518', noLine: true };
-      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (sgn > 0) for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {   // light tiles: crest + lower end only (2 nodes each)
         const y0 = r * STEP_L, d0 = Math.min(TL, Ls - y0); if (d0 < 2) continue;
-        box(tg, c * TW + TW - .9, y0, .1 + (rows - r) * .05, 1.8, d0, TH, COVER); }
+        const z0 = .1 + (rows - r) * .05, x0 = c * TW + TW - .9;
+        div('f', { left: x0 + 'px', top: y0 + 'px', width: '1.8px', height: d0 + 'px', transform: `translateZ(${(z0 + TH).toFixed(2)}px)`, background: COVER.top, borderRadius: '.9px' }, tg);
+        div('f', { left: x0 + 'px', top: (y0 + d0) + 'px', width: '1.8px', height: TH + 'px', transformOrigin: '50% 0', transform: `translateZ(${z0.toFixed(2)}px) rotateX(90deg)`, background: COVER.front, borderRadius: '.9px .9px 0 0' }, tg); }
       return el; };
     const end = ex => div('f', { left: ex + 'px', top: (y - 1.5) + 'px', width: (h + 2.6) + 'px', height: (d + 3) + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: 'linear-gradient(90deg, #E9DFCB, #DCCDB2)', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }, g);   // closes the gable up to the slab underside
     end(x); end(x + w); slope(ROOF_B, -(180 - a), -1); slope(ROOF_A, -a, 1);
@@ -196,17 +198,12 @@ export function mountHeroScene(root) {
       + [[6, 4.2], [3.6, 5.2], [8.4, 4.8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.7" fill="${c}"/><circle cx="${x}" cy="${y}" r=".55" fill="#F7D24A"/>`).join('') + '</svg>',
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
   const actor = (x, y, svg, w) => bill(x, y, 0, `<div class="pet" style="width:${w}px">${svg}</div>`);
-  // clipped Swinglea hedge on the lot edge instead of a fence: 1.2 m tall (5.3 px) and 0.6 m thick (2.6 px), a flat
-  // sheared top and straight sides, small leaf texture; gaps = [[x1, x2], ...] on the front side (gate, driveway)
-  const LEAVES = (a, b) => `radial-gradient(circle at 30% 30%, rgba(255,255,255,.16) 0 .4px, transparent .6px) 0 0/1.6px 1.4px, radial-gradient(circle, rgba(0,40,10,.22) 0 .45px, transparent .65px) .8px .7px/1.9px 1.7px, linear-gradient(180deg, ${a}, ${b})`;
-  const HEDGE = { top: LEAVES('#7DBB5E', '#6CAA50'), front: LEAVES('#4F8F3E', '#3F7A31'), back: LEAVES('#4A8739', '#3B732E'), left: LEAVES('#4A8739', '#3B732E'), right: LEAVES('#3F7A31', '#336628'), noLine: true };
-  const fence = (parent, x, y, w, d, gaps) => {
+  const fence = (parent, x, y, w, d, gaps) => {                       // white picket fence on the lot edge; gaps = [[x1, x2], ...] on the front side
     div('fence-sh', { left: x + 'px', top: y + 'px', width: w + 'px', height: d + 'px' }, parent);   // soft shadow on the ground
-    const H = 5.3, T = 2.6;
-    const fx = (x1, x2, yy) => { if (x2 - x1 > 1) box(parent, x1, yy, 0, x2 - x1, T, H, HEDGE).classList.add('hedge'); };
-    const fy = (y1, y2, xx) => box(parent, xx, y1, 0, T, y2 - y1, H, HEDGE).classList.add('hedge');
-    fx(x, x + w, y); fy(y + T, y + d - T, x); fy(y + T, y + d - T, x + w - T);
-    let cx0 = x; gaps.forEach(([g1, g2]) => { fx(cx0, g1, y + d - T); cx0 = g2; }); fx(cx0, x + w, y + d - T); };
+    const H = 5, fx = (x1, x2, yy) => { if (x2 - x1 > 1) box(parent, x1, yy, 0, x2 - x1, .6, H, { top: '#FDFBF6', front: PICKX, back: PICKX, left: '#FDFBF6', right: '#FDFBF6', noLine: true }); };
+    const fy = (y1, y2, xx) => box(parent, xx, y1, 0, .6, y2 - y1, H, { top: '#FDFBF6', front: '#FDFBF6', back: '#FDFBF6', left: PICKY, right: PICKY, noLine: true });
+    fx(x, x + w, y); fy(y, y + d, x); fy(y, y + d, x + w - .6);
+    let cx0 = x; gaps.forEach(([g1, g2]) => { fx(cx0, g1, y + d - .6); cx0 = g2; }); fx(cx0, x + w, y + d - .6); };
   function countryHouse(ox, oy, o) {
     // storeys of 2.9 m (12.8 px) on a 0.5 m stone base; the main house has two floors, which is why it stands taller
     const FLOOR = 12.8, BASE = 2.2, floors = o.floors || 1, WH = FLOOR * floors;
@@ -236,10 +233,11 @@ export function mountHeroScene(root) {
     div('plan path', { left: (gate - 2.5) + 'px', top: pathTop + 'px', width: PWD + 'px', height: (pathBot - pathTop) + 'px' }, g4);
     // flower beds only along the facade, either side of the entrance: a low planter (0.3 m) with standing flowering
     // shrubs (0.4-0.6 m, camera-facing), well below a person's knee
-    const planter = (x0, x1) => { const y0 = pathTop + .4, w0 = x1 - x0;
+    const flowers = [];
+    const planter = (x0, x1) => { const y0 = hy + hd + .2, w0 = x1 - x0;
       box(g4, x0, y0, 0, w0, 3, 1.3, { top: 'radial-gradient(rgba(60,40,25,.35) .4px, transparent .6px) 0 0/1.6px 1.4px, #6B4A33', front: '#C9BEA8', back: '#BFB39C', left: '#B3A790', right: '#A69A83', noLine: true });
-      for (let fx = x0 + 2; fx < x1 - 1.5; fx += 3.3) bill(fx, y0 + 1.6, 1.3, SVG.flower(['#F25C78', '#FFD25A', '#FFFFFF', '#9B7BEA', '#FF8A4C'][Math.round(fx) % 5])); };
-    planter(hx - WK + 1, gate - 3.5); planter(gate - 2.5 + PWD + 1, hx + hw + WK - 1);
+      for (let fx = x0 + 2; fx < x1 - 1.5; fx += 3.3) flowers.push(bill(fx, y0 + 1.6, 1.3, SVG.flower(['#F25C78', '#FFD25A', '#FFFFFF', '#9B7BEA', '#FF8A4C'][Math.round(fx) % 5]))); };
+    planter(hx + 1, gate - 4.5); planter(gate - 2.5 + PWD + 2, hx + hw - 1);
     const PIL = { top: '#E4DCCB', front: 'repeating-linear-gradient(180deg, #CFC4AE 0 2.6px, #B9AD95 2.6px 3px)', back: '#C9BEA8', left: '#C2B69F', right: '#ADA08A', noLine: true };
     const CAP = { top: '#F1ECE1', front: '#D9D1C0', back: '#D9D1C0', left: '#D9D1C0', right: '#C4BBA8', noLine: true };
     const LAN = { top: '#2E3440', front: 'linear-gradient(180deg, #2E3440 0 20%, #FFE7A6 20% 80%, #2E3440 80%)', back: '#FFE7A6', left: '#FFE7A6', right: '#F3D58A', noLine: true };
@@ -253,21 +251,24 @@ export function mountHeroScene(root) {
     fence(g4, ox + 2, oy + 2, SW - 4, SD - 4, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => { box(g4, x - .8, y - .8, 0, 1.6, 1.6, 9, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true }); return bill(x, y, 8, SVG.canopy(15)); });
-    const H = { st, wins, door, greens: [...greens, ...trees], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
+    const H = { st, wins, door, greens: [...greens, ...trees, ...flowers], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
     if (o.carport) {                                                  // driveway with the car near the gate, and a pool behind it
-      const cg = stage(); const DY = hy + 4, PD = 34;
-      div('plan drive', { left: o.cpX + 'px', top: (DY + PD + 3) + 'px', width: o.cpW + 'px', height: (oy + SD - DY - PD - 5) + 'px' }, cg);
+      const cg = stage(); const DY = hy + 2, PD = 44, DECK = 4;                          // a long lap pool (about 10 m)
+      const CAR_Y = oy + SD - 27;                                                    // parking pad just inside the driveway gate
+      div('plan walkway', { left: (o.cpX - DECK) + 'px', top: (DY - 1) + 'px', width: (o.cpW + DECK) + 'px', height: (CAR_Y - DY - 2) + 'px' }, cg);   // pool deck / leisure area
+      div('plan drive', { left: o.cpX + 'px', top: CAR_Y + 'px', width: o.cpW + 'px', height: (oy + SD - CAR_Y - 2) + 'px' }, cg);
+      [[o.cpX + 2, DY + PD + 5], [o.cpX + 10, DY + PD + 5]].forEach(([lx, ly]) => box(cg, lx, ly, 0, 3, 7, .9, { top: '#FFFFFF', front: '#E4E1D9', back: '#E4E1D9', left: '#DCD8CE', right: '#C9C4B8', noLine: true }));   // two loungers
       // pool 6 x 7.5 m: stone coping, recessed water with a light ripple, a small ladder
       const COP = { top: '#EFEBE2', front: '#D8D1C2', back: '#D8D1C2', left: '#D8D1C2', right: '#C7BFAE', noLine: true };
-      box(cg, o.cpX, DY, 0, o.cpW, PD, 1.2, COP);
-      div('f water', { left: (o.cpX + 2) + 'px', top: (DY + 2) + 'px', width: (o.cpW - 4) + 'px', height: (PD - 4) + 'px', transform: 'translateZ(1.25px)' }, cg);
+      box(cg, o.cpX + 1, DY + 1, 0, o.cpW - 2, PD, 1, COP);
+      div('f water', { left: (o.cpX + 2.6) + 'px', top: (DY + 2.6) + 'px', width: (o.cpW - 5.2) + 'px', height: (PD - 3.2) + 'px', transform: 'translateZ(1.05px)' }, cg);
       box(cg, o.cpX + o.cpW - 6, DY + 2.2, 1.2, .5, .5, 3, { top: '#C9CFD6', front: '#AEB6C0', back: '#AEB6C0', left: '#AEB6C0', right: '#97A0AB', noLine: true });
       box(cg, o.cpX + o.cpW - 4, DY + 2.2, 1.2, .5, .5, 3, { top: '#C9CFD6', front: '#AEB6C0', back: '#AEB6C0', left: '#AEB6C0', right: '#97A0AB', noLine: true });
       const car = group(cg); car.classList.add('round');
       const CAR = { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true };
       const GL = { top: 'linear-gradient(135deg, #CFE0F0, #8FB0D2 55%, #E8F1FA 57%, #8FB0D2 62%)', front: 'linear-gradient(120deg, #9DBAD8, #6E90B5 50%, #D8E6F3 53%, #6E90B5 58%)', back: '#6E90B5', left: '#7E9EC0', right: '#6584A6', noLine: true };
       const WH = { top: '#1F2937', front: '#111827', back: '#111827', left: '#111827', right: '#0B1220', noLine: true };
-      const CW = 1.8 * M, CL = 4.5 * M, cx = o.cpX + (o.cpW - CW) / 2, cy = DY + PD + 8;          // car to scale: 1.8 x 4.5 x 1.5 m
+      const CW = 1.8 * M, CL = 4.5 * M, cx = o.cpX + (o.cpW - CW) / 2, cy = CAR_Y + 3;          // car to scale: 1.8 x 4.5 x 1.5 m
       [[-.3, 3], [CW - .9, 3], [-.3, CL - 6.2], [CW - .9, CL - 6.2]].forEach(([dx, dy]) => box(car, cx + dx, cy + dy, .2, 1.2, 3.2, 2.4, WH));
       const body = box(car, cx, cy, 1, CW, CL, 3, CAR); box(car, cx + .6, cy + 5, 4, CW - 1.2, 9, 2.4, GL); box(car, cx + .8, cy + 5.3, 6.4, CW - 1.6, 8.4, .4, CAR);
       [1, CW - 2.6].forEach(l => { const hl = document.createElement('i'); hl.className = 'hlamp'; hl.style.left = l + 'px'; body._front.appendChild(hl); });
@@ -420,7 +421,7 @@ export function mountHeroScene(root) {
     if (mobile) { pool2.forEach(el => { if (el._slot <= 1) fit2(el); }); layout2(); }                                   // lift the model to leave room for the 2D HUD
     stage.style.height = Math.round(mobile ? 300 + w * .42 + 70 : Math.min(620, 300 + w * .42)) + 'px'; };
   fitStage(); if (window.ResizeObserver) { const ro = new ResizeObserver(fitStage); ro.observe(stage); observers.push(ro); }
-  let onScreen = true; if (window.IntersectionObserver) { const io = new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }); io.observe(stage); observers.push(io); }
+  let onScreen = true; if (window.IntersectionObserver) { const io = new IntersectionObserver(es => { const was = onScreen; onScreen = es[0].isIntersecting; if (onScreen && !was && alive) requestAnimationFrame(frame); }); /* the loop stops off screen and restarts on return */ io.observe(stage); observers.push(io); }
   let mx = 0, my = 0, rz = 0, ryv = 0, paidS = 0;
   listen('mousemove', e => { const r = stage.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - .5; my = (e.clientY - r.top) / r.height - .5; });
   listen('mouseleave', () => { mx = 0; my = 0; });
@@ -435,7 +436,7 @@ export function mountHeroScene(root) {
   const start = performance.now();
   function frame(now) {
     if (!alive) return;
-    if (!onScreen) { requestAnimationFrame(frame); return; }      // paused while off screen
+    if (!onScreen) return;                                        // stopped while off screen (restarted by the observer)
     const t = reduce ? CYCLE - 2100 : (now - start) % CYCLE;   // reduced motion: the finished scene (crane gone, 100 %)
     let built = 0, paid = 0, top = 0;
     const endT = T0 + BUILD_DELAY + (NS - 1) * STEP + STEP * .45 + DUR;

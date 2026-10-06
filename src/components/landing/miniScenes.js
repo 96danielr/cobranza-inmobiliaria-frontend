@@ -83,7 +83,7 @@ export function mountMiniScene(host, kind) {
   const v = V[kind](host);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let on = false, t0 = 0, raf = 0;
-  const io = new IntersectionObserver(([e]) => { const was = on; on = e.isIntersecting; if (on && !was) t0 = performance.now(); }, { threshold: .2 });
+  const io = new IntersectionObserver(([e]) => { const was = on; on = e.isIntersecting; if (on && !was) { t0 = performance.now(); if (!reduce) raf = requestAnimationFrame(loop); } }, { threshold: .2 });
   io.observe(host);
   v.update(reduce ? v.period - 1 : 0);
   const loop = now => {
@@ -92,9 +92,8 @@ export function mountMiniScene(host, kind) {
       put(host, 'opacity', t > v.period - 500 ? clamp((v.period - t) / 500).toFixed(2) : t < 300 ? clamp(t / 300).toFixed(2) : '1');
       v.update(t);
     }
-    raf = requestAnimationFrame(loop);
+    if (on) raf = requestAnimationFrame(loop);   // stops off screen; the observer restarts it
   };
-  if (!reduce) raf = requestAnimationFrame(loop);
   return () => {
     cancelAnimationFrame(raf); io.disconnect(); (host._observers || []).forEach(o => o.disconnect());
     host._observers = []; host.replaceChildren(); host.classList.remove('mx', 'dark'); host.style.opacity = ''; host._c = null; delete host.dataset.init;
