@@ -40,6 +40,7 @@ export default function Home() {
       <Security />
       <Interlude lines={landing.interludes.beforePlans} />
       <Plans />
+      <Interlude lines={landing.interludes.beforeContact} />
       <Contact />
       <Footer />
       <LandingEffects />

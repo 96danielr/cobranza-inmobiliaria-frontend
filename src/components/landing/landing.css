@@ -457,3 +457,4 @@ body:has(.landing)::before { display: none; }
 .landing .close2 .consent { margin: 16px 0 0; font-size: 13px; color: var(--muted); }
 .landing .close2 .consent a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 760px) { .landing .legal-doc { padding: 32px 22px; font-size: 15px; } .landing .legal-sec { padding-top: 96px; } }
+.landing #planes + .interlude { padding: 88px 0; } .landing .interlude + #contacto { padding-top: 0; }
