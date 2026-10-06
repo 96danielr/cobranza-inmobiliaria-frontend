@@ -50,7 +50,7 @@ export function mountHeroScene(root) {
   // gable roof over a w x d footprint, ridge along x: two tiled slopes and the two end triangles
   // gable roof over a w x d footprint, ridge along x. Barrel tiles: rounded channels across the slope (light crest,
   // dark trough) and horizontal courses every few px; a darker eave edge and a rounded ridge cap on top.
-  const TILE = (base, light, dark) => `repeating-linear-gradient(180deg, transparent 0 4.6px, rgba(60,20,8,.32) 4.6px 5.6px, rgba(255,255,255,.12) 5.6px 6px), repeating-linear-gradient(90deg, ${dark} 0 .8px, ${base} .8px 2.1px, ${light} 2.1px 3.5px, ${base} 3.5px 5px, ${dark} 5px 6px)`;   // wide barrel tiles: 6 px channels, 6 px courses
+  const TILE = (base, light, dark) => `repeating-linear-gradient(180deg, transparent 0 6.6px, rgba(60,20,8,.34) 6.6px 8px, rgba(255,255,255,.14) 8px 8.6px), repeating-linear-gradient(90deg, ${dark} 0 1.1px, ${base} 1.1px 3px, ${light} 3px 5.2px, ${base} 5.2px 7.6px, ${dark} 7.6px 9px)`;   // large barrel tiles: 9 px channels, 8.6 px courses
   const ROOF_A = TILE('#C9693D', '#E08A5C', '#93441F'), ROOF_B = TILE('#B0582F', '#C9714A', '#7D3818');
   const gableRoof = (parent, x, y, z, w, d, h, ov) => {
     const g = div('g', { transform: `translateZ(${z}px)` }, parent), half = d / 2 + ov, L = Math.hypot(half, h), a = Math.atan2(h, half) * 180 / Math.PI;
@@ -103,6 +103,7 @@ export function mountHeroScene(root) {
   const WOOD = { top: '#B98A62', front: '#8A5A3B', back: '#8A5A3B', left: '#8A5A3B', right: '#734A30', noLine: true };
   // Scale: 1 m ≈ 4.4 px (a 2.1 m door is 9.3 px). Doors, windows, walls, car and figures all follow it, in both houses.
   const M = 4.4;
+  const WIN_W = 1.8 * M, WIN_H = 1.4 * M, SILL = .8 * M;              // one window size for every house: 1.8 x 1.4 m, sill at 0.8 m
   const HOUSE_LOTS = { '3,3': 0 };                 // lot key -> house group
   Object.keys(HOUSE_LOTS).forEach(k => { const [c, r] = k.split(',').map(Number), [x, y] = lotXY(c, r);
     // small country house, same language as the main one: stone plinth, white walls with windows (glass reflection),
@@ -112,7 +113,7 @@ export function mountHeroScene(root) {
     box(g, X - 2, Y - 2, 0, W + 4, D + 4, 2.2, { ...STONE, top: '#D9D3C6' });
     const hb = box(g, X, Y, 2.2, W, D, 12.8, WALL);
     const wn = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win lit'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); };
-    [4, 30].forEach(l => wn(hb._front, l, 3.6, 1.2 * M, 1.1 * M)); [9].forEach(tp => { wn(hb._faces[2], 3.6, tp, 1.1 * M, 1.2 * M); wn(hb._faces[3], 3.6, tp, 1.1 * M, 1.2 * M); });
+    [3.5, W - 3.5 - WIN_W].forEach(l => wn(hb._front, l, SILL, WIN_W, WIN_H)); [D / 2 - WIN_W / 2].forEach(tp => { wn(hb._faces[2], SILL, tp, WIN_H, WIN_W); wn(hb._faces[3], SILL, tp, WIN_H, WIN_W); });
     const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: (W / 2 - .95 * M / 2) + 'px', top: '0px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); hb._front.appendChild(dr);
     box(g, X + W / 2 - 4, Y + D, 0, 8, 3.4, 2.2, { ...WOOD, top: '#B98A62' }); box(g, X + W / 2 - 3, Y + D + 3.4, 0, 6, 2, 1.1, { ...WOOD, top: '#B98A62' });
     box(g, X + W - 10, Y + 5, 15, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
@@ -183,10 +184,9 @@ export function mountHeroScene(root) {
     // on a wall face, `top` is the height above the floor: sills at 0.9 m, door on the floor
     const fw = hw / 2;
     for (let f = 0; f < floors; f++) {
-      const z0 = f * FLOOR + 3.6;
-      [fw - 30, fw - 19, fw + 13, fw + 24].forEach(l => win(walls._front, l, z0, 1.2 * M, 1.1 * M));
-      if (f > 0) win(walls._front, fw - .6 * M, z0, 1.2 * M, 1.1 * M);
-      [10, 28].forEach(tp => { win(walls._faces[2], z0, tp, 1.1 * M, 1.2 * M); win(walls._faces[3], z0, tp, 1.1 * M, 1.2 * M); });   // side windows (x runs up the wall)
+      const z0 = f * FLOOR + SILL;
+      [fw - 26, fw + 18].forEach(l => win(walls._front, l, z0, WIN_W, WIN_H));                // two large windows, one each side of the door
+      [hd / 2 - WIN_W / 2].forEach(tp => { win(walls._faces[2], z0, tp, WIN_H, WIN_W); win(walls._faces[3], z0, tp, WIN_H, WIN_W); });   // one per side (x runs up the wall)
     }
     if (floors > 1) div('f band', { left: '0px', top: (FLOOR - .5) + 'px', width: hw + 'px', height: '1px' }, walls._front);   // floor line between storeys
     const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - .95 * M / 2) + 'px', top: '0px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); walls._front.appendChild(door);
@@ -230,7 +230,7 @@ export function mountHeroScene(root) {
     return H;
   }
   const cpX = sx + 10 + 82 + 7, cpW = SW - 99 - 7;
-  const HM = countryHouse(sx, sy, { floors: 2, hw: 82, carport: true, cpX, cpW });
+  const HM = countryHouse(sx, sy, { hw: 82, carport: true, cpX, cpW });
   // the family and pets walk along routes on the front yard (ground coordinates); they appear during the build
   const yard = { gx: HM.gate + 3.5, door: HM.hy + HM.hd + 9, front: sy + SD - 9, l: HM.hx + 6, r: HM.hx + HM.hw - 6 };
   // Script (what each one does; they walk only to get somewhere, then stay):
