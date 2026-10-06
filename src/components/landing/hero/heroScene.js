@@ -529,10 +529,11 @@ export function mountHeroScene(root) {
     if (!dragging) { dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); vz *= .92; vx *= .88;
       if (now - lastMove > 2600) { dz += (0 - dz) * .03; dx += (0 - dx) * .03; } }
     const hover = dragging ? 0 : 1;
-    { // front-on after a plain click; the cycle closes with a fast 540° turn to the left (the snap back happens while faded out)
+    { // front-on after a plain click; the cycle closes with a fast turn to the left of about 540° that ends on the starting angle
       const base = faceFront ? CAM_Z : 0, S0 = CYCLE - 1500, S1 = CYCLE - 350;
-      const drift = reduce ? base : t < S0 ? base : base + 540 * easeIO(clamp((t - S0) / (S1 - S0)));   // 540°: one and a half turns
-      if (pl._drift !== undefined && pl._drift - drift > 180) rz -= pl._drift - drift;   // the cycle wrapped (scene is faded out): snap back to the start angle
+      const SPIN = 540 - ((base + 540) % 360);                           // about 540°, trimmed so the turn lands exactly on the starting angle
+      const drift = reduce ? base : t < S0 ? base : base + SPIN * easeIO(clamp((t - S0) / (S1 - S0)));
+      if (pl._drift !== undefined && pl._drift - drift > 180) { rz -= 360; faceFront = false; }   // the cycle wrapped: same angle (360 = 0), next cycle starts at rest
       pl._drift = drift;
       const tz = mx * 8 * hover + dz + drift, tx = -my * 4 * hover + dx;   // ease toward the target, then settle exactly (no endless sub-pixel shimmer)
       rz = Math.abs(tz - rz) < .02 ? tz : rz + (tz - rz) * .12; ryv = Math.abs(tx - ryv) < .02 ? tx : ryv + (tx - ryv) * .12;
