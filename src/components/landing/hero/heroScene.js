@@ -50,7 +50,7 @@ export function mountHeroScene(root) {
   // gable roof over a w x d footprint, ridge along x: two tiled slopes and the two end triangles
   // gable roof over a w x d footprint, ridge along x. Barrel tiles: rounded channels across the slope (light crest,
   // dark trough) and horizontal courses every few px; a darker eave edge and a rounded ridge cap on top.
-  const TILE = (base, light, dark) => `repeating-linear-gradient(180deg, transparent 0 3.1px, rgba(60,20,8,.30) 3.1px 3.8px, rgba(255,255,255,.10) 3.8px 4.2px), repeating-linear-gradient(90deg, ${dark} 0 .5px, ${base} .5px 1.4px, ${light} 1.4px 2.3px, ${base} 2.3px 3.3px, ${dark} 3.3px 3.8px)`;
+  const TILE = (base, light, dark) => `repeating-linear-gradient(180deg, transparent 0 4.6px, rgba(60,20,8,.32) 4.6px 5.6px, rgba(255,255,255,.12) 5.6px 6px), repeating-linear-gradient(90deg, ${dark} 0 .8px, ${base} .8px 2.1px, ${light} 2.1px 3.5px, ${base} 3.5px 5px, ${dark} 5px 6px)`;   // wide barrel tiles: 6 px channels, 6 px courses
   const ROOF_A = TILE('#C9693D', '#E08A5C', '#93441F'), ROOF_B = TILE('#B0582F', '#C9714A', '#7D3818');
   const gableRoof = (parent, x, y, z, w, d, h, ov) => {
     const g = div('g', { transform: `translateZ(${z}px)` }, parent), half = d / 2 + ov, L = Math.hypot(half, h), a = Math.atan2(h, half) * 180 / Math.PI;
@@ -101,6 +101,8 @@ export function mountHeroScene(root) {
   const WALL = { top: '#FBF8F1', front: '#FFFAF0', back: '#E8DFCC', left: '#DCCDB2', right: '#CBBB9C' };
   const STONE = { top: '#B7AA92', front: '#A99C85', back: '#A99C85', left: '#9C8F78', right: '#8E826C', noLine: true };
   const WOOD = { top: '#B98A62', front: '#8A5A3B', back: '#8A5A3B', left: '#8A5A3B', right: '#734A30', noLine: true };
+  // Scale: 1 m ≈ 4.4 px (a 2.1 m door is 9.3 px). Doors, windows, walls, car and figures all follow it, in both houses.
+  const M = 4.4;
   const HOUSE_LOTS = { '3,3': 0 };                 // lot key -> house group
   Object.keys(HOUSE_LOTS).forEach(k => { const [c, r] = k.split(',').map(Number), [x, y] = lotXY(c, r);
     // small country house, same language as the main one: stone plinth, white walls with windows (glass reflection),
@@ -108,16 +110,16 @@ export function mountHeroScene(root) {
     const g = group(); g.classList.add('round');
     const X = x + 12, Y = y + 14, W = 40, D = 26;
     box(g, X - 2, Y - 2, 0, W + 4, D + 4, 1.4, { ...STONE, top: '#D9D3C6' });
-    const hb = box(g, X, Y, 1.4, W, D, 9.6, WALL);
+    const hb = box(g, X, Y, 1.4, W, D, 12.8, WALL);
     const wn = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win lit'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); };
-    [4, 11, 27, 34].forEach(l => wn(hb._front, l - 1, 2.4, 4.6, 4.4)); [6, 15].forEach(tp => { wn(hb._faces[2], 2.2, tp, 4.6, 5); wn(hb._faces[3], 2.2, tp, 4.6, 5); });
-    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: '18px', top: '1.6px', width: '5.4px', height: '7.6px' }); hb._front.appendChild(dr);
-    box(g, X + 16.4, Y + D, 0, 8.6, 3.2, 1.4, { ...WOOD, top: '#B98A62' });
-    box(g, X + W - 10, Y + 5, 11, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
-    gableRoof(g, X, Y, 11, W, D, 9, 2.6);
+    [4, 30].forEach(l => wn(hb._front, l, 3.2, 1.2 * M, 1.1 * M)); [9].forEach(tp => { wn(hb._faces[2], 3.2, tp, 1.1 * M, 1.2 * M); wn(hb._faces[3], 3.2, tp, 1.1 * M, 1.2 * M); });
+    const dr = document.createElement('i'); dr.className = 'hdoor'; Object.assign(dr.style, { left: (W / 2 - .95 * M / 2) + 'px', top: (12.8 - 2.1 * M) + 'px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); hb._front.appendChild(dr);
+    box(g, X + W / 2 - 4, Y + D, 0, 8, 3.2, 1.4, { ...WOOD, top: '#B98A62' });
+    box(g, X + W - 10, Y + 5, 14.2, 4, 4, 10, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
+    gableRoof(g, X, Y, 14.2, W, D, 9, 2.6);
     box(g, x + 5, y + LD - 9, 0, 1.2, 1.2, 6, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true });
     g.style.visibility = 'hidden'; HOUSE_LOTS[k] = g; });
-  const HOUSE_H = 20, HOUSE_DELAY = 500, HOUSE_DUR = 520;
+  const HOUSE_H = 24, HOUSE_DELAY = 500, HOUSE_DUR = 520;
   // trees as plan symbols
   const tree = (x, y, s = 1) => { const g = group(); div('plan tree', { left: x + 'px', top: y + 'px', width: (9 * s) + 'px', height: (9 * s) + 'px' }, g); return g; };   // plan symbol
   const trees = [];                                             // the big lot keeps a clean plan (no inner outlines)
@@ -142,20 +144,23 @@ export function mountHeroScene(root) {
         + `<g class="body">${leg('b', o.pantsB || '#26324A')}${arm('b', o.shirtB || shirt, skin)}`
         + `<path d="M6.4 11.2C6.6 9.9 7.7 9.3 9 9.3h.9c1.6 0 2.7.9 2.9 2.4l.4 6.4c.1 1.3-.3 2.1-1.3 2.4H6.9c-.9-.3-1.2-1-1.1-2z" fill="${shirt}"/>`
         + `<path d="M6.2 19.6h6.7v1.2H6.2z" fill="${o.belt || '#5E3B24'}"/><path d="M11.6 10.2c.6 2 .7 4.6.4 7.6" stroke="rgba(0,0,0,.12)" stroke-width="1" fill="none"/>`
-        + `<rect x="8.3" y="7.3" width="2.4" height="2.6" rx="1.1" fill="${skin}"/>`
+        + `<rect x="8.3" y="7.3" width="2.4" height="2.6" rx="1.1" fill="${skin}"/><g class="head" style="transform-origin:9.5px 8.6px">`
         + `<ellipse cx="9.7" cy="4.9" rx="3.3" ry="3.6" fill="${skin}"/><path d="M12.8 4.6l.9 1.2-.8.4" fill="${skin}"/><ellipse cx="8.4" cy="5.2" rx=".75" ry=".95" fill="#D49E7A"/>`
         + `<circle cx="11.6" cy="4.3" r=".42" fill="#2A2420"/><path d="M11.1 3.4h1" stroke="${hair}" stroke-width=".4" stroke-linecap="round"/><path d="M11.4 6.6q.6.25 1-.1" stroke="#9A5B45" stroke-width=".4" fill="none" stroke-linecap="round"/>`
         + `<path d="${o.long ? 'M6.1 5.6C5.5 1.9 7.6.9 9.6 1c2.3.1 3.6 1.3 3.5 2.9-1.3-.5-2.7-.7-4-.5-.6 1.6-.6 4.1-.1 7.4-.9 0-1.6-.3-2.2-1.1-.7-1-.8-2.5-.7-4.1z' : 'M6.2 5.5C6 2.3 7.8 1.2 9.7 1.3c2.2.1 3.4 1.2 3.3 2.7-1.2-.4-2.6-.6-3.9-.4-.5.6-.8 1.4-.9 2.4-.6-.4-1.3-.4-1.9-.5z'}" fill="${hair}"/>`
-        + `${leg('f', pants)}${arm('f', shirt, skin)}</g></svg>`; },
-    dog: (c, d = 'rgba(0,0,0,.22)') => { const leg = (k, x, back) => `<g class="paw ${k}" style="transform-origin:${x}px 13.5px"><path d="M${x} 13.5v7" stroke="${c}" stroke-width="2.7" stroke-linecap="round"${back ? ' opacity=".72"' : ''}/><ellipse cx="${x + .6}" cy="21.2" rx="1.7" ry=".9" fill="${c}"${back ? ' opacity=".72"' : ''}/></g>`;
+        + `</g>${leg('f', pants)}${arm('f', shirt, skin)}</g></svg>`; },
+    dog: (c, d = 'rgba(0,0,0,.22)') => { const op = back => back ? ' opacity=".72"' : '';
+      // leg skeleton: hip (x, 13) -> knee (x, 17.2) -> paw; the lower leg is a child group that bends at the knee
+      const leg = (k, x, back) => `<g class="paw ${k}" style="transform-origin:${x}px 13px"><path d="M${x} 13v4.2" stroke="${c}" stroke-width="3" stroke-linecap="round"${op(back)}/>`
+        + `<g class="lpaw" style="transform-origin:${x}px 17.2px"><path d="M${x} 17.2v3.6" stroke="${c}" stroke-width="2.5" stroke-linecap="round"${op(back)}/><ellipse cx="${x + .7}" cy="21.1" rx="1.8" ry=".95" fill="${c}"${op(back)}/></g></g>`;
       return `<svg viewBox="0 0 34 24" class="fig"><ellipse cx="17" cy="22.6" rx="11" ry="1.1" fill="rgba(11,27,51,.18)"/><g class="body">`
         + leg('b0', 9, 1) + leg('b1', 23, 1)
         + `<path class="tail" style="transform-origin:6.5px 10.5px" d="M6.5 10.5C3.5 9.5 2.6 7 3.4 4.6" stroke="${c}" stroke-width="2.3" fill="none" stroke-linecap="round"/>`
         + `<path d="M6 11.2C6 8.6 8 7.6 10.6 7.6h10.6c2.5 0 4 1.3 4.2 3.4l.2 2.2c.1 1.6-1 2.6-2.6 2.6H9.6C7.4 15.8 6 14 6 11.2z" fill="${c}"/>`
         + `<path d="M9 14.6h12.4" stroke="${d}" stroke-width="1.2" stroke-linecap="round"/>`
-        + `<path d="M22.4 9.6c.2-2.4 1.2-4 3.1-4.4 1.6-.3 3 .3 3.8 1.5l2.6.6c.9.2 1.3.9 1.1 1.7-.2.8-.9 1.2-1.8 1.2h-3.4c-.9 1.2-2.3 1.8-3.9 1.6z" fill="${c}"/>`
-        + `<path d="M25.1 5.9c-1.1.4-1.6 1.7-1.3 3.4.8.4 1.6.3 2.1-.3.3-1.3.1-2.4-.8-3.1z" fill="${d}"/>`
-        + `<circle cx="27.6" cy="7.4" r=".75" fill="#1F1712"/><ellipse cx="32.7" cy="8.6" rx=".85" ry=".7" fill="#1F1712"/>`
+        + `<g class="dhead" style="transform-origin:23px 10px"><path d="M22.4 9.6c.2-2.4 1.2-4 3.1-4.4 1.6-.3 3 .3 3.8 1.5l2.6.6c.9.2 1.3.9 1.1 1.7-.2.8-.9 1.2-1.8 1.2h-3.4c-.9 1.2-2.3 1.8-3.9 1.6z" fill="${c}"/>`
+        + `<path class="ear" style="transform-origin:25px 6px" d="M25.1 5.9c-1.1.4-1.6 1.7-1.3 3.4.8.4 1.6.3 2.1-.3.3-1.3.1-2.4-.8-3.1z" fill="${d}"/>`
+        + `<circle cx="27.6" cy="7.4" r=".75" fill="#1F1712"/><ellipse cx="32.7" cy="8.6" rx=".85" ry=".7" fill="#1F1712"/><path d="M31 10.6q1 .9 2 .3" stroke="#C0504D" stroke-width=".7" fill="none" stroke-linecap="round" class="tongue"/></g>`
         + leg('f0', 11, 0) + leg('f1', 21, 0) + `</g></svg>`; },
     cat: `<svg viewBox="0 0 24 24"><path d="M17 20q5 0 4.5-6" stroke="#33415A" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="17" rx="6.5" ry="5.6" fill="#33415A"/><circle cx="11" cy="9" r="4.7" fill="#33415A"/><path d="M7.1 6.7 6.9 2.4l3.2 2.4zM14.9 6.7l.2-4.3-3.2 2.4z" fill="#33415A"/><circle cx="9.3" cy="9" r=".95" fill="#E3B23C"/><circle cx="12.7" cy="9" r=".95" fill="#E3B23C"/></svg>`,
     bush: d => `<i class="bush" style="width:${d}px;height:${d}px"></i>`,
@@ -173,9 +178,9 @@ export function mountHeroScene(root) {
     const g0 = stage(); box(g0, hx - 4, hy - 4, 0, hw + 8, hd + 8, 1.6, { ...STONE, top: '#D9D3C6' }); box(g0, hx - .6, hy - .6, 1.6, hw + 1.2, hd + 1.2, 2.6, STONE);
     const g1 = stage(4.2); const walls = box(g1, hx, hy, 0, hw, hd, WALL_H - 2.2, WALL);
     const win = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); wins.push(el); };
-    const fw = hw / 2; [fw - 32, fw - 21, fw + 14, fw + 25].forEach(l => win(walls._front, l, 3, 7, 6.5));
-    const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - 4) + 'px', top: '1.5px', width: '8px', height: (WALL_H - 3.8) + 'px' }); walls._front.appendChild(door);
-    [8, 28].forEach(tp => { win(walls._faces[2], 3, tp, 6.5, 8); win(walls._faces[3], 3, tp, 6.5, 8); });   // side windows (x runs up the wall)
+    const fw = hw / 2; [fw - 30, fw - 19, fw + 13, fw + 24].forEach(l => win(walls._front, l, 3.2, 1.2 * M, 1.1 * M));
+    const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - .95 * M / 2) + 'px', top: (WALL_H - 2.2 - 2.1 * M) + 'px', width: (.95 * M) + 'px', height: (2.1 * M) + 'px' }); walls._front.appendChild(door);
+    [10, 28].forEach(tp => { win(walls._faces[2], 3.2, tp, 1.1 * M, 1.2 * M); win(walls._faces[3], 3.2, tp, 1.1 * M, 1.2 * M); });   // side windows (x runs up the wall)
     gableRoof(g1, hx, hy, WALL_H - 2.2, hw, hd, ROOF_H, 4);   // the roof rises with the walls, in one go
     const g3 = stage(); box(g3, hx + hw - 18, hy + 7, 2 + WALL_H, 6, 6, ROOF_H + 4, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
     box(g3, hx + fw - 9, hy + hd, 0, 18, 6, 2.4, WOOD); box(g3, hx + fw - 6, hy + hd + 6, 0, 12, 3, 1.2, WOOD);   // entrance deck and step, no roof
@@ -199,18 +204,18 @@ export function mountHeroScene(root) {
     const H = { st, wins, door, greens: [...greens, ...trees], top: 2 + WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, 2 + WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
     if (o.carport) {                                                  // carport: driveway, open pergola, a rounded car that drives in later
       const cg = stage(); div('plan drive', { left: o.cpX + 'px', top: (hy + 4) + 'px', width: o.cpW + 'px', height: (oy + SD - hy - 4) + 'px' }, cg);
-      [[0, 0], [o.cpW - 1.4, 0], [0, 42.6], [o.cpW - 1.4, 42.6]].forEach(([dx, dy]) => box(cg, o.cpX + dx, hy + 4 + dy, 0, 1.4, 1.4, 13, { top: '#C9CFD6', front: '#AEB6C0', back: '#AEB6C0', left: '#AEB6C0', right: '#97A0AB', noLine: true }));
-      const ALU = { top: '#C9CFD6', front: '#AEB6C0', back: '#AEB6C0', left: '#AEB6C0', right: '#97A0AB', noLine: true };
-      box(cg, o.cpX - 1, hy + 3, 13, o.cpW + 2, 46, 1, ALU);                            // aluminium frame
-      const sheet = box(cg, o.cpX - .4, hy + 3.6, 14, o.cpW + .8, 44.8, .4, { top: 'repeating-linear-gradient(180deg, rgba(255,255,255,.55) 0 .5px, rgba(190,214,228,.0) .5px 3.6px), linear-gradient(135deg, rgba(214,232,242,.82), rgba(176,204,222,.72) 60%, rgba(232,244,250,.85))', front: '#B4C8D6', back: '#B4C8D6', left: '#B4C8D6', right: '#9FB4C4', noLine: true });   // translucent polycarbonate roof, corrugated
+      [[0, 0], [o.cpW - 1.4, 0], [0, 42.6], [o.cpW - 1.4, 42.6]].forEach(([dx, dy]) => box(cg, o.cpX + dx, hy + 4 + dy, 0, 1.2, 1.2, 11, { top: '#7D8794', front: '#68727F', back: '#68727F', left: '#68727F', right: '#565F6B', noLine: true }));
+      const ALU = { top: '#7D8794', front: '#68727F', back: '#68727F', left: '#68727F', right: '#565F6B', noLine: true };   // darker aluminium: the roof reads against the drive and lawn
+      [[0, 0, o.cpW + 2, 1.2], [0, 44.8, o.cpW + 2, 1.2], [0, 0, 1.2, 46], [o.cpW + .8, 0, 1.2, 46]].forEach(([dx, dy, w, d]) => box(cg, o.cpX - 1 + dx, hy + 3 + dy, 11, w, d, 1, ALU));   // hollow aluminium frame
+      box(cg, o.cpX - .4, hy + 3.6, 12, o.cpW + .8, 44.8, .3, { top: 'repeating-linear-gradient(180deg, rgba(255,255,255,.7) 0 .45px, transparent .45px 3.6px), linear-gradient(135deg, rgba(150,190,220,.30), rgba(120,165,205,.22) 60%, rgba(210,232,248,.38))', front: 'rgba(104,114,127,.9)', back: 'rgba(104,114,127,.9)', left: 'rgba(104,114,127,.9)', right: 'rgba(86,95,107,.9)', noLine: true });   // translucent polycarbonate: the car shows through
       const car = group(cg); car.classList.add('round');
       const CAR = { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true };
       const GL = { top: 'linear-gradient(135deg, #CFE0F0, #8FB0D2 55%, #E8F1FA 57%, #8FB0D2 62%)', front: 'linear-gradient(120deg, #9DBAD8, #6E90B5 50%, #D8E6F3 53%, #6E90B5 58%)', back: '#6E90B5', left: '#7E9EC0', right: '#6584A6', noLine: true };
       const WH = { top: '#1F2937', front: '#111827', back: '#111827', left: '#111827', right: '#0B1220', noLine: true };
-      const cx = o.cpX + (o.cpW - 14) / 2, cy = hy + 12;
-      [[-.6, 4], [12.2, 4], [-.6, 19], [12.2, 19]].forEach(([dx, dy]) => box(car, cx + dx, cy + dy, .4, 2.4, 5, 3.4, WH));
-      const body = box(car, cx, cy, 1.8, 14, 27, 4.6, CAR); box(car, cx + 1.2, cy + 8, 6.4, 11.6, 12, 4, GL); box(car, cx + 1.6, cy + 8.5, 10.4, 10.8, 11, .8, CAR);
-      [[1.5], [10]].forEach(([l]) => { const hl = document.createElement('i'); hl.className = 'hlamp'; hl.style.left = l + 'px'; body._front.appendChild(hl); });
+      const CW = 1.8 * M, CL = 4.5 * M, cx = o.cpX + (o.cpW - CW) / 2, cy = hy + 14;          // car to scale: 1.8 x 4.5 x 1.5 m
+      [[-.3, 3], [CW - .9, 3], [-.3, CL - 6.2], [CW - .9, CL - 6.2]].forEach(([dx, dy]) => box(car, cx + dx, cy + dy, .2, 1.2, 3.2, 2.4, WH));
+      const body = box(car, cx, cy, 1, CW, CL, 3, CAR); box(car, cx + .6, cy + 5, 4, CW - 1.2, 9, 2.4, GL); box(car, cx + .8, cy + 5.3, 6.4, CW - 1.6, 8.4, .4, CAR);
+      [1, CW - 2.6].forEach(l => { const hl = document.createElement('i'); hl.className = 'hlamp'; hl.style.left = l + 'px'; body._front.appendChild(hl); });
       H.car = car;
     }
     return H;
@@ -229,28 +234,29 @@ export function mountHeroScene(root) {
   const actorOf = (svg, w, steps, speed, at) => { const el = actor(steps[0][1], steps[0][2], svg, w); return { el, b: el.parentElement, fig: el.querySelector('svg'), steps, speed, at }; };
   const P = (dx, dy) => [yard.gx + dx, yard.door + dy];
   const actors = [
-    actorOf(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 10.5,
-      [['at', ...P(0, 34)], ['walk', ...P(0, 18)], ['face', -1], ['wait', 99999]], 20, 'buyer'),
-    actorOf(SVG.dog('#8A5A3B'), 13, [['at', ...P(-2, 38)], ['walk', ...P(-9, 20)], ['face', 1], ['wait', 99999]], 30, 'dog'),
-    actorOf(SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', pantsB: '#3A4456', skin: '#EAC2A0', shirtB: '#A9532F', belt: '#3A2A20' }), 10,
-      [['at', ...P(3, 36)], ['walk', ...P(9, 21)], ['face', -1], ['wait', 99999]], 18, 'family'),
-    actorOf(SVG.person('#E3B23C', { hair: '#8A5A3B', pants: '#5B8DB8', pantsB: '#4A79A2', skin: '#EFC7A4', shirtB: '#C99A2E' }), 7,
-      [['at', ...P(5, 38)], ['walk', ...P(15, 24)], ['face', -1], ['wait', 99999]], 22, 'family'),
-    actorOf(SVG.dog('#D9B48A'), 9.5, [['at', ...P(22, 30)], ['wait', 99999]], 30, 'puppy') ];
+    actorOf(SVG.person('#3F6FA6', { pants: '#2F3B4E', pantsB: '#243045', shirtB: '#335C8C' }), 3.49,
+      [['at', ...P(0, 34)], ['walk', ...P(0, 18)], ['face', -1], ['wait', 99999]], 7, 'buyer'),
+    actorOf(SVG.dog('#8A5A3B'), 4.28, [['at', ...P(-2, 38)], ['walk', ...P(-9, 20)], ['face', 1], ['wait', 99999]], 11, 'dog'),
+    actorOf(SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', pantsB: '#3A4456', skin: '#EAC2A0', shirtB: '#A9532F', belt: '#3A2A20' }), 3.29,
+      [['at', ...P(3, 36)], ['walk', ...P(9, 21)], ['face', -1], ['wait', 99999]], 6.5, 'family'),
+    actorOf(SVG.person('#E3B23C', { hair: '#8A5A3B', pants: '#5B8DB8', pantsB: '#4A79A2', skin: '#EFC7A4', shirtB: '#C99A2E' }), 2.29,
+      [['at', ...P(5, 38)], ['walk', ...P(15, 24)], ['face', -1], ['wait', 99999]], 7, 'family'),
+    actorOf(SVG.dog('#D9B48A'), 2.78, [['at', ...P(22, 30)], ['wait', 99999]], 30, 'puppy') ];
   // act 4: once the house is lived in, the father goes to the door and the boy plays a little with the puppy
   const ACT4 = { father: [['walk', ...P(0, 4)], ['face', -1], ['wait', 99999]], boy: [['walk', ...P(26, 30)], ['wait', 600], ['walk', ...P(19, 26)], ['face', -1], ['wait', 99999]] };
   /** Position, walking flag and facing of an actor at local time lt (ms since it appeared). */
-  const pose = (A, lt, steps) => { let x = steps[0][1], y = steps[0][2], face = 1, tt = lt;
+  const pose = (A, lt, steps) => { let x = steps[0][1], y = steps[0][2], face = 1, tt = lt, clock = 0, arrived = -1;
+    const out = walk => ({ x, y, walk, face, since: arrived < 0 ? -1 : lt - arrived });
     for (const st of steps.slice(1)) {
       if (st[0] === 'face') { face = st[1]; continue; }
-      if (st[0] === 'wait') { if (tt < st[1]) return { x, y, walk: false, face }; tt -= st[1]; continue; }
+      if (st[0] === 'wait') { if (tt < st[1]) return out(false); tt -= st[1]; clock += st[1]; continue; }
       if (st[0] === 'walk') { const dx = st[1] - x, dy = st[2] - y, d = Math.hypot(dx, dy), dur = d / A.speed * 1000;
-        const sx2 = dx * cosZ0 - dy * sinZ0; face = sx2 < 0 ? -1 : 1;
-        if (tt < dur) { const f = tt / dur; return { x: x + dx * f, y: y + dy * f, walk: true, face }; }
-        tt -= dur; x = st[1]; y = st[2]; } }
-    return { x, y, walk: false, face }; };
+        face = dx * cosZ0 - dy * sinZ0 < 0 ? -1 : 1;
+        if (tt < dur) { const f = tt / dur, r = { x: x + dx * f, y: y + dy * f, walk: true, face, since: -1 }; return r; }
+        tt -= dur; clock += dur; x = st[1]; y = st[2]; arrived = clock; } }
+    return out(false); };
   const sinZ0 = Math.sin(-CAM_Z * Math.PI / 180), cosZ0 = Math.cos(-CAM_Z * Math.PI / 180);
-  const cat = { el: actor(HM.hx + HM.hw - 12, HM.hy + HM.hd + 6, SVG.cat, 8), at: 'end' };
+  const cat = { el: actor(HM.hx + HM.hw - 12, HM.hy + HM.hd + 6, SVG.cat, 2.58), at: 'end' };
   const smoke = [0, 1, 2].map(() => bill(HM.chim[0], HM.chim[1], HM.chim[2], '<i class="puff"></i>'));
   const N = 6;
   // single 3D progress bar on the ground, parallel to the plane's front edge
@@ -402,7 +408,8 @@ export function mountHeroScene(root) {
       const extra = k === 0 ? ACT4.father : k === 3 ? ACT4.boy : null;            // act 4 continues from where they stood
       if (extra && t > ACT4_T) ps = pose(A, reduce ? 99999 : t - ACT4_T, [['at', ps.x, ps.y], ['face', ps.face], ...extra]);
       put(A.b, 'left', ps.x.toFixed(2) + 'px'); put(A.b, 'top', ps.y.toFixed(2) + 'px');
-      cls(A.el, 'walk', ps.walk && u0 >= 1); put(A.fig, 'transform', ps.face < 0 ? 'scaleX(-1)' : 'none'); });
+      cls(A.el, 'walk', ps.walk && u0 >= 1); put(A.fig, 'transform', ps.face < 0 ? 'scaleX(-1)' : 'none');
+      cls(A.el, 'cheer', !reduce && ps.since >= 0 && ps.since < 1300); });   // a happy jump when they get where they were going
     { const u = clamp((t - AT.end) / 420); put(cat.el, 'opacity', u > 0 ? '1' : '0'); put(cat.el, 'transform', `scale(${(u < 1 ? backOut(u) : 1).toFixed(3)})`); }
     cls(site, 'lawn', t > B + STEP * 3.3);
     const BILL = `rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(CAM_X + ryv)).toFixed(2)}deg)`;

@@ -128,7 +128,7 @@
   background: radial-gradient(circle at 35% 30%, #A8DCC0 0 18%, #7FBF9D 45%, #5A977A 100%); box-shadow: 0 2px 2px rgba(11,27,51,.18); }
 .landing .ox .tree-c { background: radial-gradient(circle at 35% 30%, #9ED3B4 0 16%, #6FAF8E 48%, #4E8A6D 100%); }
 .landing .ox .round .f { border-radius: 2.5px; }
-.landing .ox .hlamp { position: absolute; top: 1px; width: 2.5px; height: 1.6px; border-radius: 1px; background: #FFF4C8; box-shadow: 0 0 3px 1px rgba(255,236,170,.7); }
+.landing .ox .hlamp { position: absolute; top: .7px; width: 1.6px; height: 1px; border-radius: 1px; background: #FFF4C8; box-shadow: 0 0 3px 1px rgba(255,236,170,.7); }
 .landing .ox .plan.stone { border-radius: 2.5px; }
 .landing .ox .plan.bed { border-radius: 2px; }
 .landing .ox .puff { left: -5px; }
@@ -158,3 +158,26 @@
 .landing .ox .pet:not(.walk) .tail { animation: hs-tail .5s ease-in-out infinite alternate; }   /* dogs wag while standing */
 .landing .ox .plan.path { border-radius: 2px; box-shadow: inset 0 0 0 .5px rgba(11,27,51,.18);
   background: repeating-linear-gradient(180deg, transparent 0 5.4px, #CFC6B4 5.4px 6.2px), linear-gradient(90deg, #E6DECD 0 48%, #CFC6B4 48% 52%, #E3DACA 52%); }
+/* v4 skeletons: elbows and knees bend, the torso leans and the head nods while walking; dogs bend knees and bob the head */
+.landing .ox .walk .body { animation: hs-bob .36s ease-in-out infinite alternate; transform-origin: 50% 90%; }
+.landing .ox .walk .uarm.f .farm { animation: hs-elbow .72s ease-in-out -.36s infinite; }
+.landing .ox .walk .uarm.b .farm { animation: hs-elbow .72s ease-in-out infinite; }
+.landing .ox .walk .head { animation: hs-nod .36s ease-in-out infinite alternate; }
+.landing .ox .walk .paw .lpaw { animation: hs-dknee .4s ease-in-out infinite; }
+.landing .ox .walk .paw.f1 .lpaw, .landing .ox .walk .paw.b0 .lpaw { animation-delay: -.2s; }
+.landing .ox .walk .dhead { animation: hs-dhead .2s ease-in-out infinite alternate; }
+@keyframes hs-bob { from { transform: translateY(0) rotate(2deg); } to { transform: translateY(-.7px) rotate(3.5deg); } }
+@keyframes hs-elbow { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(-48deg); } }
+@keyframes hs-nod { from { transform: rotate(-2deg); } to { transform: rotate(3deg); } }
+@keyframes hs-dknee { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-34deg); } 75% { transform: rotate(18deg); } }
+@keyframes hs-dhead { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+/* arrival celebration: people jump twice with both arms up; dogs hop with the ears flying and the tail wagging fast */
+.landing .ox .cheer .fig { animation: hs-jump .65s cubic-bezier(.3,.8,.4,1) 2; transform-origin: 50% 100%; }
+.landing .ox .cheer .uarm { transform: rotate(158deg); transition: transform .15s ease; }
+.landing .ox .cheer .uarm.b { transform: rotate(-200deg); }
+.landing .ox .cheer .farm { transform: rotate(-18deg); }
+.landing .ox .cheer .thigh.f { transform: rotate(-14deg); } .landing .ox .cheer .thigh.b { transform: rotate(14deg); }
+.landing .ox .cheer .tail { animation: hs-tail .12s ease-in-out infinite alternate; }
+.landing .ox .cheer .dhead { transform: rotate(-14deg); }
+.landing .ox .cheer .ear { transform: rotate(-35deg); }
+@keyframes hs-jump { 0%, 100% { translate: 0 0; } 15% { translate: 0 .8px; scale: 1.06 .92; } 45% { translate: 0 -24%; scale: .96 1.05; } 75% { translate: 0 0; scale: 1.05 .94; } }
