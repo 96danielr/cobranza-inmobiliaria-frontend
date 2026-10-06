@@ -190,3 +190,18 @@ test('legal pages are server-rendered and linked from the footer', async ({ page
   await expect(page.locator('.landing footer a[href="/privacidad"]')).toHaveCount(1)
   await expect(page.locator('.landing #contacto a[href="/privacidad"]')).toHaveCount(1)
 })
+
+test('sign-in pages: two-column layout, fields work, submit enables', async ({ page }) => {
+  for (const [path, user] of [['/admin/login', 'ana@inmobiliaria.com'], ['/login', '1023456789']]) {
+    await page.goto(path)
+    await expect(page.locator('.auth .auth-title')).toHaveText('Inicia sesión')
+    const submit = page.locator('.auth form button[type="submit"]')
+    await expect(submit).toBeDisabled()
+    await page.locator('.auth input').first().fill(user)
+    const pass = page.locator('.auth input[autocomplete="current-password"]')
+    await pass.fill('secreto1')
+    await expect(submit).toBeEnabled()
+    await page.locator('.auth .auth-eye').click()
+    await expect(pass).toHaveAttribute('type', 'text')
+  }
+})

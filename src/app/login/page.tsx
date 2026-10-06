@@ -6,13 +6,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 
 import { useAdminAuthStore } from '@/stores/adminAuthStore'
-import { useThemeStore } from '@/stores/themeStore'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Card, CardContent } from '@/components/ui/Card'
+import AuthShell, { AuthField } from '@/components/auth/AuthShell'
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email o Documento requerido'),
@@ -29,16 +26,6 @@ export default function LoginPage() {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
   
   const router = useRouter()
-  const { theme } = useThemeStore()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const logoSrc = mounted && theme === 'light'
-    ? '/PERFIL FONDO BLANCO.jpeg'
-    : '/PERFIL FONDO AZUL OSCURO.jpeg'
 
   const { login, verifyOtp, isAuthenticated, admin, isLoading } = useAdminAuthStore()
 
@@ -129,154 +116,69 @@ export default function LoginPage() {
     }
   }
 
+  const shell = {
+    eyebrow: 'Portal cliente',
+    quote: ['Tu lote, cuota a cuota,', 'más cerca de tu casa.'] as [string, string],
+    quoteNote: 'Consulta tu plan de pagos, reporta tus pagos con el comprobante y descarga tus recibos cuando quieras.',
+    switchTo: { text: '¿Trabajas en una inmobiliaria?', label: 'Ingresa al portal empresa', href: '/admin/login' },
+  }
+
   if (isAuthenticated && admin) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-accent-blue border-t-transparent rounded-full animate-spin shadow-glow" />
-      </div>
+      <AuthShell {...shell} title="Entrando…" subtitle="Preparando tu portal.">
+        <span className="spin" aria-label="Cargando" />
+      </AuthShell>
+    )
+  }
+
+  if (showOtpScreen) {
+    return (
+      <AuthShell {...shell} title="Verifica tu acceso" subtitle="Escribe el código de 6 dígitos que enviamos a tu celular.">
+        <form onSubmit={handleVerifyOtpSubmit} noValidate>
+          <p className="auth-note">Código enviado a <b>{otpData?.phone ? `+${otpData.phone.slice(0, 2)} *****${otpData.phone.slice(-4)}` : 'tu celular registrado'}</b></p>
+          <div className="auth-otp">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <input
+                key={i}
+                ref={el => { otpRefs.current[i] = el }}
+                type="text"
+                inputMode="numeric"
+                autoComplete={i === 0 ? 'one-time-code' : 'off'}
+                aria-label={`Dígito ${i + 1}`}
+                maxLength={1}
+                value={otpDigits[i]}
+                onChange={e => handleOtpChange(i, e.target.value)}
+                onKeyDown={e => handleOtpKeyDown(i, e)}
+                onPaste={i === 0 ? handleOtpPaste : undefined}
+                autoFocus={i === 0}
+              />
+            ))}
+          </div>
+          <button type="submit" className="auth-btn" disabled={otpDigits.join('').length < 6 || isLoading}>{isLoading ? <span className="spin" /> : 'Verificar código'}</button>
+          <button type="button" className="auth-btn ghost" onClick={() => setShowOtpScreen(false)}>Volver</button>
+        </form>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Background aesthetics */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent-blue/10 via-transparent to-accent-purple/10" />
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,rgba(59,130,246,0.15)_0%,transparent_50%)]" />
-
-      <div className="relative w-full max-w-md animate-fade-in-up">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden glass-card mb-6 shadow-glow border-glass-border p-1">
-            <img 
-              src={logoSrc} 
-              alt="Logo" 
-              className="w-full h-full object-cover rounded-2xl" 
-            />
-          </div>
-          <h1 className="text-responsive-xl font-bold text-text-primary mb-3">
-            <span className="gradient-text">Portal Cliente</span>
-          </h1>
-          <p className="text-text-secondary text-responsive-base">
-            Bienvenido. Gestiona tus lotes y pagos de forma segura.
-          </p>
-        </div>
-
-        <Card variant="elevated" className="border-t-4 border-accent-blue">
-          <CardContent className="p-6 md:p-8">
-            <div className="flex items-center justify-center mb-8">
-              <div className="flex items-center space-x-2 glass-button px-4 py-1.5 text-xs">
-                <ShieldCheck className="w-4 h-4 text-accent-green" />
-                <span className="text-text-secondary font-medium">Acceso Seguro</span>
-              </div>
-            </div>
-
-            {showOtpScreen ? (
-              <form onSubmit={handleVerifyOtpSubmit} className="space-y-6">
-                <div className="text-center space-y-2 bg-glass-primary/5 p-4 rounded-xl border border-glass-border/30">
-                  <p className="text-sm text-text-secondary">
-                    Hemos enviado un código de verificación OTP de 6 dígitos a tu celular:
-                  </p>
-                  <p className="text-base font-bold text-accent-blue tracking-wide">
-                    {otpData?.phone ? `+${otpData.phone.slice(0, 2)} *****${otpData.phone.slice(-4)}` : 'celular registrado'}
-                  </p>
-                </div>
-
-                <div className="flex gap-2 justify-center py-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <input
-                      key={i}
-                      ref={el => { otpRefs.current[i] = el }}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={otpDigits[i]}
-                      onChange={e => handleOtpChange(i, e.target.value)}
-                      onKeyDown={e => handleOtpKeyDown(i, e)}
-                      onPaste={i === 0 ? handleOtpPaste : undefined}
-                      className="w-11 h-14 text-center text-2xl font-bold rounded-xl border-2 border-glass-border bg-white/5 focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/30 outline-none transition-all text-text-primary"
-                      autoFocus={i === 0}
-                    />
-                  ))}
-                </div>
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full"
-                  size="lg"
-                  loading={isLoading}
-                  disabled={otpDigits.join('').length < 6}
-                  glow
-                >
-                  Verificar Código
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-glass-border text-text-secondary"
-                  onClick={() => setShowOtpScreen(false)}
-                >
-                  Volver al Login
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div>
-                  <Input
-                    label="Usuario (Email o Documento)"
-                    placeholder="Ej: 1023456789 o correo@ejemplo.com"
-                    {...register('email')}
-                    error={errors.email?.message}
-                  />
-                </div>
-
-                <div>
-                  <div className="relative">
-                    <Input
-                      label="Contraseña"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      {...register('password')}
-                      error={errors.password?.message}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-glass-secondary transition-all duration-300 flex items-center justify-center"
-                      style={{ marginTop: '12px' }}
-                    >
-                      {showPassword ? <EyeOff size={16} className="text-text-secondary" /> : <Eye size={16} className="text-text-secondary" />}
-                    </button>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full"
-                  size="lg"
-                  loading={isLoading}
-                  disabled={!emailValue || !passwordValue}
-                  glow
-                >
-                  Ingresar al Portal
-                </Button>
-              </form>
-            )}
-
-            <div className="mt-8 text-center">
-              <p className="text-sm text-text-muted">
-                ¿No tienes una cuenta? <br />
-                <span className="text-xs">Contacta a tu asesor para activar tu acceso.</span>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="mt-8 text-center text-sm text-text-muted">
-          © 2026 Operix - Sistema de gestión y automatización inmobiliaria
-        </div>
-      </div>
-    </div>
+    <AuthShell {...shell} title="Inicia sesión" subtitle="Bienvenido. Entra con tu correo o tu número de documento.">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <AuthField label="Correo o documento" autoComplete="username" placeholder="1023456789 o correo@ejemplo.com" {...register('email')} error={errors.email?.message} />
+        <AuthField
+          label="Contraseña"
+          type={showPassword ? 'text' : 'password'}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          {...register('password')}
+          error={errors.password?.message}
+          end={<button type="button" className="auth-eye" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button>}
+        />
+        <button type="submit" className="auth-btn" disabled={!emailValue || !passwordValue || isLoading}>
+          {isLoading ? <span className="spin" /> : 'Entrar a mi portal'}
+        </button>
+        <p className="auth-note">¿Aún no tienes acceso? Pídeselo al asesor de tu inmobiliaria.</p>
+      </form>
+    </AuthShell>
   )
 }
