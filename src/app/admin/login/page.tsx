@@ -95,6 +95,7 @@ export default function AdminLoginPage() {
     eyebrow: 'Portal empresa',
     quote: ['Cada cuota de tus lotes,', 'recaudada y en orden.'] as [string, string],
     quoteNote: 'Entra a aprobar pagos, revisar tu cartera y ver los recibos que llegaron mientras no estabas.',
+    variant: 'company' as const,
     switchTo: { text: '¿Eres comprador?', label: 'Ingresa al portal cliente', href: '/login' },
   }
 

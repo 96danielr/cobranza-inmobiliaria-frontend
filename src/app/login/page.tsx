@@ -120,6 +120,7 @@ export default function LoginPage() {
     eyebrow: 'Portal cliente',
     quote: ['Tu lote, cuota a cuota,', 'más cerca de tu casa.'] as [string, string],
     quoteNote: 'Consulta tu plan de pagos, reporta tus pagos con el comprobante y descarga tus recibos cuando quieras.',
+    variant: 'client' as const,
     switchTo: { text: '¿Trabajas en una inmobiliaria?', label: 'Ingresa al portal empresa', href: '/admin/login' },
   }
 

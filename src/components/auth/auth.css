@@ -80,3 +80,16 @@ body:has(.auth)::before { display: none; }
   .auth .auth-mlogo { display: inline-flex; }
   .auth .auth-form { padding: 40px 20px; align-items: flex-start; }
 }
+
+/* client portal: a lighter, warmer identity (buyers) */
+.auth.client .auth-side { background: #E3F3EC; color: var(--ink); }
+.auth.client .auth-side::before { background-image: linear-gradient(rgba(11,27,51,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(11,27,51,.06) 1px, transparent 1px); }
+.auth.client .auth-side::after { background: radial-gradient(circle, rgba(255,255,255,.75), transparent 65%); }
+.auth.client .auth-logo .auth-word { filter: none; }
+.auth.client .auth-q span { color: #0B7A5F; }
+.auth.client .auth-qn { color: #4B5B57; }
+.auth.client .auth-foot { color: #6B7F78; }
+.auth .auth-house { width: 230px; height: auto; margin-bottom: 36px; animation: auth-lot 6s ease-in-out infinite; }
+.auth.client .auth-eyebrow { color: #0B7A5F; } .auth.client .auth-eyebrow::after { background: rgba(15,163,127,.4); }
+.auth.client .auth-btn { background: #0B7A5F; box-shadow: 0 8px 22px -10px rgba(11,122,95,.6); }
+.auth.client .auth-btn.ghost { background: transparent; box-shadow: none; }
