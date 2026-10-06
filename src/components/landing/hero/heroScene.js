@@ -50,7 +50,7 @@ export function mountHeroScene(root) {
   // gable roof over a w x d footprint, ridge along x: two tiled slopes and the two end triangles
   const gableRoof = (parent, x, y, z, w, d, h, ov, colors) => {
     const g = div('g', { transform: `translateZ(${z}px)` }, parent), half = d / 2 + ov, L = Math.hypot(half, h), a = Math.atan2(h, half) * 180 / Math.PI;
-    const slope = (bg, deg) => div('f', { left: (x - ov) + 'px', top: (y + d / 2) + 'px', width: (w + 2 * ov) + 'px', height: L + 'px', transformOrigin: '50% 0', transform: `translateZ(${h}px) rotateX(${deg}deg)`, background: bg, boxShadow: 'inset 0 0 0 .6px rgba(11,27,51,.18)' }, g);
+    const slope = (bg, deg) => div('f', { left: (x - ov) + 'px', top: (y + d / 2) + 'px', width: (w + 2 * ov) + 'px', height: L + 'px', transformOrigin: '50% 0', transform: `translateZ(${h}px) rotateX(${deg}deg)`, background: bg, borderRadius: '3.5px', boxShadow: 'inset 0 0 0 .6px rgba(11,27,51,.18), inset 0 -1.5px 0 rgba(0,0,0,.12)' }, g);
     const end = ex => div('f', { left: ex + 'px', top: y + 'px', width: h + 'px', height: d + 'px', transformOrigin: '0 50%', transform: 'rotateY(-90deg)', background: colors[2], clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }, g);
     slope(colors[0], -a); slope(colors[1], -(180 - a)); end(x); end(x + w); return g; };
   const CURB = { front: '#C7C1B3', back: '#D3CDC0', left: '#D3CDC0', right: '#B9B2A3', noLine: true };
@@ -68,8 +68,6 @@ export function mountHeroScene(root) {
   const QUOTAS = 6;                                                    // instalments drawn per lot
   // sidewalk around the tower site (plan outline)
   const PAVE = { ...CURB, top: 'repeating-linear-gradient(90deg, rgba(11,27,51,.07) 0 .5px, transparent .5px 5px), repeating-linear-gradient(0deg, rgba(11,27,51,.07) 0 .5px, transparent .5px 5px), #ECE9E2' }, RW = 11;
-  div('plan', { left: sx + 'px', top: sy + 'px', width: SW + 'px', height: SD + 'px' });                      // sidewalk outline
-  div('plan', { left: (sx + RW) + 'px', top: (sy + RW) + 'px', width: (SW - 2 * RW) + 'px', height: (SD - 2 * RW) + 'px' });
   // shared materials
   const CONC = { top: '#CFC9BC', front: '#B4AD9F', back: '#B4AD9F', left: '#B4AD9F', right: '#9E9789', noLine: true };
   const POST = { top: '#3A4556', front: '#2A3442', back: '#2A3442', left: '#2A3442', right: '#1E2733', noLine: true };
@@ -104,8 +102,7 @@ export function mountHeroScene(root) {
   const HOUSE_H = 17, HOUSE_DELAY = 1500, HOUSE_DUR = 1200;
   // trees as plan symbols
   const tree = (x, y, s = 1) => { const g = group(); div('plan tree', { left: x + 'px', top: y + 'px', width: (9 * s) + 'px', height: (9 * s) + 'px' }, g); return g; };   // plan symbol
-  const trees = [[sx + 10, sy + SD - 10], [sx + SW - 20, sy + SD - 10]]
-    .map(([x, y], i) => tree(x, y, i % 2 ? 1.15 : 1));
+  const trees = [];                                             // the big lot keeps a clean plan (no inner outlines)
 
   // country houses (casa campestre): built in stages with no scaffolding, then lived in little by little.
   // Everything is soft and rounded: round bushes and tree canopies, rounded car, pets and people as flat drawings.
@@ -113,37 +110,44 @@ export function mountHeroScene(root) {
   const STONE = { top: '#B7AA92', front: '#A99C85', back: '#A99C85', left: '#9C8F78', right: '#8E826C', noLine: true };
   const WOOD = { top: '#B98A62', front: '#8A5A3B', back: '#8A5A3B', left: '#8A5A3B', right: '#734A30', noLine: true };
   const ROOF_COLORS = ['repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 .6px, transparent .6px 4px), #C8693F', 'repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 .6px, transparent .6px 4px), #A9532F', '#DCCDB2'];
-  const PICKX = 'linear-gradient(#FDFBF6 0 .9px, transparent .9px calc(100% - .9px), #FDFBF6 calc(100% - .9px)), repeating-linear-gradient(90deg, #D8D0C0 0 .3px, #FDFBF6 .3px 1.5px, transparent 1.5px 3.4px)';
-  const PICKY = 'linear-gradient(90deg, #FDFBF6 0 .9px, transparent .9px calc(100% - .9px), #FDFBF6 calc(100% - .9px)), repeating-linear-gradient(180deg, #D8D0C0 0 .3px, #FDFBF6 .3px 1.5px, transparent 1.5px 3.4px)';
+  const PICKX = 'linear-gradient(#FFFFFF 0 .5px, #7F8A99 .5px 1.1px, transparent 1.1px calc(100% - 1.6px), #7F8A99 calc(100% - 1.6px) calc(100% - 1.1px), #FFFFFF calc(100% - 1.1px)), repeating-linear-gradient(90deg, #7F8A99 0 .45px, #FFFFFF .45px 1.6px, #7F8A99 1.6px 2.05px, transparent 2.05px 3.6px)';
+  const PICKY = 'linear-gradient(90deg, #FFFFFF 0 .5px, #7F8A99 .5px 1.1px, transparent 1.1px calc(100% - 1.6px), #7F8A99 calc(100% - 1.6px) calc(100% - 1.1px), #FFFFFF calc(100% - 1.1px)), repeating-linear-gradient(180deg, #7F8A99 0 .45px, #FFFFFF .45px 1.6px, #7F8A99 1.6px 2.05px, transparent 2.05px 3.6px)';
   const bills = [];                                                // camera-facing items: { b, z }
   const bill = (x, y, z, html) => { const b = div('bb', { left: x + 'px', top: y + 'px' }); b.innerHTML = html; bills.push({ b, z }); return b.firstChild; };
   const SVG = {
-    person: c => `<svg viewBox="0 0 12 26"><circle cx="6" cy="4" r="3.3" fill="#E8C4A0"/><path d="M1.4 13.5a4.6 4.6 0 0 1 9.2 0v5.5H1.4z" fill="${c}"/><rect x="2.3" y="17.5" width="3.1" height="8" rx="1.55" fill="#33415A"/><rect x="6.6" y="17.5" width="3.1" height="8" rx="1.55" fill="#33415A"/></svg>`,
+    person: (shirt, o = {}) => `<svg viewBox="0 0 16 34"><ellipse cx="8" cy="33" rx="5.5" ry="1" fill="rgba(11,27,51,.18)"/>`
+      + `<rect x="4.4" y="20" width="3.2" height="11.5" rx="1.6" fill="${o.pants || '#33415A'}"/><rect x="8.4" y="20" width="3.2" height="11.5" rx="1.6" fill="${o.pants || '#33415A'}"/>`
+      + `<ellipse cx="5.8" cy="31.8" rx="2.3" ry="1.2" fill="#2A2420"/><ellipse cx="10.2" cy="31.8" rx="2.3" ry="1.2" fill="#2A2420"/>`
+      + `<rect x="1.4" y="11.5" width="2.6" height="9.5" rx="1.3" fill="${shirt}"/><rect x="12" y="11.5" width="2.6" height="9.5" rx="1.3" fill="${shirt}"/>`
+      + `<circle cx="2.7" cy="21.4" r="1.4" fill="${o.skin || '#E2B48F'}"/><circle cx="13.3" cy="21.4" r="1.4" fill="${o.skin || '#E2B48F'}"/>`
+      + `<path d="M3 13.5a5 5 0 0 1 10 0V22H3z" fill="${shirt}"/><path d="M6.4 9.6h3.2v2.4H6.4z" fill="${o.skin || '#E2B48F'}"/>`
+      + `<circle cx="8" cy="6" r="4.2" fill="${o.skin || '#E2B48F'}"/><path d="${o.long ? 'M3.6 6.5C3.4 2 6 1 8 1s4.8 1 4.4 5.5c.4 2.5.2 5-1 6.5.2-2.5-.2-4.5-1.4-5.8C8.6 8.5 6 8 4.6 7.6 4.3 9.5 4.6 11 5 12.6 3.6 11 3.2 8.6 3.6 6.5z' : 'M3.7 6.4C3.5 2.6 5.8 1.2 8 1.2s4.6 1.4 4.3 5.2c-.8-1.6-2.4-2.4-4.3-2.4S4.5 4.8 3.7 6.4z'}" fill="${o.hair || '#3B2A20'}"/>`
+      + `<circle cx="6.5" cy="6.6" r=".55" fill="#2A2420"/><circle cx="9.5" cy="6.6" r=".55" fill="#2A2420"/><path d="M6.8 8.4q1.2.9 2.4 0" stroke="#9A5B45" stroke-width=".55" fill="none" stroke-linecap="round"/></svg>`,
     dog: c => `<svg viewBox="0 0 32 22"><path d="M5.5 11q-4-2-3-6" stroke="${c}" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="14" cy="13" rx="9" ry="5" fill="${c}"/><circle cx="24" cy="8" r="4.6" fill="${c}"/><ellipse cx="27.6" cy="9.6" rx="2.7" ry="1.9" fill="#5E3B24" opacity=".55"/><path d="M21.2 5.4q-1.6-4 1.6-3.6" stroke="#5E3B24" stroke-width="2.3" fill="none" stroke-linecap="round" opacity=".7"/><rect x="7" y="15" width="3.2" height="6.4" rx="1.6" fill="${c}"/><rect x="17" y="15" width="3.2" height="6.4" rx="1.6" fill="${c}"/><circle cx="25.6" cy="7" r=".95" fill="#0B1B33"/></svg>`,
     cat: `<svg viewBox="0 0 24 24"><path d="M17 20q5 0 4.5-6" stroke="#33415A" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="17" rx="6.5" ry="5.6" fill="#33415A"/><circle cx="11" cy="9" r="4.7" fill="#33415A"/><path d="M7.1 6.7 6.9 2.4l3.2 2.4zM14.9 6.7l.2-4.3-3.2 2.4z" fill="#33415A"/><circle cx="9.3" cy="9" r=".95" fill="#E3B23C"/><circle cx="12.7" cy="9" r=".95" fill="#E3B23C"/></svg>`,
     bush: d => `<i class="bush" style="width:${d}px;height:${d}px"></i>`,
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
   const actor = (x, y, svg, w) => bill(x, y, 0, `<div class="pet" style="width:${w}px">${svg}</div>`);
   const fence = (parent, x, y, w, d, gaps) => {                       // picket fence on the lot edge; gaps = [[x1, x2], ...] on the front side
+    div('fence-sh', { left: x + 'px', top: y + 'px', width: w + 'px', height: d + 'px' }, parent);   // soft shadow on the ground
     const H = 6, fx = (x1, x2, yy) => { if (x2 - x1 > 1) box(parent, x1, yy, 0, x2 - x1, .6, H, { top: '#FDFBF6', front: PICKX, back: PICKX, left: '#FDFBF6', right: '#FDFBF6', noLine: true }); };
     const fy = (y1, y2, xx) => box(parent, xx, y1, 0, .6, y2 - y1, H, { top: '#FDFBF6', front: '#FDFBF6', back: '#FDFBF6', left: PICKY, right: PICKY, noLine: true });
     fx(x, x + w, y); fy(y, y + d, x); fy(y, y + d, x + w - .6);
     let cx0 = x; gaps.forEach(([g1, g2]) => { fx(cx0, g1, y + d - .6); cx0 = g2; }); fx(cx0, x + w, y + d - .6); };
   function countryHouse(ox, oy, o) {
     const hx = ox + 10, hy = oy + 10, hw = o.hw, hd = 44, WALL_H = 15, ROOF_H = 16, wins = [], st = [];
-    const stage = (z = 0) => { const g = group(); st.push({ g, z }); return g; };
+    const stage = (z = 0) => { const g = group(); g.classList.add('round'); st.push({ g, z }); return g; };
     const g0 = stage(); box(g0, hx - 4, hy - 4, 0, hw + 8, hd + 8, 1.6, { ...STONE, top: '#D9D3C6' }); box(g0, hx - .6, hy - .6, 1.6, hw + 1.2, hd + 1.2, 2.6, STONE);
     const g1 = stage(4.2); const walls = box(g1, hx, hy, 0, hw, hd, WALL_H - 2.2, WALL);
     const win = (face, l, t, w, h) => { const el = document.createElement('i'); el.className = 'win'; Object.assign(el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' }); face.appendChild(el); wins.push(el); };
     const fw = hw / 2; [fw - 32, fw - 21, fw + 14, fw + 25].forEach(l => win(walls._front, l, 3, 7, 6.5));
     const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - 4) + 'px', top: '1.5px', width: '8px', height: (WALL_H - 3.8) + 'px' }); walls._front.appendChild(door);
     [8, 28].forEach(tp => { win(walls._faces[2], 3, tp, 6.5, 8); win(walls._faces[3], 3, tp, 6.5, 8); });   // side windows (x runs up the wall)
-    const g2 = stage(2 + WALL_H); gableRoof(g2, hx, hy, 0, hw, hd, ROOF_H, 4, ROOF_COLORS);
+    gableRoof(g1, hx, hy, WALL_H - 2.2, hw, hd, ROOF_H, 4, ROOF_COLORS);   // the roof rises with the walls, in one go
     const g3 = stage(); box(g3, hx + hw - 18, hy + 7, 2 + WALL_H, 6, 6, ROOF_H + 4, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
     box(g3, hx + fw - 9, hy + hd, 0, 18, 6, 2.4, WOOD); box(g3, hx + fw - 6, hy + hd + 6, 0, 12, 3, 1.2, WOOD);   // entrance deck and step, no roof
     const g4 = stage(); const gate = hx + fw - 3;
     [0, 1, 2, 3, 4].forEach(k => div('plan stone', { left: (gate - k * .4) + 'px', top: (hy + hd + 12 + k * 7.5) + 'px', width: '7px', height: '4.5px' }, g4));
-    [0, 1, 2].forEach(k => div('plan bed', { left: (hx + 2 + k * 10) + 'px', top: (oy + 96) + 'px', width: '7px', height: '16px' }, g4));
     fence(g4, ox + 2, oy + 2, SW - 4, SD - 4, [[gate - 3, gate + 10], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
     const greens = [[hx - 2, hy + hd + 18, 9], [hx + hw - 6, hy + hd + 20, 10], [hx + 34, oy + 112, 7]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 10, oy + SD - 14], [hx + hw - 2, oy + 6]].map(([x, y]) => { box(g4, x - .8, y - .8, 0, 1.6, 1.6, 9, { top: '#7A6A57', front: '#6B5C4A', back: '#6B5C4A', left: '#6B5C4A', right: '#5A4D3E', noLine: true }); return bill(x, y, 8, SVG.canopy(15)); });
@@ -166,16 +170,15 @@ export function mountHeroScene(root) {
   }
   const cpX = sx + 10 + 82 + 7, cpW = SW - 99 - 7;
   const HM = countryHouse(sx, sy, { hw: 82, carport: true, cpX, cpW });
-  const H2 = countryHouse(s2x, s2y, { hw: 92, carport: false });
   // the family, pets and visitors: they show up during the build, not only at the end
   const people = [
-    { el: actor(HM.gate - 14, HM.hy + HM.hd + 30, SVG.person('#3F6FA6'), 7.5), at: 'k1' },   // the buyer comes to see the walls go up
+    { el: actor(HM.gate - 14, HM.hy + HM.hd + 30, SVG.person('#3F6FA6', { pants: '#2F3B4E' }), 8), at: 'k1' },   // the buyer comes to see the walls go up
     { el: actor(HM.hx + 20, HM.hy + HM.hd + 22, SVG.dog('#8A5A3B'), 13), at: 'k3' },
-    { el: actor(HM.gate + 14, HM.hy + HM.hd + 34, SVG.person('#C8693F'), 7.5), at: 'k4' },
-    { el: actor(HM.gate + 22, HM.hy + HM.hd + 36, SVG.person('#E3B23C'), 5.6), at: 'k4b' },  // a child
+    { el: actor(HM.gate + 14, HM.hy + HM.hd + 34, SVG.person('#C8693F', { long: true, hair: '#6B3E26', pants: '#4A5568', skin: '#EAC2A0' }), 7.6), at: 'k4' },
+    { el: actor(HM.gate + 22, HM.hy + HM.hd + 36, SVG.person('#E3B23C', { hair: '#8A5A3B', pants: '#5B8DB8', skin: '#EFC7A4' }), 5.4), at: 'k4b' },  // a child
     { el: actor(HM.hx + HM.hw - 14, HM.hy + HM.hd + 8, SVG.cat, 8), at: 'end' },
     { el: actor(HM.hx + 50, HM.hy + HM.hd + 40, SVG.dog('#D9B48A'), 9), at: 'end2' },
-    { el: actor(H2.gate - 12, H2.hy + H2.hd + 26, SVG.person('#0FA37F'), 7.5), at: 'h2' } ];
+  ];
   const smoke = [0, 1, 2].map(() => bill(HM.chim[0], HM.chim[1], HM.chim[2], '<i class="puff"></i>'));
   const N = 6;
   // single 3D progress bar on the ground, parallel to the plane's front edge
@@ -304,32 +307,27 @@ export function mountHeroScene(root) {
     const endT = T0 + BUILD_DELAY + (NS - 1) * STEP + STEP * .45 + DUR;
     // main house: one stage per paid instalment (slab, walls, roof, chimney + entrance, garden + fence, carport)
     const B = T0 + BUILD_DELAY, grow = (g, z, e) => { put(g, 'visibility', e > .002 ? 'visible' : 'hidden'); put(g, 'transform', `translateZ(${z}px) scale3d(1,1,${Math.max(e, .002).toFixed(3)})`); };
-    const eM = HM.st.map((S, k) => easeOut(clamp((t - (B + Math.min(k, NS - 1) * STEP + (k >= NS ? STEP * .45 : 0))) / DUR)));
+    const AT_STAGE = [0, 1, 3, 4, 5];                                // instalment that starts each stage (walls + roof get two steps)
+    const eM = HM.st.map((S, k) => easeOut(clamp((t - (B + AT_STAGE[k] * STEP )) / (k === 1 ? DUR + STEP : DUR))));
     HM.st.forEach((S, k) => grow(S.g, S.z, eM[k]));
-    top = 2 * eM[0] + 15 * eM[1] + 16 * eM[2];
-    // second large lot: its house goes up quickly once the lot is fully paid
-    const e2 = H2.st.map((S, k) => easeOut(clamp((t - (SITE2_DONE + 500 + k * 750)) / DUR)));
-    H2.st.forEach((S, k) => grow(S.g, S.z, e2[k]));
-    const top2 = 2 * e2[0] + 15 * e2[1] + 16 * e2[2];
+    top = 2 * eM[0] + 31 * eM[1];
     for (let j = 0; j < NS; j++) if (t >= T0 + j * STEP) paid = j + 1;
     // greenery grows with the garden stage
-    const gE = Math.max(eM[4], 0), g2E = e2[4] || 0;
+    const gE = Math.max(eM[3], 0);
     HM.greens.forEach(el => { put(el, 'transform', `scale(${gE.toFixed(3)})`); });
-    H2.greens.forEach(el => { put(el, 'transform', `scale(${g2E.toFixed(3)})`); });
     // lived in: lights on window by window, door open, chimney smoke, car drives in
     HM.wins.forEach((w, k) => cls(w, 'lit', t > endT + 200 + k * 220));
-    H2.wins.forEach((w, k) => cls(w, 'lit', t > endT + 900 + k * 220));
-    cls(HM.door, 'open', t > endT + 900); cls(H2.door, 'open', t > endT + 1400);
+    cls(HM.door, 'open', t > endT + 900);
     smoke.forEach((el, k) => { const ph = ((t - endT - 600 - k * 700) % 2100 + 2100) % 2100 / 2100, on = t > endT + 600 + k * 700;
       put(el, 'opacity', on ? (Math.sin(ph * Math.PI) * .75).toFixed(2) : '0'); put(el, 'transform', `translateY(${(-ph * 22).toFixed(1)}px) scale(${(.6 + ph * .9).toFixed(2)})`); });
     const ce = easeIO(clamp((t - endT - 300) / 1400));
     put(HM.car, 'visibility', ce > 0 ? 'visible' : 'hidden'); put(HM.car, 'transform', `translate3d(0, ${(70 * (1 - ce)).toFixed(1)}px, 0)`);
-    const AT = { k1: B + STEP * 1.5, k3: B + STEP * 3.3, k4: B + STEP * 4.3, k4b: B + STEP * 4.6, end: endT + 1500, end2: endT + 2600, h2: SITE2_DONE + 3800 };
+    const AT = { k1: B + STEP * 1.6, k3: B + STEP * 3.3, k4: B + STEP * 4.3, k4b: B + STEP * 4.6, end: endT + 1500, end2: endT + 2600 };
     people.forEach(P => { const e = clamp((t - AT[P.at]) / 450), sc = e < 1 ? 1.15 * easeOut(e) : 1; put(P.el, 'opacity', e > 0 ? '1' : '0'); put(P.el, 'transform', `scale(${sc.toFixed(3)})`); });
-    cls(site, 'lawn', t > B + STEP * 4.3); cls(site2, 'lawn', t > SITE2_DONE + 3500);
+    cls(site, 'lawn', t > B + STEP * 3.3);
     const BILL = `rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(CAM_X + ryv)).toFixed(2)}deg)`;
     bills.forEach(({ b, z }) => put(b, 'transform', `translateZ(${z}px) ${BILL}`));
-    put(site2Pin, 'transform', `translateZ(${(top2 + 2.5).toFixed(1)}px) ${BILL}`);
+    put(site2Pin, 'transform', `translateZ(2.5px) ${BILL}`);
     // trees and context
     trees.forEach((g, k) => { const e = easeOut(clamp((t - 250 - k * 80) / 650)); put(g, 'transform', `scale3d(1,1,${Math.max(e, .002).toFixed(3)})`); put(g, 'visibility', e > .002 ? 'visible' : 'hidden'); });
     // every lot pays its own instalments; yellow fill + peso-sign pin while paying, green + check when fully paid

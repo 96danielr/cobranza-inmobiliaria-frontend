@@ -132,3 +132,5 @@
 .landing .ox .plan.stone { border-radius: 2.5px; }
 .landing .ox .plan.bed { border-radius: 2px; }
 .landing .ox .puff { left: -5px; }
+.landing .ox .fence-sh { position: absolute; border-radius: 3px; box-shadow: inset 0 0 0 1.6px rgba(11,27,51,.16); }
+.landing .ox .round .f { border-radius: 2px; }
