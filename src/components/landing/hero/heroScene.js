@@ -52,7 +52,8 @@ export function mountHeroScene(root) {
   const GM = 6, SOIL = 13;
   const SPECK = 'radial-gradient(circle at 30% 40%, rgba(70,45,25,.22) 0 .6px, transparent .8px) 0 0/5px 4px, radial-gradient(circle at 70% 70%, rgba(255,240,215,.25) 0 .5px, transparent .7px) 0 0/6px 5px, radial-gradient(circle, rgba(60,40,22,.18) 0 1.1px, transparent 1.3px) 2px 3px/11px 9px';
   const EARTH = dir => `${SPECK}, linear-gradient(${dir}, rgba(150,138,122,.5) 0 25%, rgba(165,130,96,.62) 25% 55%, rgba(150,112,78,.72) 55% calc(100% - 1.6px), rgba(126,160,110,.8) calc(100% - 1.6px))`;
-  const soil = box(pl, -GM, -GM, -SOIL - .3, PW + 2 * GM, PH + 2 * GM, SOIL, { top: 'rgba(170,198,152,.55)', front: EARTH('0deg'), back: EARTH('0deg'), left: EARTH('270deg'), right: EARTH('270deg'), noLine: true });
+  const soil = box(pl, -GM, -GM, -SOIL - 1.6,   // 1.6 px below the plan: no depth fighting (flicker) with the lots and roads
+    PW + 2 * GM, PH + 2 * GM, SOIL, { top: 'rgba(170,198,152,.55)', front: EARTH('0deg'), back: EARTH('0deg'), left: EARTH('270deg'), right: EARTH('270deg'), noLine: true });
   // ragged bottom: the earth fades and breaks off irregularly (front/back run top -> bottom, sides run top -> right)
   const RAG_Y = 'polygon(0 15%, 9% 3%, 17% 17%, 26% 7%, 35% 20%, 44% 5%, 52% 14%, 61% 0, 70% 16%, 79% 4%, 87% 19%, 94% 8%, 100% 22%, 100% 100%, 0 100%)';   // element top = bottom of the block
   const RAG_X = 'polygon(22% 0, 100% 0, 100% 100%, 15% 100%, 3% 91%, 17% 83%, 7% 74%, 20% 65%, 5% 56%, 14% 48%, 0 39%, 16% 30%, 4% 21%, 19% 13%, 8% 6%)';   // element left = bottom of the block
@@ -223,6 +224,11 @@ export function mountHeroScene(root) {
     }
     if (floors > 1) div('f band', { left: '0px', top: (FLOOR - .5) + 'px', width: hw + 'px', height: '1px' }, walls._front);   // floor line between storeys
     const door = document.createElement('i'); door.className = 'hdoor'; Object.assign(door.style, { left: (fw - 1.15 * M / 2) + 'px', top: '0px', width: (1.15 * M) + 'px', height: (2.1 * M) + 'px' }); walls._front.appendChild(door);
+    // 3D door leaf hinged on the left jamb: closed it covers the opening (warm interior behind), it swings out when they arrive
+    door.classList.add('opening');
+    const DW = 1.15 * M, DH = 2.1 * M, leaf = div('g', { transform: `translate3d(${hx + fw - DW / 2}px, ${hy + hd + .15}px, 0px)`, transformOrigin: '0 0' }, g1);
+    const lb = box(leaf, 0, 0, 0, DW, .55, DH, { top: '#8A5A3B', front: 'linear-gradient(180deg, #9C6B45, #7E5134)', back: '#6E4529', left: '#734A30', right: '#734A30', noLine: true });
+    const knob = document.createElement('i'); knob.className = 'knob'; knob.style.left = (DW - 1.4) + 'px'; knob.style.top = (DH * .45) + 'px'; lb._front.appendChild(knob);
     gableRoof(g1, hx, hy, WH, hw, hd, ROOF_H, 4);   // the roof rises with the walls, in one go
     const g3 = stage(); box(g3, hx + hw - 18, hy + 7, WALL_H, 6, 6, ROOF_H + 4, { top: '#7A3F24', front: '#B45A34', back: '#B45A34', left: '#B45A34', right: '#96492A', noLine: true });
     box(g3, hx + fw - 7, hy + hd, 0, 14, 5, BASE, WOOD); box(g3, hx + fw - 5, hy + hd + 5, 0, 10, 2.6, BASE / 2, WOOD);   // entrance landing at floor level and one step, no roof
@@ -253,7 +259,7 @@ export function mountHeroScene(root) {
     fence(g4, ox + FI, oy + FI, SW - 2 * FI, SD - 2 * FI, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
     const trees = [[ox + 12, oy + SD - 16]].map(([x, y]) => bill(x, y, 0, SVG.tree(17)));   // trunk + canopy in one drawing
-    const H = { st, wins, door, greens: [...greens, ...trees, ...flowers], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
+    const H = { st, wins, door, leaf, greens: [...greens, ...trees, ...flowers], top: WALL_H + ROOF_H, chim: [hx + hw - 15, hy + 10, WALL_H + ROOF_H + 4], hx, hy, hw, hd, gate };
     if (o.carport) {                                                  // driveway with the car near the gate, and a pool behind it
       const cg = stage(); const DY = hy + 2, PD = 44, DECK = 4;                          // a long lap pool (about 10 m)
       const CAR_Y = DY + PD + 14;                                                    // the car parks right after the pool deck
@@ -462,7 +468,7 @@ export function mountHeroScene(root) {
     HM.greens.forEach(el => { put(el, 'transform', `scale(${gE.toFixed(3)})`); });
     // lived in: lights on window by window, door open, chimney smoke, car drives in
     HM.wins.forEach((w, k) => cls(w, 'lit', t > endT + 200 + k * 220));
-    cls(HM.door, 'open', t > endT + 900);
+    { const o = easeIO(clamp((t - endT - 900) / 700)); put(HM.leaf, 'transform', `${HM.leaf._base || (HM.leaf._base = HM.leaf.style.transform)} rotateZ(${(78 * o).toFixed(1)}deg)`); }   // the door swings open
     smoke.forEach((el, k) => { const ph = ((t - endT - 600 - k * 700) % 2100 + 2100) % 2100 / 2100, on = t > endT + 600 + k * 700;
       put(el, 'opacity', on ? (Math.sin(ph * Math.PI) * .75).toFixed(2) : '0'); put(el, 'transform', `translateY(${(-ph * 22).toFixed(1)}px) scale(${(.6 + ph * .9).toFixed(2)})`); });
     const AT = { buyer: B + 700, dog: B + STEP * 1.4, family: B + STEP * 2.4, puppy: endT + 1800, end: endT + 1200 };
@@ -493,7 +499,7 @@ export function mountHeroScene(root) {
       // a house rises on some lots a while after they are fully paid; its pin rides on the roof
       let hz = 0; const hg = HOUSE_LOTS[key];
       if (hg) { const tp = LOTS[i].done, u = clamp((t - tp - HOUSE_DELAY) / HOUSE_DUR), e = backOut(u), hop = u > 0 && u < 1 ? 6 * Math.sin(Math.PI * u) : 0; hz = HOUSE_H * clamp(u * 1.4) + hop;
-        put(hg, 'visibility', u > 0 ? 'visible' : 'hidden'); put(hg, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(e, .002).toFixed(3)})`); }
+        cls(LOTS[i].el, 'built', u > .5); put(hg, 'visibility', u > 0 ? 'visible' : 'hidden'); put(hg, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(e, .002).toFixed(3)})`); }
       put(pins[i], 'transform', `translateZ(${(hz + 1).toFixed(1)}px) rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(56 + ryv)).toFixed(2)}deg)`); });
     put(sitePin, 'transform', `translateZ(${(top + 2.5).toFixed(1)}px) rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(56 + ryv)).toFixed(2)}deg)`);
     // bar = average collection across all lots; turns green when the whole portfolio is collected
@@ -510,7 +516,9 @@ export function mountHeroScene(root) {
     if (!dragging) { dz += vz; dx = Math.min(14, Math.max(-16, dx + vx)); vz *= .92; vx *= .88;
       if (now - lastMove > 2600) { dz += (0 - dz) * .03; dx += (0 - dx) * .03; } }
     const hover = dragging ? 0 : 1;
-    rz += (mx * 8 * hover + dz - rz) * .12; ryv += (-my * 4 * hover + dx - ryv) * .12;
+    { const tz = mx * 8 * hover + dz, tx = -my * 4 * hover + dx;   // ease toward the target, then settle exactly (no endless sub-pixel shimmer)
+      rz = Math.abs(tz - rz) < .02 ? tz : rz + (tz - rz) * .12; ryv = Math.abs(tx - ryv) < .02 ? tx : ryv + (tx - ryv) * .12;
+      rz = Math.round(rz * 20) / 20; ryv = Math.round(ryv * 20) / 20; }
     pickEdge(-CAM_Z + rz, CAM_X + ryv);                   // real scene rotation and camera tilt
     put(tg, 'transform', `translate3d(0px, ${TPIV}px, 0) rotateX(${(-(56 + ryv) * .85).toFixed(1)}deg)`);   // hanging label facing the camera                                  // relative to the rest pose, so the margin is symmetric
     const rzs = rz.toFixed(2) + 'deg', rys = ryv.toFixed(2) + 'deg'; if (pl._rz !== rzs || pl._ry !== rys) { pl._rz = rzs; pl._ry = rys; pl.style.setProperty('--rz', rzs); pl.style.setProperty('--ry', rys); }

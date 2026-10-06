@@ -186,7 +186,6 @@
 .landing .ox .pet .thigh, .landing .ox .pet .uarm, .landing .ox .pet .shin, .landing .ox .pet .farm, .landing .ox .pet .paw, .landing .ox .pet .lpaw { transition: transform .25s ease; }
 .landing .ox .win { background: linear-gradient(135deg, #B9D2EA 0%, #6F93BA 40%, #EAF3FB 44%, #7FA2C6 50%, #4B6F96 100%); box-shadow: inset 0 0 0 .8px #8A5A3B, inset 0 -.8px 0 1px rgba(138,90,59,.0); }
 .landing .ox .win::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: .6px; background: #8A5A3B; }   /* mullion */
-.landing .ox .ground-sh { position: absolute; border-radius: 10px; background: rgba(11,27,51,.08); filter: blur(12px); }
 .landing .ox .plan.walkway { border-radius: 3px; background: repeating-linear-gradient(90deg, transparent 0 6px, rgba(150,138,118,.5) 6px 6.5px), repeating-linear-gradient(180deg, transparent 0 6px, rgba(150,138,118,.5) 6px 6.5px), #E4DCCB; box-shadow: inset 0 0 0 .6px rgba(11,27,51,.2); }
 .landing .ox .plan.flowers { border-radius: 1.4px; box-shadow: none;
   background: radial-gradient(circle, #F25C78 0 .55px, transparent .7px) 0 0/2.6px 2.2px, radial-gradient(circle, #FFD25A 0 .5px, transparent .65px) 1.3px 1.1px/2.6px 2.2px, radial-gradient(circle, #FFFFFF 0 .45px, transparent .6px) .6px 1.6px/3.1px 2.6px, radial-gradient(circle, #9B7BEA 0 .45px, transparent .6px) 2px .3px/3.4px 2.9px, #5E9B57; }
@@ -201,3 +200,7 @@
   background: radial-gradient(circle at 30% 40%, rgba(160,150,135,.28) 0 .3px, transparent .45px) 0 0/1.7px 1.3px, radial-gradient(circle at 70% 60%, rgba(160,150,135,.22) 0 .35px, transparent .5px) .5px .4px/2.3px 1.9px, #F6F4EE; }
 /* bushes get the same glossy leaves as the tree: a soft light spot, a darker lower rim */
 .landing .ox .bush { background: radial-gradient(circle at 34% 30%, rgba(214,240,224,.85) 0 14%, rgba(158,211,180,.55) 26%, transparent 44%), radial-gradient(circle at 50% 120%, #4E8A6D 0 38%, transparent 62%), #6FAF8E; }
+.landing .ox .hdoor.opening { background: linear-gradient(180deg, #F6D68A, #E8B85A); box-shadow: inset 0 0 0 .6px #5E3B24; }   /* warm hallway seen when the leaf opens */
+.landing .ox .knob { position: absolute; width: .8px; height: .8px; border-radius: 50%; background: #E8C66A; }
+/* a lot whose house is already up keeps only its green area (no dark outline) */
+.landing .ox .plan.built, .landing .ox .site.lawn { box-shadow: none !important; }
