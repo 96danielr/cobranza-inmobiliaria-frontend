@@ -108,17 +108,36 @@ V.close = host => { const m = mk(host, 250, 180, { zoom: 1.24 }); const lots = [
     const u = clamp((t - 4300) / 600), e = u < 1 ? 1 + 2.4 * Math.pow(u - 1, 3) + 1.4 * Math.pow(u - 1, 2) : 1, hop = u > 0 && u < 1 ? 5 * Math.sin(Math.PI * u) : 0;   // pops up with a little hop
     put(house, 'visibility', u > 0 ? 'visible' : 'hidden'); put(house, 'transform', `translateZ(${hop.toFixed(2)}px) scale3d(1,1,${Math.max(u > 0 ? e : 0, .01).toFixed(3)})`); } }; };
 
+/** Hexagonal cabin centred at (cx, cy): side r, wall height h, roof rise rh. Walls are wood planks, one has a door. */
+function hexCabin(m, cx, cy, r, h, rh) {
+  const ap = r * Math.cos(Math.PI / 6), L = Math.hypot(ap, rh), tilt = Math.atan2(rh, ap) * 180 / Math.PI;
+  const WOODS = ['#C99A6B', '#B5865A', '#A9794F', '#B98B5E', '#C5966A', '#D2A576'];
+  m.div('mhexbase', cx - r - 1.5, cy - r - 1.5, 2 * r + 3, 2 * r + 3);
+  for (let k = 0; k < 6; k++) {
+    const g = document.createElement('div'); g.className = 'g'; g.style.transform = `translate3d(${cx}px, ${cy}px, 0) rotateZ(${k * 60 + 30}deg)`; m.pl.appendChild(g);
+    const w = document.createElement('div'); w.className = 'f'; Object.assign(w.style, { left: (-r / 2) + 'px', top: ap + 'px', width: r + 'px', height: h + 'px', transformOrigin: '50% 0', transform: 'rotateX(90deg)',
+      background: `repeating-linear-gradient(0deg, rgba(60,30,10,.18) 0 .5px, transparent .5px 2.4px), ${WOODS[k]}` }); g.appendChild(w);
+    if (k === 0) { const d = document.createElement('i'); Object.assign(d.style, { position: 'absolute', left: (r / 2 - 2.2) + 'px', top: '0px', width: '4.4px', height: '7.5px', background: '#6B4227', borderRadius: '0 0 1.4px 1.4px' }); w.appendChild(d); }
+    if (k === 2 || k === 4) { const wi = document.createElement('i'); wi.className = 'mwin'; Object.assign(wi.style, { left: (r / 2 - 2.5) + 'px', top: '3px', width: '5px', height: '4px' }); w.appendChild(wi); }
+    const t = document.createElement('div'); t.className = 'f'; Object.assign(t.style, { left: (-r / 2 - .6) + 'px', top: (ap - L) + 'px', width: (r + 1.2) + 'px', height: L + 'px', transformOrigin: '50% 100%',
+      transform: `translateZ(${h}px) rotateX(${-tilt}deg)`, clipPath: 'polygon(50% 0, 100% 100%, 0 100%)',
+      background: `repeating-linear-gradient(180deg, transparent 0 2.6px, rgba(60,20,8,.3) 2.6px 3.1px), ${k % 2 ? '#C9693D' : '#B5552C'}` }); g.appendChild(t);
+  }
+}
+
 // client sign-in · the finished home: an L-shaped country house on a paid lot, with a tree and a stone path (static)
 V.home = host => { const m = mk(host, 170, 150, { zoom: 1.02 }); const LX = 14, LY = 16, LW = 142, LD = 118;
   const l = m.lot(LX, LY, LW, LD); l.classList.add('sold', 'paid');
-  const tag = document.createElement('b'); tag.className = 'mtag ok'; tag.textContent = 'TU CASA'; l.appendChild(tag);
   // main wing along x, and a side wing turned 90° coming forward on the right: an L
   const main = cottage(m, LX + 22, LY + 18, 72, 30, 14, 11);
   const wing = cottage(m, 0, 0, 40, 28, 14, 11);
   main.house.style.visibility = 'visible';
   wing.house.style.visibility = 'visible'; wing.house.style.transform = `translate3d(${LX + 22 + 72 - 28}px, ${LY + 18 + 30 + 34}px, 0) rotateZ(-90deg)`;   // comes forward from the right end
-  for (let k = 0; k < 4; k++) { const st = document.createElement('i'); st.className = 'mstone'; Object.assign(st.style, { left: (LX + 52) + 'px', top: (LY + 54 + k * 12) + 'px' }); m.pl.appendChild(st); }
-  const tree = m.div('bb', LX + 16, LY + LD - 26, 0, 0); tree.innerHTML = '<i class="mtree"></i>'; put(tree, 'transform', m.bill(0));
+  // gravel path with flagstones from the door to the front of the lot
+  m.div('mpath', LX + 52, LY + 48, 12, LD - 48);
+  // small hexagonal wooden cabin (hexagonal prism + six-sided tiled roof), at the front-left of the lot
+  hexCabin(m, LX + 26, LY + LD - 30, 11, 10, 8);
+  const tree = m.div('bb', LX + LW - 18, LY + LD - 16, 0, 0); tree.innerHTML = '<i class="mtree"></i>'; put(tree, 'transform', m.bill(0));
   const p = m.pin(LX + 58, LY + 33); cls(p, 'done', true); put(p, 'transform', m.bill(1 + main.TOP));
   return { period: 1e9, update() {} }; };
 
