@@ -459,3 +459,6 @@ body:has(.landing)::before { display: none; }
 @media (max-width: 760px) { .landing .legal-doc { padding: 32px 22px; font-size: 15px; } .landing .legal-sec { padding-top: 96px; } }
 .landing #planes + .interlude { padding: 88px 0; } .landing .interlude + #contacto { padding-top: 0; }
 .landing .legal-draft { display: inline-block; padding: 6px 12px; border-radius: 99px; font-size: 12px; letter-spacing: .04em; }
+.landing .il-link { display: inline-block; margin-top: 22px; font-size: 17px; font-weight: 600; color: var(--green); text-decoration: none; border-bottom: 1.5px solid currentColor; padding-bottom: 3px; }
+.landing .il-link span { display: inline-block; transition: transform .3s ease; } .landing .il-link:hover span { transform: translateX(4px); }
+.landing .il-link.is-pending { cursor: default; opacity: .55; } .landing .il-link.is-pending:hover span { transform: none; }

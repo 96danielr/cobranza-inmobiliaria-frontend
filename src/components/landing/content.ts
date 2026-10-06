@@ -45,8 +45,11 @@ export const landing = {
   interludes: {
     afterHow: ['Menos tiempo persiguiendo pagos.', 'Más tiempo vendiendo lotes.'],
     beforePlans: ['Sin costos de instalación.', 'Pagas solo por los lotes que cobras.'],
-    beforeContact: ['Tus compradores pagan.', 'Tú ves crecer tu cartera.'],
+    beforeContact: ['¿Quieres ver lo que dicen nuestros clientes?'],
   },
+  /** Customer stories page. Pending: while null the link shows but does not open. */
+  testimonials: { label: 'Ver testimonios', href: null as string | null },
+
   benefits: {
     eyebrow: 'Beneficios',
     title: 'Menos planillas, más recaudo',
