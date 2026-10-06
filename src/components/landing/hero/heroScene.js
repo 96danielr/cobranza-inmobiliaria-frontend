@@ -92,17 +92,10 @@ export function mountHeroScene(root) {
   const PAY_ORDER = ['0,0', '3,0', '4,0', '0,3', '2,3', '3,3'], PAY_STEP = [2, 3, 3, 5, 6, 6];
   const PIN = '<div class="pin p1"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#E3B23C" stroke="#fff" stroke-width="1.6"/><text x="10" y="14.3" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="Inter, system-ui, sans-serif">&#36;</text></svg><i></i></div>'
     + '<div class="pin p2"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#0FA37F" stroke="#fff" stroke-width="1.6"/><path d="M5.9 10.3l2.7 2.7 5.5-5.9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i></div>';
-  // fully paid lots that are still empty show a "VENDIDO" real-estate sign instead of the check (the check stays for lots with a house):
-  // a wooden post with an arm and a hanging white board with a red band, staked in the lot
-  const SOLD = '<div class="pin p3"><svg viewBox="0 0 44 30"><ellipse cx="5" cy="29.2" rx="4" ry=".8" fill="rgba(11,27,51,.2)"/>'
-    + '<path d="M4 29V2.5" stroke="#7A5136" stroke-width="2" stroke-linecap="round"/><path d="M3 3.4h38" stroke="#7A5136" stroke-width="1.6" stroke-linecap="round"/>'
-    + '<path d="M8 3.8v2M38 3.8v2" stroke="#8E959E" stroke-width=".6"/>'
-    + '<rect x="5.5" y="5.8" width="36" height="12" rx="1.4" fill="#0FA37F" stroke="#FFFFFF" stroke-width="1"/>'
-    + '<text x="23.5" y="14.1" text-anchor="middle" textLength="29" lengthAdjust="spacingAndGlyphs" font-family="Inter, system-ui, sans-serif" font-size="6.4" font-weight="800" fill="#FFFFFF">VENDIDO</text></svg></div>';
   const pins = PAY_ORDER.map(key => { const [c, r] = key.split(',').map(Number), [x, y] = lotXY(c, r);
-    const g = div('bb', { left: (x + LW / 2) + 'px', top: (y + LD / 2) + 'px' }); g.innerHTML = PIN + SOLD; if (key !== '3,3') g.classList.add('signed'); return g; });   // '3,3' gets a house
+    const g = div('bb', { left: (x + LW / 2) + 'px', top: (y + LD / 2) + 'px' }); g.innerHTML = PIN; return g; });
   const sitePin = div('bb', { left: (sx + SW / 2) + 'px', top: (sy + SD / 2) + 'px' }); sitePin.innerHTML = PIN;   // rides on the growing roof
-  const site2Pin = div('bb', { left: (s2x + SW / 2) + 'px', top: (s2y + SD / 2) + 'px' }); site2Pin.innerHTML = PIN + SOLD; site2Pin.classList.add('signed');
+  const site2Pin = div('bb', { left: (s2x + SW / 2) + 'px', top: (s2y + SD / 2) + 'px' }); site2Pin.innerHTML = PIN;
   const addFill = el => { const f = document.createElement('i'); f.className = 'lfill'; el.appendChild(f); return f; };
   const QUOTAS = 6;                                                    // instalments drawn per lot
   // sidewalk around the tower site (plan outline)
@@ -439,7 +432,7 @@ export function mountHeroScene(root) {
   LOTS.push({ key: 'site', el: site, pin: sitePin, fill: addFill(site), start: 250, done: T0, st: -1 });
   const SITE2_DONE = T0 + 3.4 * STEP;                                 // the second large lot finishes paying, then its house goes up
   LOTS.push({ key: 'site2', el: site2, pin: site2Pin, fill: addFill(site2), start: T0 + .6 * STEP, done: SITE2_DONE, st: -1 });
-  let recaudo = 0, lastPct = '';
+  let recaudo = 0, lastPct = '', soldN = 0;                          // soldN: lots that have turned green in this cycle
   const CYCLE = T0 + BUILD_DELAY + (NS - 1) * STEP + STEP * .45 + DUR + 6800;   // build, then ~5 s of the house being lived in
   const easeOut = t => 1 - Math.pow(1 - t, 3), clamp = v => Math.min(Math.max(v, 0), 1);
   const backOut = t => { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
@@ -522,7 +515,10 @@ export function mountHeroScene(root) {
     put(sitePin, 'transform', `translateZ(${(top + 2.5).toFixed(1)}px) rotateZ(${(CAM_Z - rz).toFixed(2)}deg) rotateX(${(-(56 + ryv)).toFixed(2)}deg)`);
     // bar = average collection across all lots; turns green when the whole portfolio is collected
     paidS += (recaudo - paidS) * .12;
-    const pct = `RECAUDO ${Math.round(recaudo * 100)} %`; if (pct !== lastPct) { lastPct = pct; lblN.textContent = pct; n2.textContent = pct; }
+    soldN = LOTS.filter(L => L.st === 2).length;                   // lots that are green right now
+    const pct = `RECAUDO ${Math.round(recaudo * 100)} %` + (soldN ? `|Lote ${soldN} vendido` : '');
+    if (pct !== lastPct) { lastPct = pct; const [a, b] = pct.split('|');
+      [lblN, n2].forEach(el => { el.textContent = a; if (b) { const sp = document.createElement('span'); sp.className = 'sold'; sp.textContent = b; el.appendChild(sp); } }); }
     put(barG, 'transform', `translate3d(14px, ${BY}px, 0) scale3d(${Math.max(paidS * lenK, .002).toFixed(3)},1,1)`);
     const isDone = t > endT;
     if (isDone !== green) { green = isDone; barColor(isDone ? BAR_G : BAR_Y); fill2.classList.toggle('done', isDone); }

@@ -238,3 +238,6 @@
 .landing .ox .bb .pin.p3 svg { width: 50px; height: auto; }
 .landing .ox .bb.done.signed .p2 { transform: scale(0); opacity: 0; }
 .landing .ox .bb.done.signed .p3 { transform: scale(1); opacity: 1; }
+/* "Lote n vendido" next to the collection %, in the paid green */
+.landing .ox .tx.n .sold, .landing .ox .hud2 .n2 .sold { margin-left: .7em; color: #0B7A5F; font-weight: 600; }
+.landing .ox .tx.n .sold::before, .landing .ox .hud2 .n2 .sold::before { content: '✓ '; }
