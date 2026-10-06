@@ -519,3 +519,13 @@ body:has(.landing)::before { display: none; }
 :is(.landing, .auth) .mx .mcarface { position: absolute; inset: 0; background: radial-gradient(circle at 16% 40%, #FFF4C8 0 9%, transparent 11%), radial-gradient(circle at 84% 40%, #FFF4C8 0 9%, transparent 11%), linear-gradient(90deg, transparent 32%, #3A4352 32% 68%, transparent 68%) 0 55% / 100% 30% no-repeat; }
 :is(.landing, .auth) .mx .mknob { position: absolute; right: 1.4px; top: 4.8px; width: 1.4px; height: 1.4px; border-radius: 50%; background: #E8C66A; box-shadow: 0 0 0 .3px #8A6A20; }
 :is(.landing, .auth) .mx .mgrill { position: absolute; border-radius: .6px; background: repeating-linear-gradient(90deg, #2A3240 0 .5px, transparent .5px 1.2px), radial-gradient(ellipse at 50% 50%, #FFB25A 0 25%, #E0602F 55%, #6B2A14 100%); box-shadow: 0 0 4px 1px rgba(255,140,60,.45); }
+:is(.landing, .auth) .mx .mcar .mbody > .f { border-radius: 2px; }
+:is(.landing, .auth) .mx .mcar .mtyre > .f { border-radius: 50%; }
+:is(.landing, .auth) .mx .mcar .mcab > .f:nth-child(1) { border-radius: 2px; }
+:is(.landing, .auth) .mx .mcar .mcab > .f:nth-child(3), :is(.landing, .auth) .mx .mcar .mcab > .f:nth-child(4) { clip-path: polygon(0 0, 100% 16%, 100% 86%, 0 100%); }   /* sloped windscreen and rear window pillars */
+:is(.landing, .auth) .mx .mtools { position: absolute; left: 22%; right: 22%; top: 1.2px; height: 4px; border-radius: .6px; background: radial-gradient(circle, #8E959E 0 .35px, transparent .5px) 0 0 / 1.6px 1.6px, #E9E3D3; box-shadow: inset 0 0 0 .4px rgba(11,27,51,.25); }
+:is(.landing, .auth) .mx .mlamp { position: absolute; left: -3px; top: -1px; width: 6px; height: 1.6px; border-radius: 1px; background: #FFFBEA; box-shadow: 0 0 6px 3px rgba(255,226,140,.8), 0 0 14px 8px rgba(255,236,170,.45); }
+:is(.landing, .auth) .mx .msit { position: absolute; left: -2.5px; bottom: 0; width: 5px; height: auto; display: block; overflow: visible; }
+:is(.landing, .auth) .mx .msit.flip { transform: scaleX(-1); }
+:is(.landing, .auth) .mx .mtail { position: absolute; inset: 0; background: linear-gradient(90deg, #D9483B 0 16%, transparent 16% 84%, #D9483B 84%) 0 30% / 100% 35% no-repeat; }
+:is(.landing, .auth) .mx .mspill { background: radial-gradient(ellipse at 50% 0%, rgba(255,232,160,.55), rgba(255,232,160,0) 70%); pointer-events: none; }

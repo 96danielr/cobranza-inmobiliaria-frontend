@@ -118,7 +118,14 @@ function hexCabin(m, cx, cy, r, h, rh) {
   box(m, cx - 4, cy - 2.5, 0, 8, 5, 5, { top: '#8E4A2A', front: BRICK, back: BRICK, left: BRICK, right: BRICK, noLine: true });
   const grill = m.div('mgrill', cx - 3.4, cy - 2, 6.8, 4); grill.style.transform = 'translateZ(5.1px)';
   box(m, cx + 2, cy - 2.3, 5, 1.4, 1.4, 5, { top: '#3A4352', front: '#4A5466', back: '#4A5466', left: '#4A5466', right: '#3A4352', noLine: true });   // small chimney
-  [[-7, 4], [5, 4]].forEach(([dx, dy]) => box(m, cx + dx, cy + dy, 0, 2.5, 2.5, 2.2, POST));                                            // stools
+  [[-7, 4], [2, 8.5]].forEach(([dx, dy]) => box(m, cx + dx, cy + dy, 0, 2.5, 2.5, 2.2, POST));
+  // a person sitting on the left stool, facing the barbecue (camera-facing drawing: legs bent at the knee)
+  const sit = m.div('bb', cx + 3.25, cy + 9.75, 0, 0);
+  put(sit, 'transform', m.bill(0) + ' translateZ(2px)');   /* feet on the floor, hips (y 13 of 20) at the 2.2 seat; nudged toward the camera so the seat stays behind */
+  sit.innerHTML = '<svg class="msit flip" viewBox="0 0 14 20"><path d="M6 13h5v6" stroke="#2F3B4E" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M10.4 19.3h2.4" stroke="#2A2420" stroke-width="1.6" stroke-linecap="round"/><path d="M4.2 7.6C4.4 6.4 5.4 5.8 6.6 5.8s2.2.6 2.4 1.8l.4 5.6H4.4z" fill="#F7F5F0"/>'
+    + '<path d="M8.6 8.4 11 11.2" stroke="#F7F5F0" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.3" cy="11.4" r=".9" fill="#E2B48F"/>'
+    + '<circle cx="6.8" cy="3.4" r="2.4" fill="#E2B48F"/><path d="M4.5 3.2C4.4 1.2 5.6.6 6.9.7 8.4.8 9.2 1.6 9.1 2.6 8.2 2.3 7.2 2.1 6.3 2.3 6 2.7 5.8 3.2 5.8 3.8z" fill="#3B2A20"/></svg>';
   for (let k = 0; k < 6; k++) { const a = (k * 60) * Math.PI / 180; box(m, cx + r * Math.cos(a) - .7, cy + r * Math.sin(a) - .7, 0, 1.4, 1.4, h, POST); }
   for (let k = 0; k < 6; k++) {
     const g = document.createElement('div'); g.className = 'g'; g.style.transform = `translate3d(${cx}px, ${cy}px, 0) rotateZ(${k * 60 + 30}deg)`; m.pl.appendChild(g);
@@ -146,24 +153,37 @@ V.home = host => { const m = mk(host, 170, 150, { zoom: 1.02 }); const LX = 14, 
   // and a white car parked nose-out
   { const GY = LY + 82, X0 = LX + 82, X1 = LX + 102, GH = 11;   // face plane y, opening span along x, opening height
     wing.body.children[2].style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 24px, ${GH}px 24px, ${GH}px 4px, 0 4px)`;   // wide notch from the floor up
-    const DK = { top: '#232B38', front: '#232B38', back: '#232B38', left: '#2E3746', right: '#2E3746', noLine: true };
-    box(m, X0, GY - 20, 1.6, X1 - X0, 20, .3, { ...DK, top: '#3A4352' });                                      // garage floor
-    box(m, X0, GY - 21, 1.6, X1 - X0, 1, GH, DK);                                                                // back wall
-    box(m, X0 - .5, GY - 20, 1.6, .5, 20, GH, DK); box(m, X1, GY - 20, 1.6, .5, 20, GH, DK);                     // inner side walls
-    box(m, X0, GY - 10, 1.6 + GH - .7, X1 - X0, 9.5, .6, { top: '#F1EDE4', front: 'repeating-linear-gradient(0deg, #D6CFBF 0 .5px, #E7E2D6 .5px 1.8px)', back: '#D6CFBF', left: '#D6CFBF', right: '#C9C1AF', noLine: true });   // sectional door rolled up under the ceiling
-    box(m, X0 - 1, GY, 1.6 + GH, X1 - X0 + 2, .7, 1.1, { top: '#FBF8F1', front: '#FFFFFF', back: '#E8DFCC', left: '#E8DFCC', right: '#DCCDB2', noLine: true });   // white lintel over the opening
+    // cut the stone base under the opening too, so the garage floor is level with the ground (no step)
+    const base = wing.house.children[0];
+    base.children[0].style.clipPath = 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 25.5px, 21.5px 25.5px, 21.5px 5.5px, 0 5.5px)';
+    base.children[2].style.clipPath = 'polygon(0 0, 100% 0, 100% 5.5px, 0 5.5px, 0 25.5px, 100% 25.5px, 100% 100%, 0 100%)';
+    // lit interior: warm grey walls, concrete floor, a ceiling lamp, a shelf with boxes and a tool board on the back wall
+    const IN = { top: '#F6E7BE', front: '#EBD8A6', back: '#F3E2B4', left: '#F8EAC4', right: '#E6D19C', noLine: true };   // warm, lit by the ceiling lamp
+    box(m, X0, GY - 20, 0, X1 - X0, 20, .2, { ...IN, top: 'radial-gradient(ellipse at 50% 45%, rgba(255,246,214,.95), rgba(255,236,180,0) 70%), repeating-linear-gradient(90deg, rgba(11,27,51,.06) 0 .4px, transparent .4px 5px), #EADBB2' });   // floor
+    const back = box(m, X0, GY - 21, 0, X1 - X0, 1, GH + 1.6, IN);                                                            // back wall
+    box(m, X0 - .5, GY - 20, 0, .5, 20, GH + 1.6, IN); box(m, X1, GY - 20, 0, .5, 20, GH + 1.6, IN);                              // side walls
+    box(m, X0, GY - 20, 1.6 + GH, X1 - X0, 20, .4, { ...IN, top: '#E4DFD4' });
+    back._front.style.background = 'radial-gradient(ellipse at 50% 0%, #FFF8DE, rgba(255,240,196,0) 75%), #F3E2B4';     // lamp glow on the back wall
+    m.div('mspill', X0 - 1, GY, X1 - X0 + 2, 12);                                                                         // light spilling onto the driveway                                             // ceiling
+    box(m, X0 + 2, GY - 20, 1.6 + 5.5, X1 - X0 - 4, 2.2, .5, { top: '#A9794F', front: '#8A5A3B', back: '#8A5A3B', left: '#8A5A3B', right: '#734A30', noLine: true });   // shelf
+    [[3, '#C9A46E'], [7.5, '#6FA0C8'], [12, '#C98F5E']].forEach(([dx, c]) => box(m, X0 + dx, GY - 19.8, 1.6 + 6, 3, 1.8, 2.2, { top: c, front: c, back: c, left: c, right: c, noLine: true }));   // boxes on the shelf
+    const tb = document.createElement('i'); tb.className = 'mtools'; back._front.appendChild(tb);                         // tool board on the back wall
+    const lamp = m.div('bb', X0 + (X1 - X0) / 2, GY - 10, 0, 0); lamp.innerHTML = '<i class="mlamp"></i>'; put(lamp, 'transform', `translateZ(${1.6 + GH - .5}px)`);
     m.div('mdrive2', X0, GY, X1 - X0, LY + LD - GY - 1);                                                          // concrete apron to the lot front
-    // white car (1.8 x 4.3 m): low body, cabin with glass all round, black wheels, headlights and grille facing out
-    const WHT = { top: '#FFFFFF', front: '#EFEDE8', back: '#E3E0D9', left: '#F4F2EE', right: '#D9D5CC', noLine: true };
-    const GLS = { top: '#FFFFFF', front: 'linear-gradient(170deg, #E9F2FA, #8FB0D2 45%, #6E90B5)', back: '#6E90B5', left: 'linear-gradient(100deg, #A9C4DE, #7E9EC0)', right: '#6584A6', noLine: true };
-    const TYR = { top: '#1F2937', front: '#111827', back: '#111827', left: '#1F2937', right: '#0B1220', noLine: true };
+    // white car (1.8 x 4.3 m), rounded: soft body corners, a cabin with sloped pillars, round wheels, headlights and grille
+    const car = m.group(); car.classList.add('mcar');
+    const WHT = { top: 'linear-gradient(90deg, #E8E6E1, #FFFFFF 30%, #FFFFFF 70%, #E8E6E1)', front: '#EFEDE8', back: '#E3E0D9', left: 'linear-gradient(0deg, #DCD8D0, #F7F6F2 60%, #FFFFFF)', right: 'linear-gradient(0deg, #CFCBC2, #E3E0D9)', noLine: true };
+    const GLS = { top: '#FFFFFF', front: 'linear-gradient(170deg, #E9F2FA, #8FB0D2 45%, #6E90B5)', back: '#6E90B5', left: 'linear-gradient(100deg, #B9D2EA, #7E9EC0 60%, #6E90B5)', right: '#6584A6', noLine: true };
+    const TYR = { top: '#2A3240', front: '#111827', back: '#111827', left: 'radial-gradient(circle, #C9CFD6 0 22%, #1F2937 26%)', right: 'radial-gradient(circle, #C9CFD6 0 22%, #1F2937 26%)', noLine: true };
     const cw = 9, cl = 18, cx0 = X0 + (X1 - X0 - cw) / 2, cy0 = GY - 12;
-    [[-.5, 2.6], [cw - .9, 2.6], [-.5, cl - 6], [cw - .9, cl - 6]].forEach(([dx, dy]) => box(m, cx0 + dx, cy0 + dy, .2, 1.4, 3.4, 3, TYR));
-    const body = box(m, cx0, cy0, 1.2, cw, cl, 3.4, WHT);
-    box(m, cx0 + .7, cy0 + 4.5, 4.6, cw - 1.4, 8.5, 2.8, GLS);                                                   // glass cabin
-    box(m, cx0 + .9, cy0 + 4.9, 7.4, cw - 1.8, 7.7, .45, WHT);                                                  // roof
-    box(m, cx0 - .3, cy0 + cl - .4, 1.2, cw + .6, .6, 1.1, TYR);                                                // front bumper
-    const face = document.createElement('i'); face.className = 'mcarface'; body._front.appendChild(face);   // headlights + grille
+    [[-.5, 2.4], [cw - .9, 2.4], [-.5, cl - 6], [cw - .9, cl - 6]].forEach(([dx, dy]) => m.box(car, cx0 + dx, cy0 + dy, .2, 1.4, 3.6, 3.6, TYR).classList.add('mtyre'));
+    const body = m.box(car, cx0, cy0, 1.3, cw, cl, 2.8, WHT); body.classList.add('mbody');
+    const tail = document.createElement('i'); tail.className = 'mtail'; body.children[1].appendChild(tail);                 // red tail lights
+    [[-.7], [cw]].forEach(([dx]) => m.box(car, cx0 + dx, cy0 + 12.4, 4.3, .7, 1, .9, WHT));                                  // side mirrors
+    const cab = m.box(car, cx0 + .6, cy0 + 3.6, 4.1, cw - 1.2, 8.8, 3, GLS); cab.classList.add('mcab');                  // glass cabin with sloped pillars
+    m.box(car, cx0 + .9, cy0 + 5, 7, cw - 1.8, 6, .5, WHT).classList.add('mbody');                            // roof
+    m.box(car, cx0 - .2, cy0 + cl - .5, 1.2, cw + .4, .7, 1, { top: '#3A4352', front: '#2A3240', back: '#2A3240', left: '#2A3240', right: '#1F2937', noLine: true });   // front bumper
+    const face = document.createElement('i'); face.className = 'mcarface'; body._front.appendChild(face);              // headlights + grille
   }
   // gravel path with flagstones from the door to the front of the lot
   m.div('mpath', LX + 64, LY + 48, 12, LD - 48);
