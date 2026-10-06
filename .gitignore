@@ -59,3 +59,7 @@ implementation_plan_id_global.md
 
 #docs
 /docs
+
+# playwright
+/test-results/
+/playwright-report/

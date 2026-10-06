@@ -1,0 +1,382 @@
+/* Landing styles, ported from the approved prototype (./planes/2026-10-05-landing-fuentes). Every selector is scoped under .landing. */
+.landing {--paper:#F2F0E9; --surface:#FBFAF6; --ink:#0B1B33; --muted:#566070; --line:#DCD6C8; --line2:#E7E2D6;
+  --green:#0FA37F; --yellow:#E3B23C; --blue:#1C56C4; --max:1200px; --pad:32px;}
+.landing, .landing * {box-sizing: border-box;}
+html:has(.landing) {scroll-behavior: smooth;}
+.landing {margin: 0; background: var(--paper); color: var(--ink); font-family: inherit; min-height: 100vh; -webkit-font-smoothing: antialiased;}
+.landing a {color: inherit; text-decoration: none;}
+.landing .wrap {max-width: var(--max); margin: 0 auto; padding: 0 var(--pad);}
+.landing .eyebrow {display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);}
+.landing .eyebrow b {color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums;}
+.landing .eyebrow::after {content: ''; flex: 0 0 36px; height: 1px; background: var(--line);}
+.landing h1, .landing h2, .landing h3 {margin: 0; font-weight: 650;}
+.landing .h1 {font-size: clamp(38px, 4vw, 54px); line-height: 1.02; letter-spacing: -.038em;}
+.landing .h2 {font-size: clamp(30px, 3.4vw, 46px); line-height: 1.08; letter-spacing: -.03em; max-width: 18ch; text-wrap: balance;}
+.landing .lead {font-size: 18px; line-height: 1.6; color: var(--muted); max-width: 46ch; margin: 0;}
+.landing .btn {display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 20px; border-radius: 12px; font-size: 15px; font-weight: 600; letter-spacing: -.005em; transition: transform .2s ease, background .2s ease, box-shadow .2s ease; white-space: nowrap;}
+.landing .btn svg {width: 18px; height: 18px; flex: none;}
+.landing .btn.primary {background: var(--ink); color: #fff; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 8px 22px -10px rgba(11,27,51,.55);}
+.landing .btn.primary:hover {transform: translateY(-1px); background: #12284A;}
+.landing .btn.ghost {border: 1px solid var(--line); background: transparent;}
+.landing .btn.ghost:hover {background: var(--surface);}
+.landing .btn.sm {height: 40px; padding: 0 14px; font-size: 14px; border-radius: 10px;}
+.landing section {position: relative;}
+.landing .sec {padding: 120px 0;}
+.landing .sec + .sec {border-top: 1px solid var(--line2);}
+.landing .rv {opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1);}
+.landing .rv.in {opacity: 1; transform: none;}
+.landing .rv.d1 {transition-delay: .08s;}
+.landing .rv.d2 {transition-delay: .16s;}
+.landing .rv.d3 {transition-delay: .24s;}
+.landing .rv.d4 {transition-delay: .32s;}
+.landing .draw path, .landing .draw circle, .landing .draw rect, .landing .draw line, .landing .draw polyline {stroke-dasharray: 160; stroke-dashoffset: 160; transition: stroke-dashoffset 1.4s cubic-bezier(.65,0,.35,1) .2s;}
+.landing .in .draw path, .landing .in .draw circle, .landing .in .draw rect, .landing .in .draw line, .landing .in .draw polyline, .landing .draw.in path, .landing .draw.in circle, .landing .draw.in rect, .landing .draw.in line, .landing .draw.in polyline {stroke-dashoffset: 0;}
+@media (prefers-reduced-motion: reduce) {
+  .landing .rv {opacity: 1; transform: none; transition: none;}
+  .landing .draw * {stroke-dashoffset: 0 !important; transition: none !important;}
+}
+.landing .top {position: sticky; top: 0; z-index: 50; transition: background .3s, box-shadow .3s;}
+.landing .top .bar {height: 76px; display: flex; align-items: center; gap: 32px; transition: height .3s;}
+.landing .top.scrolled {background: rgba(242,240,233,.86); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); box-shadow: 0 1px 0 var(--line2);}
+.landing .top.scrolled .bar {height: 62px;}
+.landing .logo {display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .2em; font-size: 14px;}
+.landing .logo svg {width: 26px; height: 26px;}
+.landing .nav {display: flex; gap: 28px; font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 12px;}
+.landing .nav a:hover {color: var(--ink);}
+.landing .top .right {margin-left: auto; display: flex; align-items: center; gap: 10px;}
+.landing .menu {position: relative;}
+.landing .menu > button {all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 10px; font-size: 14px; font-weight: 600;}
+.landing .menu > button:hover {background: var(--surface);}
+.landing .menu .pop {position: absolute; right: 0; top: 46px; min-width: 220px; background: #fff; border: 1px solid var(--line2); border-radius: 14px; padding: 6px; box-shadow: 0 18px 40px -18px rgba(11,27,51,.35); opacity: 0; transform: translateY(-4px); pointer-events: none; transition: all .18s ease;}
+.landing .menu.open .pop {opacity: 1; transform: none; pointer-events: auto;}
+.landing .pop a {display: block; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 600;}
+.landing .pop a small {display: block; font-weight: 400; color: var(--muted); font-size: 12.5px; margin-top: 2px;}
+.landing .pop a:hover {background: var(--paper);}
+.landing .hero {padding: 40px 0 72px;}
+.landing .hero .grid {display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; align-items: center;}
+.landing .hero .copy {grid-column: 1 / span 6;}
+.landing .hero .art {grid-column: 7 / span 6; margin-right: calc(var(--pad) * -1); margin-left: -56px;}
+.landing .hero .h1 {margin: 22px 0 22px;}
+.landing .hero .ctas {display: flex; gap: 12px; margin-top: 34px; flex-wrap: wrap;}
+.landing .hero .already {margin-top: 26px; font-size: 14px; color: var(--muted);}
+.landing .hero .already a {color: var(--ink); font-weight: 600; border-bottom: 1px solid var(--line);}
+.landing .card {background: var(--surface); border: 1px solid var(--line2); border-radius: 20px; padding: 32px;}
+.landing .card h3 {font-size: 22px; line-height: 1.25; letter-spacing: -.02em; text-wrap: balance;}
+.landing .card p {margin: 12px 0 0; font-size: 15.5px; line-height: 1.6; color: var(--muted);}
+.landing .card .ic {width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); display: grid; place-items: center; margin-bottom: 22px; background: #fff;}
+.landing .card .ic svg {width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;}
+.landing footer {padding: 56px 0 40px; border-top: 1px solid var(--line2); font-size: 14px; color: var(--muted);}
+.landing footer .grid {display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px;}
+.landing footer .grid > div:first-child {grid-column: 1 / span 4;}
+.landing footer .col {grid-column: span 2; display: flex; flex-direction: column; gap: 10px;}
+.landing footer .col b {color: var(--ink); font-weight: 600; margin-bottom: 4px;}
+.landing footer .pend {color: #9A8E6E;}
+.landing footer .legal {margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line2); display: flex; justify-content: space-between;}
+.landing [data-px] {will-change: transform;}
+@media (max-width: 1000px) {
+  .landing {--pad: 20px;}
+  .landing .nav {display: none;}
+  .landing .hero .copy, .landing .hero .art {grid-column: 1 / -1; margin-right: 0; margin-left: 0;}
+  .landing footer .grid > div:first-child {grid-column: 1 / -1;}
+  .landing footer .col {grid-column: span 6;}
+  .landing .sec {padding: 84px 0;}
+  .landing .top .right .btn span {display: none;}
+}
+.landing .mx {position: relative; width: 100%; aspect-ratio: 1 / 1; perspective: 1300px; perspective-origin: 50% 20%; overflow: hidden;}
+.landing .mx .pl {position: absolute; left: 50%; top: 66%; transform-style: preserve-3d;}
+.landing .mx .g {position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d;}
+.landing .mx .b {position: absolute; transform-style: preserve-3d;}
+.landing .mx .f {position: absolute;}
+.landing .mx .lot {position: absolute; background: #F7F5EF; box-shadow: inset 0 0 0 .8px rgba(11,27,51,.38); transition: background-color .6s ease, box-shadow .6s ease;}
+.landing .mx .lot.sold {background: repeating-linear-gradient(45deg, rgba(11,27,51,.12) 0 .6px, transparent .6px 5px), #F4F1EA; box-shadow: inset 0 0 0 1.2px rgba(11,27,51,.6);}
+.landing .mx .lot.paid {background: repeating-linear-gradient(45deg, rgba(15,163,127,.22) 0 .6px, transparent .6px 5px), #DDEFE6; box-shadow: inset 0 0 0 1.3px rgba(15,163,127,.9);}
+.landing .mx .lfill {position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: rgba(227,178,60,.38); transform-origin: 50% 100%; transform: scaleY(0); transition: transform .6s cubic-bezier(.2,.8,.2,1), opacity .5s ease;}
+.landing .mx .lot.paid > .lfill {opacity: 0;}
+.landing .mx .bb {position: absolute; width: 0; height: 0;}
+.landing .mx .pin {position: absolute; left: -9px; bottom: 0; width: 18px; transform-origin: 50% 100%; transform: scale(0); opacity: 0; transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;}
+.landing .mx .pin svg {display: block; width: 18px; height: 18px; filter: drop-shadow(0 2px 3px rgba(11,27,51,.25));}
+.landing .mx .pin i {display: block; width: 1.2px; height: 10px; margin: 0 auto;}
+.landing .mx .bb.prog .p1, .landing .mx .bb.done .p2 {transform: scale(1); opacity: 1;}
+.landing .mx .p1 i {background: rgba(201,154,46,.9);}
+.landing .mx .p2 i {background: rgba(15,163,127,.85);}
+.landing .mx.dark .lot {background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 .8px rgba(255,255,255,.28);}
+.landing .mx .card {position: absolute; left: 0; bottom: 0; transform-origin: 50% 100%; background: #fff; border-radius: 12px; padding: 11px 13px; font: 500 11.5px/1.35 Inter, system-ui, sans-serif; color: #0B1B33;
+  box-shadow: 0 0 0 1px rgba(11,27,51,.08), 0 14px 30px -16px rgba(11,27,51,.5); white-space: nowrap;}
+.landing .mx .card .t {font-weight: 650; font-size: 12.5px; letter-spacing: -.01em;}
+.landing .mx .card .s {color: #6B6F78; font-size: 10.5px; margin-top: 2px;}
+.landing .mx .card .v {font-weight: 650; font-size: 16px; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums;}
+.landing .mx .card .ok {color: #0B7A5F; font-weight: 600;}
+.landing .mx .card .due {color: #8A6510; font-weight: 600;}
+.landing .mx .card .bar {height: 5px; border-radius: 3px; background: #EEEAE0; margin-top: 7px; overflow: hidden;}
+.landing .mx .card .bar i {display: block; height: 100%; width: 0; background: #0FA37F;}
+.landing .mx .card {translate: -50% 0;}
+.landing .close2 .vig .mx {aspect-ratio: 4 / 3;}
+.landing .close2 .vig .mx .pl {top: 56%;}
+.landing .mx .card .v, .landing .mx .card .t {white-space: nowrap;}
+.landing .mx .card .tg {display: inline-block; margin-top: 8px; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: #EFEDE7; color: #6B6F78;}
+.landing .mx .card .tg.due {background: #FBF0D4; color: #8A6510;}
+.landing .mx .card .tg.ok {background: #E3F3EC; color: #0B7A5F;}
+.landing .logos2 {padding: 8px 0 8px;}
+.landing .logos2 .eyebrow {justify-content: center;}
+.landing .logos2 .eyebrow::before {content: ''; flex: 0 0 36px; height: 1px; background: var(--line);}
+.landing .marquee {margin-top: 22px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);}
+.landing .marquee .track {display: flex; width: max-content; animation: mq 46s linear infinite;}
+.landing .marquee span {display: inline-flex; align-items: center; gap: 46px; padding-right: 46px; font-size: 13px; font-weight: 700; letter-spacing: .16em; color: #8D919A; white-space: nowrap;}
+.landing .marquee span::after {content: ''; width: 7px; height: 7px; border: 1px solid #B9B3A5; transform: rotate(45deg);}
+@keyframes mq { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .landing .marquee .track {animation: none;}
+}
+.landing .cotas {display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; margin: 8px 0 56px;}
+.landing .ct .num {font-size: clamp(44px, 5vw, 72px); font-weight: 650; letter-spacing: -.045em; line-height: 1; font-variant-numeric: tabular-nums;}
+.landing .ct .lbl {font-size: 14px; font-weight: 600;}
+.landing .ct p {margin: 6px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--muted);}
+.landing .q2 {display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; align-items: start;}
+.landing .q2 .mark {grid-column: 1 / span 1; width: 56px;}
+.landing .q2 blockquote {grid-column: 2 / span 9; margin: 0; font-size: clamp(26px, 3vw, 40px); line-height: 1.22; letter-spacing: -.025em; font-weight: 500;}
+.landing .q2 blockquote .pend {color: #9A8E6E;}
+.landing .q2 .who {grid-column: 2 / span 6; display: flex; align-items: center; gap: 14px; font-size: 14px; margin-top: 28px;}
+.landing .q2 .av {width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 600; letter-spacing: .04em;}
+.landing .q2 .who small {display: block; color: var(--muted); margin-top: 2px;}
+.landing .seclist {list-style: none; margin: 36px 0 0; padding: 0; border-top: 1px solid rgba(255,255,255,.14);}
+.landing .seclist li {display: flex; gap: 14px; align-items: center; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,.14); font-size: 16px; font-weight: 500;}
+.landing .seclist svg {width: 22px; height: 22px; flex: none; stroke: #5FD3B0; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;}
+.landing .plan2 {grid-column: 1 / span 6; background: #fff; border: 1px solid var(--line2); border-radius: 24px; padding: 36px; box-shadow: 0 24px 60px -36px rgba(11,27,51,.35);}
+.landing .plan2 .tag {display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--green); background: #E3F3EC; padding: 6px 10px; border-radius: 99px;}
+.landing .plan2 h3 {font-size: 26px; letter-spacing: -.02em; margin-top: 18px;}
+.landing .plan2 .amt {margin-top: 14px; display: flex; align-items: baseline; gap: 10px;}
+.landing .plan2 .amt b {font-size: 44px; font-weight: 650; letter-spacing: -.04em;}
+.landing .plan2 .amt span {color: var(--muted); font-size: 15px;}
+.landing .plan2 .btn {margin-top: 24px; width: 100%; justify-content: center;}
+.landing .incl {grid-column: 8 / span 5; list-style: none; margin: 0; padding: 0;}
+.landing .incl .t {font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-bottom: 14px;}
+.landing .incl li {display: flex; gap: 14px; padding: 15px 0; border-top: 1px solid var(--line2); font-size: 15.5px;}
+.landing .incl li svg {width: 20px; height: 20px; flex: none; stroke: var(--green); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-top: 1px;}
+.landing .close2 .box {background: var(--surface); border: 1px solid var(--line2); border-radius: 28px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; align-items: center; overflow: hidden;}
+.landing .close2 .box .tx {grid-column: 1 / span 6; padding: 64px 0 64px 64px;}
+.landing .close2 .box .tx .h2 {margin-top: 18px;}
+.landing .close2 .box .tx .lead {margin-top: 18px;}
+.landing .close2 .box .tx .acts {display: flex; gap: 14px; align-items: center; margin-top: 30px; flex-wrap: wrap;}
+.landing .close2 .box .tx .mail {font-size: 14px; color: var(--muted);}
+.landing .close2 .box .tx .mail a {color: var(--ink); font-weight: 600;}
+.landing .close2 .box .vig {grid-column: 7 / span 6; align-self: stretch; background: #ECE9E1; border-left: 1px solid var(--line2); display: grid; place-items: center;}
+.landing .close2 .box .vig > .mxw {width: 92%;}
+@media (max-width: 1000px) {
+  .landing .cotas {grid-template-columns: 1fr 1fr; gap: 32px;}
+  .landing .q2 .mark, .landing .q2 blockquote, .landing .q2 .who {grid-column: 1 / -1;}
+  .landing .plan2, .landing .incl {grid-column: 1 / -1;}
+  .landing .close2 .box .tx {grid-column: 1 / -1; padding: 36px 24px 8px;}
+  .landing .close2 .box .vig {grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line2);}
+}
+.landing .specs {display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; margin-top: 64px; border-top: 1px solid var(--line);}
+.landing .sp {display: grid; grid-template-columns: 44px 1fr; gap: 18px; padding: 26px 0; border-bottom: 1px solid var(--line2);}
+.landing .sp .ic {width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center;}
+.landing .sp .ic svg {width: 21px; height: 21px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;}
+.landing .sp h3 {font-size: 17px; letter-spacing: -.01em;}
+.landing .sp p {margin: 6px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--muted);}
+@media (max-width: 1000px) {
+  .landing .specs {grid-template-columns: 1fr;}
+}
+.landing .feedgrid {display: grid; grid-template-columns: repeat(12, 1fr); gap: 32px; align-items: center;}
+.landing .feedstage {grid-column: 1 / span 6; position: relative;}
+.landing .feedtx {grid-column: 8 / span 5;}
+.landing .feedtx .h2 {margin-top: 18px;}
+.landing .feedtx .lead {margin-top: 18px;}
+.landing .feedtx .ctas {margin-top: 28px; align-items: center; gap: 24px;}
+.landing .feedtx .more {font-size: 16px; font-weight: 600; color: var(--ink); text-decoration: none; border-bottom: 1.5px solid var(--ink); padding-bottom: 3px;}
+.landing .feedtx .more span {display: inline-block; transition: transform .3s ease;}
+.landing .feedtx .more:hover span {transform: translateX(4px);}
+.landing .lf-deck {position: relative; width: min(100%, 420px); height: 372px; margin: 0 auto;}
+.landing .lf {position: absolute; inset: 0 0 auto 0; padding: 30px 32px 32px; border-radius: 22px; background: #fff; color: var(--ink);
+  box-shadow: 0 1px 0 rgba(11,27,51,.04), 0 28px 50px -30px rgba(11,27,51,.35);
+  transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.65,0,.35,1), opacity .6s ease;}
+.landing .lf[data-pos="0"] {z-index: 3;}
+.landing .lf[data-pos="1"] {z-index: 2; transform: translateY(18px) scale(.94); opacity: .7;}
+.landing .lf[data-pos="2"] {z-index: 1; transform: translateY(34px) scale(.88); opacity: .35;}
+.landing .lf:not([data-pos="0"]) > * {opacity: 0;}
+.landing .lf > * {transition: opacity .4s ease .3s;}
+.landing .lf.leave {transform: translateX(-70%) rotate(-5deg); opacity: 0;}
+.landing .lf.snap, .landing .lf.snap > * {transition: none;}
+.landing .lf-hd {display: flex; justify-content: space-between; align-items: baseline;}
+.landing .lf-hd b {font-size: 20px; font-weight: 650; letter-spacing: -.02em;}
+.landing .lf-hd span {font-size: 13px; color: var(--muted);}
+.landing .lf-feed {position: relative; height: 132px; margin-top: 14px; overflow: hidden;}
+.landing .lf-track {position: absolute; left: 0; right: 0; bottom: 0;}
+.landing .lf-ev {display: flex; align-items: center; gap: 12px; height: 44px; font-size: 15px; transition: opacity .4s ease;}
+.landing .lf-ev:nth-last-child(2) {opacity: .6;}
+.landing .lf-ev:nth-last-child(3) {opacity: .3;}
+.landing .lf-ev:nth-last-child(n+4) {opacity: 0;}
+.landing .lf-ev i {width: 24px; height: 24px; flex: none; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; color: #fff;}
+.landing .lf-ev.due i {background: #E3B23C;}
+.landing .lf-ev.ok i {background: #0FA37F;}
+.landing .lf-ev.all i {background: #0B1B33;}
+.landing .lf-ev b {font-weight: 550;}
+.landing .lf-ft {margin-top: 18px; padding-top: 18px; border-top: 1px solid #F0ECE3;}
+.landing .lf-amt {display: flex; align-items: baseline; justify-content: space-between; gap: 12px;}
+.landing .lf-amt b {font-size: 30px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums;}
+.landing .lf-amt span {font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums;}
+.landing .lf-bar {height: 6px; border-radius: 3px; background: #F0ECE3; margin-top: 12px; overflow: hidden;}
+.landing .lf-bar i {display: block; height: 100%; width: 0; background: #E3B23C; border-radius: 3px; transition: width .5s cubic-bezier(.2,.8,.2,1), background .4s;}
+.landing .lf-bar.done i {background: #0FA37F;}
+.landing .lf-got {display: inline-block; transform-origin: 0 80%;}
+.landing .lf-got.pop {color: #0B7A5F; animation: lfpop 1.1s cubic-bezier(.3,1.6,.5,1) both;}
+@keyframes lfpop { 0% { transform: scale(1); } 25% { transform: scale(1.1) translateY(-3px); } 45% { transform: scale(.98); } 65% { transform: scale(1.05) translateY(-1px); } 100% { transform: scale(1); } }
+@media (max-width: 1000px) {
+  .landing .feedstage, .landing .feedtx {grid-column: 1 / -1;}
+  .landing .feedtx {order: -1;}
+}
+.landing .bnf {display: flex; flex-direction: column; background: #fff; border-radius: 22px; padding: 32px 36px 36px; box-shadow: 0 24px 44px -32px rgba(11,27,51,.35);}
+.landing .bf-ic {width: 56px; height: 56px; border-radius: 16px; background: #F2F0E9; display: grid; place-items: center;}
+.landing .bf-ic svg {width: 28px; height: 28px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;}
+.landing .bf-tx {padding-top: 22px;}
+.landing .bf-tx h3 {font-size: 22px; font-weight: 650; letter-spacing: -.025em; line-height: 1.15;}
+.landing .bf-tx p {margin: 8px 0 0; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 36ch;}
+.landing .specs3 {grid-template-columns: repeat(3, 1fr); column-gap: 40px; margin-top: 72px;}
+.landing .specs3 .sp {align-items: center; padding: 22px 0;}
+.landing .specs3 .sp h3 {font-size: 16px;}
+@media (max-width: 1000px) {
+  .landing .specs3 {grid-template-columns: 1fr 1fr;}
+}
+@media (max-width: 600px) {
+  .landing .specs3 {grid-template-columns: 1fr;}
+}
+.landing .feedtx .ctas {display: flex; flex-wrap: wrap;}
+.landing .feedtx .more {margin-left: 8px;}
+.landing .howcard {background: #fff; border-radius: 28px; padding: 56px 64px; box-shadow: 0 1px 0 rgba(11,27,51,.04), 0 40px 70px -44px rgba(11,27,51,.35); align-items: center;}
+.landing .howcard .feedstage {grid-column: 1 / span 6; padding-right: 48px; border-right: 1px solid #F0ECE3; overflow: hidden;}
+.landing .howcard .feedtx {grid-column: 7 / span 6; padding-left: 24px;}
+.landing .howcard .lf-deck {width: 100%; max-width: 420px; height: 300px; margin: 0;}
+.landing .howcard .lf {padding: 0; background: none; box-shadow: none; border-radius: 0;}
+.landing .howcard .lf[data-pos="1"], .landing .howcard .lf[data-pos="2"] {transform: translateX(48px); opacity: 0;}
+.landing .howcard .lf.leave {transform: translateX(-48px); opacity: 0;}
+@media (max-width: 1000px) {
+  .landing .howcard {padding: 32px 24px;}
+  .landing .howcard .feedstage, .landing .howcard .feedtx {grid-column: 1 / -1; padding: 0; border: 0;}
+  .landing .howcard .feedtx {order: -1; margin-bottom: 24px;}
+}
+.landing .bencard {display: grid; grid-template-columns: repeat(12, 1fr); gap: 32px;}
+.landing .bc-tx {grid-column: 1 / span 6; padding-right: 32px;}
+.landing .bc-tx .h2 {margin-top: 18px;}
+.landing .bc-list {margin-top: 28px; display: grid; gap: 22px;}
+.landing .bc-list .bnf {display: flex; flex-direction: row; gap: 16px; align-items: flex-start; background: none; box-shadow: none; padding: 0; border-radius: 0;}
+.landing .bc-list .bf-ic {width: auto; height: auto; background: none; padding-top: 3px;}
+.landing .bc-list .bf-ic svg {width: 24px; height: 24px;}
+.landing .bc-list .bf-tx {padding: 0;}
+.landing .bc-list .bf-tx h3 {font-size: 19px;}
+.landing .bc-list .bf-tx p {margin-top: 4px; font-size: 15.5px;}
+.landing .bc-tx .more {display: inline-block; margin-top: 30px; font-size: 16px; font-weight: 600; color: var(--ink); text-decoration: none; border-bottom: 1.5px solid var(--ink); padding-bottom: 3px;}
+.landing .bc-tx .more span {display: inline-block; transition: transform .3s ease;}
+.landing .bc-tx .more:hover span {transform: translateX(4px);}
+.landing .bc-st {grid-column: 7 / span 6; padding-left: 48px; border-left: 1px solid #F0ECE3; align-self: stretch; display: flex; align-items: center;}
+.landing .cotas.grid4 {width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0;}
+.landing .cotas.grid4 .ct {padding: 26px 0;}
+.landing .cotas.grid4 .ct:nth-child(-n+2) {border-bottom: 1px solid #F0ECE3;}
+.landing .cotas.grid4 .ct:nth-child(even) {padding-left: 32px; border-left: 1px solid #F0ECE3;}
+.landing .cotas.grid4 .num {font-size: clamp(38px, 3.6vw, 54px);}
+.landing .cotas.grid4 .lbl {margin-top: 6px; font-size: 15px; font-weight: 500; color: var(--muted);}
+@media (max-width: 1000px) {
+  .landing .bc-tx, .landing .bc-st {grid-column: 1 / -1; padding: 0; border: 0;}
+}
+.landing #como, .landing #beneficios {position: relative; isolation: isolate;}
+.landing #como::before, .landing #beneficios::before {content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(rgba(11,27,51,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(11,27,51,.06) 1px, transparent 1px);
+  background-size: 56px 56px; background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 30%, transparent 85%); mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 30%, transparent 85%);}
+.landing #como {padding-bottom: 56px;}
+.landing #como + #beneficios {border-top: 0; padding-top: 56px;}
+.landing .bencard {padding: 0; overflow: hidden; gap: 0;}
+.landing .bencard .bc-tx {padding: 56px 48px 56px 64px;}
+.landing .bencard .bc-st {margin: 0; padding: 56px 56px; border-left: 0; background: var(--ink); color: #fff;}
+.landing .bencard .cotas.grid4 .ct:nth-child(-n+2) {border-bottom-color: rgba(255,255,255,.12);}
+.landing .bencard .cotas.grid4 .ct:nth-child(even) {border-left-color: rgba(255,255,255,.12);}
+.landing .bencard .cotas.grid4 .num {color: #fff;}
+.landing .bencard .cotas.grid4 .lbl {color: #A9B3C4;}
+@media (max-width: 1000px) {
+  .landing .bencard .bc-tx {padding: 32px 24px;}
+  .landing .bencard .bc-st {padding: 24px;}
+}
+.landing #como {padding-bottom: 0;}
+.landing #beneficios {padding-top: 0; border-top: 0;}
+.landing .howcard .lf[data-pos="0"] {transition-delay: .3s;}
+.landing .howcard .lf.leave {transition-delay: 0s; transition-duration: .3s;}
+.landing .interlude {position: relative; isolation: isolate; padding: 112px 0; text-align: center;}
+.landing .interlude::before {content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(rgba(11,27,51,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(11,27,51,.06) 1px, transparent 1px);
+  background-size: 56px 56px; background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 30%, transparent 85%); mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 30%, transparent 85%);}
+.landing .il-t {margin: 0 auto; max-width: 30ch; font-size: clamp(30px, 3.8vw, 52px); font-weight: 650; line-height: 1.12; letter-spacing: -.03em; color: var(--ink); text-wrap: balance;}
+.landing .il-t span {color: #0FA37F;}
+@media (max-width: 760px) {
+  .landing .interlude {padding: 72px 0;}
+}
+.landing .seccard {display: grid; grid-template-columns: repeat(12, 1fr); gap: 0; padding: 0; overflow: hidden;}
+.landing .sc-vis {grid-column: 1 / span 5; background: var(--ink); display: grid; place-items: center; padding: 40px;}
+.landing .sc-vis .vig {width: 100%; max-width: 380px;}
+.landing .sc-tx {grid-column: 6 / span 7; padding: 56px 64px;}
+.landing .sc-tx .h2 {margin-top: 18px;}
+.landing .sc-tx .lead {margin-top: 16px;}
+.landing .sc-tx .seclist {margin-top: 26px;}
+.landing .sc-tx .seclist li {color: var(--ink); border-color: #F0ECE3;}
+.landing .sc-tx .seclist svg {stroke: #0FA37F;}
+.landing .plancard {display: grid; grid-template-columns: repeat(12, 1fr); gap: 0; padding: 0; overflow: hidden; align-items: stretch;}
+.landing .pc-main {grid-column: 1 / span 7; padding: 56px 64px;}
+.landing .pc-main .h2 {margin-top: 18px;}
+.landing .pc-main .lead {margin-top: 14px;}
+.landing .pc-main .plan2 {margin-top: 28px; padding: 0; border: 0; box-shadow: none; background: none;}
+.landing .pc-main .plan2 .tag, .landing .pc-main .plan2 h3 {display: none;}
+.landing .pc-incl {grid-column: 8 / span 5; background: #F7F5EF; padding: 56px 48px;}
+.landing .pc-t {display: block; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px;}
+.landing .pc-incl .incl {margin: 0; padding: 0; list-style: none;}
+@media (max-width: 1000px) {
+  .landing .sc-vis, .landing .sc-tx, .landing .pc-main, .landing .pc-incl {grid-column: 1 / -1;}
+  .landing .sc-tx, .landing .pc-main, .landing .pc-incl {padding: 32px 24px;}
+}
+.landing .sc-tx .seclist {border-top-color: #F0ECE3;}
+.landing .sc-vis .vig.mx {aspect-ratio: 4 / 3;}
+.landing .seccard {align-items: stretch;}
+.landing .seccard .sc-tx {align-self: center;}
+.landing .pc-ex {margin: 14px 0 0; font-size: 15px; color: var(--muted);}
+.landing .pc-ex b {color: var(--ink); font-weight: 650;}
+.landing .pc-main .plan2 .btn {margin-top: 28px;}
+.landing .specs3.featcard {margin-top: 28px; background: #fff; border: 0; border-radius: 28px; overflow: hidden; column-gap: 0;
+  box-shadow: 0 1px 0 rgba(11,27,51,.04), 0 40px 70px -44px rgba(11,27,51,.35);}
+.landing .featcard .sp {padding: 30px 36px; border-bottom: 1px solid #F0ECE3; border-left: 1px solid #F0ECE3; gap: 16px; grid-template-columns: 40px 1fr;}
+.landing .featcard .sp:nth-child(3n+1) {border-left: 0;}
+.landing .featcard .sp:nth-last-child(-n+3) {border-bottom: 0;}
+.landing .featcard .sp .ic {width: 40px; height: 40px; border: 0; border-radius: 12px; background: #F2F0E9;}
+.landing .featcard .sp .ic svg {width: 20px; height: 20px;}
+.landing .featcard .sp h3 {font-size: 16px; font-weight: 600;}
+@media (max-width: 1000px) {
+  .landing .featcard .sp {border-left: 0;}
+  .landing .featcard .sp:nth-last-child(-n+3) {border-bottom: 1px solid #F0ECE3;}
+  .landing .featcard .sp:last-child {border-bottom: 0;}
+}
+.landing .featcard.in-card {grid-column: 1 / -1; margin: 0; border-radius: 0; box-shadow: none; border-top: 1px solid #F0ECE3;}
+.landing .quote3 {position: relative; isolation: isolate; border-top: 0 !important;}
+.landing .quote3::before {content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(rgba(11,27,51,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(11,27,51,.06) 1px, transparent 1px);
+  background-size: 56px 56px; background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 30%, transparent 85%); mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 30%, transparent 85%);}
+.landing .quote3 .q2 {display: flex; flex-direction: column; align-items: center; text-align: center;}
+.landing .quote3 .q2 .mark {width: 40px;}
+.landing .quote3 .q2 blockquote {margin-top: 24px; max-width: 26ch; font-size: clamp(28px, 3.4vw, 46px); font-weight: 600; letter-spacing: -.03em; line-height: 1.15; text-wrap: balance;}
+.landing .quote3 .q2 .who {margin-top: 32px; text-align: left;}
+.landing #seguridad {border-top: 0; padding-top: 0;}
+.landing .close2 {border-top: 0 !important;}
+.landing .close2 .box {background: #fff; border: 0; gap: 0; box-shadow: 0 1px 0 rgba(11,27,51,.04), 0 40px 70px -44px rgba(11,27,51,.35);}
+.landing .close2 .box .tx {padding: 64px 48px 64px 64px;}
+.landing .close2 .box .vig {background: #F7F5EF; border-left: 0;}
+.landing #seguridad, .landing #planes, .landing #contacto {border-top: 0 !important; padding-top: 48px; padding-bottom: 48px;}
+.landing #contacto {padding-bottom: 112px;}
+.landing #seguridad + .interlude {padding: 88px 0;}
+.landing .interlude + #planes {padding-top: 0;}
+/* the white benefit icon wrapper reuses the line-icon stroke style */
+.landing .bf-ic svg, .landing .featcard .ic svg, .landing .seclist svg, .landing .incl svg { fill: none; }
+.landing footer .about { margin: 16px 0 0; max-width: 34ch; line-height: 1.6; }
+/* on narrow screens the 12-column cards collapse to one column (12 gaps would not fit at 390 px) */
+@media (max-width: 1000px) {
+  .landing .feedgrid, .landing .bencard, .landing .seccard, .landing .plancard, .landing .close2 .box { grid-template-columns: 1fr; }
+}
+/* the app paints a fixed tinted overlay on body::before; the landing keeps its own plain paper */
+body:has(.landing)::before { display: none; }
+@media (max-width: 1000px) { .landing .close2 .box .tx { padding: 32px 24px 8px; } }
