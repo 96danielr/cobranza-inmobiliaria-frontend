@@ -443,9 +443,9 @@ export function mountHeroScene(root) {
   const fitStage = () => { const w = stage.clientWidth || 800, mobile = window.innerWidth < 760 || w < 420;   // layout follows the viewport
     wrap.classList.toggle('mobile', mobile);
     pl.style.setProperty('--s', Math.min(1.4, w / 560).toFixed(3));
-    pl.style.top = mobile ? '38%' : '';
+    pl.style.top = mobile ? '28%' : '';
     if (mobile) { pool2.forEach(el => { if (el._slot <= 1) fit2(el); }); layout2(); }                                   // lift the model to leave room for the 2D HUD
-    stage.style.height = Math.round(mobile ? 300 + w * .42 + 70 : Math.min(620, 300 + w * .42)) + 'px'; };
+    stage.style.height = Math.round(mobile ? 20 + w * .62 + 150 : Math.min(620, 300 + w * .42)) + 'px'; };
   fitStage(); if (window.ResizeObserver) { const ro = new ResizeObserver(fitStage); ro.observe(stage); observers.push(ro); }
   let onScreen = true; if (window.IntersectionObserver) { const io = new IntersectionObserver(es => { const was = onScreen; onScreen = es[0].isIntersecting; if (onScreen && !was && alive) requestAnimationFrame(frame); }); /* the loop stops off screen and restarts on return */ io.observe(stage); observers.push(io); }
   let mx = 0, my = 0, rz = 0, ryv = 0, paidS = 0;
