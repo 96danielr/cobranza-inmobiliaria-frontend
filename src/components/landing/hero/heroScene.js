@@ -205,6 +205,7 @@ export function mountHeroScene(root) {
       + `<path d="M8 6.9Q20 16.2 32 6.9" stroke="#5E97BD" stroke-width=".8" fill="none"/><path d="M8 7.8Q20 17 32 7.8" stroke="#E3B23C" stroke-width=".6" fill="none"/>`
       + `<path d="M8 6.2Q20 15.5 32 6.2" stroke="rgba(120,90,55,.45)" stroke-width=".35" fill="none"/>`
       + `<ellipse cx="11.6" cy="9.2" rx="2.2" ry="1" fill="#FFFFFF" transform="rotate(26 11.6 9.2)"/></svg>`,
+    mailbox: w => `<svg class="flw" viewBox="0 0 10 14" style="width:${w}px"><ellipse cx="5" cy="13.5" rx="3" ry=".5" fill="rgba(11,27,51,.16)"/><path d="M5 13.4V7" stroke="#8A5A3B" stroke-width="1.2" stroke-linecap="round"/><path d="M1 7V4.4a3 3 0 0 1 6 0V7z" fill="#5B6B7E"/><path d="M1.6 6.4V4.6a2.4 2.4 0 0 1 4.8 0v1.8" stroke="#7E8EA2" stroke-width=".5" fill="none"/><path d="M7.4 6.6V1.4l2.2.9-2.2.9" fill="#D94A3A" stroke="#B53A2C" stroke-width=".3"/></svg>`,
     tree: d => `<svg class="flw" viewBox="0 0 20 26" style="width:${d}px"><ellipse cx="10" cy="25.2" rx="6" ry="1" fill="rgba(11,27,51,.18)"/><path d="M9 25V15h2v10z" fill="#7A6A57"/><circle cx="10" cy="10" r="8.6" fill="#6FAF8E"/><circle cx="7.4" cy="7.2" r="4.2" fill="#9ED3B4" opacity=".55"/><path d="M3 12a8.6 8.6 0 0 0 14 4" stroke="#4E8A6D" stroke-width="2.4" fill="none" opacity=".45"/></svg>`,
     canopy: d => `<i class="bush tree-c" style="width:${d}px;height:${d}px"></i>` };
   const actor = (x, y, svg, w) => bill(x, y, 0, `<div class="pet" style="width:${w}px">${svg}</div>`);
@@ -261,8 +262,8 @@ export function mountHeroScene(root) {
     const GATE = { top: '#9C6B45', front: 'repeating-linear-gradient(90deg, #8A5A3B 0 1px, #A8774F 1px 1.9px)', back: 'repeating-linear-gradient(90deg, #8A5A3B 0 1px, #A8774F 1px 1.9px)', left: '#734A30', right: '#734A30', noLine: true };
     [[gate - 1.8, 1], [gate + 10.2, -1]].forEach(([hx0, sgn]) => { const leaf = div('g', { transform: `translate3d(${hx0}px, ${gy + 1.5}px, 0) rotateZ(${sgn * -68}deg)`, transformOrigin: '0 0' }, g4);
       box(leaf, sgn > 0 ? 0 : -6.2, -.3, .6, 6.2, .6, 6.2, GATE); });                     // gate leaves, swung open inward
-    box(g4, gate + 15.5, gy + .6, 0, .8, .8, 6.5, { top: '#3A4556', front: '#2A3442', back: '#2A3442', left: '#2A3442', right: '#1E2733', noLine: true });   // mailbox post
-    box(g4, gate + 14.4, gy - .4, 6.5, 3, 2.8, 2.4, { top: '#4C7DB5', front: '#3A679C', back: '#3A679C', left: '#3A679C', right: '#2D5482', noLine: true });
+    // rural mailbox outside the fence, beside the gate: a wooden post with a rounded box and a red flag (1.1 m tall)
+    bill(gate + 16.5, gy + 5.5, 0, SVG.mailbox(4.4));
     fence(g4, ox + FI, oy + FI, SW - 2 * FI, SD - 2 * FI, [[gate - 5.2, gate + 13.6], ...(o.carport ? [[o.cpX, o.cpX + o.cpW]] : [])]);
     const hammockEl = bill(hx + hw - 18, hy + hd + 17, 0, SVG.hammock(14));   // next to the bush, same scale as the people
     const greens = [[hx + hw - 4, hy + hd + 16, 9]].map(([x, y, d]) => bill(x, y, 0, SVG.bush(d)));
